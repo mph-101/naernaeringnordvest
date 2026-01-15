@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        editorial: ['"Playfair Display"', 'Georgia', 'serif'],
-        body: ['Inter', 'system-ui', 'sans-serif'],
+        headline: ['Oswald', '"Arial Black"', 'sans-serif'],
+        subhead: ['"Roboto Condensed"', '"Arial Narrow"', 'sans-serif'],
+        body: ['Roboto', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

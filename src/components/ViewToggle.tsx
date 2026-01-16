@@ -8,12 +8,12 @@ interface ViewToggleProps {
 export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   return (
     <div className="flex items-center justify-center py-6">
-      <div className="inline-flex bg-surface-subtle rounded-xl p-1 border border-border">
+      <div className="inline-flex bg-secondary rounded-full p-1.5">
         <button
           onClick={() => onViewChange("search")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-body text-sm font-medium transition-all duration-200 ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-body text-sm font-medium transition-all duration-200 ${
             view === "search"
-              ? "bg-background text-foreground shadow-soft"
+              ? "bg-card text-foreground shadow-soft"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -22,9 +22,9 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         </button>
         <button
           onClick={() => onViewChange("feed")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-body text-sm font-medium transition-all duration-200 ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-body text-sm font-medium transition-all duration-200 ${
             view === "feed"
-              ? "bg-background text-foreground shadow-soft"
+              ? "bg-card text-foreground shadow-soft"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >

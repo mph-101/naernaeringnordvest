@@ -51,9 +51,9 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-10 bg-card border-b border-border">
+      <header className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
-          <button onClick={onBack} className="p-2 hover:bg-secondary rounded-sm transition-colors">
+          <button onClick={onBack} className="p-2.5 hover:bg-secondary rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <span className="font-headline text-lg font-bold text-headline">Sport Business Journal</span>
@@ -65,21 +65,21 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
           {messages.map((message, index) => (
             <div key={message.id} className="animate-fade-up" style={{ animationDelay: `${index * 100}ms` }}>
               <div className="flex gap-4">
-                <div className={`w-8 h-8 rounded-sm flex items-center justify-center flex-shrink-0 ${message.role === "user" ? "bg-secondary" : "bg-accent/10"}`}>
-                  {message.role === "user" ? <User className="w-4 h-4 text-foreground/70" /> : <BarChart3 className="w-4 h-4 text-accent" />}
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${message.role === "user" ? "bg-secondary" : "bg-accent/10"}`}>
+                  {message.role === "user" ? <User className="w-5 h-5 text-foreground/70" /> : <BarChart3 className="w-5 h-5 text-accent" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-subhead text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">
+                  <p className="font-subhead text-sm text-muted-foreground mb-2">
                     {message.role === "user" ? "You" : "Sport Business Journal"}
                   </p>
                   <div className="text-foreground font-body leading-relaxed whitespace-pre-line">{message.content}</div>
                   {message.sources && (
                     <div className="mt-4 pt-4 border-t border-border">
-                      <p className="font-subhead text-xs text-muted-foreground mb-2 uppercase tracking-wider">Sources</p>
+                      <p className="font-subhead text-sm text-muted-foreground mb-3">Sources</p>
                       <div className="flex flex-wrap gap-2">
                         {message.sources.map((source, idx) => (
-                          <a key={idx} href={source.url} className="inline-flex items-center gap-2 px-3 py-1.5 bg-card border border-border rounded-sm text-sm font-body hover:border-accent/30 transition-colors">
-                            <span className="text-xs text-accent font-medium">{source.publication}</span>
+                          <a key={idx} href={source.url} className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-body hover:border-accent/30 hover:shadow-soft transition-all">
+                            <span className="text-accent font-medium">{source.publication}</span>
                             <span className="text-muted-foreground">·</span>
                             <span className="text-foreground/80">{source.title}</span>
                             <ExternalLink className="w-3 h-3 text-muted-foreground" />
@@ -94,8 +94,8 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
           ))}
           {isLoading && (
             <div className="flex gap-4 animate-fade-in">
-              <div className="w-8 h-8 rounded-sm bg-accent/10 flex items-center justify-center"><BarChart3 className="w-4 h-4 text-accent" /></div>
-              <div className="flex gap-1.5 pt-3">
+              <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center"><BarChart3 className="w-5 h-5 text-accent" /></div>
+              <div className="flex gap-1.5 pt-4">
                 <span className="w-2 h-2 bg-accent/50 rounded-full animate-bounce" />
                 <span className="w-2 h-2 bg-accent/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
                 <span className="w-2 h-2 bg-accent/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
@@ -107,11 +107,11 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
 
       <div className="sticky bottom-0 bg-background border-t border-border py-4">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-6">
-          <div className="relative bg-card border border-border rounded-sm shadow-soft focus-within:border-accent">
-            <div className="flex items-center px-4 py-3">
-              <Search className="w-5 h-5 text-muted-foreground mr-3" />
+          <div className="relative bg-card border border-border rounded-2xl shadow-soft focus-within:border-accent">
+            <div className="flex items-center px-5 py-3">
+              <Search className="w-5 h-5 text-muted-foreground mr-4" />
               <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask a follow-up question..." className="flex-1 bg-transparent outline-none font-body text-foreground placeholder:text-muted-foreground" disabled={isLoading} />
-              <button type="submit" disabled={!input.trim() || isLoading} className="ml-3 p-2 rounded-sm bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40 transition-all">
+              <button type="submit" disabled={!input.trim() || isLoading} className="ml-3 p-2.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40 transition-all">
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

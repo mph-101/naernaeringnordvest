@@ -218,7 +218,9 @@ export function NewsFeed() {
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <BarChart3 className="w-5 h-5 text-accent" />
+              <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-accent" />
+              </div>
               <h2 className="font-headline text-xl font-bold text-headline">
                 Latest Analysis
               </h2>
@@ -231,9 +233,9 @@ export function NewsFeed() {
               <button
                 key={topic}
                 onClick={() => setSelectedTopic(topic)}
-                className={`px-4 py-2 rounded-sm text-sm font-subhead font-medium whitespace-nowrap transition-all duration-200 ${
+                className={`px-4 py-2.5 rounded-full text-sm font-subhead whitespace-nowrap transition-all duration-200 ${
                   selectedTopic === topic
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary text-primary-foreground shadow-soft"
                     : "bg-card border border-border text-foreground hover:bg-secondary"
                 }`}
               >
@@ -246,20 +248,20 @@ export function NewsFeed() {
           {featuredItem && (
             <button
               onClick={() => handleArticleClick(featuredItem)}
-              className="group block w-full text-left mb-8 bg-card rounded-sm border-l-3 border-accent shadow-soft hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden border-accent-left"
+              className="group block w-full text-left mb-8 bg-card rounded-2xl shadow-soft hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden border border-border hover:border-accent/30"
             >
               <div className="p-6 md:p-8">
                 <div className="flex items-center gap-3 mb-4">
                   {featuredItem.premium && (
-                    <span className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 text-primary text-xs font-subhead font-semibold rounded-sm">
+                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 text-accent text-xs font-subhead font-semibold rounded-full">
                       <Lock className="w-3 h-3" />
                       Premium
                     </span>
                   )}
-                  <span className="font-subhead text-xs text-accent font-semibold uppercase tracking-wider">
+                  <span className="font-subhead text-sm text-accent font-medium">
                     {featuredItem.category}
                   </span>
-                  <span className="text-xs text-muted-foreground font-body">
+                  <span className="text-sm text-muted-foreground font-body">
                     {featuredItem.publishedAt}
                   </span>
                 </div>
@@ -286,16 +288,16 @@ export function NewsFeed() {
               <button
                 key={item.id}
                 onClick={() => handleArticleClick(item)}
-                className="group block w-full text-left p-5 bg-card rounded-sm border border-border hover:border-accent/30 hover:shadow-soft transition-all duration-300 animate-fade-up"
+                className="group block w-full text-left p-5 bg-card rounded-xl border border-border hover:border-accent/30 hover:shadow-soft transition-all duration-300 animate-fade-up"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="flex items-center gap-1.5 text-xs text-accent font-subhead font-semibold uppercase tracking-wider">
+                  <span className="flex items-center gap-1.5 text-sm text-accent font-subhead font-medium">
                     {getTypeIcon(item.type)}
                     {item.category}
                   </span>
                   {item.premium && (
-                    <Lock className="w-3 h-3 text-muted-foreground" />
+                    <Lock className="w-3 h-3 text-muted-foreground ml-auto" />
                   )}
                 </div>
                 
@@ -320,7 +322,7 @@ export function NewsFeed() {
 
           {/* Load More */}
           <div className="text-center mt-10">
-            <button className="px-6 py-3 bg-primary text-primary-foreground rounded-sm font-subhead text-sm font-semibold hover:bg-primary/90 transition-colors">
+            <button className="px-8 py-3 bg-primary text-primary-foreground rounded-full font-subhead text-sm font-semibold hover:bg-primary/90 transition-colors shadow-soft">
               Load More Stories
             </button>
           </div>
@@ -329,11 +331,11 @@ export function NewsFeed() {
 
       {/* Paywall Modal */}
       {showPaywall && selectedArticle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-card rounded-sm shadow-elevated max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-card rounded-2xl shadow-elevated max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
             <div className="p-6 border-b border-border">
               <div className="flex items-center gap-2 mb-3">
-                <span className="font-subhead text-xs text-accent font-semibold uppercase tracking-wider">
+                <span className="font-subhead text-sm text-accent font-medium">
                   {selectedArticle.category}
                 </span>
               </div>
@@ -358,9 +360,11 @@ export function NewsFeed() {
               </div>
             </div>
 
-            <div className="p-6 bg-surface-subtle border-t border-border">
+            <div className="p-6 bg-surface-subtle rounded-b-2xl border-t border-border">
               <div className="text-center mb-6">
-                <Lock className="w-8 h-8 text-accent mx-auto mb-3" />
+                <div className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Lock className="w-6 h-6 text-accent" />
+                </div>
                 <h4 className="font-headline text-lg font-bold text-headline mb-2">
                   Subscribe to Continue Reading
                 </h4>
@@ -370,10 +374,10 @@ export function NewsFeed() {
               </div>
               
               <div className="space-y-3">
-                <button className="w-full py-3 bg-accent text-accent-foreground rounded-sm font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors">
+                <button className="w-full py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
                   Subscribe — $29/month
                 </button>
-                <button className="w-full py-3 bg-card border border-border text-foreground rounded-sm font-subhead text-sm font-semibold hover:bg-secondary transition-colors">
+                <button className="w-full py-3 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors">
                   Already a member? Sign in
                 </button>
               </div>
@@ -381,7 +385,7 @@ export function NewsFeed() {
 
             <button
               onClick={() => setShowPaywall(false)}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute top-4 right-4 p-2.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-full transition-all"
             >
               ✕
             </button>

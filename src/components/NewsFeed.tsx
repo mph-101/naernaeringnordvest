@@ -1,43 +1,29 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Clock, Play, Headphones, FileText, Lock, BarChart3 } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-
-interface NewsItem {
-  id: string;
-  title: string;
-  excerpt: string;
-  category: string;
-  readTime: string;
-  publishedAt: string;
-  author: string;
-  type: "article" | "video" | "podcast";
-  featured?: boolean;
-  premium?: boolean;
-}
+import { getArticles, Article } from "@/lib/articles";
 
 export function NewsFeed() {
   const [selectedTopic, setSelectedTopic] = useState("Alle");
-  const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null);
-  const [showPaywall, setShowPaywall] = useState(false);
   const { language } = useTheme();
   const t = translations[language];
+  const navigate = useNavigate();
 
-  const mockNews: NewsItem[] = t.news.map((item, index) => ({
-    ...item,
-    type: index === 2 ? "video" : index === 4 ? "podcast" : "article",
+  const articles = getArticles(language).map((article, index) => ({
+    ...article,
     featured: index === 0,
-    premium: true,
   }));
 
   const topics = t.topics;
   const allTopic = topics[0];
 
   const filteredNews = selectedTopic === allTopic
-    ? mockNews
-    : mockNews.filter((item) => item.category === selectedTopic);
+    ? articles
+    : articles.filter((item) => item.category === selectedTopic);
 
-  const getTypeIcon = (type: NewsItem["type"]) => {
+  const getTypeIcon = (type: Article["type"]) => {
     switch (type) {
       case "video":
         return <Play className="w-3.5 h-3.5" />;
@@ -48,11 +34,8 @@ export function NewsFeed() {
     }
   };
 
-  const handleArticleClick = (item: NewsItem) => {
-    if (item.premium) {
-      setSelectedArticle(item);
-      setShowPaywall(true);
-    }
+  const handleArticleClick = (item: Article) => {
+    navigate(`/article/${item.id}`);
   };
 
   const featuredItem = filteredNews.find((item) => item.featured);
@@ -174,70 +157,6 @@ export function NewsFeed() {
           </div>
         </div>
       </section>
-
-      {/* Paywall Modal */}
-      {showPaywall && selectedArticle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-card rounded-2xl shadow-elevated max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="p-6 border-b border-border">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="font-subhead text-sm text-accent font-medium">
-                  {selectedArticle.category}
-                </span>
-              </div>
-              <h3 className="font-headline text-lg font-bold text-headline leading-snug mb-2">
-                {selectedArticle.title}
-              </h3>
-              <p className="text-sm text-muted-foreground font-body">
-                {language === "no" ? "Av" : "By"} {selectedArticle.author} · {selectedArticle.readTime}
-              </p>
-            </div>
-            
-            <div className="p-6">
-              <p className="text-muted-foreground font-body leading-relaxed mb-6">
-                {selectedArticle.excerpt}
-              </p>
-              
-              <div className="relative">
-                <p className="text-foreground font-body leading-relaxed line-clamp-4">
-                  {selectedArticle.excerpt}
-                </p>
-                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-card to-transparent" />
-              </div>
-            </div>
-
-            <div className="p-6 bg-surface-subtle rounded-b-2xl border-t border-border">
-              <div className="text-center mb-6">
-                <div className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Lock className="w-6 h-6 text-accent" />
-                </div>
-                <h4 className="font-headline text-lg font-bold text-headline mb-2">
-                  {t.subscribeTitle}
-                </h4>
-                <p className="text-sm text-muted-foreground font-body">
-                  {t.subscribeDesc}
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <button className="w-full py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
-                  {t.subscribeButton}
-                </button>
-                <button className="w-full py-3 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors">
-                  {t.signIn}
-                </button>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowPaywall(false)}
-              className="absolute top-4 right-4 p-2.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-full transition-all"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }

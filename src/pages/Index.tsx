@@ -55,12 +55,10 @@ const Index = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
               <h2 className="font-headline text-lg font-medium text-headline mb-1">
-                {t.brandName} {t.brandSub}
+                {t.brandName}
               </h2>
               <p className="text-sm text-muted-foreground font-body">
-                {language === "no" 
-                  ? "Journalistikk reimaginert for samtalealderen."
-                  : "Journalism reimagined for the conversational age."}
+                {t.footerTagline}
               </p>
             </div>
             <div className="flex items-center gap-6 text-sm font-body text-muted-foreground">

@@ -2,112 +2,112 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Inter:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@400;500;600;700;900&display=swap');
 
 @layer base {
   :root {
-    /* Sophisticated business palette - clean, professional */
-    --background: 210 20% 98%;
-    --foreground: 220 20% 15%;
+    /* Warm Scandinavian palette - cream, amber, orange */
+    --background: 45 30% 97%;
+    --foreground: 30 15% 20%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 20% 15%;
+    --card: 45 40% 99%;
+    --card-foreground: 30 15% 20%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 15%;
+    --popover: 45 40% 99%;
+    --popover-foreground: 30 15% 20%;
 
-    /* Deep navy primary */
-    --primary: 220 45% 20%;
-    --primary-foreground: 0 0% 100%;
+    /* Warm amber primary */
+    --primary: 35 90% 50%;
+    --primary-foreground: 30 20% 10%;
 
-    /* Light gray secondary */
-    --secondary: 220 15% 95%;
-    --secondary-foreground: 220 20% 25%;
+    /* Light cream secondary */
+    --secondary: 40 25% 94%;
+    --secondary-foreground: 30 15% 25%;
 
-    --muted: 220 12% 92%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 40 20% 92%;
+    --muted-foreground: 30 10% 45%;
 
-    /* Business blue accent */
-    --accent: 215 70% 45%;
+    /* Burnt orange accent */
+    --accent: 25 85% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 215 70% 45%;
+    --border: 40 20% 88%;
+    --input: 40 20% 88%;
+    --ring: 25 85% 55%;
 
-    --radius: 0.25rem;
+    --radius: 1rem;
 
-    /* Sophisticated business tokens */
-    --headline: 220 25% 12%;
-    --subhead: 220 10% 45%;
-    --link: 215 65% 40%;
-    --link-hover: 215 70% 30%;
-    --surface-elevated: 0 0% 100%;
-    --surface-subtle: 220 15% 97%;
-    --gradient-professional: linear-gradient(135deg, hsl(220, 45%, 20%) 0%, hsl(215, 50%, 30%) 100%);
-    --shadow-soft: 0 1px 8px -2px hsl(220 20% 15% / 0.06);
-    --shadow-elevated: 0 4px 16px -4px hsl(220 20% 15% / 0.1);
+    /* Scandinavian design tokens */
+    --headline: 30 20% 15%;
+    --subhead: 30 10% 40%;
+    --link: 25 80% 45%;
+    --link-hover: 25 85% 35%;
+    --surface-elevated: 45 40% 99%;
+    --surface-subtle: 45 25% 95%;
+    --gradient-warm: linear-gradient(135deg, hsl(35, 90%, 50%) 0%, hsl(25, 85%, 55%) 100%);
+    --shadow-soft: 0 2px 12px -3px hsl(30 20% 20% / 0.08);
+    --shadow-elevated: 0 8px 24px -6px hsl(30 20% 20% / 0.12);
 
-    --sidebar-background: 220 25% 15%;
-    --sidebar-foreground: 220 10% 90%;
-    --sidebar-primary: 215 70% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 20%;
-    --sidebar-accent-foreground: 220 10% 90%;
-    --sidebar-border: 220 20% 22%;
-    --sidebar-ring: 215 70% 45%;
+    --sidebar-background: 30 20% 15%;
+    --sidebar-foreground: 40 20% 92%;
+    --sidebar-primary: 35 90% 50%;
+    --sidebar-primary-foreground: 30 20% 10%;
+    --sidebar-accent: 30 18% 22%;
+    --sidebar-accent-foreground: 40 20% 92%;
+    --sidebar-border: 30 15% 25%;
+    --sidebar-ring: 25 85% 55%;
   }
 
   .dark {
-    --background: 220 20% 8%;
-    --foreground: 220 10% 92%;
+    --background: 30 15% 8%;
+    --foreground: 40 15% 92%;
 
-    --card: 220 18% 12%;
-    --card-foreground: 220 10% 92%;
+    --card: 30 12% 12%;
+    --card-foreground: 40 15% 92%;
 
-    --popover: 220 20% 10%;
-    --popover-foreground: 220 10% 92%;
+    --popover: 30 15% 10%;
+    --popover-foreground: 40 15% 92%;
 
-    --primary: 0 0% 100%;
-    --primary-foreground: 220 25% 10%;
+    --primary: 35 90% 55%;
+    --primary-foreground: 30 20% 8%;
 
-    --secondary: 220 15% 18%;
-    --secondary-foreground: 220 10% 85%;
+    --secondary: 30 12% 18%;
+    --secondary-foreground: 40 15% 85%;
 
-    --muted: 220 15% 20%;
-    --muted-foreground: 220 10% 55%;
+    --muted: 30 12% 20%;
+    --muted-foreground: 40 10% 55%;
 
-    --accent: 215 65% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 25 80% 60%;
+    --accent-foreground: 30 20% 8%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 22%;
-    --input: 220 15% 22%;
-    --ring: 215 65% 55%;
+    --border: 30 12% 22%;
+    --input: 30 12% 22%;
+    --ring: 25 80% 60%;
 
-    --headline: 0 0% 98%;
-    --subhead: 220 10% 60%;
-    --link: 215 65% 60%;
-    --link-hover: 215 70% 70%;
-    --surface-elevated: 220 18% 14%;
-    --surface-subtle: 220 18% 10%;
-    --gradient-professional: linear-gradient(135deg, hsl(220, 40%, 25%) 0%, hsl(215, 45%, 35%) 100%);
-    --shadow-soft: 0 1px 8px -2px hsl(0 0% 0% / 0.3);
-    --shadow-elevated: 0 4px 16px -4px hsl(0 0% 0% / 0.4);
+    --headline: 45 30% 96%;
+    --subhead: 40 10% 60%;
+    --link: 25 80% 60%;
+    --link-hover: 25 85% 70%;
+    --surface-elevated: 30 12% 14%;
+    --surface-subtle: 30 12% 10%;
+    --gradient-warm: linear-gradient(135deg, hsl(35, 85%, 45%) 0%, hsl(25, 80%, 50%) 100%);
+    --shadow-soft: 0 2px 12px -3px hsl(0 0% 0% / 0.3);
+    --shadow-elevated: 0 8px 24px -6px hsl(0 0% 0% / 0.4);
 
-    --sidebar-background: 220 22% 8%;
-    --sidebar-foreground: 220 10% 85%;
-    --sidebar-primary: 215 65% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 18% 15%;
-    --sidebar-accent-foreground: 220 10% 85%;
-    --sidebar-border: 220 18% 18%;
-    --sidebar-ring: 215 65% 55%;
+    --sidebar-background: 30 12% 8%;
+    --sidebar-foreground: 40 15% 85%;
+    --sidebar-primary: 35 90% 55%;
+    --sidebar-primary-foreground: 30 20% 8%;
+    --sidebar-accent: 30 12% 15%;
+    --sidebar-accent-foreground: 40 15% 85%;
+    --sidebar-border: 30 12% 18%;
+    --sidebar-ring: 25 80% 60%;
   }
 }
 
@@ -118,29 +118,29 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Source Sans 3', system-ui, sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Merriweather', Georgia, serif;
+    font-family: 'Fraunces', Georgia, serif;
     color: hsl(var(--headline));
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
   }
 }
 
 @layer utilities {
   .font-headline {
-    font-family: 'Merriweather', Georgia, serif;
-    letter-spacing: -0.01em;
+    font-family: 'Fraunces', Georgia, serif;
+    letter-spacing: -0.02em;
   }
 
   .font-subhead {
-    font-family: 'Inter', system-ui, sans-serif;
-    letter-spacing: 0.02em;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-weight: 500;
   }
 
   .font-body {
-    font-family: 'Source Sans 3', system-ui, sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
   }
 
   .text-headline {
@@ -167,8 +167,8 @@
     background-color: hsl(var(--surface-subtle));
   }
 
-  .bg-gradient-professional {
-    background: var(--gradient-professional);
+  .bg-gradient-warm {
+    background: var(--gradient-warm);
   }
 
   .shadow-soft {
@@ -180,7 +180,7 @@
   }
 
   .border-accent-left {
-    border-left: 3px solid hsl(var(--accent));
+    border-left: 4px solid hsl(var(--accent));
   }
 
   .animate-fade-up {

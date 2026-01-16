@@ -156,14 +156,16 @@ export function RelatedArticles() {
         <div className="max-w-4xl mx-auto px-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <FileText className="w-5 h-5 text-accent" />
+              <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
+                <FileText className="w-5 h-5 text-accent" />
+              </div>
               <h2 className="font-headline text-lg font-bold text-headline">
                 Related Coverage
               </h2>
             </div>
             <a
               href="#"
-              className="font-subhead text-sm font-medium text-accent hover:text-link-hover transition-colors flex items-center gap-1 group"
+              className="font-subhead text-sm text-accent hover:text-link-hover transition-colors flex items-center gap-1 group"
             >
               View All
               <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -175,15 +177,15 @@ export function RelatedArticles() {
               <button
                 key={article.id}
                 onClick={() => handleArticleClick(article)}
-                className="group block w-full text-left p-5 bg-card hover:bg-secondary/50 rounded-sm border border-border hover:border-accent/30 transition-all duration-300 hover:shadow-soft animate-fade-up"
+                className="group block w-full text-left p-5 bg-card hover:bg-secondary/50 rounded-xl border border-border hover:border-accent/30 transition-all duration-300 hover:shadow-soft animate-fade-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="font-subhead text-xs font-semibold uppercase tracking-wider text-accent">
+                  <span className="font-subhead text-sm text-accent font-medium">
                     {article.category}
                   </span>
                   <span className="text-muted-foreground text-xs">·</span>
-                  <span className="text-xs text-muted-foreground font-body">
+                  <span className="text-sm text-muted-foreground font-body">
                     {getTypeLabel(article.type)}
                   </span>
                   {article.premium && (
@@ -211,11 +213,11 @@ export function RelatedArticles() {
 
       {/* Paywall Modal */}
       {showPaywall && selectedArticle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/50 backdrop-blur-sm animate-fade-in">
-          <div className="relative bg-card rounded-sm shadow-elevated max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm animate-fade-in">
+          <div className="relative bg-card rounded-2xl shadow-elevated max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
             <div className="p-6 border-b border-border">
               <div className="flex items-center gap-2 mb-3">
-                <span className="font-subhead text-xs text-accent font-semibold uppercase tracking-wider">
+                <span className="font-subhead text-sm text-accent font-medium">
                   {selectedArticle.category}
                 </span>
               </div>
@@ -240,9 +242,11 @@ export function RelatedArticles() {
               </div>
             </div>
 
-            <div className="p-6 bg-surface-subtle border-t border-border">
+            <div className="p-6 bg-surface-subtle rounded-b-2xl border-t border-border">
               <div className="text-center mb-6">
-                <Lock className="w-8 h-8 text-accent mx-auto mb-3" />
+                <div className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Lock className="w-6 h-6 text-accent" />
+                </div>
                 <h4 className="font-headline text-lg font-bold text-headline mb-2">
                   Subscribe to Continue Reading
                 </h4>
@@ -252,10 +256,10 @@ export function RelatedArticles() {
               </div>
               
               <div className="space-y-3">
-                <button className="w-full py-3 bg-accent text-accent-foreground rounded-sm font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors">
+                <button className="w-full py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
                   Subscribe — $29/month
                 </button>
-                <button className="w-full py-3 bg-card border border-border text-foreground rounded-sm font-subhead text-sm font-semibold hover:bg-secondary transition-colors">
+                <button className="w-full py-3 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors">
                   Already a member? Sign in
                 </button>
               </div>
@@ -263,7 +267,7 @@ export function RelatedArticles() {
 
             <button
               onClick={() => setShowPaywall(false)}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute top-4 right-4 p-2.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-full transition-all"
             >
               ✕
             </button>

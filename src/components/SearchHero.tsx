@@ -30,6 +30,10 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[55vh] px-6 animate-fade-up">
       <div className="text-center mb-10 max-w-2xl">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full mb-6">
+          <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+          <span className="font-subhead text-sm text-accent font-medium">Sports Business Intelligence</span>
+        </div>
         <h1 className="font-headline text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-5 text-headline leading-tight">
           Intelligence for the
           <br />
@@ -43,9 +47,9 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
 
       <form onSubmit={handleSubmit} className="w-full max-w-xl mb-8">
         <div className="relative group">
-          <div className="relative bg-card border border-border rounded-sm shadow-soft group-focus-within:border-accent group-focus-within:shadow-elevated transition-all duration-200">
-            <div className="flex items-center px-4 py-3">
-              <Search className="w-5 h-5 text-muted-foreground mr-3 flex-shrink-0" />
+          <div className="relative bg-card border border-border rounded-2xl shadow-soft group-focus-within:border-accent group-focus-within:shadow-elevated transition-all duration-200">
+            <div className="flex items-center px-5 py-4">
+              <Search className="w-5 h-5 text-muted-foreground mr-4 flex-shrink-0" />
               <input
                 type="text"
                 value={query}
@@ -56,7 +60,7 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
               <button
                 type="submit"
                 disabled={!query.trim()}
-                className="ml-3 px-4 py-2 rounded-sm bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 font-subhead text-sm font-semibold flex items-center gap-2"
+                className="ml-3 px-5 py-2.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 font-subhead text-sm font-semibold flex items-center gap-2 shadow-soft"
               >
                 <span className="hidden sm:inline">Ask</span>
                 <ArrowRight className="w-4 h-4" />
@@ -67,7 +71,7 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
       </form>
 
       <div className="w-full max-w-xl">
-        <p className="font-subhead text-xs text-muted-foreground mb-3 text-center uppercase tracking-wider">
+        <p className="font-subhead text-sm text-muted-foreground mb-4 text-center">
           Popular Questions
         </p>
         <div className="flex flex-wrap justify-center gap-2">
@@ -75,7 +79,7 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
             <button
               key={index}
               onClick={() => handlePromptClick(prompt)}
-              className="px-3 py-2 bg-card hover:bg-secondary border border-border rounded-sm text-sm font-body text-foreground/80 hover:text-foreground transition-all duration-200 hover:shadow-soft text-left hover:border-accent/30"
+              className="px-4 py-2.5 bg-card hover:bg-secondary border border-border rounded-full text-sm font-body text-foreground/80 hover:text-foreground transition-all duration-200 hover:shadow-soft hover:border-accent/30"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {prompt}

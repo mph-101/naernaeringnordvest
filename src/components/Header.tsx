@@ -32,21 +32,6 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
             </div>
           </a>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8">
-            <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors">
-              {t.navTransactions}
-            </a>
-            <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors">
-              {t.navLeagues}
-            </a>
-            <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors">
-              {t.navMediaRights}
-            </a>
-            <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors">
-              {t.navValuations}
-            </a>
-          </nav>
 
           {/* Actions */}
           <div className="flex items-center gap-2">
@@ -101,19 +86,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border animate-fade-in">
             <nav className="flex flex-col gap-2">
-              <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors py-3 px-3 hover:bg-secondary rounded-xl">
-                {t.navTransactions}
-              </a>
-              <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors py-3 px-3 hover:bg-secondary rounded-xl">
-                {t.navLeagues}
-              </a>
-              <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors py-3 px-3 hover:bg-secondary rounded-xl">
-                {t.navMediaRights}
-              </a>
-              <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors py-3 px-3 hover:bg-secondary rounded-xl">
-                {t.navValuations}
-              </a>
-              <button className="w-full px-5 py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors mt-2">
+              <button className="w-full px-5 py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors">
                 {t.subscribe}
               </button>
             </nav>

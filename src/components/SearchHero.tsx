@@ -27,10 +27,6 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[55vh] px-6 animate-fade-up">
       <div className="text-center mb-10 max-w-2xl">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full mb-6">
-          <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-          <span className="font-subhead text-sm text-accent font-medium">{t.badge}</span>
-        </div>
         <h1 className="font-headline text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-5 text-headline leading-tight">
           {t.heroTitle1}
           <br />

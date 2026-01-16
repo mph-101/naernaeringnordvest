@@ -28,11 +28,15 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
     <div className="flex flex-col items-center justify-center min-h-[55vh] px-6 animate-fade-up">
       <div className="text-center mb-10 max-w-2xl">
         <h1 className="font-headline text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-5 text-headline leading-tight">
-          {t.heroTitle1}
+          <span className="inline-block animate-fade-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
+            {t.heroTitle1}
+          </span>
           <br />
-          <span className="text-accent">{t.heroTitle2}</span>
+          <span className="inline-block text-accent animate-fade-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+            {t.heroTitle2}
+          </span>
         </h1>
-        <p className="text-base md:text-lg text-muted-foreground font-body leading-relaxed max-w-lg mx-auto">
+        <p className="text-base md:text-lg text-muted-foreground font-body leading-relaxed max-w-lg mx-auto animate-fade-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
           {t.heroSubtitle}
         </p>
       </div>

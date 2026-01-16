@@ -12,8 +12,8 @@ export const translations = {
 
     // Search Hero
     badge: "Sportsbransje-intelligens",
-    heroTitle1: "Innsikt for",
-    heroTitle2: "Sportsbransjen",
+    heroTitle1: "Idrettens",
+    heroTitle2: "pengestrømmer",
     heroSubtitle: "Still spørsmål om transaksjoner, verdivurderinger, medierettigheter og markedstrender. Få svar basert på verifiserte bransjedata.",
     searchPlaceholder: "Still et spørsmål...",
     askButton: "Spør",
@@ -168,8 +168,8 @@ export const translations = {
 
     // Search Hero
     badge: "Sports Business Intelligence",
-    heroTitle1: "Intelligence for the",
-    heroTitle2: "Business of Sport",
+    heroTitle1: "Following the money",
+    heroTitle2: "in sports",
     heroSubtitle: "Ask questions about transactions, valuations, media rights, and market trends. Get answers grounded in verified industry data.",
     searchPlaceholder: "Ask a question...",
     askButton: "Ask",

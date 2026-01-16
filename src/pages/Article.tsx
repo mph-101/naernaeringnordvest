@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, User, Calendar, Lock } from "lucide-react";
 import { Header } from "@/components/Header";
+import { ArticleDiscussion } from "@/components/ArticleDiscussion";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleById } from "@/lib/articles";
@@ -172,13 +173,16 @@ const Article = () => {
         </div>
 
         {/* Body */}
-        <div className="prose prose-lg max-w-none">
+        <div className="prose prose-lg max-w-none mb-8">
           {article.body.split('\n\n').map((paragraph, index) => (
             <p key={index} className="text-foreground font-body text-lg leading-relaxed mb-6">
               {paragraph}
             </p>
           ))}
         </div>
+
+        {/* Discussion Section */}
+        <ArticleDiscussion authorName={article.author} />
       </article>
 
       {/* Footer */}

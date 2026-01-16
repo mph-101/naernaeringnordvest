@@ -1,8 +1,9 @@
 export const translations = {
   no: {
     // Header
-    brandName: "Sport Business",
-    brandSub: "Magasinet",
+    brandName: "SPØK",
+    brandSub: "",
+    footerTagline: "Idrettens pengestrømmer",
     navTransactions: "Transaksjoner",
     navLeagues: "Ligaer",
     navMediaRights: "Medierettigheter",
@@ -156,8 +157,9 @@ export const translations = {
   },
   en: {
     // Header
-    brandName: "Sport Business",
-    brandSub: "Journal",
+    brandName: "SPEC",
+    brandSub: "",
+    footerTagline: "Following the money in sports",
     navTransactions: "Transactions",
     navLeagues: "Leagues",
     navMediaRights: "Media & Rights",

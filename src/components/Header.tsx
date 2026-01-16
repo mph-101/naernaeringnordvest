@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Menu, X, Search } from "lucide-react";
+import { Menu, X, Search, Moon, Sun, Globe } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
+import { translations } from "@/lib/translations";
 
 interface HeaderProps {
   showSearch?: boolean;
@@ -8,6 +10,8 @@ interface HeaderProps {
 
 export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { theme, toggleTheme, language, toggleLanguage } = useTheme();
+  const t = translations[language];
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border">
@@ -20,10 +24,10 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
             </div>
             <div className="flex flex-col">
               <span className="font-headline text-lg font-bold text-headline leading-none">
-                Sport Business
+                {t.brandName}
               </span>
               <span className="font-subhead text-xs text-accent tracking-wide">
-                Journal
+                {t.brandSub}
               </span>
             </div>
           </a>
@@ -31,21 +35,44 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
             <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors">
-              Transactions
+              {t.navTransactions}
             </a>
             <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors">
-              Leagues
+              {t.navLeagues}
             </a>
             <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors">
-              Media & Rights
+              {t.navMediaRights}
             </a>
             <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors">
-              Valuations
+              {t.navValuations}
             </a>
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Language Toggle */}
+            <button
+              onClick={toggleLanguage}
+              className="p-2.5 hover:bg-secondary rounded-full transition-colors flex items-center gap-1.5"
+              title={language === "no" ? "Switch to English" : "Bytt til norsk"}
+            >
+              <Globe className="w-4 h-4 text-foreground/70" />
+              <span className="text-xs font-medium text-foreground/70 uppercase">{language}</span>
+            </button>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 hover:bg-secondary rounded-full transition-colors"
+              title={theme === "light" ? "Dark mode" : "Light mode"}
+            >
+              {theme === "light" ? (
+                <Moon className="w-4 h-4 text-foreground/70" />
+              ) : (
+                <Sun className="w-4 h-4 text-foreground/70" />
+              )}
+            </button>
+
             {showSearch && (
               <button
                 onClick={onSearchClick}
@@ -55,7 +82,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
               </button>
             )}
             <button className="hidden md:block px-5 py-2.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
-              Subscribe
+              {t.subscribe}
             </button>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -75,19 +102,19 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
           <div className="md:hidden py-4 border-t border-border animate-fade-in">
             <nav className="flex flex-col gap-2">
               <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors py-3 px-3 hover:bg-secondary rounded-xl">
-                Transactions
+                {t.navTransactions}
               </a>
               <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors py-3 px-3 hover:bg-secondary rounded-xl">
-                Leagues
+                {t.navLeagues}
               </a>
               <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors py-3 px-3 hover:bg-secondary rounded-xl">
-                Media & Rights
+                {t.navMediaRights}
               </a>
               <a href="#" className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors py-3 px-3 hover:bg-secondary rounded-xl">
-                Valuations
+                {t.navValuations}
               </a>
               <button className="w-full px-5 py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors mt-2">
-                Subscribe
+                {t.subscribe}
               </button>
             </nav>
           </div>

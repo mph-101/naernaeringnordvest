@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Search, ArrowRight, ArrowLeft, User, ExternalLink, BarChart3 } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
+import { translations } from "@/lib/translations";
 
 interface Message {
   id: string;
@@ -14,16 +16,26 @@ interface ConversationViewProps {
 }
 
 export function ConversationView({ initialQuery, onBack }: ConversationViewProps) {
+  const { language } = useTheme();
+  const t = translations[language];
+
+  const getInitialResponse = () => {
+    if (language === "no") {
+      return `Her er vår analyse av "${initialQuery}":\n\n**Viktige markedsutviklinger:**\nSportsbransjens landskap gjennomgår betydelige endringer. Private equity-investeringer i profesjonell idrett har nådd rekordnivåer, med over 30 milliarder dollar investert i sektoren de siste 18 månedene.\n\n**Finansielle høydepunkter:**\n• Verdivurderinger av medierettigheter fortsetter å stige, drevet av strømmingskonkurranse\n• Franchiseverdier har økt 15-25% år-over-år på tvers av store ligaer\n• Sponsorinntekter er tilbake til pre-pandemi nivåer med nye kategorier som dukker opp\n\n**Hva driver dette:**\nInvestorer ser på sportsaktiva som resesjonsbestandige med sterkt inntektsvekstpotensial. Knapphet på franchisemuligheter og ekspanderende internasjonale markeder er nøkkelfaktorer.`;
+    }
+    return `Here's what our analysis shows about "${initialQuery}":\n\n**Key Market Developments:**\nThe sports business landscape is experiencing significant shifts. Private equity investment in professional sports has reached record levels, with over $30 billion deployed in the sector over the past 18 months.\n\n**Financial Highlights:**\n• Media rights valuations continue to climb, driven by streaming competition\n• Franchise valuations have increased 15-25% year-over-year across major leagues\n• Sponsorship revenue is rebounding to pre-pandemic levels with new categories emerging\n\n**What's Driving This:**\nInvestors view sports assets as recession-resistant with strong revenue growth potential. The scarcity of franchise opportunities and expanding international markets are key factors.`;
+  };
+
   const [messages, setMessages] = useState<Message[]>([
     { id: "1", role: "user", content: initialQuery },
     {
       id: "2",
       role: "assistant",
-      content: `Here's what our analysis shows about "${initialQuery}":\n\n**Key Market Developments:**\nThe sports business landscape is experiencing significant shifts. Private equity investment in professional sports has reached record levels, with over $30 billion deployed in the sector over the past 18 months.\n\n**Financial Highlights:**\n• Media rights valuations continue to climb, driven by streaming competition\n• Franchise valuations have increased 15-25% year-over-year across major leagues\n• Sponsorship revenue is rebounding to pre-pandemic levels with new categories emerging\n\n**What's Driving This:**\nInvestors view sports assets as recession-resistant with strong revenue growth potential. The scarcity of franchise opportunities and expanding international markets are key factors.`,
+      content: getInitialResponse(),
       sources: [
-        { title: "Q4 Sports Investment Report", url: "#", publication: "Sport Business Journal" },
-        { title: "Private Equity in Sports: 2024 Analysis", url: "#", publication: "Sport Business Journal" },
-        { title: "Global Media Rights Tracker", url: "#", publication: "Bloomberg" },
+        { title: language === "no" ? "Q4 Sportsinvestering Rapport" : "Q4 Sports Investment Report", url: "#", publication: "Sport Business Journal" },
+        { title: language === "no" ? "Private Equity i Sport: 2024 Analyse" : "Private Equity in Sports: 2024 Analysis", url: "#", publication: "Sport Business Journal" },
+        { title: language === "no" ? "Global Medierettigheter Tracker" : "Global Media Rights Tracker", url: "#", publication: "Bloomberg" },
       ],
     },
   ]);
@@ -39,11 +51,15 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
     setIsLoading(true);
 
     setTimeout(() => {
+      const response = language === "no"
+        ? `Ytterligere kontekst om "${input}":\n\n**Analyse:**\nVårt datateam har samlet de siste tallene om dette emnet. Tallene viser en klar trend mot konsolidering og vertikal integrasjon på tvers av bransjen.\n\n**Hovedpunkter:**\n• Transaksjonsmultipler forblir høye til tross for markedsvolatilitet\n• Strategiske kjøpere overbyr finansielle sponsorer i konkurranseprosesser\n• Internasjonal ekspansjon forblir en prioritet for store franchiser`
+        : `Additional context on "${input}":\n\n**Analysis:**\nOur data team has compiled the latest figures on this topic. The numbers show a clear trend toward consolidation and vertical integration across the industry.\n\n**Key Takeaways:**\n• Transaction multiples remain elevated despite market volatility\n• Strategic buyers are outbidding financial sponsors in competitive processes\n• International expansion remains a priority for major franchises`;
+
       setMessages((prev) => [...prev, {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: `Additional context on "${input}":\n\n**Analysis:**\nOur data team has compiled the latest figures on this topic. The numbers show a clear trend toward consolidation and vertical integration across the industry.\n\n**Key Takeaways:**\n• Transaction multiples remain elevated despite market volatility\n• Strategic buyers are outbidding financial sponsors in competitive processes\n• International expansion remains a priority for major franchises`,
-        sources: [{ title: "Deal Flow Analysis: Sports M&A", url: "#", publication: "Sport Business Journal" }],
+        content: response,
+        sources: [{ title: language === "no" ? "Deal Flow Analyse: Sports M&A" : "Deal Flow Analysis: Sports M&A", url: "#", publication: "Sport Business Journal" }],
       }]);
       setIsLoading(false);
     }, 1500);
@@ -56,7 +72,7 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
           <button onClick={onBack} className="p-2.5 hover:bg-secondary rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <span className="font-headline text-lg font-bold text-headline">Sport Business Journal</span>
+          <span className="font-headline text-lg font-bold text-headline">{t.brandName} {t.brandSub}</span>
         </div>
       </header>
 
@@ -70,12 +86,12 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-subhead text-sm text-muted-foreground mb-2">
-                    {message.role === "user" ? "You" : "Sport Business Journal"}
+                    {message.role === "user" ? t.you : `${t.brandName} ${t.brandSub}`}
                   </p>
                   <div className="text-foreground font-body leading-relaxed whitespace-pre-line">{message.content}</div>
                   {message.sources && (
                     <div className="mt-4 pt-4 border-t border-border">
-                      <p className="font-subhead text-sm text-muted-foreground mb-3">Sources</p>
+                      <p className="font-subhead text-sm text-muted-foreground mb-3">{t.sources}</p>
                       <div className="flex flex-wrap gap-2">
                         {message.sources.map((source, idx) => (
                           <a key={idx} href={source.url} className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-body hover:border-accent/30 hover:shadow-soft transition-all">
@@ -110,7 +126,7 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
           <div className="relative bg-card border border-border rounded-2xl shadow-soft focus-within:border-accent">
             <div className="flex items-center px-5 py-3">
               <Search className="w-5 h-5 text-muted-foreground mr-4" />
-              <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask a follow-up question..." className="flex-1 bg-transparent outline-none font-body text-foreground placeholder:text-muted-foreground" disabled={isLoading} />
+              <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder={t.followUp} className="flex-1 bg-transparent outline-none font-body text-foreground placeholder:text-muted-foreground" disabled={isLoading} />
               <button type="submit" disabled={!input.trim() || isLoading} className="ml-3 p-2.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40 transition-all">
                 <ArrowRight className="w-4 h-4" />
               </button>

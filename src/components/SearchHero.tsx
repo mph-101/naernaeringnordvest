@@ -1,19 +1,16 @@
 import { useState } from "react";
 import { Search, ArrowRight } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
+import { translations } from "@/lib/translations";
 
 interface SearchHeroProps {
   onSearch: (query: string) => void;
 }
 
-const examplePrompts = [
-  "What are the latest NBA media rights developments?",
-  "How is private equity reshaping European football ownership?",
-  "Which sports franchises changed hands this quarter?",
-  "What's driving the surge in women's sports valuations?",
-];
-
 export function SearchHero({ onSearch }: SearchHeroProps) {
   const [query, setQuery] = useState("");
+  const { language } = useTheme();
+  const t = translations[language];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,16 +29,15 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
       <div className="text-center mb-10 max-w-2xl">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full mb-6">
           <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-          <span className="font-subhead text-sm text-accent font-medium">Sports Business Intelligence</span>
+          <span className="font-subhead text-sm text-accent font-medium">{t.badge}</span>
         </div>
         <h1 className="font-headline text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-5 text-headline leading-tight">
-          Intelligence for the
+          {t.heroTitle1}
           <br />
-          <span className="text-accent">Business of Sport</span>
+          <span className="text-accent">{t.heroTitle2}</span>
         </h1>
         <p className="text-base md:text-lg text-muted-foreground font-body leading-relaxed max-w-lg mx-auto">
-          Ask questions about transactions, valuations, media rights, and market trends. 
-          Get answers grounded in verified industry data.
+          {t.heroSubtitle}
         </p>
       </div>
 
@@ -54,7 +50,7 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ask a question..."
+                placeholder={t.searchPlaceholder}
                 className="flex-1 bg-transparent outline-none text-base font-body text-foreground placeholder:text-muted-foreground"
               />
               <button
@@ -62,7 +58,7 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
                 disabled={!query.trim()}
                 className="ml-3 px-5 py-2.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 font-subhead text-sm font-semibold flex items-center gap-2 shadow-soft"
               >
-                <span className="hidden sm:inline">Ask</span>
+                <span className="hidden sm:inline">{t.askButton}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -72,10 +68,10 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
 
       <div className="w-full max-w-xl">
         <p className="font-subhead text-sm text-muted-foreground mb-4 text-center">
-          Popular Questions
+          {t.popularQuestions}
         </p>
         <div className="flex flex-wrap justify-center gap-2">
-          {examplePrompts.map((prompt, index) => (
+          {t.examplePrompts.map((prompt, index) => (
             <button
               key={index}
               onClick={() => handlePromptClick(prompt)}

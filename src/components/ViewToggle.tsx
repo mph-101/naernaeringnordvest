@@ -1,4 +1,6 @@
 import { MessageSquare, Newspaper } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
+import { translations } from "@/lib/translations";
 
 interface ViewToggleProps {
   view: "search" | "feed";
@@ -6,6 +8,9 @@ interface ViewToggleProps {
 }
 
 export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
+  const { language } = useTheme();
+  const t = translations[language];
+
   return (
     <div className="flex items-center justify-center py-6">
       <div className="inline-flex bg-secondary rounded-full p-1.5">
@@ -18,7 +23,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
           }`}
         >
           <MessageSquare className="w-4 h-4" />
-          Ask
+          {t.ask}
         </button>
         <button
           onClick={() => onViewChange("feed")}
@@ -29,7 +34,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
           }`}
         >
           <Newspaper className="w-4 h-4" />
-          Browse
+          {t.browse}
         </button>
       </div>
     </div>

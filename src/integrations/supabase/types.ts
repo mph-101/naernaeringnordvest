@@ -113,6 +113,24 @@ export type Database = {
         }
         Relationships: []
       }
+      tip_rate_limits: {
+        Row: {
+          ip_hash: string
+          submission_count: number
+          window_start: string
+        }
+        Insert: {
+          ip_hash: string
+          submission_count?: number
+          window_start?: string
+        }
+        Update: {
+          ip_hash?: string
+          submission_count?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
       tips: {
         Row: {
           content: string

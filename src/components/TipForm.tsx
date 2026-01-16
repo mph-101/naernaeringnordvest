@@ -8,6 +8,10 @@ import { Shield, Send, CheckCircle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+// Validation constants
+const MAX_CONTENT_LENGTH = 10000;
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
 interface TipFormProps {
   journalistId: string;
   journalistName: string;
@@ -21,6 +25,8 @@ export const TipForm = ({ journalistId, journalistName, onClose }: TipFormProps)
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [contentError, setContentError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   const labels = {
     title: language === "no" ? "Send et tips" : "Send a tip",
@@ -48,28 +54,79 @@ export const TipForm = ({ journalistId, journalistName, onClose }: TipFormProps)
     errorTitle: language === "no" ? "Feil" : "Error",
     errorMessage: language === "no" 
       ? "Kunne ikke sende tipset. Prøv igjen."
-      : "Could not send the tip. Please try again."
+      : "Could not send the tip. Please try again.",
+    rateLimitError: language === "no"
+      ? "For mange tips sendt. Vennligst vent litt før du prøver igjen."
+      : "Too many tips submitted. Please wait before trying again.",
+    contentTooLong: language === "no"
+      ? `Innholdet kan ikke være mer enn ${MAX_CONTENT_LENGTH} tegn.`
+      : `Content cannot exceed ${MAX_CONTENT_LENGTH} characters.`,
+    invalidEmail: language === "no"
+      ? "Ugyldig e-postadresse."
+      : "Invalid email address.",
+  };
+
+  // Client-side validation
+  const validateForm = (): boolean => {
+    let valid = true;
+    setContentError(null);
+    setEmailError(null);
+
+    const trimmedContent = content.trim();
+    if (trimmedContent.length === 0) {
+      setContentError(language === "no" ? "Innhold er påkrevd." : "Content is required.");
+      valid = false;
+    } else if (trimmedContent.length > MAX_CONTENT_LENGTH) {
+      setContentError(labels.contentTooLong);
+      valid = false;
+    }
+
+    const trimmedEmail = email.trim();
+    if (trimmedEmail.length > 0 && !EMAIL_REGEX.test(trimmedEmail)) {
+      setEmailError(labels.invalidEmail);
+      valid = false;
+    }
+
+    return valid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!content.trim()) return;
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from("tips")
-        .insert({
-          journalist_id: journalistId,
-          journalist_name: journalistName,
-          content: content.trim(),
-          follow_up_email: email.trim() || null,
-          is_anonymous: true
-        });
+      // Use Edge Function for rate-limited, validated submission
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-tip`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            ...(session?.access_token && { "Authorization": `Bearer ${session.access_token}` }),
+          },
+          body: JSON.stringify({
+            journalist_id: journalistId,
+            journalist_name: journalistName,
+            content: content.trim(),
+            follow_up_email: email.trim() || null,
+          }),
+        }
+      );
 
-      if (error) throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("RATE_LIMIT");
+        }
+        throw new Error(result.error || "Failed to submit tip");
+      }
 
       setIsSubmitted(true);
       toast({
@@ -77,10 +134,13 @@ export const TipForm = ({ journalistId, journalistName, onClose }: TipFormProps)
         description: labels.successMessage,
       });
     } catch (error) {
-      console.error("Error submitting tip:", error);
+      const errorMessage = error instanceof Error && error.message === "RATE_LIMIT"
+        ? labels.rateLimitError
+        : labels.errorMessage;
+      
       toast({
         title: labels.errorTitle,
-        description: labels.errorMessage,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -136,15 +196,25 @@ export const TipForm = ({ journalistId, journalistName, onClose }: TipFormProps)
           <div>
             <Label htmlFor="tip-content" className="font-body font-medium">
               {labels.tipLabel}
+              <span className="ml-2 text-xs text-muted-foreground">
+                ({content.length}/{MAX_CONTENT_LENGTH})
+              </span>
             </Label>
             <Textarea
               id="tip-content"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => {
+                setContent(e.target.value);
+                setContentError(null);
+              }}
               placeholder={labels.tipPlaceholder}
-              className="mt-1.5 min-h-[150px] font-body"
+              className={`mt-1.5 min-h-[150px] font-body ${contentError ? 'border-destructive' : ''}`}
               required
+              maxLength={MAX_CONTENT_LENGTH}
             />
+            {contentError && (
+              <p className="mt-1 text-xs text-destructive">{contentError}</p>
+            )}
           </div>
 
           <div>
@@ -155,10 +225,16 @@ export const TipForm = ({ journalistId, journalistName, onClose }: TipFormProps)
               id="tip-email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailError(null);
+              }}
               placeholder={labels.emailPlaceholder}
-              className="mt-1.5 font-body"
+              className={`mt-1.5 font-body ${emailError ? 'border-destructive' : ''}`}
             />
+            {emailError && (
+              <p className="mt-1 text-xs text-destructive">{emailError}</p>
+            )}
           </div>
 
           <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">

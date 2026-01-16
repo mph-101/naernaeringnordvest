@@ -43,9 +43,10 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
 
       <form onSubmit={handleSubmit} className="w-full max-w-xl mb-8">
         <div className="relative group">
-          <div className="relative bg-card border border-border rounded-2xl shadow-soft group-focus-within:border-accent group-focus-within:shadow-elevated transition-all duration-200">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-accent/50 to-accent/30 rounded-2xl opacity-0 group-focus-within:opacity-100 blur-sm transition-all duration-500 group-focus-within:animate-pulse" />
+          <div className="relative bg-card border border-border rounded-2xl shadow-soft group-focus-within:border-accent group-focus-within:shadow-elevated transition-all duration-300">
             <div className="flex items-center px-5 py-4">
-              <Search className="w-5 h-5 text-muted-foreground mr-4 flex-shrink-0" />
+              <Search className="w-5 h-5 text-muted-foreground group-focus-within:text-accent mr-4 flex-shrink-0 transition-colors duration-300" />
               <input
                 type="text"
                 value={query}

@@ -5,6 +5,7 @@ import { ConversationView } from "@/components/ConversationView";
 import { RelatedArticles } from "@/components/RelatedArticles";
 import { NewsFeed } from "@/components/NewsFeed";
 import { ViewToggle } from "@/components/ViewToggle";
+import { TeamSection } from "@/components/TeamSection";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 
@@ -47,6 +48,8 @@ const Index = () => {
         ) : (
           <NewsFeed />
         )}
+
+        <TeamSection />
       </main>
 
       {/* Footer */}

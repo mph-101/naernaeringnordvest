@@ -32,6 +32,8 @@ export const translations = {
     // News Feed
     latestAnalysis: "Siste analyser",
     topics: ["Alle", "Transaksjoner", "Medierettigheter", "Verdivurderinger", "Ligaer", "Sponsorater", "Analyser"],
+    sports: ["Alle idretter", "Fotball", "Amerikansk fotball", "Basketball", "Motorsport", "Flereidrett"],
+    sportFilterLabel: "Idrett",
     premium: "Premium",
     loadMore: "Last flere artikler",
     minRead: "min lesing",
@@ -188,6 +190,8 @@ export const translations = {
     // News Feed
     latestAnalysis: "Latest Analysis",
     topics: ["All", "Transactions", "Media Rights", "Valuations", "Leagues", "Sponsorship", "Analysis"],
+    sports: ["All sports", "Football", "American Football", "Basketball", "Motorsport", "Multi-sport"],
+    sportFilterLabel: "Sport",
     premium: "Premium",
     loadMore: "Load More Stories",
     minRead: "min read",

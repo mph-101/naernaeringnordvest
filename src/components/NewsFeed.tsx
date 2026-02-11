@@ -4,9 +4,17 @@ import { Clock, Play, Headphones, FileText, Lock, BarChart3 } from "lucide-react
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticles, Article } from "@/lib/articles";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function NewsFeed() {
   const [selectedTopic, setSelectedTopic] = useState("Alle");
+  const [selectedSport, setSelectedSport] = useState<string>("all");
   const { language } = useTheme();
   const t = translations[language];
   const navigate = useNavigate();
@@ -18,10 +26,16 @@ export function NewsFeed() {
 
   const topics = t.topics;
   const allTopic = topics[0];
+  const sports = t.sports;
+  const allSport = sports[0];
 
-  const filteredNews = selectedTopic === allTopic
+  let filteredNews = selectedTopic === allTopic
     ? articles
     : articles.filter((item) => item.category === selectedTopic);
+
+  if (selectedSport !== "all") {
+    filteredNews = filteredNews.filter((item) => item.sport === selectedSport);
+  }
 
   const getTypeIcon = (type: Article["type"]) => {
     switch (type) {
@@ -56,21 +70,44 @@ export function NewsFeed() {
             </div>
           </div>
 
-          {/* Topic Filters */}
-          <div className="flex gap-2 mb-8 overflow-x-auto pb-2 -mx-6 px-6">
-            {topics.map((topic) => (
-              <button
-                key={topic}
-                onClick={() => setSelectedTopic(topic)}
-                className={`px-4 py-2.5 rounded-full text-sm font-subhead whitespace-nowrap transition-all duration-200 ${
-                  selectedTopic === topic
-                    ? "bg-primary text-primary-foreground shadow-soft"
-                    : "bg-card border border-border text-foreground hover:bg-secondary"
-                }`}
-              >
-                {topic}
-              </button>
-            ))}
+          {/* Filters */}
+          <div className="flex flex-col gap-4 mb-8">
+            {/* Sport Filter */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-subhead text-muted-foreground whitespace-nowrap">
+                {t.sportFilterLabel}:
+              </span>
+              <Select value={selectedSport} onValueChange={setSelectedSport}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{allSport}</SelectItem>
+                  {sports.slice(1).map((sport) => (
+                    <SelectItem key={sport} value={sport}>
+                      {sport}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Topic Filters */}
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6">
+              {topics.map((topic) => (
+                <button
+                  key={topic}
+                  onClick={() => setSelectedTopic(topic)}
+                  className={`px-4 py-2.5 rounded-full text-sm font-subhead whitespace-nowrap transition-all duration-200 ${
+                    selectedTopic === topic
+                      ? "bg-primary text-primary-foreground shadow-soft"
+                      : "bg-card border border-border text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  {topic}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Featured Article */}

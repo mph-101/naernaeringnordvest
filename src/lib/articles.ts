@@ -16,286 +16,294 @@ export interface Article {
 export const articlesNo: Article[] = [
   {
     id: "1",
-    title: "NFL Medierettigheter: Amazon og Apple posisjonerer seg for 3 milliarder dollar Sunday Ticket-pakke",
-    excerpt: "Teknologigigantene forbereder konkurrerende bud mens ligaen søker en betydelig premie over gjeldende avtale med Google.",
+    title: "Eliteserien TV-avtale: Viaplay og NRK forhandler om ny milliardpakke fra 2026",
+    excerpt: "Rettighetene til Eliteserien er verdt anslagsvis 500–700 millioner kroner årlig. Viaplay møter sterk konkurranse fra Discovery og en overraskende NRK-offensiv.",
     category: "Medierettigheter",
-    sport: "Amerikansk fotball",
+    sport: "Fotball",
     readTime: "6 min lesing",
     publishedAt: "2 timer siden",
-    author: "Michael Chen",
+    author: "Kristoffer Haugen",
     type: "article",
     premium: false,
     keyPoints: [
-      "Amazon og Apple forbereder bud på over 3 milliarder dollar for NFL Sunday Ticket-rettighetene",
-      "NFL forventer en premie på 40-50% sammenlignet med gjeldende Google-avtale",
-      "Avtalen kan omforme hvordan amerikanske seere konsumerer profesjonell fotball"
+      "Viaplay og NRK er de fremste kandidatene for ny Eliteserien-avtale fra 2026",
+      "Rettighetene estimeres til 500–700 millioner kroner årlig – opp fra dagens nivå",
+      "Discovery+ og en ny strømmeallianase er mørke hester i budrunden"
     ],
-    body: `NFL står ved et kritisk veiskille i sin mediestrategi. Med den nåværende Sunday Ticket-avtalen med Google som utløper etter 2025-sesongen, har ligaen startet samtaler med teknologigigantene Amazon og Apple om en ny avtale verdt over 3 milliarder dollar årlig.
+    body: `Kampen om Eliteserien-rettighetene begynner å ta form. Gjeldende avtale med Viaplay og NRK løper ut etter 2025-sesongen, og forhandlingene om neste periode er allerede i gang bak lukkede dører.
 
-Kilder nær forhandlingene forteller at begge selskaper ser på rettighetene som en strategisk mulighet til å styrke sine strømmetjenester. Amazon, som allerede har Thursday Night Football, ønsker å utvide sitt fotballtilbud, mens Apple ser dette som en mulighet til å etablere seg sterkere i sportsverdenen.
+Norges Fotballforbund (NFF) og Norsk Toppfotball (NTF) har engasjert mediebyrået Wasserman Media Group som rådgiver i prosessen. Målet er å maksimere inntektene fra en ny pakke som anslås å være verdt 500–700 millioner kroner per år.
 
-"Dette handler ikke bare om sport lenger," sier en analytiker hos Goldman Sachs. "Det handler om å kontrollere fremtidens underholdningsøkosystem."
+Viaplay, som har slitt med nedgangen i abonnenter de siste to årene, er tydelig på at Eliteserien er et kjerneprodukt. Selskapet har signalisert vilje til å strekke seg langt for å beholde rettighetene.
 
-NFL-kommissær Roger Goodell har signalisert at ligaen er åpen for innovative løsninger, inkludert delte rettigheter mellom flere plattformer. Dette kan bety at vi ser en fragmentering av hvordan fans konsumerer NFL-innhold i fremtiden.
+"Norsk fotball er ryggraden i vår sportsportefølje i Norden," uttalte Viaplays norske direktør i et intervju med Kampanje denne uken.
 
-Markedseksperter forventer at den endelige avtalen vil sette nye rekorder for sports-medierettigheter, med implikasjoner for hele bransjen.`
+NRK, på sin side, er under press fra politisk hold for å sikre gratis tilgang til norsk toppfotball. En NRK-offensiv for minst én kamp per runde gratis er ventet i den endelige pakken, uavhengig av hvem som vinner hoverettighetene.
+
+Analytikere mener en samlet pakke kan lande på mellom 550 og 650 millioner kroner per år – en betydelig økning fra dagens anslåtte 400 millioner. Det ville gi Eliteserien-klubbene en kollektiv inntektsøkning på over 100 millioner kroner årlig.`
   },
   {
     id: "2",
-    title: "Chelsea FC-verdivurdering når £4,2 milliarder etter stadionutvikling godkjent",
-    excerpt: "Boehly-Clearlake-eierskapet har sikret plantillatelse for Stamford Bridge-utvidelse, noe som øker franchiseverdien betydelig.",
-    category: "Verdivurderinger",
+    title: "Bodø/Glimt-salg slår rekord: Klubben hentet 195 MNOK på spillersalg i 2023",
+    excerpt: "Gultrøyene fra nord er Norges ubestridte eksportmaskin. Vi går gjennom hvem som ble solgt, til hvilke klubber og hva det betyr for egenkapitalen.",
+    category: "Transaksjoner",
     sport: "Fotball",
     readTime: "5 min lesing",
     publishedAt: "4 timer siden",
-    author: "Sarah Williams",
+    author: "Marte Solberg",
     type: "article",
-    premium: true,
+    premium: false,
     keyPoints: [
-      "Stamford Bridge-utvidelsen vil øke kapasiteten til 60 000 seter",
-      "Prosjektet estimeres til £1,5 milliarder og fullføres innen 2030",
-      "Klubbens totale verdivurdering har økt med 35% siden Boehly-oppkjøpet"
+      "Bodø/Glimt genererte 195 MNOK i spillersalgsinntekter i 2023 – ny klubbrekord",
+      "Tre spillere solgt til Serie A og Premier League-klubber",
+      "Egenkapitalen har økt med over 300% siden 2019"
     ],
-    body: `Chelsea FC har mottatt grønt lys fra Hammersmith & Fulham Council for sitt ambisiøse stadionutbyggingsprosjekt. Planene inkluderer en total renovering av Stamford Bridge som vil øke kapasiteten fra dagens 40 341 til over 60 000 seter.
+    body: `Bodø/Glimt skriver norsk fotballhistorie – ikke bare på banen, men i regnskapene. Med 195 millioner kroner i spillersalgsinntekter i 2023 satte den nordnorske klubben en ny nasjonal rekord.
 
-Prosjektet, estimert til £1,5 milliarder, representerer en av de største stadioninvesteringene i europeisk fotballhistorie. Eierne Clearlake Capital og Todd Boehly har sikret finansiering gjennom en kombinasjon av egenkapital og langsiktig gjeld.
+Salget av Jens Petter Hauge til Genoa (40 MNOK), Ola Solbakken til Roma (18 MNOK) og ytterligere transaksjoner til Premier League-klubber utgjorde hoveddelen av inntektene. I tillegg kom salgsbonuser fra tidligere salg av Patrick Berg og Ulrik Saltnes.
 
-Verdivurderingseksperter hos Deloitte anslår at den utvidede stadionkapasiteten alene vil generere ytterligere £50-70 millioner årlig i matchday-inntekter. I tillegg kommer økte kommersielle muligheter gjennom premium-seter og hospitality-tjenester.
+Regnskapet for 2023 viser en total omsetning på 312 millioner kroner, opp fra 287 millioner i 2022. Driftsresultatet landet på solide 67 millioner kroner, og egenkapitalen passerte 200 millioner for første gang i klubbens historie.
 
-"Denne utviklingen posisjonerer Chelsea som en av de mest verdifulle klubbene i verden," sier en analytiker hos KPMG Sports Advisory.`
+"Vi har bygget en modell som er finansielt bærekraftig og fotballmessig ambisiøs," sier daglig leder Frode Thomassen i et intervju med Finansavisen.
+
+Analysebyrået Football Benchmark rangerer nå Bodø/Glimt blant de ti mest effektive spillerutviklingsklubbene i Europa, målt ved avkastning på akademiinvesteringer. Det er et bemerkelsesverdig bragd for en klubb fra en by med 52 000 innbyggere nord for polarsirkelen.`
   },
   {
     id: "3",
-    title: "Dokumentar: Innsiden av NBAs milliard-ekspansjonsstrategi i Afrika",
-    excerpt: "Et eksklusivt innblikk i hvordan Basketball Africa League bygger infrastruktur og utvikler talent over hele kontinentet.",
-    category: "Ligaer",
-    sport: "Basketball",
-    readTime: "28 min video",
+    title: "Dokumentar: Rosenborgs fall og forsøket på å bygge seg opp igjen",
+    excerpt: "Fra 26 seriemesterskap og Champions League til en omsetning som halveres. Vi ser nærmere på hva som gikk galt — og hva som er gjort for å snu trenden.",
+    category: "Analyser",
+    sport: "Fotball",
+    readTime: "24 min video",
     publishedAt: "6 timer siden",
     author: "Dokumentarteamet",
     type: "video",
     premium: true,
     keyPoints: [
-      "NBA har investert over 100 millioner dollar i afrikansk basketballinfrastruktur",
-      "Basketball Africa League har etablert akademier i 12 land",
-      "Målet er å utvikle 50 NBA-klare spillere innen 2030"
+      "Rosenborgs omsetning falt fra 350 MNOK i 2019 til under 180 MNOK i 2022",
+      "Klubben mistet Champions League-inntektene og solgte nøkkelspillere",
+      "En ny sportslig og kommersiell strategi er iverksatt fra 2023"
     ],
-    body: `Denne dokumentaren tar deg med bak kulissene i NBAs ambisiøse Afrika-satsing. Fra treningsanleggene i Senegal til talentjakten i Nigeria, får du et unikt innblikk i hvordan verdens største basketballiga bygger sitt neste store marked.
+    body: `Historien om Rosenborg BK de siste fem årene er historien om en stolt institusjon som møtte veggen. Fra å være Norges dominerende lag gjennom tre tiår, opplevde trønderne en dramatisk nedtur – både sportslig og økonomisk.
 
-Kommissær Adam Silver har uttalt at Afrika representerer "basketballens største uoppdagede territorium." Med en ung og raskt voksende befolkning ser NBA kontinentet som nøkkelen til fremtidig vekst.
+Omsetningen falt fra 350 millioner kroner i 2019 til 178 millioner i 2022. Bortfallet av Champions League-inntekter, kombinert med covid-19 og kostbare satsinger på dyre spillere som ikke fungerte, skapte en perfekt storm av utfordringer.
 
-Dokumentaren følger unge spillere gjennom BAL-systemet, og viser både triumfer og utfordringer på veien mot den ultimate drømmen: en plass i NBA.`
+Denne dokumentaren følger klubbens forsøk på å reise seg. Vi snakker med tidligere og nåværende spillere, ledere og fotballanalytikere om hva som gikk galt, og hva som nå gjøres for å gjenreise RBK som Norges fremste fotballklubb.`
   },
   {
     id: "4",
-    title: "Private Equity i sport: Q4-transaksjonsvolum overstiger 8 milliarder dollar",
-    excerpt: "Blackstone, Silver Lake og Sixth Street leder et rekordkvartal for minoritetsinvesteringer på tvers av store profesjonelle ligaer.",
-    category: "Transaksjoner",
-    sport: "Flereidrett",
+    title: "Norsk toppfotball samlet: 2,1 milliarder i omsetning — men bare halvparten er lønnsomme",
+    excerpt: "En gjennomgang av regnskapene til alle 16 Eliteserien-klubber avslører store forskjeller i lønnsomhet, gjeldsgrad og fremtidsutsikter.",
+    category: "Analyser",
+    sport: "Fotball",
     readTime: "8 min lesing",
     publishedAt: "8 timer siden",
-    author: "James Morrison",
+    author: "Sindre Bakke",
     type: "article",
     premium: false,
     keyPoints: [
-      "Q4 2024 satte rekord med over 8 milliarder dollar i sports-PE-transaksjoner",
-      "NBA og NHL tillater nå inntil 30% private equity-eierskap i lag",
-      "Gjennomsnittlig avkastning for sports-PE har overgått S&P 500 de siste 10 årene"
+      "Eliteserien-klubbene omsatte samlet for 2,1 milliarder kroner i 2023",
+      "Bare 8 av 16 klubber gikk med overskudd",
+      "Bodø/Glimt og Molde er de mest lønnsomme, Stabæk og HamKam sliter mest"
     ],
-    body: `Fjerde kvartal 2024 markerte et vannskille for private equity i sportsbransjen. Med transaksjoner verdt over 8 milliarder dollar, har institusjonelle investorer etablert seg som en dominerende kraft i eierskap av profesjonelle idrettslag.
+    body: `En systematisk gjennomgang av regnskapene til alle 16 Eliteserien-klubber maler et nyansert bilde av norsk toppfotballs økonomi. Den gode nyheten: total omsetning passerte 2,1 milliarder kroner for første gang. Den mindre gode: lønnsomheten er svært ujevnt fordelt.
 
-Blackstone ledet an med sin 2 milliarder dollar investering i en NBA-franchise, mens Silver Lake og Sixth Street også gjorde betydelige bevegelser. Regelendringer i både NBA og NHL har åpnet døren for større PE-eierskap, og investorene har svart med aggressiv kapitalallokering.
+Bodø/Glimt og Molde FK skiller seg ut med driftsresultater på henholdsvis 67 og 41 millioner kroner. Begge klubber kombinerer sterk akademimodell med god kostnadsstyring.
 
-"Sport er den siste store aktivaklassen som har vært utilgjengelig for institusjonelle investorer," sier en partner hos CVC Capital. "Nå endrer det seg raskt."
+I den andre enden av skalaen finner vi Stabæk IF og HamKam, som begge rapporterte negative driftsresultater på over 15 millioner kroner. Disse klubbene sliter med å balansere ambisjoner mot de kommersielle realitetene i et marked dominert av Bodø/Glimt og Rosenborg.
 
-Analyser fra PitchBook viser at sports-investeringer har levert en gjennomsnittlig årlig avkastning på 15,2% det siste tiåret, sammenlignet med 10,8% for S&P 500. Denne meravkastningen, kombinert med lav korrelasjon til tradisjonelle aktivaklasser, gjør sport til en attraktiv diversifiseringsmulighet.
-
-Eksperter forventer at trenden vil akselerere i 2025, med flere ligaer som vurderer å lempe på eierskapsrestriksjonene.`
+Lønnskostnadene som andel av omsetning varierer fra 48% (Bodø/Glimt) til over 80% (Stabæk). Europeisk beste praksis tilsier maks 60-65%, noe bare fem norske klubber oppnår.`
   },
   {
     id: "5",
-    title: "Ukentlig transaksjonsoppdatering: M&A-aktivitet",
-    excerpt: "En omfattende gjennomgang av ukens fusjons- og oppkjøpsaktivitet, inkludert vilkår, verdivurderinger og muligheter.",
+    title: "Ukens transfers: Norske spillere til og fra Eliteserien",
+    excerpt: "En komplett oversikt over ukens inn- og utleieaktivitet, kjøpesum, kontraktslengder og hvilke agenter som er involvert.",
     category: "Transaksjoner",
-    sport: "Flereidrett",
-    readTime: "22 min lytting",
+    sport: "Fotball",
+    readTime: "15 min lesing",
     publishedAt: "10 timer siden",
-    author: "Deal Sheet-teamet",
+    author: "Transferteamet",
     type: "podcast",
     premium: true,
     keyPoints: [
-      "Fem store transaksjoner annonsert denne uken med samlet verdi på 3,2 milliarder dollar",
-      "Europeisk fotball dominerer M&A-aktiviteten med tre klubbsalg",
-      "Asiatiske investorer viser økende interesse for vestlige sportseiendommer"
+      "Tre norske spillere er på vei til utenlandske klubber denne uken",
+      "Agenten Rune Hauge er involvert i to av de største transaksjonene",
+      "Molde avviste et bud på 25 MNOK for sin toppscorer"
     ],
-    body: `I denne ukens episode gjennomgår vi de viktigste transaksjonene i sportsbransjen. Fra klubbsalg i Serie A til nye sponsoravtaler i Formel 1, dekker vi alt du trenger å vite.
+    body: `I denne ukens transferoppdatering gjennomgår vi alle bekreftede og nært forestående spillerbevegelser i og rundt Eliteserien. Fra sommerens tidlige aktivitet til utlånsavtaler som er på plass frem mot overgangsvinduets slutt.
 
-Vertene diskuterer også de underliggende trendene som driver dagens M&A-marked, inkludert den økende betydningen av medierettigheter og digitale inntektsstrømmer.`
+Vi ser nærmere på agentbildet bak de største avtalene, og analyserer hva de ulike kjøpesummene sier om prisutviklingen for norsk-utviklete spillere internasjonalt.`
   },
   {
     id: "6",
-    title: "Saudi PIF i avanserte forhandlinger om Formel 1-konstruktørandel",
-    excerpt: "Kongerikets suverene formuesfond forhandler om en betydelig minoritetsposisjon i et ledende F1-team.",
+    title: "Viking FK får ny storaksjonsær — Stavanger-investorer skyter inn 80 MNOK",
+    excerpt: "En gruppe regionale investorer med tilknytning til oljeindustrien tar en betydelig eierandel i Viking FK. Hva betyr det for klubbens ambisjoner?",
     category: "Transaksjoner",
-    sport: "Motorsport",
+    sport: "Fotball",
     readTime: "5 min lesing",
     publishedAt: "12 timer siden",
-    author: "Alexandra Reid",
+    author: "Eirik Johnsen",
     type: "article",
-    premium: true,
+    premium: false,
     keyPoints: [
-      "PIF søker en 20-30% eierandel i et topp-5 F1-team",
-      "Avtalen kan verdsette teamet til over 4 milliarder dollar",
-      "Investeringen er del av Saudi-Arabias Vision 2030-strategi"
+      "Ny investorgruppe skyter inn 80 MNOK i Viking FK",
+      "Investeringen gir dem 22% eierandel i klubben",
+      "Midlene øremerkes spilleranskaffelser og akademiutbygging"
     ],
-    body: `Saudi-Arabias Public Investment Fund (PIF) er i avanserte forhandlinger om å kjøpe en betydelig minoritetsandel i et av Formel 1s ledende team. Kilder nær forhandlingene bekrefter at diskusjonene har nådd et avansert stadium.
+    body: `En gruppe Stavanger-baserte investorer med bakgrunn fra olje- og gassindustrien har inngått en avtale om å investere 80 millioner kroner i Viking FK. Transaksjonen gir investorgruppen en eierandel på 22% i klubben og representerer den største private kapitalinjeksjonen i klubbens nyere historie.
 
-PIF, som forvalter over 700 milliarder dollar, har allerede betydelige sportsinvesteringer gjennom Newcastle United, LIV Golf og kommende arrangementer som Formel 1 Saudi Arabian Grand Prix.
+Daglig leder i Viking FK, Eirik Stephansen, sier midlene vil gå direkte til å styrke sportslig kapasitet.
 
-En avtale vil markere det suverene formuesfondets første direkte investering i et F1-team, og signaliserer en dypere forpliktelse til motorsport som del av Vision 2030-strategien.`
+"Dette gir oss muligheten til å hente inn to-tre spillere vi ellers ikke ville hatt råd til, og til å investere langsiktig i akademiet," sier Stephansen.
+
+Transaksjonen speiler en bredere trend der regionale næringslivsprofiler ser på norske fotballklubber som attraktive investeringsobjekter – både kommersielt og som del av et lokal-identitetsprosjekt.`
   }
 ];
 
 export const articlesEn: Article[] = [
   {
     id: "1",
-    title: "NFL Media Rights Renewal: Amazon and Apple Positioning for $3B Sunday Ticket Package",
-    excerpt: "Technology giants are preparing competing bids as the league seeks a significant premium over the current agreement with Google.",
+    title: "Eliteserien TV Deal: Viaplay and NRK Negotiate New Billion-Kroner Package from 2026",
+    excerpt: "The rights to Eliteserien are estimated at NOK 500–700 million annually. Viaplay faces stiff competition from Discovery and a surprising NRK offensive.",
     category: "Media Rights",
-    sport: "American Football",
+    sport: "Football",
     readTime: "6 min read",
     publishedAt: "2 hours ago",
-    author: "Michael Chen",
+    author: "Kristoffer Haugen",
     type: "article",
     premium: false,
     keyPoints: [
-      "Amazon and Apple are preparing bids exceeding $3 billion for NFL Sunday Ticket rights",
-      "NFL expects a 40-50% premium compared to the current Google deal",
-      "The deal could reshape how American viewers consume professional football"
+      "Viaplay and NRK are the leading candidates for the new Eliteserien deal from 2026",
+      "Rights estimated at NOK 500–700 million annually — up from current levels",
+      "Discovery+ and a new streaming alliance are dark horses in the bidding"
     ],
-    body: `The NFL stands at a critical crossroads in its media strategy. With the current Sunday Ticket deal with Google expiring after the 2025 season, the league has initiated conversations with tech giants Amazon and Apple about a new agreement worth over $3 billion annually.
+    body: `The battle for Eliteserien broadcasting rights is taking shape. The current deal with Viaplay and NRK expires after the 2025 season, and negotiations for the next period are already underway behind closed doors.
 
-Sources close to the negotiations say both companies view the rights as a strategic opportunity to strengthen their streaming services. Amazon, which already has Thursday Night Football, wants to expand its football offerings, while Apple sees this as a chance to establish a stronger presence in the sports world.
+The Norwegian Football Federation (NFF) and Norwegian Top Football (NTF) have engaged Wasserman Media Group as an advisor. The goal is to maximise revenue from a new package estimated to be worth NOK 500–700 million per year.
 
-"This is no longer just about sports," says a Goldman Sachs analyst. "It's about controlling the future entertainment ecosystem."
+Viaplay, which has struggled with declining subscribers over the past two years, is clear that Eliteserien is a core product. The company has signalled willingness to stretch significantly to retain the rights.
 
-NFL Commissioner Roger Goodell has signaled that the league is open to innovative solutions, including shared rights between multiple platforms. This could mean we see a fragmentation of how fans consume NFL content in the future.
+"Norwegian football is the backbone of our sports portfolio in the Nordics," said Viaplay's Norwegian director in an interview with Kampanje this week.
 
-Market experts expect the final deal to set new records for sports media rights, with implications for the entire industry.`
+NRK, meanwhile, is under political pressure to secure free access to Norwegian top football. An NRK push for at least one free match per round is expected in the final package, regardless of who wins the main rights.
+
+Analysts believe a combined package could land between NOK 550 and 650 million per year — a significant increase from the estimated NOK 400 million today. This would give Eliteserien clubs a collective revenue increase of over NOK 100 million annually.`
   },
   {
     id: "2",
-    title: "Chelsea FC Valuation Reaches £4.2B Following Stadium Development Approval",
-    excerpt: "The Boehly-Clearlake ownership group has secured planning consent for Stamford Bridge expansion, significantly enhancing franchise value.",
-    category: "Valuations",
+    title: "Bodø/Glimt Player Sales Break Records: Club Generated 195 MNOK in 2023",
+    excerpt: "The yellow-and-black club from the north is Norway's undisputed export machine. We break down who was sold, to which clubs, and what it means for equity.",
+    category: "Transactions",
     sport: "Football",
     readTime: "5 min read",
     publishedAt: "4 hours ago",
-    author: "Sarah Williams",
+    author: "Marte Solberg",
     type: "article",
-    premium: true,
+    premium: false,
     keyPoints: [
-      "Stamford Bridge expansion will increase capacity to 60,000 seats",
-      "The project is estimated at £1.5 billion and will be completed by 2030",
-      "The club's total valuation has increased 35% since the Boehly acquisition"
+      "Bodø/Glimt generated NOK 195 million in player sales in 2023 — a new club record",
+      "Three players sold to Serie A and Premier League clubs",
+      "Equity has increased by over 300% since 2019"
     ],
-    body: `Chelsea FC has received the green light from Hammersmith & Fulham Council for its ambitious stadium development project. The plans include a complete renovation of Stamford Bridge that will increase capacity from the current 40,341 to over 60,000 seats.
+    body: `Bodø/Glimt is writing Norwegian football history — not only on the pitch, but in the accounts. With NOK 195 million in player sale revenues in 2023, the northern Norwegian club set a new national record.
 
-The project, estimated at £1.5 billion, represents one of the largest stadium investments in European football history. Owners Clearlake Capital and Todd Boehly have secured financing through a combination of equity and long-term debt.
+The sales of Jens Petter Hauge to Genoa (NOK 40m), Ola Solbakken to Roma (NOK 18m), and further transactions to Premier League clubs made up the bulk of revenues. Add-on fees from earlier sales of Patrick Berg and Ulrik Saltnes also contributed.
 
-Valuation experts at Deloitte estimate that the expanded stadium capacity alone will generate an additional £50-70 million annually in matchday revenue. This is in addition to increased commercial opportunities through premium seating and hospitality services.
+The 2023 accounts show total revenue of NOK 312 million, up from NOK 287 million in 2022. Operating profit landed at a solid NOK 67 million, and equity passed NOK 200 million for the first time in the club's history.
 
-"This development positions Chelsea as one of the most valuable clubs in the world," says an analyst at KPMG Sports Advisory.`
+"We have built a model that is financially sustainable and footballing ambitious," says CEO Frode Thomassen in an interview with Finansavisen.
+
+Analytics firm Football Benchmark now ranks Bodø/Glimt among the ten most efficient player development clubs in Europe, measured by return on academy investment. A remarkable achievement for a club from a city of 52,000 north of the Arctic Circle.`
   },
   {
     id: "3",
-    title: "Documentary: Inside the NBA's $1B Africa Expansion Strategy",
-    excerpt: "An exclusive look at how the Basketball Africa League is building infrastructure and developing talent across the continent.",
-    category: "Leagues",
-    sport: "Basketball",
-    readTime: "28 min watch",
+    title: "Documentary: Rosenborg's Decline and the Effort to Rebuild",
+    excerpt: "From 26 league titles and Champions League nights to halved revenues. We examine what went wrong — and what has been done to reverse the trend.",
+    category: "Analysis",
+    sport: "Football",
+    readTime: "24 min watch",
     publishedAt: "6 hours ago",
     author: "Documentary Team",
     type: "video",
     premium: true,
     keyPoints: [
-      "NBA has invested over $100 million in African basketball infrastructure",
-      "Basketball Africa League has established academies in 12 countries",
-      "The goal is to develop 50 NBA-ready players by 2030"
+      "Rosenborg's revenue fell from NOK 350m in 2019 to under NOK 180m in 2022",
+      "The club lost Champions League revenues and sold key players",
+      "A new sporting and commercial strategy has been implemented from 2023"
     ],
-    body: `This documentary takes you behind the scenes of the NBA's ambitious African initiative. From training facilities in Senegal to talent scouting in Nigeria, you get a unique insight into how the world's largest basketball league is building its next major market.
+    body: `The story of Rosenborg BK over the past five years is the story of a proud institution that hit a wall. From being Norway's dominant club for three decades, the Trondheim side experienced a dramatic downturn — both on and off the pitch.
 
-Commissioner Adam Silver has stated that Africa represents "basketball's greatest undiscovered territory." With a young and rapidly growing population, the NBA sees the continent as key to future growth.
+Revenue fell from NOK 350 million in 2019 to NOK 178 million in 2022. The loss of Champions League income, combined with the covid-19 pandemic and costly signings that didn't work out, created a perfect storm of challenges.
 
-The documentary follows young players through the BAL system, showing both triumphs and challenges on the road to the ultimate dream: a spot in the NBA.`
+This documentary follows the club's attempt to recover. We speak with former and current players, executives, and football analysts about what went wrong and what is now being done to restore RBK as Norway's leading football club.`
   },
   {
     id: "4",
-    title: "Private Equity in Sports: Q4 Transaction Volume Exceeds $8 Billion",
-    excerpt: "Blackstone, Silver Lake, and Sixth Street lead a record quarter for minority stake investments across major professional leagues.",
-    category: "Transactions",
-    sport: "Multi-sport",
+    title: "Norwegian Top Football Combined: NOK 2.1 Billion Revenue — But Only Half Are Profitable",
+    excerpt: "A review of all 16 Eliteserien clubs' accounts reveals large differences in profitability, debt levels and future prospects.",
+    category: "Analysis",
+    sport: "Football",
     readTime: "8 min read",
     publishedAt: "8 hours ago",
-    author: "James Morrison",
+    author: "Sindre Bakke",
     type: "article",
     premium: false,
     keyPoints: [
-      "Q4 2024 set a record with over $8 billion in sports PE transactions",
-      "NBA and NHL now allow up to 30% private equity ownership in teams",
-      "Average returns for sports PE have outperformed the S&P 500 over the past 10 years"
+      "Eliteserien clubs generated a combined NOK 2.1 billion in revenue in 2023",
+      "Only 8 of 16 clubs turned a profit",
+      "Bodø/Glimt and Molde are the most profitable; Stabæk and HamKam struggle most"
     ],
-    body: `The fourth quarter of 2024 marked a watershed moment for private equity in the sports industry. With transactions worth over $8 billion, institutional investors have established themselves as a dominant force in professional sports team ownership.
+    body: `A systematic review of the accounts of all 16 Eliteserien clubs paints a nuanced picture of Norwegian top football's finances. The good news: total revenue passed NOK 2.1 billion for the first time. The less good: profitability is very unevenly distributed.
 
-Blackstone led with its $2 billion investment in an NBA franchise, while Silver Lake and Sixth Street also made significant moves. Rule changes in both the NBA and NHL have opened the door to greater PE ownership, and investors have responded with aggressive capital allocation.
+Bodø/Glimt and Molde FK stand out with operating results of NOK 67 million and NOK 41 million respectively. Both clubs combine a strong academy model with good cost management.
 
-"Sports is the last major asset class that has been inaccessible to institutional investors," says a partner at CVC Capital. "Now that's changing rapidly."
+At the other end of the scale, Stabæk IF and HamKam both reported negative operating results of over NOK 15 million. These clubs struggle to balance ambitions against the commercial realities of a market dominated by Bodø/Glimt and Rosenborg.
 
-Analysis from PitchBook shows that sports investments have delivered an average annual return of 15.2% over the past decade, compared to 10.8% for the S&P 500. This excess return, combined with low correlation to traditional asset classes, makes sports an attractive diversification opportunity.
-
-Experts expect the trend to accelerate in 2025, with more leagues considering relaxing ownership restrictions.`
+Wage costs as a share of revenue vary from 48% (Bodø/Glimt) to over 80% (Stabæk). European best practice suggests a maximum of 60–65%, which only five Norwegian clubs achieve.`
   },
   {
     id: "5",
-    title: "The Deal Sheet: Weekly Transactions Briefing",
-    excerpt: "A comprehensive review of this week's M&A activity, including terms, valuations, and emerging opportunities.",
+    title: "Week in Transfers: Norwegian Players In and Out of Eliteserien",
+    excerpt: "A complete overview of this week's loan and transfer activity, fees, contract lengths and the agents involved.",
     category: "Transactions",
-    sport: "Multi-sport",
-    readTime: "22 min listen",
+    sport: "Football",
+    readTime: "15 min listen",
     publishedAt: "10 hours ago",
-    author: "Deal Sheet Team",
+    author: "Transfer Team",
     type: "podcast",
     premium: true,
     keyPoints: [
-      "Five major transactions announced this week with combined value of $3.2 billion",
-      "European football dominates M&A activity with three club sales",
-      "Asian investors showing increasing interest in Western sports properties"
+      "Three Norwegian players heading to foreign clubs this week",
+      "Agent Rune Hauge is involved in two of the biggest transactions",
+      "Molde rejected a NOK 25m bid for their top scorer"
     ],
-    body: `In this week's episode, we review the most important transactions in the sports industry. From club sales in Serie A to new sponsorship deals in Formula 1, we cover everything you need to know.
+    body: `In this week's transfer update, we cover all confirmed and imminent player movements in and around Eliteserien. From early summer activity to loan deals in place ahead of the window's close.
 
-The hosts also discuss the underlying trends driving today's M&A market, including the growing importance of media rights and digital revenue streams.`
+We look closely at the agent landscape behind the biggest deals and analyse what the various fees tell us about the price trend for Norwegian-developed players internationally.`
   },
   {
     id: "6",
-    title: "Saudi PIF Enters Advanced Talks for Formula One Constructorship Stake",
-    excerpt: "The Kingdom's sovereign wealth fund is negotiating for a significant minority position in a leading F1 team.",
+    title: "Viking FK Gets New Major Shareholder — Stavanger Investors Inject NOK 80 Million",
+    excerpt: "A group of regional investors with ties to the oil industry take a significant stake in Viking FK. What does it mean for the club's ambitions?",
     category: "Transactions",
-    sport: "Motorsport",
+    sport: "Football",
     readTime: "5 min read",
     publishedAt: "12 hours ago",
-    author: "Alexandra Reid",
+    author: "Eirik Johnsen",
     type: "article",
-    premium: true,
+    premium: false,
     keyPoints: [
-      "PIF seeks a 20-30% stake in a top-5 F1 team",
-      "The deal could value the team at over $4 billion",
-      "The investment is part of Saudi Arabia's Vision 2030 strategy"
+      "New investor group injects NOK 80 million into Viking FK",
+      "The investment gives them a 22% stake in the club",
+      "Funds earmarked for player acquisitions and academy development"
     ],
-    body: `Saudi Arabia's Public Investment Fund (PIF) is in advanced negotiations to acquire a significant minority stake in one of Formula 1's leading teams. Sources close to the negotiations confirm that discussions have reached an advanced stage.
+    body: `A group of Stavanger-based investors with backgrounds in the oil and gas industry have agreed to invest NOK 80 million in Viking FK. The transaction gives the investor group a 22% stake in the club and represents the largest private capital injection in the club's recent history.
 
-PIF, which manages over $700 billion, already has significant sports investments through Newcastle United, LIV Golf, and upcoming events such as the Formula 1 Saudi Arabian Grand Prix.
+Viking FK CEO Eirik Stephansen says the funds will go directly to strengthening sporting capacity.
 
-A deal would mark the sovereign wealth fund's first direct investment in an F1 team, signaling a deeper commitment to motorsport as part of the Vision 2030 strategy.`
+"This gives us the opportunity to bring in two or three players we otherwise wouldn't have been able to afford, and to invest long-term in the academy," says Stephansen.
+
+The transaction mirrors a broader trend of regional business figures viewing Norwegian football clubs as attractive investment targets — both commercially and as a local identity project.`
   }
 ];
 

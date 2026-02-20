@@ -9,6 +9,9 @@ import Article from "./pages/Article";
 import Team from "./pages/Team";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import Idrett from "./pages/Idrett";
+import KlubbProfil from "./pages/KlubbProfil";
+import Sammenlign from "./pages/Sammenlign";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +27,9 @@ const App = () => (
             <Route path="/article/:id" element={<Article />} />
             <Route path="/team" element={<Team />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/idrett" element={<Idrett />} />
+            <Route path="/idrett/klubb/:id" element={<KlubbProfil />} />
+            <Route path="/idrett/sammenlign" element={<Sammenlign />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -21,9 +21,9 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
 
   const getInitialResponse = () => {
     if (language === "no") {
-      return `Her er vår analyse av "${initialQuery}":\n\n**Viktige markedsutviklinger:**\nSportsbransjens landskap gjennomgår betydelige endringer. Private equity-investeringer i profesjonell idrett har nådd rekordnivåer, med over 30 milliarder dollar investert i sektoren de siste 18 månedene.\n\n**Finansielle høydepunkter:**\n• Verdivurderinger av medierettigheter fortsetter å stige, drevet av strømmingskonkurranse\n• Franchiseverdier har økt 15-25% år-over-år på tvers av store ligaer\n• Sponsorinntekter er tilbake til pre-pandemi nivåer med nye kategorier som dukker opp\n\n**Hva driver dette:**\nInvestorer ser på sportsaktiva som resesjonsbestandige med sterkt inntektsvekstpotensial. Knapphet på franchisemuligheter og ekspanderende internasjonale markeder er nøkkelfaktorer.`;
+      return `Her er vår analyse av «${initialQuery}»:\n\n**Norsk fotball i tall:**\nEliteserien-klubbene omsatte for totalt 2,1 milliarder kroner i 2023 — en vekst på over 20 % fra 2022. Bodø/Glimt alene sto for nesten 380 MNOK, godt hjulpet av Europa-deltakelse og rekordstore spillersalg.\n\n**Viktige trender:**\n• Spillersalg er nå den viktigste enkeltinntektskilden for de beste klubbene\n• TV-avtalens verdi diskuteres — ny runde med Viaplay starter 2025\n• Privat kapital begynner å vise interesse for norske klubber\n\n**Hva driver dette:**\nNorske talenter etterspørres i Europa. Kombinasjonen av lave lønninger, god akademimodell og UEFA-rankingpoeng gjør Eliteserien-klubber til attraktive selgere.`;
     }
-    return `Here's what our analysis shows about "${initialQuery}":\n\n**Key Market Developments:**\nThe sports business landscape is experiencing significant shifts. Private equity investment in professional sports has reached record levels, with over $30 billion deployed in the sector over the past 18 months.\n\n**Financial Highlights:**\n• Media rights valuations continue to climb, driven by streaming competition\n• Franchise valuations have increased 15-25% year-over-year across major leagues\n• Sponsorship revenue is rebounding to pre-pandemic levels with new categories emerging\n\n**What's Driving This:**\nInvestors view sports assets as recession-resistant with strong revenue growth potential. The scarcity of franchise opportunities and expanding international markets are key factors.`;
+    return `Here's our analysis of "${initialQuery}":\n\n**Norwegian Football in Numbers:**\nEliteserien clubs generated a combined NOK 2.1 billion in revenue in 2023 — growth of over 20% from 2022. Bodø/Glimt alone accounted for nearly 380 MNOK, boosted by European competition and record player sales.\n\n**Key Trends:**\n• Player sales are now the single most important revenue stream for top clubs\n• The value of the TV deal is under discussion — new negotiations with Viaplay start in 2025\n• Private capital is beginning to show interest in Norwegian clubs\n\n**What's Driving This:**\nNorwegian talent is in demand across Europe. The combination of low wages, strong academy models and UEFA ranking points make Eliteserien clubs attractive sellers.`;
   };
 
   const [messages, setMessages] = useState<Message[]>([
@@ -33,9 +33,9 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
       role: "assistant",
       content: getInitialResponse(),
       sources: [
-        { title: language === "no" ? "Q4 Sportsinvestering Rapport" : "Q4 Sports Investment Report", url: "#", publication: "Sport Business Journal" },
-        { title: language === "no" ? "Private Equity i Sport: 2024 Analyse" : "Private Equity in Sports: 2024 Analysis", url: "#", publication: "Sport Business Journal" },
-        { title: language === "no" ? "Global Medierettigheter Tracker" : "Global Media Rights Tracker", url: "#", publication: "Bloomberg" },
+        { title: language === "no" ? "Eliteserien Årsrapport 2023" : "Eliteserien Annual Report 2023", url: "#", publication: "NFF" },
+        { title: language === "no" ? "Spillersalg og akademiinntekter" : "Player Sales and Academy Revenue", url: "#", publication: "Transfermarkt" },
+        { title: language === "no" ? "Norsk Toppfotball Økonomianalyse" : "Norwegian Top Football Economic Analysis", url: "#", publication: "Deloitte Sports" },
       ],
     },
   ]);
@@ -52,14 +52,14 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
 
     setTimeout(() => {
       const response = language === "no"
-        ? `Ytterligere kontekst om "${input}":\n\n**Analyse:**\nVårt datateam har samlet de siste tallene om dette emnet. Tallene viser en klar trend mot konsolidering og vertikal integrasjon på tvers av bransjen.\n\n**Hovedpunkter:**\n• Transaksjonsmultipler forblir høye til tross for markedsvolatilitet\n• Strategiske kjøpere overbyr finansielle sponsorer i konkurranseprosesser\n• Internasjonal ekspansjon forblir en prioritet for store franchiser`
-        : `Additional context on "${input}":\n\n**Analysis:**\nOur data team has compiled the latest figures on this topic. The numbers show a clear trend toward consolidation and vertical integration across the industry.\n\n**Key Takeaways:**\n• Transaction multiples remain elevated despite market volatility\n• Strategic buyers are outbidding financial sponsors in competitive processes\n• International expansion remains a priority for major franchises`;
+        ? `Mer om «${input}»:\n\n**Analyse:**\nVårt datateam har sett nærmere på dette. Tallene fra norsk toppfotball viser at det er store strukturelle forskjeller mellom klubbene — særlig mellom de som har investert i akademiutvikling og de som er avhengige av kortsiktige løsninger.\n\n**Nøkkelpunkter:**\n• Klubber med sterke akademier omsetter talenter til 3–5× kostpris\n• Europa-inntekter kan doble en middels norsk klubbs totalomsetning\n• Egenkapitalgraden varierer fra under 10 % til over 60 % i Eliteserien`
+        : `Additional context on "${input}":\n\n**Analysis:**\nOur data team has examined this closely. Figures from Norwegian top football reveal large structural differences between clubs — especially between those who have invested in academy development and those relying on short-term fixes.\n\n**Key Takeaways:**\n• Clubs with strong academies sell talent at 3–5× cost price\n• European revenue can double a mid-sized Norwegian club's total turnover\n• Equity ratios vary from below 10% to over 60% across Eliteserien`;
 
       setMessages((prev) => [...prev, {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content: response,
-        sources: [{ title: language === "no" ? "Deal Flow Analyse: Sports M&A" : "Deal Flow Analysis: Sports M&A", url: "#", publication: "Sport Business Journal" }],
+        sources: [{ title: language === "no" ? "Eliteserien Økonomirapport" : "Eliteserien Financial Report", url: "#", publication: "NFF / Deloitte" }],
       }]);
       setIsLoading(false);
     }, 1500);

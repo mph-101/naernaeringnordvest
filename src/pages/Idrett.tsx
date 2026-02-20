@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
+import { ViewToggle } from "@/components/ViewToggle";
 import { clubs, getLatestFinancials, formatMNOK } from "@/data/clubs";
 import { IdrettAIChat } from "@/components/IdrettAIChat";
 import { Search, TrendingUp, TrendingDown, ArrowUpDown, Trophy, Building2 } from "lucide-react";
@@ -63,7 +64,8 @@ export default function Idrett() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header showSearch={false} />
+      <ViewToggle view="feed" onViewChange={() => {}} />
 
       {/* Hero */}
       <div className="bg-gradient-warm py-12 px-6">
@@ -97,6 +99,7 @@ export default function Idrett() {
           </div>
         </div>
       </div>
+
 
       <main className="max-w-6xl mx-auto px-6 py-10">
         {/* Søk + sammenlign */}

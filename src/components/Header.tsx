@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Menu, X, Search, Moon, Sun, Globe } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 
@@ -13,8 +12,6 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme, language, toggleLanguage } = useTheme();
   const t = translations[language];
-  const location = useLocation();
-  const isIdrett = location.pathname.startsWith("/idrett");
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border">
@@ -34,20 +31,6 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
               </span>
             </div>
           </a>
-
-          {/* Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            <Link
-              to="/idrett"
-              className={`px-3 py-1.5 rounded-full font-subhead text-sm font-medium transition-colors ${
-                isIdrett
-                  ? "bg-accent text-accent-foreground"
-                  : "text-foreground/70 hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              Idrett
-            </Link>
-          </nav>
 
           {/* Actions */}
           <div className="flex items-center gap-2">
@@ -102,13 +85,6 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border animate-fade-in">
             <nav className="flex flex-col gap-2">
-              <Link
-                to="/idrett"
-                className={`px-5 py-2.5 rounded-xl font-subhead text-sm font-medium transition-colors ${isIdrett ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-secondary"}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Idrett
-              </Link>
               <button className="w-full px-5 py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors">
                 {t.subscribe}
               </button>

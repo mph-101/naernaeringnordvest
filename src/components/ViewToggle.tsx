@@ -1,4 +1,5 @@
-import { MessageSquare, Newspaper } from "lucide-react";
+import { MessageSquare, Newspaper, BarChart2 } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 
@@ -10,6 +11,8 @@ interface ViewToggleProps {
 export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   const { language } = useTheme();
   const t = translations[language];
+  const location = useLocation();
+  const isIdrett = location.pathname.startsWith("/idrett");
 
   return (
     <div className="flex items-center justify-center py-6">
@@ -17,7 +20,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         <button
           onClick={() => onViewChange("search")}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-body text-sm font-medium transition-all duration-200 ${
-            view === "search"
+            !isIdrett && view === "search"
               ? "bg-card text-foreground shadow-soft"
               : "text-muted-foreground hover:text-foreground"
           }`}
@@ -28,7 +31,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         <button
           onClick={() => onViewChange("feed")}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-body text-sm font-medium transition-all duration-200 ${
-            view === "feed"
+            !isIdrett && view === "feed"
               ? "bg-card text-foreground shadow-soft"
               : "text-muted-foreground hover:text-foreground"
           }`}
@@ -36,6 +39,17 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
           <Newspaper className="w-4 h-4" />
           {t.browse}
         </button>
+        <Link
+          to="/idrett"
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-body text-sm font-medium transition-all duration-200 ${
+            isIdrett
+              ? "bg-card text-foreground shadow-soft"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <BarChart2 className="w-4 h-4" />
+          Tall
+        </Link>
       </div>
     </div>
   );

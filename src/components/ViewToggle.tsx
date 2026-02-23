@@ -19,7 +19,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
     <div className="flex items-center justify-center py-6">
       <div className="inline-flex bg-secondary rounded-full p-1.5">
         <button
-          onClick={() => { if (isIdrett) navigate("/"); onViewChange("search"); }}
+          onClick={() => { if (isIdrett) navigate("/?view=search"); onViewChange("search"); }}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-body text-sm font-medium transition-all duration-200 ${
             !isIdrett && view === "search"
               ? "bg-card text-foreground shadow-soft"
@@ -30,7 +30,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
           {t.ask}
         </button>
         <button
-          onClick={() => { if (isIdrett) navigate("/"); onViewChange("feed"); }}
+          onClick={() => { if (isIdrett) navigate("/?view=feed"); onViewChange("feed"); }}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-body text-sm font-medium transition-all duration-200 ${
             !isIdrett && view === "feed"
               ? "bg-card text-foreground shadow-soft"

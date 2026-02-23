@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { SearchHero } from "@/components/SearchHero";
 import { ConversationView } from "@/components/ConversationView";
@@ -10,10 +11,17 @@ import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 
 const Index = () => {
-  const [view, setView] = useState<"search" | "feed">("search");
+  const [searchParams] = useSearchParams();
+  const initialView = searchParams.get("view") === "feed" ? "feed" : "search";
+  const [view, setView] = useState<"search" | "feed">(initialView);
   const [conversationQuery, setConversationQuery] = useState<string | null>(null);
   const { language } = useTheme();
   const t = translations[language];
+
+  useEffect(() => {
+    const v = searchParams.get("view");
+    if (v === "feed" || v === "search") setView(v);
+  }, [searchParams]);
 
   const handleSearch = (query: string) => {
     setConversationQuery(query);

@@ -2,12 +2,15 @@ import { useState, useEffect, createContext, useContext, ReactNode } from "react
 
 type Theme = "light" | "dark";
 type Language = "no" | "en";
+type DefaultView = "search" | "feed" | "tall";
 
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
   language: Language;
   toggleLanguage: () => void;
+  defaultView: DefaultView;
+  setDefaultView: (view: DefaultView) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -25,6 +28,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       return (localStorage.getItem("language") as Language) || "no";
     }
     return "no";
+  });
+
+  const [defaultView, setDefaultViewState] = useState<DefaultView>(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("defaultView") as DefaultView) || "search";
+    }
+    return "search";
   });
 
   useEffect(() => {
@@ -46,8 +56,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setLanguage((prev) => (prev === "no" ? "en" : "no"));
   };
 
+  const setDefaultView = (view: DefaultView) => {
+    setDefaultViewState(view);
+    localStorage.setItem("defaultView", view);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, language, toggleLanguage }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, language, toggleLanguage, defaultView, setDefaultView }}>
       {children}
     </ThemeContext.Provider>
   );

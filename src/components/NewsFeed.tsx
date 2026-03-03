@@ -116,33 +116,52 @@ export function NewsFeed() {
               onClick={() => handleArticleClick(featuredItem)}
               className="group block w-full text-left mb-8 bg-card rounded-2xl shadow-soft hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden border border-border hover:border-accent/30"
             >
-              <div className="p-6 md:p-8">
-                <div className="flex items-center gap-3 mb-4">
-                  {featuredItem.premium && (
-                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 text-accent text-xs font-subhead font-semibold rounded-full">
-                      <Lock className="w-3 h-3" />
-                      {t.premium}
-                    </span>
+              <div className="md:flex">
+                {/* Featured thumbnail */}
+                <div
+                  className="h-48 md:h-auto md:w-2/5 flex-shrink-0 flex items-center justify-center relative overflow-hidden"
+                  style={{ background: getArticleImage(featuredItem.id, featuredItem.category) }}
+                >
+                  <div className="absolute inset-0 bg-black/10" />
+                  <span className="relative text-white/80 font-headline text-3xl font-bold tracking-tight select-none">
+                    {featuredItem.category.slice(0, 2).toUpperCase()}
+                  </span>
+                  {featuredItem.type === "video" && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <Play className="w-6 h-6 text-white fill-white" />
+                      </div>
+                    </div>
                   )}
-                  <span className="font-subhead text-sm text-accent font-medium">
-                    {featuredItem.category}
-                  </span>
-                  <span className="text-sm text-muted-foreground font-body">
-                    {featuredItem.publishedAt}
-                  </span>
                 </div>
-                <h3 className="font-headline text-xl md:text-2xl font-bold text-headline group-hover:text-accent transition-colors mb-3 leading-snug">
-                  {featuredItem.title}
-                </h3>
-                <p className="text-muted-foreground font-body leading-relaxed mb-4 max-w-3xl">
-                  {featuredItem.excerpt}
-                </p>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground font-body">
-                  <span>{language === "no" ? "Av" : "By"} {featuredItem.author}</span>
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-4 h-4" />
-                    {featuredItem.readTime}
-                  </span>
+                <div className="p-6 md:p-8 flex-1">
+                  <div className="flex items-center gap-3 mb-4">
+                    {featuredItem.premium && (
+                      <span className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 text-accent text-xs font-subhead font-semibold rounded-full">
+                        <Lock className="w-3 h-3" />
+                        {t.premium}
+                      </span>
+                    )}
+                    <span className="font-subhead text-sm text-accent font-medium">
+                      {featuredItem.category}
+                    </span>
+                    <span className="text-sm text-muted-foreground font-body">
+                      {featuredItem.publishedAt}
+                    </span>
+                  </div>
+                  <h3 className="font-headline text-xl md:text-2xl font-bold text-headline group-hover:text-accent transition-colors mb-3 leading-snug">
+                    {featuredItem.title}
+                  </h3>
+                  <p className="text-muted-foreground font-body leading-relaxed mb-4 max-w-3xl">
+                    {featuredItem.excerpt}
+                  </p>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground font-body">
+                    <span>{language === "no" ? "Av" : "By"} {featuredItem.author}</span>
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-4 h-4" />
+                      {featuredItem.readTime}
+                    </span>
+                  </div>
                 </div>
               </div>
             </button>

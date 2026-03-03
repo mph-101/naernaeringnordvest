@@ -25,10 +25,19 @@ const Index = () => {
   const [view, setView] = useState<"search" | "feed">(getInitialView);
   const [conversationQuery, setConversationQuery] = useState<string | null>(null);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const v = searchParams.get("view");
     if (v === "feed" || v === "search") setView(v);
   }, [searchParams]);
+
+  // Redirect to /idrett if default view is "tall" and no explicit view param
+  useEffect(() => {
+    if (defaultView === "tall" && !searchParams.get("view")) {
+      navigate("/idrett", { replace: true });
+    }
+  }, []);
 
   const handleSearch = (query: string) => {
     setConversationQuery(query);

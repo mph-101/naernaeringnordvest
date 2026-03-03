@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Clock, Play, Headphones, FileText, Lock, BarChart3 } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-import { getArticles, Article } from "@/lib/articles";
+import { getArticles, getArticleImage, Article } from "@/lib/articles";
 import {
   Select,
   SelectContent,

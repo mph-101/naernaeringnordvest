@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { SearchHero } from "@/components/SearchHero";
 import { ConversationView } from "@/components/ConversationView";
@@ -11,17 +11,33 @@ import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 
 const Index = () => {
-  const [searchParams] = useSearchParams();
-  const initialView = searchParams.get("view") === "feed" ? "feed" : "search";
-  const [view, setView] = useState<"search" | "feed">(initialView);
-  const [conversationQuery, setConversationQuery] = useState<string | null>(null);
-  const { language } = useTheme();
+  const { language, defaultView } = useTheme();
   const t = translations[language];
+  const [searchParams] = useSearchParams();
+  
+  const getInitialView = (): "search" | "feed" => {
+    const urlView = searchParams.get("view");
+    if (urlView === "feed" || urlView === "search") return urlView;
+    if (defaultView === "feed") return "feed";
+    return "search";
+  };
+  
+  const [view, setView] = useState<"search" | "feed">(getInitialView);
+  const [conversationQuery, setConversationQuery] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const v = searchParams.get("view");
     if (v === "feed" || v === "search") setView(v);
   }, [searchParams]);
+
+  // Redirect to /idrett if default view is "tall" and no explicit view param
+  useEffect(() => {
+    if (defaultView === "tall" && !searchParams.get("view")) {
+      navigate("/idrett", { replace: true });
+    }
+  }, []);
 
   const handleSearch = (query: string) => {
     setConversationQuery(query);

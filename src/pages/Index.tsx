@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { SearchHero } from "@/components/SearchHero";
 import { ConversationView } from "@/components/ConversationView";

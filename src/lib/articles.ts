@@ -11,6 +11,27 @@ export interface Article {
   premium: boolean;
   keyPoints: string[];
   body: string;
+  image?: string;
+}
+
+// Generate a deterministic gradient thumbnail based on article id and category
+export function getArticleImage(id: string, category: string): string {
+  // Return a CSS gradient string used as background
+  const gradients: Record<string, string> = {
+    "Medierettigheter": "linear-gradient(135deg, hsl(220, 70%, 50%), hsl(260, 60%, 40%))",
+    "Media Rights": "linear-gradient(135deg, hsl(220, 70%, 50%), hsl(260, 60%, 40%))",
+    "Transaksjoner": "linear-gradient(135deg, hsl(150, 60%, 40%), hsl(180, 50%, 35%))",
+    "Transactions": "linear-gradient(135deg, hsl(150, 60%, 40%), hsl(180, 50%, 35%))",
+    "Analyser": "linear-gradient(135deg, hsl(25, 80%, 50%), hsl(45, 70%, 45%))",
+    "Analysis": "linear-gradient(135deg, hsl(25, 80%, 50%), hsl(45, 70%, 45%))",
+    "Ligaer": "linear-gradient(135deg, hsl(0, 65%, 50%), hsl(340, 60%, 40%))",
+    "Leagues": "linear-gradient(135deg, hsl(0, 65%, 50%), hsl(340, 60%, 40%))",
+    "Sponsorater": "linear-gradient(135deg, hsl(280, 60%, 50%), hsl(310, 50%, 40%))",
+    "Sponsorship": "linear-gradient(135deg, hsl(280, 60%, 50%), hsl(310, 50%, 40%))",
+    "Verdivurderinger": "linear-gradient(135deg, hsl(200, 70%, 45%), hsl(220, 60%, 35%))",
+    "Valuations": "linear-gradient(135deg, hsl(200, 70%, 45%), hsl(220, 60%, 35%))",
+  };
+  return gradients[category] || "linear-gradient(135deg, hsl(30, 70%, 50%), hsl(20, 60%, 40%))";
 }
 
 export const articlesNo: Article[] = [

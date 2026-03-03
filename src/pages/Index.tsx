@@ -11,9 +11,18 @@ import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 
 const Index = () => {
+  const { language, defaultView } = useTheme();
+  const t = translations[language];
   const [searchParams] = useSearchParams();
-  const initialView = searchParams.get("view") === "feed" ? "feed" : "search";
-  const [view, setView] = useState<"search" | "feed">(initialView);
+  
+  const getInitialView = (): "search" | "feed" => {
+    const urlView = searchParams.get("view");
+    if (urlView === "feed" || urlView === "search") return urlView;
+    if (defaultView === "feed") return "feed";
+    return "search";
+  };
+  
+  const [view, setView] = useState<"search" | "feed">(getInitialView);
   const [conversationQuery, setConversationQuery] = useState<string | null>(null);
   const { language } = useTheme();
   const t = translations[language];

@@ -24,8 +24,6 @@ const Index = () => {
   
   const [view, setView] = useState<"search" | "feed">(getInitialView);
   const [conversationQuery, setConversationQuery] = useState<string | null>(null);
-  const { language } = useTheme();
-  const t = translations[language];
 
   useEffect(() => {
     const v = searchParams.get("view");

@@ -70,10 +70,11 @@ const Profile = () => {
       // Fetch profile
       const { data: profile } = await supabase
         .from("profiles")
-        .select("display_name")
+        .select("display_name, avatar_url")
         .eq("user_id", session.user.id)
         .maybeSingle();
       setDisplayName(profile?.display_name ?? null);
+      setAvatarUrl(profile?.avatar_url ?? null);
 
       // Fetch notes and groups in parallel
       const [notesRes, groupsRes] = await Promise.all([

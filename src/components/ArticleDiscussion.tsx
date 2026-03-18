@@ -237,10 +237,10 @@ export function ArticleDiscussion({ authorName }: ArticleDiscussionProps) {
                 {text.loginDesc}
               </p>
               <div className="space-y-3">
-                <button className="w-full py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
+                <button onClick={() => { setShowLoginPrompt(false); navigate("/login"); }} className="w-full py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
                   {text.loginButton}
                 </button>
-                <button className="w-full py-3 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors">
+                <button onClick={() => { setShowLoginPrompt(false); navigate("/login"); }} className="w-full py-3 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors">
                   {text.signupButton}
                 </button>
               </div>

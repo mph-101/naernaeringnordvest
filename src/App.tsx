@@ -14,6 +14,7 @@ import KlubbProfil from "./pages/KlubbProfil";
 import Sammenlign from "./pages/Sammenlign";
 import Groups from "./pages/Groups";
 import GroupDetail from "./pages/GroupDetail";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 

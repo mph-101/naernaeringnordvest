@@ -15,6 +15,7 @@ export function ArticleNotes({ articleId }: ArticleNotesProps) {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
   const { language } = useTheme();
 
   const t = language === "no"

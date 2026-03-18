@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, User, Calendar, Lock } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ArticleDiscussion } from "@/components/ArticleDiscussion";
+import { ArticleNotes } from "@/components/ArticleNotes";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleById } from "@/lib/articles";
@@ -184,6 +185,9 @@ const Article = () => {
         {/* Discussion Section */}
         <ArticleDiscussion authorName={article.author} />
       </article>
+
+      {/* Floating Notes */}
+      <ArticleNotes articleId={id!} />
 
       {/* Footer */}
       <footer className="border-t border-border py-12 mt-16">

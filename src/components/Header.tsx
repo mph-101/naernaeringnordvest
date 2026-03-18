@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Menu, X, Search, Moon, Sun, Globe } from "lucide-react";
+import { Menu, X, Search, Moon, Sun, Globe, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 
@@ -11,6 +12,7 @@ interface HeaderProps {
 export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme, language, toggleLanguage } = useTheme();
+  const navigate = useNavigate();
   const t = translations[language];
 
   return (
@@ -65,6 +67,9 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
                 <Search className="w-5 h-5 text-foreground/70" />
               </button>
             )}
+            <button onClick={() => navigate("/grupper")} className="p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Grupper" : "Groups"}>
+              <Users className="w-4 h-4 text-foreground/70" />
+            </button>
             <button className="hidden md:block px-5 py-2.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
               {t.subscribe}
             </button>

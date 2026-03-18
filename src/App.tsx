@@ -12,6 +12,8 @@ import NotFound from "./pages/NotFound";
 import Idrett from "./pages/Idrett";
 import KlubbProfil from "./pages/KlubbProfil";
 import Sammenlign from "./pages/Sammenlign";
+import Groups from "./pages/Groups";
+import GroupDetail from "./pages/GroupDetail";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +32,8 @@ const App = () => (
             <Route path="/idrett" element={<Idrett />} />
             <Route path="/idrett/klubb/:id" element={<KlubbProfil />} />
             <Route path="/idrett/sammenlign" element={<Sammenlign />} />
+            <Route path="/grupper" element={<Groups />} />
+            <Route path="/grupper/:id" element={<GroupDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

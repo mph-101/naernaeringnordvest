@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, X, Search, Moon, Sun, Globe, Users, LogIn, LogOut } from "lucide-react";
+import { Menu, X, Search, Moon, Sun, Globe, Users, LogIn, LogOut, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -92,7 +92,14 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
             </button>
 
             {userId ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => navigate("/profil")}
+                  className="p-2.5 hover:bg-secondary rounded-full transition-colors"
+                  title={language === "no" ? "Min profil" : "My profile"}
+                >
+                  <UserCircle className="w-4 h-4 text-foreground/70" />
+                </button>
                 <span className="hidden md:block text-xs font-body text-muted-foreground max-w-[120px] truncate">
                   {userEmail}
                 </span>
@@ -133,7 +140,9 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
             <nav className="flex flex-col gap-2">
               {userId ? (
                 <>
-                  <span className="px-5 py-2 text-sm text-muted-foreground font-body truncate">{userEmail}</span>
+                  <button onClick={() => { navigate("/profil"); setIsMobileMenuOpen(false); }} className="w-full px-5 py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors">
+                    {language === "no" ? "Min profil" : "My profile"}
+                  </button>
                   <button onClick={handleLogout} className="w-full px-5 py-3 bg-secondary text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary/80 transition-colors">
                     {language === "no" ? "Logg ut" : "Log out"}
                   </button>

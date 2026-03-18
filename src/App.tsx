@@ -15,6 +15,7 @@ import Sammenlign from "./pages/Sammenlign";
 import Groups from "./pages/Groups";
 import GroupDetail from "./pages/GroupDetail";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/grupper" element={<Groups />} />
             <Route path="/grupper/:id" element={<GroupDetail />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/profil" element={<Profile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

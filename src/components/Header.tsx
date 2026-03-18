@@ -12,6 +12,7 @@ interface HeaderProps {
 export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme, language, toggleLanguage } = useTheme();
+  const navigate = useNavigate();
   const t = translations[language];
 
   return (

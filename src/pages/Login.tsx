@@ -182,6 +182,18 @@ const Login = () => {
               </div>
             </div>
 
+            {!isSignUp && !forgotMode && (
+              <div className="text-right mt-1">
+                <button
+                  type="button"
+                  onClick={() => setForgotMode(true)}
+                  className="text-xs text-muted-foreground hover:text-accent transition-colors font-body"
+                >
+                  {t.forgotPassword}
+                </button>
+              </div>
+            )}
+
             <div>
               <label className="text-sm font-subhead font-medium text-foreground mb-1.5 block">
                 {t.password}

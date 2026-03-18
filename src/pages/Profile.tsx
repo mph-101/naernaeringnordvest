@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
+import { articlesNo, articlesEn } from "@/lib/articles";
 
 interface Note {
   id: string;

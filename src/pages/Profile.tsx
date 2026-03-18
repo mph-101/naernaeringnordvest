@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { User, StickyNote, Users, LogOut, Loader2, Trash2, Globe, Lock } from "lucide-react";
 import { Header } from "@/components/Header";
+import { ProfileEditor } from "@/components/ProfileEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";

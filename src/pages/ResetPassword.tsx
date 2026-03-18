@@ -111,8 +111,8 @@ const ResetPassword = () => {
         <div className="bg-card rounded-2xl p-8 max-w-md w-full shadow-elevated border border-border">
           {success ? (
             <div className="text-center py-4">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+              <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="w-8 h-8 text-accent" />
               </div>
               <h1 className="font-headline text-2xl font-bold text-headline mb-3">{t.successTitle}</h1>
               <p className="text-muted-foreground font-body mb-6">{t.successDesc}</p>

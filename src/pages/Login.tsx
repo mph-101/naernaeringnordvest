@@ -15,6 +15,9 @@ const Login = () => {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
   const t = language === "no"
     ? {
         loginTitle: "Logg inn",
@@ -32,6 +35,13 @@ const Login = () => {
         loading: "Vennligst vent...",
         signupSuccess: "Konto opprettet! Sjekk e-posten din for å bekrefte kontoen.",
         loginSuccess: "Velkommen tilbake!",
+        forgotPassword: "Glemt passord?",
+        forgotTitle: "Tilbakestill passord",
+        forgotDesc: "Skriv inn e-posten din, så sender vi deg en lenke for å tilbakestille passordet.",
+        sendReset: "Send tilbakestillingslenke",
+        resetSent: "Sjekk e-posten din!",
+        resetSentDesc: "Vi har sendt deg en lenke for å tilbakestille passordet.",
+        backToLogin: "Tilbake til innlogging",
       }
     : {
         loginTitle: "Log in",
@@ -49,6 +59,13 @@ const Login = () => {
         loading: "Please wait...",
         signupSuccess: "Account created! Check your email to verify your account.",
         loginSuccess: "Welcome back!",
+        forgotPassword: "Forgot password?",
+        forgotTitle: "Reset password",
+        forgotDesc: "Enter your email and we'll send you a link to reset your password.",
+        sendReset: "Send reset link",
+        resetSent: "Check your email!",
+        resetSentDesc: "We've sent you a link to reset your password.",
+        backToLogin: "Back to login",
       };
 
   // Redirect if already logged in

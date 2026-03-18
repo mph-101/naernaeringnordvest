@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, User, Calendar, Lock } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ArticleDiscussion } from "@/components/ArticleDiscussion";
+import { ArticleNotes } from "@/components/ArticleNotes";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleById } from "@/lib/articles";

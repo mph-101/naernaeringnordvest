@@ -87,7 +87,36 @@ const Profile = () => {
           .order("joined_at", { ascending: false }),
       ]);
 
-      setNotes(notesRes.data || []);
+      const fetchedNotes: Note[] = notesRes.data || [];
+      setNotes(fetchedNotes);
+
+      // Resolve article titles from local data and DB
+      const localArticles = language === "no" ? articlesNo : articlesEn;
+      const localMap = new Map(localArticles.map(a => [a.id, a.title]));
+      const titleMap = new Map<string, string>();
+      const dbIds: string[] = [];
+
+      for (const note of fetchedNotes) {
+        const localTitle = localMap.get(note.article_id);
+        if (localTitle) {
+          titleMap.set(note.article_id, localTitle);
+        } else {
+          dbIds.push(note.article_id);
+        }
+      }
+
+      if (dbIds.length > 0) {
+        const titleCol = language === "no" ? "title" : "title_en, title";
+        const { data: dbArticles } = await supabase
+          .from("articles")
+          .select("id, title, title_en")
+          .in("id", dbIds);
+        for (const a of dbArticles || []) {
+          titleMap.set(a.id, (language === "no" ? a.title : a.title_en) || a.title);
+        }
+      }
+
+      setArticleTitles(titleMap);
 
       // Fetch group details for memberships
       if (groupsRes.data && groupsRes.data.length > 0) {

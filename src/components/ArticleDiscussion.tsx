@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MessageCircle, Lock, Globe, Send, User } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 

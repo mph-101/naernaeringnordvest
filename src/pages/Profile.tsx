@@ -192,20 +192,16 @@ const Profile = () => {
       <Header showSearch={false} />
 
       <div className="max-w-3xl mx-auto px-6 py-12">
-        {/* Profile Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center">
-            <User className="w-8 h-8 text-accent" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-headline text-2xl font-bold text-headline truncate">
-              {displayName || userEmail}
-            </h1>
-            {displayName && (
-              <p className="text-sm text-muted-foreground font-body truncate">{userEmail}</p>
-            )}
-          </div>
-        </div>
+        <ProfileEditor
+          userId={userId}
+          userEmail={userEmail}
+          displayName={displayName}
+          avatarUrl={avatarUrl}
+          onUpdate={(updates) => {
+            if (updates.displayName !== undefined) setDisplayName(updates.displayName || null);
+            if (updates.avatarUrl !== undefined) setAvatarUrl(updates.avatarUrl || null);
+          }}
+        />
 
         {/* Tabs */}
         <div className="flex gap-2 mb-8">

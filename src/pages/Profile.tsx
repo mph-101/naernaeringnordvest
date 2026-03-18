@@ -34,6 +34,7 @@ const Profile = () => {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [groups, setGroups] = useState<GroupMembership[]>([]);
+  const [articleTitles, setArticleTitles] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"notes" | "groups">("notes");
 

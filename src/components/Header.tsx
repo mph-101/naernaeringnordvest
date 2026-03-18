@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Menu, X, Search, Moon, Sun, Globe } from "lucide-react";
+import { Menu, X, Search, Moon, Sun, Globe, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 

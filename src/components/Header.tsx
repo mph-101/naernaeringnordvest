@@ -92,7 +92,14 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
             </button>
 
             {userId ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => navigate("/profil")}
+                  className="p-2.5 hover:bg-secondary rounded-full transition-colors"
+                  title={language === "no" ? "Min profil" : "My profile"}
+                >
+                  <UserCircle className="w-4 h-4 text-foreground/70" />
+                </button>
                 <span className="hidden md:block text-xs font-body text-muted-foreground max-w-[120px] truncate">
                   {userEmail}
                 </span>

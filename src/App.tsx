@@ -14,6 +14,7 @@ import KlubbProfil from "./pages/KlubbProfil";
 import Sammenlign from "./pages/Sammenlign";
 import Groups from "./pages/Groups";
 import GroupDetail from "./pages/GroupDetail";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/idrett/sammenlign" element={<Sammenlign />} />
             <Route path="/grupper" element={<Groups />} />
             <Route path="/grupper/:id" element={<GroupDetail />} />
+            <Route path="/login" element={<Login />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

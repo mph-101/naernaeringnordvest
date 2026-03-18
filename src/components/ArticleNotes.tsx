@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { StickyNote, X, Save, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
@@ -14,6 +15,7 @@ export function ArticleNotes({ articleId }: ArticleNotesProps) {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
   const { language } = useTheme();
 
   const t = language === "no"
@@ -90,7 +92,12 @@ export function ArticleNotes({ articleId }: ArticleNotesProps) {
             {/* Body */}
             <div className="p-5 flex-1 overflow-auto">
               {!userId ? (
-                <p className="text-muted-foreground font-body text-center py-8">{t.login}</p>
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground font-body mb-4">{t.login}</p>
+                  <button onClick={() => { setIsOpen(false); navigate("/login"); }} className="px-5 py-2.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
+                    {language === "no" ? "Logg inn" : "Log in"}
+                  </button>
+                </div>
               ) : loading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MessageCircle, Lock, Globe, Send, User } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -20,6 +21,7 @@ export function ArticleDiscussion({ authorName }: ArticleDiscussionProps) {
   const [message, setMessage] = useState("");
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const { language } = useTheme();
+  const navigate = useNavigate();
 
   const t = {
     no: {
@@ -235,10 +237,10 @@ export function ArticleDiscussion({ authorName }: ArticleDiscussionProps) {
                 {text.loginDesc}
               </p>
               <div className="space-y-3">
-                <button className="w-full py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
+                <button onClick={() => { setShowLoginPrompt(false); navigate("/login"); }} className="w-full py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
                   {text.loginButton}
                 </button>
-                <button className="w-full py-3 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors">
+                <button onClick={() => { setShowLoginPrompt(false); navigate("/login"); }} className="w-full py-3 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors">
                   {text.signupButton}
                 </button>
               </div>

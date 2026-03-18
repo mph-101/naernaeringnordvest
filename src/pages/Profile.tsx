@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
+import { articlesNo, articlesEn } from "@/lib/articles";
 
 interface Note {
   id: string;
@@ -33,6 +34,7 @@ const Profile = () => {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [groups, setGroups] = useState<GroupMembership[]>([]);
+  const [articleTitles, setArticleTitles] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"notes" | "groups">("notes");
 
@@ -85,7 +87,36 @@ const Profile = () => {
           .order("joined_at", { ascending: false }),
       ]);
 
-      setNotes(notesRes.data || []);
+      const fetchedNotes: Note[] = notesRes.data || [];
+      setNotes(fetchedNotes);
+
+      // Resolve article titles from local data and DB
+      const localArticles = language === "no" ? articlesNo : articlesEn;
+      const localMap = new Map(localArticles.map(a => [a.id, a.title]));
+      const titleMap = new Map<string, string>();
+      const dbIds: string[] = [];
+
+      for (const note of fetchedNotes) {
+        const localTitle = localMap.get(note.article_id);
+        if (localTitle) {
+          titleMap.set(note.article_id, localTitle);
+        } else {
+          dbIds.push(note.article_id);
+        }
+      }
+
+      if (dbIds.length > 0) {
+        const titleCol = language === "no" ? "title" : "title_en, title";
+        const { data: dbArticles } = await supabase
+          .from("articles")
+          .select("id, title, title_en")
+          .in("id", dbIds);
+        for (const a of dbArticles || []) {
+          titleMap.set(a.id, (language === "no" ? a.title : a.title_en) || a.title);
+        }
+      }
+
+      setArticleTitles(titleMap);
 
       // Fetch group details for memberships
       if (groupsRes.data && groupsRes.data.length > 0) {
@@ -216,7 +247,7 @@ const Profile = () => {
                         to={`/article/${note.article_id}`}
                         className="text-sm text-accent hover:underline font-subhead font-medium"
                       >
-                        {t.article} #{note.article_id}
+                        {articleTitles.get(note.article_id) || `${t.article} #${note.article_id}`}
                       </Link>
                       <p className="text-foreground font-body mt-2 line-clamp-3 leading-relaxed">
                         {note.content}

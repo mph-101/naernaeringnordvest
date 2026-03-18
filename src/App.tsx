@@ -35,6 +35,7 @@ const App = () => (
             <Route path="/idrett/sammenlign" element={<Sammenlign />} />
             <Route path="/grupper" element={<Groups />} />
             <Route path="/grupper/:id" element={<GroupDetail />} />
+            <Route path="/login" element={<Login />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

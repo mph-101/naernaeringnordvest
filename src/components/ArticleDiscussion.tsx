@@ -21,6 +21,7 @@ export function ArticleDiscussion({ authorName }: ArticleDiscussionProps) {
   const [message, setMessage] = useState("");
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const { language } = useTheme();
+  const navigate = useNavigate();
 
   const t = {
     no: {

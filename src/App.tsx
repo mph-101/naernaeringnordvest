@@ -32,6 +32,8 @@ const App = () => (
             <Route path="/idrett" element={<Idrett />} />
             <Route path="/idrett/klubb/:id" element={<KlubbProfil />} />
             <Route path="/idrett/sammenlign" element={<Sammenlign />} />
+            <Route path="/grupper" element={<Groups />} />
+            <Route path="/grupper/:id" element={<GroupDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -186,6 +186,9 @@ const Article = () => {
         <ArticleDiscussion authorName={article.author} />
       </article>
 
+      {/* Floating Notes */}
+      <ArticleNotes articleId={id!} />
+
       {/* Footer */}
       <footer className="border-t border-border py-12 mt-16">
         <div className="max-w-6xl mx-auto px-6">

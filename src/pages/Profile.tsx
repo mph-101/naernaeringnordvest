@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { User, StickyNote, Users, LogOut, Loader2, Trash2, Globe, Lock } from "lucide-react";
 import { Header } from "@/components/Header";
+import { ProfileEditor } from "@/components/ProfileEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
@@ -32,6 +33,7 @@ const Profile = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [groups, setGroups] = useState<GroupMembership[]>([]);
   const [articleTitles, setArticleTitles] = useState<Map<string, string>>(new Map());
@@ -68,10 +70,11 @@ const Profile = () => {
       // Fetch profile
       const { data: profile } = await supabase
         .from("profiles")
-        .select("display_name")
+        .select("display_name, avatar_url")
         .eq("user_id", session.user.id)
         .maybeSingle();
       setDisplayName(profile?.display_name ?? null);
+      setAvatarUrl(profile?.avatar_url ?? null);
 
       // Fetch notes and groups in parallel
       const [notesRes, groupsRes] = await Promise.all([
@@ -189,20 +192,16 @@ const Profile = () => {
       <Header showSearch={false} />
 
       <div className="max-w-3xl mx-auto px-6 py-12">
-        {/* Profile Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center">
-            <User className="w-8 h-8 text-accent" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-headline text-2xl font-bold text-headline truncate">
-              {displayName || userEmail}
-            </h1>
-            {displayName && (
-              <p className="text-sm text-muted-foreground font-body truncate">{userEmail}</p>
-            )}
-          </div>
-        </div>
+        <ProfileEditor
+          userId={userId}
+          userEmail={userEmail}
+          displayName={displayName}
+          avatarUrl={avatarUrl}
+          onUpdate={(updates) => {
+            if (updates.displayName !== undefined) setDisplayName(updates.displayName || null);
+            if (updates.avatarUrl !== undefined) setAvatarUrl(updates.avatarUrl || null);
+          }}
+        />
 
         {/* Tabs */}
         <div className="flex gap-2 mb-8">

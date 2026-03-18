@@ -15,6 +15,7 @@ import Sammenlign from "./pages/Sammenlign";
 import Groups from "./pages/Groups";
 import GroupDetail from "./pages/GroupDetail";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 

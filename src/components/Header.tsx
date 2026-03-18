@@ -140,7 +140,9 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
             <nav className="flex flex-col gap-2">
               {userId ? (
                 <>
-                  <span className="px-5 py-2 text-sm text-muted-foreground font-body truncate">{userEmail}</span>
+                  <button onClick={() => { navigate("/profil"); setIsMobileMenuOpen(false); }} className="w-full px-5 py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors">
+                    {language === "no" ? "Min profil" : "My profile"}
+                  </button>
                   <button onClick={handleLogout} className="w-full px-5 py-3 bg-secondary text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary/80 transition-colors">
                     {language === "no" ? "Logg ut" : "Log out"}
                   </button>

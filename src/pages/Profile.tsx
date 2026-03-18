@@ -247,7 +247,8 @@ const Profile = () => {
                         to={`/article/${note.article_id}`}
                         className="text-sm text-accent hover:underline font-subhead font-medium"
                       >
-                        {t.article} #{note.article_id}
+                        {articleTitles.get(note.article_id) || `${t.article} #${note.article_id}`}
+                      </Link>
                       </Link>
                       <p className="text-foreground font-body mt-2 line-clamp-3 leading-relaxed">
                         {note.content}

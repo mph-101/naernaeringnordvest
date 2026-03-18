@@ -12,6 +12,8 @@ import NotFound from "./pages/NotFound";
 import Idrett from "./pages/Idrett";
 import KlubbProfil from "./pages/KlubbProfil";
 import Sammenlign from "./pages/Sammenlign";
+import Groups from "./pages/Groups";
+import GroupDetail from "./pages/GroupDetail";
 
 const queryClient = new QueryClient();
 

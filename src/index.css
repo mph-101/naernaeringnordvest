@@ -120,8 +120,8 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'DM Sans', system-ui, sans-serif;
     background-image: 
-      radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.03) 1px, transparent 0);
-    background-size: 24px 24px;
+      radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.06) 1.5px, transparent 0);
+    background-size: 32px 32px;
   }
 
   h1, h2, h3, h4, h5, h6 {

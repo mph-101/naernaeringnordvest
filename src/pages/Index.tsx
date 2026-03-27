@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Navigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { SearchHero } from "@/components/SearchHero";
 import { ConversationView } from "@/components/ConversationView";
@@ -11,21 +11,20 @@ import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 
 const Index = () => {
-  const { language, defaultView } = useTheme();
+  const { language, defaultView, hasOnboarded } = useTheme();
   const t = translations[language];
   const [searchParams] = useSearchParams();
-  
+  const navigate = useNavigate();
+
   const getInitialView = (): "search" | "feed" => {
     const urlView = searchParams.get("view");
     if (urlView === "feed" || urlView === "search") return urlView;
     if (defaultView === "feed") return "feed";
     return "search";
   };
-  
+
   const [view, setView] = useState<"search" | "feed">(getInitialView);
   const [conversationQuery, setConversationQuery] = useState<string | null>(null);
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     const v = searchParams.get("view");
@@ -38,6 +37,11 @@ const Index = () => {
       navigate("/idrett", { replace: true });
     }
   }, []);
+
+  // Redirect to onboarding if user hasn't chosen a start page yet
+  if (!hasOnboarded && !searchParams.get("view")) {
+    return <Navigate to="/velkommen" replace />;
+  }
 
   const handleSearch = (query: string) => {
     setConversationQuery(query);

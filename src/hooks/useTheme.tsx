@@ -11,6 +11,8 @@ interface ThemeContextType {
   toggleLanguage: () => void;
   defaultView: DefaultView;
   setDefaultView: (view: DefaultView) => void;
+  hasOnboarded: boolean;
+  completeOnboarding: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -37,6 +39,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return "search";
   });
 
+  const [hasOnboarded, setHasOnboarded] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("hasOnboarded") === "true";
+    }
+    return false;
+  });
+
+  const completeOnboarding = () => {
+    setHasOnboarded(true);
+    localStorage.setItem("hasOnboarded", "true");
+  };
+
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove("light", "dark");
@@ -62,7 +76,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, language, toggleLanguage, defaultView, setDefaultView }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, language, toggleLanguage, defaultView, setDefaultView, hasOnboarded, completeOnboarding }}>
       {children}
     </ThemeContext.Provider>
   );

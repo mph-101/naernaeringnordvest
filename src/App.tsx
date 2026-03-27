@@ -17,6 +17,7 @@ import GroupDetail from "./pages/GroupDetail";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
+import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/profil" element={<Profile />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/velkommen" element={<Onboarding />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

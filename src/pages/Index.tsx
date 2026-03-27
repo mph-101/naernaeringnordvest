@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Navigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { SearchHero } from "@/components/SearchHero";
 import { ConversationView } from "@/components/ConversationView";
@@ -11,9 +11,14 @@ import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 
 const Index = () => {
-  const { language, defaultView } = useTheme();
+  const { language, defaultView, hasOnboarded } = useTheme();
   const t = translations[language];
   const [searchParams] = useSearchParams();
+
+  // Redirect to onboarding if user hasn't chosen a start page yet
+  if (!hasOnboarded && !searchParams.get("view")) {
+    return <Navigate to="/velkommen" replace />;
+  }
   
   const getInitialView = (): "search" | "feed" => {
     const urlView = searchParams.get("view");

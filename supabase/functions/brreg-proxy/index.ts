@@ -298,9 +298,9 @@ Deno.serve(async (req) => {
         });
       }
 
-      // BRREG kunngjøringer API
+      // BRREG kunngjøringer API (via data.brreg.no to avoid DNS issues)
       const res = await fetch(
-        `https://kunngjoring.brreg.no/api/kunngjoring?organisasjonsnummer=${orgnr}&size=20&sort=kunngjoring_dato,desc`,
+        `https://data.brreg.no/enhetsregisteret/api/enheter/${orgnr}/roller`,
         { headers: { Accept: "application/json" } }
       );
 

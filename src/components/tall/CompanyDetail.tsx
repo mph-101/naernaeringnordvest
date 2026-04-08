@@ -26,26 +26,28 @@ function formatNOK(n: number): string {
   return `${n.toLocaleString()} NOK`;
 }
 
-export function CompanyDetail({ orgnr, session }: { orgnr: string; session: any }) {
+export function CompanyDetail({ orgnr, companyName: initialName, session }: { orgnr: string; companyName?: string; session: any }) {
   const { language } = useTheme();
   const isNo = language === "no";
   const [financials, setFinancials] = useState<FinancialYear[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loadingFin, setLoadingFin] = useState(true);
   const [loadingRoles, setLoadingRoles] = useState(true);
-  const [companyName, setCompanyName] = useState("");
+  const [companyName, setCompanyName] = useState(initialName || "");
   const [showAddToList, setShowAddToList] = useState(false);
 
   const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
   const headers = { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` };
 
   useEffect(() => {
-    // Fetch company info
-    fetch(`${baseUrl}?action=search&q=${orgnr}&size=1`, { headers })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.companies?.[0]) setCompanyName(d.companies[0].navn);
-      });
+    // Fetch company info only if name not provided
+    if (!companyName) {
+      fetch(`${baseUrl}?action=search&q=${orgnr}&size=1`, { headers })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.companies?.[0]) setCompanyName(d.companies[0].navn);
+        });
+    }
 
     // Fetch financials
     fetch(`${baseUrl}?action=financials&orgnr=${orgnr}`, { headers })
@@ -136,9 +138,11 @@ export function CompanyDetail({ orgnr, session }: { orgnr: string; session: any 
               <div key={i} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-subhead text-sm font-medium">
-                    {r.person ? `${r.person.fornavn} ${r.person.etternavn}` : r.enhet?.navn || "—"}
-                  </span>
+                   <span className="font-subhead text-sm font-medium">
+                     {r.person && (r.person.fornavn || r.person.etternavn)
+                       ? `${r.person.fornavn} ${r.person.etternavn}`.trim()
+                       : r.enhet?.navn || (isNo ? "Ikke oppgitt" : "Not specified")}
+                   </span>
                 </div>
                 <span className="text-xs text-muted-foreground font-body bg-secondary px-2 py-1 rounded-full">
                   {r.typeBeskrivelse}

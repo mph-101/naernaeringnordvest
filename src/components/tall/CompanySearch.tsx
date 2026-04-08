@@ -26,25 +26,21 @@ export function CompanySearch({ session }: { session: any }) {
   const [loading, setLoading] = useState(false);
   const [totalElements, setTotalElements] = useState(0);
   const [page, setPage] = useState(0);
-  const [selectedOrgnr, setSelectedOrgnr] = useState<string | null>(null);
-  const [searched, setSearched] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
   const search = async (p = 0) => {
     setLoading(true);
     setSearched(true);
     try {
-      const { data, error } = await supabase.functions.invoke("brreg-proxy", {
-        body: null,
-        method: "GET",
-      });
-      
-      // Use fetch directly since we need query params
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy?action=search&q=${encodeURIComponent(query)}&page=${p}&size=20`;
       const res = await fetch(url, {
         headers: {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
       });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
       const json = await res.json();
       setResults(json.companies || []);
       setTotalElements(json.totalElements || 0);
@@ -56,16 +52,18 @@ export function CompanySearch({ session }: { session: any }) {
     setLoading(false);
   };
 
-  if (selectedOrgnr) {
+  const [searched, setSearched] = useState(false);
+
+  if (selectedCompany) {
     return (
       <div>
         <button
-          onClick={() => setSelectedOrgnr(null)}
+          onClick={() => setSelectedCompany(null)}
           className="text-sm text-muted-foreground hover:text-foreground mb-4 font-body transition-colors"
         >
           ← {isNo ? "Tilbake til søk" : "Back to search"}
         </button>
-        <CompanyDetail orgnr={selectedOrgnr} session={session} />
+        <CompanyDetail orgnr={selectedCompany.orgnr} companyName={selectedCompany.navn} session={session} />
       </div>
     );
   }
@@ -102,7 +100,7 @@ export function CompanySearch({ session }: { session: any }) {
         {results.map((c) => (
           <button
             key={c.orgnr}
-            onClick={() => setSelectedOrgnr(c.orgnr)}
+            onClick={() => setSelectedCompany(c)}
             className="w-full text-left bg-card border border-border rounded-xl p-4 hover:border-accent/40 hover:shadow-soft transition-all group"
           >
             <div className="flex items-start justify-between gap-4">

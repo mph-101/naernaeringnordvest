@@ -74,14 +74,18 @@ Deno.serve(async (req) => {
       }
 
       const data = await res.json();
-      const years = (Array.isArray(data) ? data : data?._embedded?.regnskaper || []).map((r: any) => ({
-        year: r.regnskapsperiode?.fraDato?.substring(0, 4) || r.journalnr,
-        omsetning: r.resultatregnskapResultat?.driftsinntekter?.sumDriftsinntekter || 0,
-        driftsresultat: r.resultatregnskapResultat?.driftsresultat || 0,
-        arsresultat: r.resultatregnskapResultat?.ordinaertResultatFoerSkattekostnad || 0,
-        egenkapital: r.eiendeler?.sumEgenkapitalGjeldOgAvsetningForForpliktelser || 0,
-        sumEiendeler: r.eiendeler?.sumEiendeler || 0,
-      }));
+      const years = (Array.isArray(data) ? data : data?._embedded?.regnskaper || []).map((r: any) => {
+        const resultat = r.resultatregnskapResultat || {};
+        const driftsres = resultat.driftsresultat;
+        return {
+          year: r.regnskapsperiode?.fraDato?.substring(0, 4) || r.journalnr,
+          omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,
+          driftsresultat: typeof driftsres === 'number' ? driftsres : (driftsres?.driftsresultat || 0),
+          arsresultat: resultat.ordinaertResultatFoerSkattekostnad || resultat.aarsresultat || 0,
+          egenkapital: r.egenkapitalGjeld?.sumEgenkapitalGjeld || r.eiendeler?.sumEgenkapitalGjeldOgAvsetningForForpliktelser || 0,
+          sumEiendeler: r.eiendeler?.sumEiendeler || 0,
+        };
+      });
 
       return new Response(JSON.stringify({ financials: years }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -112,11 +116,11 @@ Deno.serve(async (req) => {
         (g.roller || []).map((r: any) => ({
           type: g.type?.kode || "",
           typeBeskrivelse: g.type?.beskrivelse || "",
-          person: r.person
-            ? { fornavn: r.person.fornavn, etternavn: r.person.etternavn }
+          person: r.person && (r.person.fornavn || r.person.navn?.fornavn)
+            ? { fornavn: r.person.fornavn || r.person.navn?.fornavn || "", etternavn: r.person.etternavn || r.person.navn?.etternavn || "" }
             : null,
           enhet: r.enhet
-            ? { orgnr: r.enhet.organisasjonsnummer, navn: r.enhet.navn }
+            ? { orgnr: r.enhet.organisasjonsnummer, navn: Array.isArray(r.enhet.navn) ? r.enhet.navn[0] : r.enhet.navn }
             : null,
           fratradt: r.fratradt || false,
         }))

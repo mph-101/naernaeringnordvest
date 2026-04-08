@@ -54,7 +54,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
             return (
               <Link
                 key={tab.id}
-                to="/idrett"
+                to="/tall"
                 className={`relative flex items-center gap-2 px-5 py-2.5 rounded-full font-body text-sm font-medium transition-all duration-200 ${
                   active
                     ? "bg-card text-foreground shadow-soft"

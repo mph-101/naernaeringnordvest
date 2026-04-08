@@ -74,13 +74,13 @@ export default function Onboarding() {
       <div className="max-w-2xl w-full text-center animate-fade-up">
         {/* Logo */}
         <div className="w-16 h-16 bg-gradient-warm rounded-full flex items-center justify-center mx-auto mb-6">
-          <span className="text-primary-foreground font-headline font-bold text-2xl">S</span>
+          <span className="text-primary-foreground font-headline font-bold text-2xl">N</span>
         </div>
 
         {step === "region" ? (
           <>
             <h1 className="font-headline text-3xl md:text-4xl font-bold mb-3">
-              {isNo ? "Velkommen til SPØK" : "Welcome to SPØK"}
+              {isNo ? "Velkommen til Nær Næring" : "Welcome to Nær Næring"}
             </h1>
             <p className="text-muted-foreground font-body text-lg mb-10 max-w-md mx-auto">
               {isNo ? "Velg din region for lokale nyheter og analyser" : "Choose your region for local news and analysis"}

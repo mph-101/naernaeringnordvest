@@ -48,10 +48,8 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
   const isNo = language === "no";
   const [financials, setFinancials] = useState<FinancialYear[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loadingFin, setLoadingFin] = useState(true);
   const [loadingRoles, setLoadingRoles] = useState(true);
-  const [loadingAnn, setLoadingAnn] = useState(true);
   const [companyName, setCompanyName] = useState(initialName || "");
   const [showAddToList, setShowAddToList] = useState(false);
   const [antallAnsatte, setAntallAnsatte] = useState<number | null>(null);
@@ -92,11 +90,6 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
       .catch(() => {})
       .finally(() => setLoadingRoles(false));
 
-    fetch(`${baseUrl}?action=announcements&orgnr=${orgnr}`, { headers })
-      .then((r) => r.json())
-      .then((d) => setAnnouncements(d.announcements || []))
-      .catch(() => {})
-      .finally(() => setLoadingAnn(false));
   }, [orgnr]);
 
   const activeRoles = roles.filter((r) => !r.fratradt);
@@ -273,59 +266,26 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
 
       {/* Announcements */}
       <div className="bg-card border border-border rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Megaphone className="w-5 h-5 text-primary" />
-            <h3 className="font-headline text-lg font-semibold text-headline">
-              {isNo ? "Kunngjøringer" : "Announcements"}
-            </h3>
-          </div>
-          <SourceLink href={brregKunnUrl} label={isNo ? "Alle kunngjøringer på Brreg" : "All on Brreg"} />
+        <div className="flex items-center gap-2 mb-4">
+          <Megaphone className="w-5 h-5 text-primary" />
+          <h3 className="font-headline text-lg font-semibold text-headline">
+            {isNo ? "Kunngjøringer" : "Announcements"}
+          </h3>
         </div>
-        {loadingAnn ? (
-          <p className="text-muted-foreground font-body text-sm">{isNo ? "Laster..." : "Loading..."}</p>
-        ) : announcements.length === 0 ? (
-          <div className="text-center py-4">
-            <p className="text-muted-foreground font-body text-sm mb-2">
-              {isNo ? "Ingen kunngjøringer funnet i API-et" : "No announcements found via API"}
-            </p>
-            <a
-              href={brregKunnUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm text-primary font-subhead hover:underline"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              {isNo ? "Søk i kunngjøringer på Brønnøysundregistrene" : "Search announcements on Brreg"}
-            </a>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {announcements.map((ann) => (
-              <div key={ann.id} className="flex items-start gap-3 py-2 border-b border-border/50 last:border-0">
-                <FileText className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-subhead text-sm font-medium text-headline">{ann.kunngjoringstype}</span>
-                    <span className="text-xs text-muted-foreground font-body">
-                      {new Date(ann.dato).toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "short", year: "numeric" })}
-                    </span>
-                  </div>
-                  {ann.beskrivelse && <p className="text-xs text-muted-foreground font-body mt-0.5">{ann.beskrivelse}</p>}
-                </div>
-              </div>
-            ))}
-            <a
-              href={brregKunnUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs text-primary font-subhead hover:underline mt-2"
-            >
-              <ExternalLink className="w-3 h-3" />
-              {isNo ? "Se alle kunngjøringer på Brønnøysundregistrene" : "View all announcements on Brreg"}
-            </a>
-          </div>
-        )}
+        <p className="text-muted-foreground font-body text-sm mb-3">
+          {isNo
+            ? "Kunngjøringer fra Foretaksregisteret, Konkursregisteret og andre registre er tilgjengelig på Brønnøysundregistrenes nettsider."
+            : "Announcements from the business registers are available on the Brønnøysund Register Centre website."}
+        </p>
+        <a
+          href={brregKunnUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm text-primary font-subhead hover:underline"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          {isNo ? "Søk i kunngjøringer på Brønnøysundregistrene" : "Search announcements on Brreg"}
+        </a>
       </div>
 
       {/* Roles */}

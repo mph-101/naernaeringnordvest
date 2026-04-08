@@ -290,45 +290,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (action === "announcements") {
-      const orgnr = url.searchParams.get("orgnr");
-      if (!orgnr) {
-        return new Response(JSON.stringify({ error: "orgnr required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      // Try multiple kunngjøring endpoints
-      let announcements: any[] = [];
-      const kunngjoringUrls = [
-        `https://data.brreg.no/enhetsregisteret/api/kunngjoeringer?organisasjonsnummer=${orgnr}&size=20`,
-        `https://kunngjoring.brreg.no/api/kunngjoring?organisasjonsnummer=${orgnr}&size=20&sort=kunngjoring_dato,desc`,
-      ];
-
-      for (const kunngjoringUrl of kunngjoringUrls) {
-        try {
-          const res = await fetch(kunngjoringUrl, { headers: { Accept: "application/json" } });
-          if (res.ok) {
-            const data = await res.json();
-            const items = data?._embedded?.kunngjoeringer || data?.kunngjoeringer || data?._embedded?.kunngjoringer || [];
-            announcements = items.map((k: any) => ({
-              id: k.id || `${k.kunngjoring_dato || k.dato}-${k.kunngjoringstype || k.type}`,
-              kunngjoringstype: k.kunngjoringstype || k.type || "Ukjent",
-              dato: k.kunngjoring_dato || k.dato || "",
-              beskrivelse: k.beskrivelse || k.innhold || "",
-            }));
-            if (announcements.length > 0) break;
-          }
-        } catch { /* try next URL */ }
-      }
-
-      // If no kunngjøringer found, return empty gracefully
-
-
-      return new Response(JSON.stringify({ announcements }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },

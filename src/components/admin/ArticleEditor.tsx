@@ -121,6 +121,15 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           .eq("id", articleId);
 
         if (error) throw error;
+
+        // Sync company tags
+        await supabase.from("article_company_tags").delete().eq("article_id", articleId);
+        if (companyTags.length > 0) {
+          await supabase.from("article_company_tags").insert(
+            companyTags.map((t) => ({ article_id: articleId, orgnr: t.orgnr, company_name: t.company_name }))
+          );
+        }
+
         toast({
           title: "Lagret",
           description: "Artikkelen er oppdatert",
@@ -374,6 +383,70 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 Premium-artikkel
               </Label>
             </div>
+          </div>
+        </div>
+
+        {/* Company Tags */}
+        <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
+          <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">
+            Selskapskobling
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Koble artikkelen til selskaper via organisasjonsnummer. Artikkelen vises da på selskapsprofilen.
+          </p>
+
+          {companyTags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {companyTags.map((tag) => (
+                <Badge key={tag.orgnr} variant="secondary" className="flex items-center gap-1.5 py-1 px-3">
+                  <span className="font-subhead text-xs">{tag.company_name || tag.orgnr}</span>
+                  <span className="text-[10px] text-muted-foreground">({tag.orgnr})</span>
+                  <button
+                    type="button"
+                    onClick={() => setCompanyTags(companyTags.filter((t) => t.orgnr !== tag.orgnr))}
+                    className="ml-1 hover:text-destructive"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Label htmlFor="new_orgnr">Org.nr</Label>
+              <Input
+                id="new_orgnr"
+                value={newOrgnr}
+                onChange={(e) => setNewOrgnr(e.target.value)}
+                placeholder="f.eks. 984851006"
+                className="mt-1.5"
+              />
+            </div>
+            <div className="flex-1">
+              <Label htmlFor="new_company_name">Selskapsnavn</Label>
+              <Input
+                id="new_company_name"
+                value={newCompanyName}
+                onChange={(e) => setNewCompanyName(e.target.value)}
+                placeholder="f.eks. DNB Bank ASA"
+                className="mt-1.5"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                if (newOrgnr.trim() && !companyTags.some((t) => t.orgnr === newOrgnr.trim())) {
+                  setCompanyTags([...companyTags, { orgnr: newOrgnr.trim(), company_name: newCompanyName.trim() }]);
+                  setNewOrgnr("");
+                  setNewCompanyName("");
+                }
+              }}
+            >
+              <Plus className="w-4 h-4 mr-1" /> Legg til
+            </Button>
           </div>
         </div>
 

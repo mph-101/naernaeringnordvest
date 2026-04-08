@@ -67,9 +67,8 @@ Deno.serve(async (req) => {
       });
 
       if (!res.ok) {
-        const text = await res.text();
-        return new Response(JSON.stringify({ error: "No financials found", details: text }), {
-          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ financials: [] }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 

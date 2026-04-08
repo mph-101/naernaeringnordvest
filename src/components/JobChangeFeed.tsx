@@ -105,7 +105,18 @@ export const JobChangeFeed = () => {
             const isExpanded = expandedId === item.id;
 
             return (
-              <div key={item.id} className="border border-border rounded-xl p-4 hover:bg-secondary/30 transition-colors">
+              <div key={item.id} className="border border-border rounded-xl overflow-hidden hover:bg-secondary/30 transition-colors">
+                {item.image_url && (
+                  <div className="relative">
+                    <img src={item.image_url} alt={item.person_name} className="w-full h-48 object-cover" />
+                    {item.photo_credit && (
+                      <span className="absolute bottom-2 right-2 bg-background/80 backdrop-blur-sm text-[10px] text-muted-foreground font-body px-2 py-0.5 rounded">
+                        {item.photo_credit}
+                      </span>
+                    )}
+                  </div>
+                )}
+                <div className="p-4">
                 {structured ? (
                   <>
                     <div className="flex items-center gap-2 mb-1">

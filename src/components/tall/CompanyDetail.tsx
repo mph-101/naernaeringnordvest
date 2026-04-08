@@ -78,7 +78,16 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="font-headline text-2xl font-bold text-headline">{companyName || orgnr}</h2>
-          <p className="text-sm text-muted-foreground font-body">Org.nr: {orgnr}</p>
+          <p className="text-sm text-muted-foreground font-body">Org.nr: {orgnr}{kommune && ` · ${kommune}`}</p>
+          {naeringsbeskriv && <p className="text-xs text-muted-foreground font-body mt-1">{naeringsbeskriv}</p>}
+          <div className="flex items-center gap-4 mt-2">
+            {antallAnsatte !== null && (
+              <span className="flex items-center gap-1.5 text-sm font-subhead text-foreground">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                {antallAnsatte.toLocaleString()} {isNo ? "ansatte" : "employees"}
+              </span>
+            )}
+          </div>
         </div>
         {session && (
           <button

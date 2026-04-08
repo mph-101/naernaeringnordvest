@@ -118,13 +118,15 @@ export function CompanySearch({ session, selectedFylker, selectedKommuner, onFyl
 
       <div className="space-y-2">
         {results.map((c) => (
-          <button
+          <div
             key={c.orgnr}
-            onClick={() => setSelectedCompany(c)}
             className="w-full text-left bg-card border border-border rounded-xl p-4 hover:border-accent/40 hover:shadow-soft transition-all group"
           >
             <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3 min-w-0">
+              <button
+                onClick={() => setSelectedCompany(c)}
+                className="flex items-start gap-3 min-w-0 text-left flex-1"
+              >
                 <div className="w-10 h-10 rounded-full bg-gradient-warm flex items-center justify-center flex-shrink-0 mt-0.5">
                   <Building2 className="w-4 h-4 text-accent-foreground" />
                 </div>
@@ -141,8 +143,8 @@ export function CompanySearch({ session, selectedFylker, selectedKommuner, onFyl
                     </p>
                   )}
                 </div>
-              </div>
-              <div className="flex items-center gap-3 flex-shrink-0 text-right">
+              </button>
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {c.antallAnsatte > 0 && (
                   <span className="flex items-center gap-1 text-xs text-muted-foreground font-subhead">
                     <Users className="w-3 h-3" />
@@ -154,9 +156,18 @@ export function CompanySearch({ session, selectedFylker, selectedKommuner, onFyl
                     {isNo ? "Konkurs" : "Bankrupt"}
                   </span>
                 )}
+                {session && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setAddToListCompany(c); }}
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
+                    title={isNo ? "Legg til i liste" : "Add to list"}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
-          </button>
+          </div>
         ))}
       </div>
 

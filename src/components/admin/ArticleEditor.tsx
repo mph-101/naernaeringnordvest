@@ -415,40 +415,63 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             </div>
           )}
 
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <Label htmlFor="new_orgnr">Org.nr</Label>
-              <Input
-                id="new_orgnr"
-                value={newOrgnr}
-                onChange={(e) => setNewOrgnr(e.target.value)}
-                placeholder="f.eks. 984851006"
-                className="mt-1.5"
-              />
-            </div>
-            <div className="flex-1">
-              <Label htmlFor="new_company_name">Selskapsnavn</Label>
-              <Input
-                id="new_company_name"
-                value={newCompanyName}
-                onChange={(e) => setNewCompanyName(e.target.value)}
-                placeholder="f.eks. DNB Bank ASA"
-                className="mt-1.5"
-              />
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                if (newOrgnr.trim() && !companyTags.some((t) => t.orgnr === newOrgnr.trim())) {
-                  setCompanyTags([...companyTags, { orgnr: newOrgnr.trim(), company_name: newCompanyName.trim() }]);
-                  setNewOrgnr("");
-                  setNewCompanyName("");
+          <div className="relative">
+            <Label htmlFor="company_search">Søk etter selskap</Label>
+            <Input
+              id="company_search"
+              value={companySearch}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCompanySearch(val);
+                if (val.length >= 2) {
+                  setSearchingCompanies(true);
+                  setShowResults(true);
+                  const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
+                  fetch(`${baseUrl}?action=search&q=${encodeURIComponent(val)}&size=8`, {
+                    headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+                  })
+                    .then((r) => r.json())
+                    .then((d) => setSearchResults(d.companies?.map((c: any) => ({ orgnr: c.organisasjonsnummer, navn: c.navn })) || []))
+                    .catch(() => setSearchResults([]))
+                    .finally(() => setSearchingCompanies(false));
+                } else {
+                  setSearchResults([]);
+                  setShowResults(false);
                 }
               }}
-            >
-              <Plus className="w-4 h-4 mr-1" /> Legg til
-            </Button>
+              onFocus={() => { if (searchResults.length > 0) setShowResults(true); }}
+              onBlur={() => setTimeout(() => setShowResults(false), 200)}
+              placeholder="Skriv selskapsnavn eller org.nr..."
+              className="mt-1.5"
+              autoComplete="off"
+            />
+            {showResults && searchResults.length > 0 && (
+              <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {searchResults.map((r) => {
+                  const alreadyAdded = companyTags.some((t) => t.orgnr === r.orgnr);
+                  return (
+                    <button
+                      key={r.orgnr}
+                      type="button"
+                      disabled={alreadyAdded}
+                      className="w-full text-left px-3 py-2 hover:bg-muted/50 transition-colors flex items-center justify-between gap-2 disabled:opacity-40"
+                      onClick={() => {
+                        setCompanyTags([...companyTags, { orgnr: r.orgnr, company_name: r.navn }]);
+                        setCompanySearch("");
+                        setSearchResults([]);
+                        setShowResults(false);
+                      }}
+                    >
+                      <span className="font-subhead text-sm truncate">{r.navn}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">{r.orgnr}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {searchingCompanies && (
+              <div className="absolute right-3 top-9 text-xs text-muted-foreground">Søker...</div>
+            )}
           </div>
         </div>
 

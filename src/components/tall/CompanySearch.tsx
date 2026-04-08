@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { Search, Building2, Users, Plus } from "lucide-react";
 import { CompanyDetail } from "./CompanyDetail";
@@ -30,6 +31,7 @@ interface Props {
 export function CompanySearch({ session, selectedFylker, selectedKommuner, onFylkerChange, onKommunerChange }: Props) {
   const { language } = useTheme();
   const isNo = language === "no";
+  const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
@@ -37,6 +39,23 @@ export function CompanySearch({ session, selectedFylker, selectedKommuner, onFyl
   const [page, setPage] = useState(0);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [addToListCompany, setAddToListCompany] = useState<Company | null>(null);
+
+  // Auto-open company from URL param
+  useEffect(() => {
+    const selskapParam = searchParams.get("selskap");
+    if (selskapParam && !selectedCompany) {
+      // Fetch company info by orgnr and auto-select it
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy?action=search&q=${selskapParam}&size=1`, {
+        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          const c = data?.companies?.[0];
+          if (c) setSelectedCompany(c);
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   const search = async (p = 0) => {
     setLoading(true);
@@ -70,7 +89,12 @@ export function CompanySearch({ session, selectedFylker, selectedKommuner, onFyl
     return (
       <div>
         <button
-          onClick={() => setSelectedCompany(null)}
+          onClick={() => {
+            setSelectedCompany(null);
+            // Clear selskap param from URL
+            searchParams.delete("selskap");
+            setSearchParams(searchParams, { replace: true });
+          }}
           className="text-sm text-muted-foreground hover:text-foreground mb-4 font-body transition-colors"
         >
           ← {isNo ? "Tilbake til søk" : "Back to search"}

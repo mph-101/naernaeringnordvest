@@ -26,8 +26,7 @@ export function CompanySearch({ session }: { session: any }) {
   const [loading, setLoading] = useState(false);
   const [totalElements, setTotalElements] = useState(0);
   const [page, setPage] = useState(0);
-  const [selectedOrgnr, setSelectedOrgnr] = useState<string | null>(null);
-  const [searched, setSearched] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
   const search = async (p = 0) => {
     setLoading(true);
@@ -53,16 +52,18 @@ export function CompanySearch({ session }: { session: any }) {
     setLoading(false);
   };
 
-  if (selectedOrgnr) {
+  const [searched, setSearched] = useState(false);
+
+  if (selectedCompany) {
     return (
       <div>
         <button
-          onClick={() => setSelectedOrgnr(null)}
+          onClick={() => setSelectedCompany(null)}
           className="text-sm text-muted-foreground hover:text-foreground mb-4 font-body transition-colors"
         >
           ← {isNo ? "Tilbake til søk" : "Back to search"}
         </button>
-        <CompanyDetail orgnr={selectedOrgnr} session={session} />
+        <CompanyDetail orgnr={selectedCompany.orgnr} companyName={selectedCompany.navn} session={session} />
       </div>
     );
   }
@@ -99,7 +100,7 @@ export function CompanySearch({ session }: { session: any }) {
         {results.map((c) => (
           <button
             key={c.orgnr}
-            onClick={() => setSelectedOrgnr(c.orgnr)}
+            onClick={() => setSelectedCompany(c)}
             className="w-full text-left bg-card border border-border rounded-xl p-4 hover:border-accent/40 hover:shadow-soft transition-all group"
           >
             <div className="flex items-start justify-between gap-4">

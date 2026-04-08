@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/useTheme";
-import { Building2, Users, TrendingUp, TrendingDown, User } from "lucide-react";
+import { Building2, Users, TrendingUp, TrendingDown, User, ChevronDown, ChevronUp } from "lucide-react";
 import { AddToListDialog } from "./AddToListDialog";
 
 interface FinancialYear {
@@ -26,6 +26,8 @@ function formatNOK(n: number): string {
   return `${n.toLocaleString()} NOK`;
 }
 
+type ChartMetric = "omsetning" | "driftsresultat" | "arsresultat" | "egenkapital";
+
 export function CompanyDetail({ orgnr, companyName: initialName, session }: { orgnr: string; companyName?: string; session: any }) {
   const { language } = useTheme();
   const isNo = language === "no";
@@ -38,12 +40,13 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
   const [antallAnsatte, setAntallAnsatte] = useState<number | null>(null);
   const [kommune, setKommune] = useState("");
   const [naeringsbeskriv, setNaeringsbeskriv] = useState("");
+  const [chartMetric, setChartMetric] = useState<ChartMetric>("omsetning");
+  const [showAllYears, setShowAllYears] = useState(false);
 
   const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
   const headers = { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` };
 
   useEffect(() => {
-    // Always fetch company info for employees/municipality
     fetch(`${baseUrl}?action=search&q=${orgnr}&size=1`, { headers })
       .then((r) => r.json())
       .then((d) => {
@@ -56,14 +59,12 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
         }
       });
 
-    // Fetch financials
     fetch(`${baseUrl}?action=financials&orgnr=${orgnr}`, { headers })
       .then((r) => r.json())
       .then((d) => setFinancials(d.financials || []))
       .catch(() => {})
       .finally(() => setLoadingFin(false));
 
-    // Fetch roles
     fetch(`${baseUrl}?action=roles&orgnr=${orgnr}`, { headers })
       .then((r) => r.json())
       .then((d) => setRoles(d.roles || []))
@@ -72,6 +73,17 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
   }, [orgnr]);
 
   const activeRoles = roles.filter((r) => !r.fratradt);
+
+  const metricLabels: Record<ChartMetric, string> = {
+    omsetning: isNo ? "Omsetning" : "Revenue",
+    driftsresultat: isNo ? "Driftsresultat" : "Operating Profit",
+    arsresultat: isNo ? "Årsresultat" : "Net Profit",
+    egenkapital: isNo ? "Egenkapital" : "Equity",
+  };
+
+  // Chart data: reverse to chronological, show all years
+  const chartData = [...financials].reverse();
+  const visibleTableYears = showAllYears ? financials : financials.slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -99,26 +111,51 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
         )}
       </div>
 
-      {/* Financials Chart */}
-      {!loadingFin && financials.length > 1 && (
+      {/* Multi-metric Chart */}
+      {!loadingFin && chartData.length > 1 && (
         <div className="bg-card border border-border rounded-2xl p-6">
-          <h3 className="font-headline text-lg font-semibold text-headline mb-4">
-            {isNo ? "Omsetning over tid" : "Revenue Over Time"}
-          </h3>
-          <div className="flex items-end gap-1 h-40">
-            {[...financials].reverse().map((f) => {
-              const maxOmsetning = Math.max(...financials.map((x) => x.omsetning), 1);
-              const heightPct = (f.omsetning / maxOmsetning) * 100;
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <h3 className="font-headline text-lg font-semibold text-headline">
+              {isNo ? "Historisk utvikling" : "Historical Trend"} ({chartData.length} {isNo ? "år" : "years"})
+            </h3>
+            <div className="flex gap-1.5 flex-wrap">
+              {(Object.keys(metricLabels) as ChartMetric[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setChartMetric(m)}
+                  className={`px-2.5 py-1 text-xs font-subhead rounded-lg transition-all ${
+                    chartMetric === m
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {metricLabels[m]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-end gap-[2px] h-48">
+            {chartData.map((f) => {
+              const values = chartData.map((x) => x[chartMetric]);
+              const maxVal = Math.max(...values.map(Math.abs), 1);
+              const val = f[chartMetric];
+              const isNegative = val < 0;
+              const heightPct = (Math.abs(val) / maxVal) * 100;
               return (
-                <div key={f.year} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-[10px] font-subhead text-muted-foreground">
-                    {formatNOK(f.omsetning)}
-                  </span>
+                <div key={f.year} className="flex-1 flex flex-col items-center justify-end gap-0.5 group relative min-w-0">
+                  {/* Tooltip */}
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground border border-border rounded px-2 py-1 text-[10px] font-subhead whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-md">
+                    {f.year}: {formatNOK(val)}
+                  </div>
                   <div
-                    className="w-full bg-primary/70 rounded-t-sm min-h-[2px] transition-all"
+                    className={`w-full rounded-t-sm min-h-[2px] transition-all ${
+                      isNegative ? "bg-destructive/70" : "bg-primary/70"
+                    } group-hover:${isNegative ? "bg-destructive" : "bg-primary"}`}
                     style={{ height: `${Math.max(heightPct, 2)}%` }}
                   />
-                  <span className="text-[10px] font-body text-muted-foreground">{f.year}</span>
+                  <span className="text-[9px] font-body text-muted-foreground truncate w-full text-center">
+                    {chartData.length > 12 ? f.year.slice(2) : f.year}
+                  </span>
                 </div>
               );
             })}
@@ -130,39 +167,73 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
       <div className="bg-card border border-border rounded-2xl p-6">
         <h3 className="font-headline text-lg font-semibold text-headline mb-4">
           {isNo ? "Nøkkeltall" : "Key Figures"}
+          {financials.length > 0 && (
+            <span className="text-sm font-normal text-muted-foreground ml-2">
+              ({financials.length} {isNo ? "år" : "years"})
+            </span>
+          )}
         </h3>
         {loadingFin ? (
           <p className="text-muted-foreground font-body text-sm">{isNo ? "Laster..." : "Loading..."}</p>
         ) : financials.length === 0 ? (
           <p className="text-muted-foreground font-body text-sm">{isNo ? "Ingen regnskapsdata funnet" : "No financial data found"}</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-2 font-subhead text-muted-foreground font-medium">{isNo ? "År" : "Year"}</th>
-                  <th className="text-right py-2 font-subhead text-muted-foreground font-medium">{isNo ? "Omsetning" : "Revenue"}</th>
-                  <th className="text-right py-2 font-subhead text-muted-foreground font-medium">{isNo ? "Driftsres." : "Op. Profit"}</th>
-                  <th className="text-right py-2 font-subhead text-muted-foreground font-medium">{isNo ? "Årsresultat" : "Net Profit"}</th>
-                  <th className="text-right py-2 font-subhead text-muted-foreground font-medium">{isNo ? "Egenkapital" : "Equity"}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {financials.map((f) => (
-                  <tr key={f.year} className="border-b border-border/50">
-                    <td className="py-2.5 font-subhead font-medium">{f.year}</td>
-                    <td className="py-2.5 text-right font-subhead">{formatNOK(f.omsetning)}</td>
-                    <td className={`py-2.5 text-right font-subhead flex items-center justify-end gap-1 ${f.driftsresultat >= 0 ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
-                      {f.driftsresultat >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                      {formatNOK(f.driftsresultat)}
-                    </td>
-                    <td className={`py-2.5 text-right font-subhead ${f.arsresultat >= 0 ? "" : "text-destructive"}`}>{formatNOK(f.arsresultat)}</td>
-                    <td className="py-2.5 text-right font-subhead">{formatNOK(f.egenkapital)}</td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 font-subhead text-muted-foreground font-medium">{isNo ? "År" : "Year"}</th>
+                    <th className="text-right py-2 font-subhead text-muted-foreground font-medium">{isNo ? "Omsetning" : "Revenue"}</th>
+                    <th className="text-right py-2 font-subhead text-muted-foreground font-medium">{isNo ? "Driftsres." : "Op. Profit"}</th>
+                    <th className="text-right py-2 font-subhead text-muted-foreground font-medium">{isNo ? "Årsresultat" : "Net Profit"}</th>
+                    <th className="text-right py-2 font-subhead text-muted-foreground font-medium">{isNo ? "Egenkapital" : "Equity"}</th>
+                    <th className="text-right py-2 font-subhead text-muted-foreground font-medium">{isNo ? "Sum eiendeler" : "Total Assets"}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {visibleTableYears.map((f, i) => {
+                    const prev = financials[i + 1];
+                    const revChange = prev && prev.omsetning ? ((f.omsetning - prev.omsetning) / Math.abs(prev.omsetning)) * 100 : null;
+                    return (
+                      <tr key={f.year} className="border-b border-border/50">
+                        <td className="py-2.5 font-subhead font-medium">{f.year}</td>
+                        <td className="py-2.5 text-right font-subhead">
+                          <div>{formatNOK(f.omsetning)}</div>
+                          {revChange !== null && (
+                            <div className={`text-[10px] ${revChange >= 0 ? "text-accent" : "text-destructive"}`}>
+                              {revChange >= 0 ? "+" : ""}{revChange.toFixed(1)}%
+                            </div>
+                          )}
+                        </td>
+                        <td className={`py-2.5 text-right font-subhead ${f.driftsresultat >= 0 ? "" : "text-destructive"}`}>
+                          <div className="flex items-center justify-end gap-1">
+                            {f.driftsresultat >= 0 ? <TrendingUp className="w-3 h-3 text-accent" /> : <TrendingDown className="w-3 h-3 text-destructive" />}
+                            {formatNOK(f.driftsresultat)}
+                          </div>
+                        </td>
+                        <td className={`py-2.5 text-right font-subhead ${f.arsresultat >= 0 ? "" : "text-destructive"}`}>{formatNOK(f.arsresultat)}</td>
+                        <td className="py-2.5 text-right font-subhead">{formatNOK(f.egenkapital)}</td>
+                        <td className="py-2.5 text-right font-subhead">{formatNOK(f.sumEiendeler)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {financials.length > 5 && (
+              <button
+                onClick={() => setShowAllYears(!showAllYears)}
+                className="mt-3 flex items-center gap-1 text-sm text-primary font-subhead hover:underline mx-auto"
+              >
+                {showAllYears ? (
+                  <><ChevronUp className="w-4 h-4" /> {isNo ? "Vis færre" : "Show less"}</>
+                ) : (
+                  <><ChevronDown className="w-4 h-4" /> {isNo ? `Vis alle ${financials.length} år` : `Show all ${financials.length} years`}</>
+                )}
+              </button>
+            )}
+          </>
         )}
       </div>
 

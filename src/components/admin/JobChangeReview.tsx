@@ -138,11 +138,37 @@ export const JobChangeReview = () => {
                 </a>
               )}
 
-              {/* Editable notice */}
+              {/* Structured notice preview */}
+              {(() => {
+                try {
+                  const parsed = JSON.parse(item.generated_notice || "");
+                  if (parsed.title && parsed.key_points) {
+                    return (
+                      <div className="mb-3 p-3 bg-secondary/50 rounded-lg space-y-2">
+                        <div className="font-headline text-sm font-semibold text-headline">{parsed.title}</div>
+                        <div className="text-xs text-muted-foreground font-body">{parsed.ingress}</div>
+                        <div className="flex flex-wrap gap-2">
+                          <span className="flex items-center gap-1 text-xs bg-background px-2 py-0.5 rounded">
+                            <User className="w-3 h-3 text-primary" /> {parsed.key_points.name}
+                          </span>
+                          <span className="flex items-center gap-1 text-xs bg-background px-2 py-0.5 rounded">
+                            <BadgeCheck className="w-3 h-3 text-primary" /> {parsed.key_points.role}
+                          </span>
+                          <span className="flex items-center gap-1 text-xs bg-background px-2 py-0.5 rounded">
+                            <Building2 className="w-3 h-3 text-primary" /> {parsed.key_points.company}
+                          </span>
+                        </div>
+                        <div className="text-xs text-foreground font-body leading-relaxed">{parsed.body}</div>
+                      </div>
+                    );
+                  }
+                } catch {}
+                return null;
+              })()}
               <textarea
                 defaultValue={item.generated_notice || ""}
                 onBlur={(e) => handleNoticeEdit(item.id, e.target.value)}
-                rows={2}
+                rows={3}
                 className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none mb-3"
               />
 

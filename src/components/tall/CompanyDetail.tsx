@@ -55,7 +55,6 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
           setNaeringsbeskriv(c.naeringsbeskriv || "");
         }
       });
-    }
 
     // Fetch financials
     fetch(`${baseUrl}?action=financials&orgnr=${orgnr}`, { headers })

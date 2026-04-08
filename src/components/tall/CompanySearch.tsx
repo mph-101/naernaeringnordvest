@@ -86,19 +86,28 @@ export function CompanySearch({ session, selectedFylker, selectedKommuner, onFyl
   const [searched, setSearched] = useState(false);
 
   if (selectedCompany) {
+    const cameFromArticle = searchParams.has("selskap");
     return (
       <div>
-        <button
-          onClick={() => {
-            setSelectedCompany(null);
-            // Clear selskap param from URL
-            searchParams.delete("selskap");
-            setSearchParams(searchParams, { replace: true });
-          }}
-          className="text-sm text-muted-foreground hover:text-foreground mb-4 font-body transition-colors"
-        >
-          ← {isNo ? "Tilbake til søk" : "Back to search"}
-        </button>
+        {cameFromArticle ? (
+          <button
+            onClick={() => window.history.back()}
+            className="text-sm text-muted-foreground hover:text-foreground mb-4 font-body transition-colors"
+          >
+            ← {isNo ? "Tilbake til artikkelen" : "Back to article"}
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              setSelectedCompany(null);
+              searchParams.delete("selskap");
+              setSearchParams(searchParams, { replace: true });
+            }}
+            className="text-sm text-muted-foreground hover:text-foreground mb-4 font-body transition-colors"
+          >
+            ← {isNo ? "Tilbake til søk" : "Back to search"}
+          </button>
+        )}
         <CompanyDetail orgnr={selectedCompany.orgnr} companyName={selectedCompany.navn} session={session} />
       </div>
     );

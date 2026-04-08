@@ -20,6 +20,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const isIdrett = location.pathname.startsWith("/idrett");
+  const isTall = location.pathname.startsWith("/tall");
 
   const tabs = [
     { id: "search" as const, label: t.ask, icon: MessageSquare },
@@ -29,15 +30,16 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
 
   const handleClick = (tabId: "search" | "feed" | "tall") => {
     if (tabId === "tall") {
-      if (!isIdrett) navigate("/idrett");
+      if (!isTall) navigate("/tall");
     } else {
-      if (isIdrett) navigate(`/?view=${tabId}`);
+      if (isTall || isIdrett) navigate(`/?view=${tabId}`);
       onViewChange(tabId);
     }
   };
 
   const isActive = (tabId: string) => {
-    if (tabId === "tall") return isIdrett;
+    if (tabId === "tall") return isTall;
+    if (isTall) return false;
     return !isIdrett && view === tabId;
   };
 
@@ -52,7 +54,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
             return (
               <Link
                 key={tab.id}
-                to="/idrett"
+                to="/tall"
                 className={`relative flex items-center gap-2 px-5 py-2.5 rounded-full font-body text-sm font-medium transition-all duration-200 ${
                   active
                     ? "bg-card text-foreground shadow-soft"

@@ -74,6 +74,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         key_points: (data.key_points as string[]) || [],
         key_points_en: (data.key_points_en as string[]) || [],
       });
+
+      // Fetch company tags
+      const { data: tags } = await supabase
+        .from("article_company_tags")
+        .select("orgnr, company_name")
+        .eq("article_id", articleId);
+      setCompanyTags(tags || []);
     } catch (error: any) {
       toast({
         title: "Feil",

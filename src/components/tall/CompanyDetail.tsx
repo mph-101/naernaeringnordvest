@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import { Building2, Users, TrendingUp, TrendingDown, User, ChevronDown, ChevronUp, ExternalLink, FileText, Megaphone } from "lucide-react";
 import { AddToListDialog } from "./AddToListDialog";
+import { CompanyArticles } from "./CompanyArticles";
 
 interface FinancialYear {
   year: string;
@@ -281,6 +282,9 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
           </>
         )}
       </div>
+
+      {/* Related Articles */}
+      <CompanyArticles orgnr={orgnr} />
 
       {/* Announcements */}
       <div className="bg-card border border-border rounded-2xl p-6">

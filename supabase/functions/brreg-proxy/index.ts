@@ -158,6 +158,7 @@ Deno.serve(async (req) => {
         registreringsdato: e.registreringsdatoEnhetsregisteret,
         kommune: e.forretningsadresse?.kommune || "",
         naeringsbeskriv: e.naeringskode1?.beskrivelse || "",
+        antallAnsatte: e.antallAnsatte || 0,
         konkurs: e.konkurs || false,
       }));
 
@@ -182,6 +183,7 @@ Deno.serve(async (req) => {
         stiftelsesdato: e.stiftelsesdato,
         kommune: e.forretningsadresse?.kommune || "",
         naeringsbeskriv: e.naeringskode1?.beskrivelse || "",
+        antallAnsatte: e.antallAnsatte || 0,
       }));
 
       return new Response(JSON.stringify({ companies, total }), {

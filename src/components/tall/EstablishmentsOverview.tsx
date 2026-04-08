@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/useTheme";
-import { Building2, AlertTriangle, TrendingUp } from "lucide-react";
+import { Building2, AlertTriangle, TrendingUp, Users } from "lucide-react";
 
 interface SimpleCompany {
   orgnr: string;
@@ -9,6 +9,7 @@ interface SimpleCompany {
   registreringsdato?: string;
   kommune: string;
   naeringsbeskriv: string;
+  antallAnsatte?: number;
   konkurs?: boolean;
 }
 
@@ -89,8 +90,16 @@ export function EstablishmentsOverview() {
                     ? <Building2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                     : <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />}
                 </div>
-                <div className="min-w-0">
-                  <p className="font-subhead font-medium text-sm text-headline">{c.navn}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-subhead font-medium text-sm text-headline">{c.navn}</p>
+                    {(c.antallAnsatte ?? 0) > 0 && (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground font-subhead flex-shrink-0">
+                        <Users className="w-3 h-3" />
+                        {c.antallAnsatte}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground font-body mt-0.5">
                     {c.orgnr} · {c.kommune}
                     {c.registreringsdato && ` · ${isNo ? "Reg." : "Reg."} ${c.registreringsdato}`}

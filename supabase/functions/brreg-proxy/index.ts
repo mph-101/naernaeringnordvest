@@ -221,6 +221,45 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "batch_financials") {
+      const orgnrs = url.searchParams.get("orgnrs") || "";
+      const orgnrList = orgnrs.split(",").filter(Boolean).slice(0, 50);
+      if (!orgnrList.length) {
+        return new Response(JSON.stringify({ financials: {} }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const results: Record<string, any> = {};
+      await Promise.all(
+        orgnrList.map(async (orgnr) => {
+          try {
+            const res = await fetch(
+              `${BRREG_BASE}/regnskapsregisteret/regnskap/${orgnr}?size=1&page=0`,
+              { headers: { Accept: "application/json" } }
+            );
+            if (!res.ok) { results[orgnr] = null; return; }
+            const data = await res.json();
+            const items = Array.isArray(data) ? data : data?._embedded?.regnskaper || [];
+            if (!items.length) { results[orgnr] = null; return; }
+            const r = items[0];
+            const resultat = r.resultatregnskapResultat || {};
+            const driftsres = resultat.driftsresultat;
+            results[orgnr] = {
+              year: r.regnskapsperiode?.fraDato?.substring(0, 4) || "",
+              omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,
+              driftsresultat: typeof driftsres === "number" ? driftsres : (driftsres?.driftsresultat || 0),
+              arsresultat: resultat.ordinaertResultatFoerSkattekostnad || resultat.aarsresultat || 0,
+            };
+          } catch { results[orgnr] = null; }
+        })
+      );
+
+      return new Response(JSON.stringify({ financials: results }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (action === "top") {
       const page = url.searchParams.get("page") || "0";
       const size = url.searchParams.get("size") || "30";

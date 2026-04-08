@@ -191,6 +191,36 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "top") {
+      const page = url.searchParams.get("page") || "0";
+      const size = url.searchParams.get("size") || "30";
+      const sort = url.searchParams.get("sort") || "antallAnsatte";
+      const order = url.searchParams.get("order") || "desc";
+      const kommune = url.searchParams.get("kommune") || "";
+
+      let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsform=AS,ASA&page=${page}&size=${size}&sort=${sort},${order}`;
+      if (kommune) apiUrl += `&kommunenummer=${kommune}`;
+
+      const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
+      const data = await res.json();
+      const enheter = data?._embedded?.enheter || [];
+      const totalElements = data?.page?.totalElements || 0;
+
+      const companies = enheter.map((e: any) => ({
+        orgnr: e.organisasjonsnummer,
+        navn: e.navn,
+        kommune: e.forretningsadresse?.kommune || e.postadresse?.kommune || "",
+        naeringsbeskriv: e.naeringskode1?.beskrivelse || "",
+        antallAnsatte: e.antallAnsatte || 0,
+        stiftelsesdato: e.stiftelsesdato,
+        konkurs: e.konkurs || false,
+      }));
+
+      return new Response(JSON.stringify({ companies, totalElements }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -33,18 +33,15 @@ export function CompanySearch({ session }: { session: any }) {
     setLoading(true);
     setSearched(true);
     try {
-      const { data, error } = await supabase.functions.invoke("brreg-proxy", {
-        body: null,
-        method: "GET",
-      });
-      
-      // Use fetch directly since we need query params
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy?action=search&q=${encodeURIComponent(query)}&page=${p}&size=20`;
       const res = await fetch(url, {
         headers: {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
       });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
       const json = await res.json();
       setResults(json.companies || []);
       setTotalElements(json.totalElements || 0);

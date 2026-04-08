@@ -317,11 +317,13 @@ export type Database = {
           created_at: string
           generated_notice: string | null
           id: string
+          image_url: string | null
           new_company: string | null
           new_role: string | null
           old_company: string | null
           old_role: string | null
           person_name: string
+          photo_credit: string | null
           published_at: string | null
           reviewed_by: string | null
           source_text: string | null
@@ -335,11 +337,13 @@ export type Database = {
           created_at?: string
           generated_notice?: string | null
           id?: string
+          image_url?: string | null
           new_company?: string | null
           new_role?: string | null
           old_company?: string | null
           old_role?: string | null
           person_name: string
+          photo_credit?: string | null
           published_at?: string | null
           reviewed_by?: string | null
           source_text?: string | null
@@ -353,11 +357,13 @@ export type Database = {
           created_at?: string
           generated_notice?: string | null
           id?: string
+          image_url?: string | null
           new_company?: string | null
           new_role?: string | null
           old_company?: string | null
           old_role?: string | null
           person_name?: string
+          photo_credit?: string | null
           published_at?: string | null
           reviewed_by?: string | null
           source_text?: string | null

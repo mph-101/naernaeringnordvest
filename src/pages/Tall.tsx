@@ -75,7 +75,13 @@ export default function Tall() {
 
         {tab === "search" && (
           <div className="space-y-10">
-            <CompanySearch session={session} />
+           <CompanySearch
+              session={session}
+              selectedFylker={selectedFylker}
+              selectedKommuner={selectedKommuner}
+              onFylkerChange={setSelectedFylker}
+              onKommunerChange={setSelectedKommuner}
+            />
             <CompanyTable
               session={session}
               selectedFylker={selectedFylker}

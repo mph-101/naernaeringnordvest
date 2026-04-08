@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
-import { Search, ArrowUpDown, Building2, Users, ChevronDown, Plus } from "lucide-react";
+import { Search, Building2, Users } from "lucide-react";
 import { CompanyDetail } from "./CompanyDetail";
+import { GeoFilter, getKommuneParam } from "./GeoFilter";
 import { toast } from "@/hooks/use-toast";
 
 interface Company {
@@ -18,7 +18,15 @@ interface Company {
   underAvvikling: boolean;
 }
 
-export function CompanySearch({ session }: { session: any }) {
+interface Props {
+  session: any;
+  selectedFylker: string[];
+  selectedKommuner: string[];
+  onFylkerChange: (v: string[]) => void;
+  onKommunerChange: (v: string[]) => void;
+}
+
+export function CompanySearch({ session, selectedFylker, selectedKommuner, onFylkerChange, onKommunerChange }: Props) {
   const { language } = useTheme();
   const isNo = language === "no";
   const [query, setQuery] = useState("");
@@ -32,7 +40,9 @@ export function CompanySearch({ session }: { session: any }) {
     setLoading(true);
     setSearched(true);
     try {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy?action=search&q=${encodeURIComponent(query)}&page=${p}&size=20`;
+      let url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy?action=search&q=${encodeURIComponent(query)}&page=${p}&size=20`;
+      const kommune = getKommuneParam(selectedFylker, selectedKommuner);
+      if (kommune) url += `&kommune=${kommune}`;
       const res = await fetch(url, {
         headers: {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
@@ -70,6 +80,14 @@ export function CompanySearch({ session }: { session: any }) {
 
   return (
     <div>
+      <div className="mb-4">
+        <GeoFilter
+          selectedFylker={selectedFylker}
+          selectedKommuner={selectedKommuner}
+          onFylkerChange={onFylkerChange}
+          onKommunerChange={onKommunerChange}
+        />
+      </div>
       <div className="flex gap-2 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

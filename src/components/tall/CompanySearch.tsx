@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useTheme } from "@/hooks/useTheme";
-import { Search, Building2, Users } from "lucide-react";
+import { Search, Building2, Users, Plus } from "lucide-react";
 import { CompanyDetail } from "./CompanyDetail";
 import { GeoFilter, getKommuneParam } from "./GeoFilter";
+import { AddToListDialog } from "./AddToListDialog";
 import { toast } from "@/hooks/use-toast";
 
 interface Company {

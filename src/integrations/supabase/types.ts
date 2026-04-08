@@ -36,15 +36,7 @@ export type Database = {
           id?: string
           orgnr?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "article_company_tags_article_id_fkey"
-            columns: ["article_id"]
-            isOneToOne: false
-            referencedRelation: "articles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       article_notes: {
         Row: {

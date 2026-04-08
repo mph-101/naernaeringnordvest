@@ -63,7 +63,7 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
 
   const brregEnhetUrl = `https://data.brreg.no/enhetsregisteret/api/enheter/${orgnr}`;
   const brregRegnskapUrl = `https://data.brreg.no/regnskapsregisteret/regnskap/${orgnr}`;
-  const brregKunnUrl = `https://w2.brreg.no/kunngjoring/finn.jsp?LegacyOrgnr=${orgnr}`;
+  const brregKunnUrl = `https://www.brreg.no/registersok/kunngjoringer/`;
 
   useEffect(() => {
     fetch(`${baseUrl}?action=search&q=${orgnr}&size=1`, { headers })

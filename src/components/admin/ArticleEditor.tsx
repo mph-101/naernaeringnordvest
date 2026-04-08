@@ -19,8 +19,10 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
-  const [newOrgnr, setNewOrgnr] = useState("");
-  const [newCompanyName, setNewCompanyName] = useState("");
+  const [companySearch, setCompanySearch] = useState("");
+  const [searchResults, setSearchResults] = useState<{ orgnr: string; navn: string }[]>([]);
+  const [searchingCompanies, setSearchingCompanies] = useState(false);
+  const [showResults, setShowResults] = useState(false);
 
   const [form, setForm] = useState({
     title: "",

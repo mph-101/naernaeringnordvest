@@ -12,6 +12,8 @@ interface JobChange {
   generated_notice: string | null;
   source_url: string | null;
   published_at: string | null;
+  image_url: string | null;
+  photo_credit: string | null;
 }
 
 interface StructuredNotice {
@@ -41,7 +43,7 @@ export const JobChangeFeed = () => {
     const fetch = async () => {
       const { data } = await supabase
         .from("job_changes")
-        .select("id, person_name, new_role, new_company, change_type, generated_notice, source_url, published_at")
+        .select("id, person_name, new_role, new_company, change_type, generated_notice, source_url, published_at, image_url, photo_credit")
         .eq("status", "published")
         .order("published_at", { ascending: false })
         .limit(5);

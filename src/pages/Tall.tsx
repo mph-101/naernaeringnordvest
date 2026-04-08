@@ -16,6 +16,8 @@ export default function Tall() {
   const isNo = language === "no";
   const [tab, setTab] = useState<Tab>("search");
   const [session, setSession] = useState<any>(null);
+  const [selectedFylker, setSelectedFylker] = useState<string[]>([]);
+  const [selectedKommuner, setSelectedKommuner] = useState<string[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -74,11 +76,24 @@ export default function Tall() {
         {tab === "search" && (
           <div className="space-y-10">
             <CompanySearch session={session} />
-            <CompanyTable session={session} />
+            <CompanyTable
+              session={session}
+              selectedFylker={selectedFylker}
+              selectedKommuner={selectedKommuner}
+              onFylkerChange={setSelectedFylker}
+              onKommunerChange={setSelectedKommuner}
+            />
           </div>
         )}
         {tab === "lists" && <CompanyLists session={session} />}
-        {tab === "overview" && <EstablishmentsOverview />}
+        {tab === "overview" && (
+          <EstablishmentsOverview
+            selectedFylker={selectedFylker}
+            selectedKommuner={selectedKommuner}
+            onFylkerChange={setSelectedFylker}
+            onKommunerChange={setSelectedKommuner}
+          />
+        )}
       </div>
     </div>
   );

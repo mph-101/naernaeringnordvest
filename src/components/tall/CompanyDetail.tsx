@@ -35,19 +35,26 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
   const [loadingRoles, setLoadingRoles] = useState(true);
   const [companyName, setCompanyName] = useState(initialName || "");
   const [showAddToList, setShowAddToList] = useState(false);
+  const [antallAnsatte, setAntallAnsatte] = useState<number | null>(null);
+  const [kommune, setKommune] = useState("");
+  const [naeringsbeskriv, setNaeringsbeskriv] = useState("");
 
   const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
   const headers = { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` };
 
   useEffect(() => {
-    // Fetch company info only if name not provided
-    if (!companyName) {
-      fetch(`${baseUrl}?action=search&q=${orgnr}&size=1`, { headers })
-        .then((r) => r.json())
-        .then((d) => {
-          if (d.companies?.[0]) setCompanyName(d.companies[0].navn);
-        });
-    }
+    // Always fetch company info for employees/municipality
+    fetch(`${baseUrl}?action=search&q=${orgnr}&size=1`, { headers })
+      .then((r) => r.json())
+      .then((d) => {
+        const c = d.companies?.[0];
+        if (c) {
+          if (!companyName) setCompanyName(c.navn);
+          setAntallAnsatte(c.antallAnsatte ?? null);
+          setKommune(c.kommune || "");
+          setNaeringsbeskriv(c.naeringsbeskriv || "");
+        }
+      });
 
     // Fetch financials
     fetch(`${baseUrl}?action=financials&orgnr=${orgnr}`, { headers })
@@ -71,7 +78,16 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="font-headline text-2xl font-bold text-headline">{companyName || orgnr}</h2>
-          <p className="text-sm text-muted-foreground font-body">Org.nr: {orgnr}</p>
+          <p className="text-sm text-muted-foreground font-body">Org.nr: {orgnr}{kommune && ` · ${kommune}`}</p>
+          {naeringsbeskriv && <p className="text-xs text-muted-foreground font-body mt-1">{naeringsbeskriv}</p>}
+          <div className="flex items-center gap-4 mt-2">
+            {antallAnsatte !== null && (
+              <span className="flex items-center gap-1.5 text-sm font-subhead text-foreground">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                {antallAnsatte.toLocaleString()} {isNo ? "ansatte" : "employees"}
+              </span>
+            )}
+          </div>
         </div>
         {session && (
           <button

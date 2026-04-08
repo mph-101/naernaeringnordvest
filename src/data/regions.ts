@@ -27,6 +27,7 @@ export const FYLKER: Fylke[] = [
       { nummer: "1532", navn: "Giske" },
       { nummer: "1535", navn: "Vestnes" },
       { nummer: "1539", navn: "Rauma" },
+      { nummer: "1547", navn: "Aukra" },
       { nummer: "1554", navn: "Averøy" },
       { nummer: "1557", navn: "Gjemnes" },
       { nummer: "1560", navn: "Tingvoll" },

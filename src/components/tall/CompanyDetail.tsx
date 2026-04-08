@@ -207,11 +207,20 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
             <p className="text-muted-foreground font-body text-sm mb-1">
               {isNo ? "Ingen regnskapsdata tilgjengelig" : "No financial data available"}
             </p>
-            <p className="text-muted-foreground/70 font-body text-xs">
+            <p className="text-muted-foreground/70 font-body text-xs mb-3">
               {isNo
                 ? "Banker, forsikringsselskaper og andre finansinstitusjoner bruker egne oppstillingsplaner som ikke er tilgjengelig via det åpne API-et."
                 : "Banks, insurance companies and other financial institutions use specific reporting formats not available via the public API."}
             </p>
+            <a
+              href={`https://www.proff.no/bransjesøk?q=${orgnr}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-primary font-subhead hover:underline"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              {isNo ? "Se regnskap på Proff.no" : "View financials on Proff.no"}
+            </a>
           </div>
         ) : (
           <>

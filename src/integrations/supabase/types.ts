@@ -252,6 +252,63 @@ export type Database = {
         }
         Relationships: []
       }
+      job_changes: {
+        Row: {
+          change_type: string
+          created_at: string
+          generated_notice: string | null
+          id: string
+          new_company: string | null
+          new_role: string | null
+          old_company: string | null
+          old_role: string | null
+          person_name: string
+          published_at: string | null
+          reviewed_by: string | null
+          source_text: string | null
+          source_url: string | null
+          status: string
+          submitted_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          change_type?: string
+          created_at?: string
+          generated_notice?: string | null
+          id?: string
+          new_company?: string | null
+          new_role?: string | null
+          old_company?: string | null
+          old_role?: string | null
+          person_name: string
+          published_at?: string | null
+          reviewed_by?: string | null
+          source_text?: string | null
+          source_url?: string | null
+          status?: string
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          change_type?: string
+          created_at?: string
+          generated_notice?: string | null
+          id?: string
+          new_company?: string | null
+          new_role?: string | null
+          old_company?: string | null
+          old_role?: string | null
+          person_name?: string
+          published_at?: string | null
+          reviewed_by?: string | null
+          source_text?: string | null
+          source_url?: string | null
+          status?: string
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -34,6 +34,7 @@ const Profile = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [userRegion, setUserRegion] = useState<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [groups, setGroups] = useState<GroupMembership[]>([]);
   const [articleTitles, setArticleTitles] = useState<Map<string, string>>(new Map());
@@ -70,11 +71,12 @@ const Profile = () => {
       // Fetch profile
       const { data: profile } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url")
+        .select("display_name, avatar_url, region")
         .eq("user_id", session.user.id)
         .maybeSingle();
       setDisplayName(profile?.display_name ?? null);
       setAvatarUrl(profile?.avatar_url ?? null);
+      setUserRegion((profile as any)?.region ?? null);
 
       // Fetch notes and groups in parallel
       const [notesRes, groupsRes] = await Promise.all([
@@ -197,9 +199,11 @@ const Profile = () => {
           userEmail={userEmail}
           displayName={displayName}
           avatarUrl={avatarUrl}
+          userRegion={userRegion}
           onUpdate={(updates) => {
             if (updates.displayName !== undefined) setDisplayName(updates.displayName || null);
             if (updates.avatarUrl !== undefined) setAvatarUrl(updates.avatarUrl || null);
+            if (updates.region !== undefined) setUserRegion(updates.region || null);
           }}
         />
 

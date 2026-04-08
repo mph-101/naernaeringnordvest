@@ -1,28 +1,40 @@
 import { useState, useRef } from "react";
-import { Camera, Pencil, X, Check, Loader2, User } from "lucide-react";
+import { Camera, Pencil, X, Check, Loader2, User, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
+
+const regions = [
+  { id: "more_og_romsdal", labelNo: "Møre og Romsdal", labelEn: "Møre og Romsdal" },
+  { id: "vestlandet", labelNo: "Vestlandet", labelEn: "Western Norway" },
+  { id: "nord_norge", labelNo: "Nord-Norge", labelEn: "Northern Norway" },
+  { id: "trondelag", labelNo: "Trøndelag", labelEn: "Trøndelag" },
+  { id: "ostlandet", labelNo: "Østlandet", labelEn: "Eastern Norway" },
+  { id: "sorlandet", labelNo: "Sørlandet", labelEn: "Southern Norway" },
+];
 
 interface ProfileEditorProps {
   userId: string;
   userEmail: string | null;
   displayName: string | null;
   avatarUrl: string | null;
-  onUpdate: (updates: { displayName?: string; avatarUrl?: string }) => void;
+  userRegion: string | null;
+  onUpdate: (updates: { displayName?: string; avatarUrl?: string; region?: string }) => void;
 }
 
-export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, onUpdate }: ProfileEditorProps) {
-  const { language } = useTheme();
+export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userRegion, onUpdate }: ProfileEditorProps) {
+  const { language, setRegion: setThemeRegion } = useTheme();
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(displayName || "");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState(userRegion || "");
   const fileRef = useRef<HTMLInputElement>(null);
+  const isNo = language === "no";
 
-  const t = language === "no"
-    ? { edit: "Rediger", save: "Lagre", cancel: "Avbryt", saved: "Lagret!", uploadError: "Feil ved opplasting", namePlaceholder: "Visningsnavn", changePhoto: "Endre bilde" }
-    : { edit: "Edit", save: "Save", cancel: "Cancel", saved: "Saved!", uploadError: "Upload error", namePlaceholder: "Display name", changePhoto: "Change photo" };
+  const t = isNo
+    ? { edit: "Rediger", save: "Lagre", cancel: "Avbryt", saved: "Lagret!", uploadError: "Feil ved opplasting", namePlaceholder: "Visningsnavn", changePhoto: "Endre bilde", region: "Region" }
+    : { edit: "Edit", save: "Save", cancel: "Cancel", saved: "Saved!", uploadError: "Upload error", namePlaceholder: "Display name", changePhoto: "Change photo", region: "Region" };
 
   const handleSaveName = async () => {
     setSaving(true);
@@ -37,111 +49,97 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, onUpd
     toast.success(t.saved);
   };
 
+  const handleRegionChange = async (regionId: string) => {
+    setSelectedRegion(regionId);
+    setThemeRegion(regionId);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ region: regionId } as any)
+      .eq("user_id", userId);
+    if (error) { toast.error(error.message); return; }
+    onUpdate({ region: regionId });
+    toast.success(t.saved);
+  };
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error(language === "no" ? "Kun bildefiler er tillatt" : "Only image files allowed");
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error(language === "no" ? "Maks 2MB" : "Max 2MB");
-      return;
-    }
+    if (!file.type.startsWith("image/")) { toast.error(isNo ? "Kun bildefiler er tillatt" : "Only image files allowed"); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error(isNo ? "Maks 2MB" : "Max 2MB"); return; }
 
     setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `${userId}/avatar.${ext}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(path, file, { upsert: true });
-
-    if (uploadError) {
-      setUploading(false);
-      toast.error(t.uploadError);
-      return;
-    }
+    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (uploadError) { setUploading(false); toast.error(t.uploadError); return; }
 
     const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
     const url = `${publicUrl}?t=${Date.now()}`;
-
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ avatar_url: url })
-      .eq("user_id", userId);
-
+    const { error: updateError } = await supabase.from("profiles").update({ avatar_url: url }).eq("user_id", userId);
     setUploading(false);
     if (updateError) { toast.error(updateError.message); return; }
     onUpdate({ avatarUrl: url });
     toast.success(t.saved);
   };
 
+  const currentRegionLabel = regions.find(r => r.id === selectedRegion);
+
   return (
-    <div className="flex items-center gap-4 mb-8">
-      {/* Avatar */}
-      <div className="relative group">
-        <div className="w-16 h-16 rounded-full overflow-hidden bg-accent/10 flex items-center justify-center flex-shrink-0">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-          ) : (
-            <User className="w-8 h-8 text-accent" />
-          )}
+    <div className="mb-8">
+      <div className="flex items-center gap-4 mb-4">
+        {/* Avatar */}
+        <div className="relative group">
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-accent/10 flex items-center justify-center flex-shrink-0">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-8 h-8 text-accent" />
+            )}
+          </div>
+          <button onClick={() => fileRef.current?.click()} disabled={uploading} className="absolute inset-0 rounded-full bg-foreground/0 group-hover:bg-foreground/40 flex items-center justify-center transition-colors cursor-pointer" aria-label={t.changePhoto}>
+            {uploading ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />}
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
         </div>
-        <button
-          onClick={() => fileRef.current?.click()}
-          disabled={uploading}
-          className="absolute inset-0 rounded-full bg-foreground/0 group-hover:bg-foreground/40 flex items-center justify-center transition-colors cursor-pointer"
-          aria-label={t.changePhoto}
-        >
-          {uploading ? (
-            <Loader2 className="w-5 h-5 text-white animate-spin" />
+
+        {/* Name */}
+        <div className="flex-1 min-w-0">
+          {editing ? (
+            <div className="flex items-center gap-2">
+              <input value={nameValue} onChange={(e) => setNameValue(e.target.value)} placeholder={t.namePlaceholder} className="flex-1 min-w-0 px-3 py-1.5 bg-surface-subtle border border-border rounded-lg font-headline text-lg font-bold text-headline focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all" autoFocus onKeyDown={(e) => e.key === "Enter" && handleSaveName()} />
+              <button onClick={handleSaveName} disabled={saving} className="p-2 text-accent hover:bg-accent/10 rounded-lg transition-colors">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              </button>
+              <button onClick={() => { setEditing(false); setNameValue(displayName || ""); }} className="p-2 text-muted-foreground hover:bg-secondary rounded-lg transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           ) : (
-            <Camera className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex items-center gap-2">
+              <h1 className="font-headline text-2xl font-bold text-headline truncate">{displayName || userEmail}</h1>
+              <button onClick={() => { setNameValue(displayName || ""); setEditing(true); }} className="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-lg transition-colors flex-shrink-0">
+                <Pencil className="w-4 h-4" />
+              </button>
+            </div>
           )}
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          onChange={handleAvatarUpload}
-          className="hidden"
-        />
+          {displayName && !editing && <p className="text-sm text-muted-foreground font-body truncate">{userEmail}</p>}
+        </div>
       </div>
 
-      {/* Name */}
-      <div className="flex-1 min-w-0">
-        {editing ? (
-          <div className="flex items-center gap-2">
-            <input
-              value={nameValue}
-              onChange={(e) => setNameValue(e.target.value)}
-              placeholder={t.namePlaceholder}
-              className="flex-1 min-w-0 px-3 py-1.5 bg-surface-subtle border border-border rounded-lg font-headline text-lg font-bold text-headline focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
-              autoFocus
-              onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
-            />
-            <button onClick={handleSaveName} disabled={saving} className="p-2 text-accent hover:bg-accent/10 rounded-lg transition-colors">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-            </button>
-            <button onClick={() => { setEditing(false); setNameValue(displayName || ""); }} className="p-2 text-muted-foreground hover:bg-secondary rounded-lg transition-colors">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <h1 className="font-headline text-2xl font-bold text-headline truncate">
-              {displayName || userEmail}
-            </h1>
-            <button onClick={() => { setNameValue(displayName || ""); setEditing(true); }} className="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-lg transition-colors flex-shrink-0">
-              <Pencil className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-        {displayName && !editing && (
-          <p className="text-sm text-muted-foreground font-body truncate">{userEmail}</p>
-        )}
+      {/* Region selector */}
+      <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl">
+        <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        <span className="text-sm font-subhead font-medium text-muted-foreground">{t.region}:</span>
+        <select
+          value={selectedRegion}
+          onChange={(e) => handleRegionChange(e.target.value)}
+          className="flex-1 bg-transparent text-sm font-body text-foreground focus:outline-none cursor-pointer"
+        >
+          <option value="">{isNo ? "Velg region" : "Select region"}</option>
+          {regions.map(r => (
+            <option key={r.id} value={r.id}>{isNo ? r.labelNo : r.labelEn}</option>
+          ))}
+        </select>
       </div>
     </div>
   );

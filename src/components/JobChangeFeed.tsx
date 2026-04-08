@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Briefcase, ArrowRight, ExternalLink } from "lucide-react";
+import { Briefcase, ArrowRight, ExternalLink, User, Building2, BadgeCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -14,11 +14,28 @@ interface JobChange {
   published_at: string | null;
 }
 
+interface StructuredNotice {
+  title: string;
+  ingress: string;
+  key_points: { name: string; role: string; company: string };
+  body: string;
+}
+
+const parseNotice = (notice: string | null): StructuredNotice | null => {
+  if (!notice) return null;
+  try {
+    const parsed = JSON.parse(notice);
+    if (parsed.title && parsed.ingress && parsed.key_points && parsed.body) return parsed;
+  } catch {}
+  return null;
+};
+
 export const JobChangeFeed = () => {
   const { language } = useTheme();
   const isNo = language === "no";
   const [items, setItems] = useState<JobChange[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
@@ -80,37 +97,86 @@ export const JobChangeFeed = () => {
           {isNo ? "Ingen publiserte jobbytter ennå" : "No published job changes yet"}
         </p>
       ) : (
-        <div className="space-y-3">
-          {items.map((item) => (
-            <div key={item.id} className="flex gap-3 items-start">
-              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Briefcase className="w-4 h-4 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-subhead font-semibold text-sm text-headline">{item.person_name}</span>
-                  <span className={`px-2 py-0.5 text-xs font-subhead font-medium rounded-full ${typeBg(item.change_type)}`}>
-                    {typeLabel(item.change_type)}
-                  </span>
-                </div>
-                {item.generated_notice && (
-                  <p className="text-sm text-foreground font-body leading-relaxed">{item.generated_notice}</p>
+        <div className="space-y-4">
+          {items.map((item) => {
+            const structured = parseNotice(item.generated_notice);
+            const isExpanded = expandedId === item.id;
+
+            return (
+              <div key={item.id} className="border border-border rounded-xl p-4 hover:bg-secondary/30 transition-colors">
+                {structured ? (
+                  <>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`px-2 py-0.5 text-xs font-subhead font-medium rounded-full ${typeBg(item.change_type)}`}>
+                        {typeLabel(item.change_type)}
+                      </span>
+                      {item.published_at && (
+                        <span className="text-xs text-muted-foreground font-body">
+                          {new Date(item.published_at).toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "short" })}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-headline text-base font-semibold text-headline mb-1">{structured.title}</h3>
+                    <p className="text-sm text-muted-foreground font-body mb-3">{structured.ingress}</p>
+                    <div className="flex flex-wrap gap-3 mb-3">
+                      <span className="flex items-center gap-1.5 text-xs font-subhead font-medium bg-secondary px-2.5 py-1 rounded-lg">
+                        <User className="w-3 h-3 text-primary" /> {structured.key_points.name}
+                      </span>
+                      <span className="flex items-center gap-1.5 text-xs font-subhead font-medium bg-secondary px-2.5 py-1 rounded-lg">
+                        <BadgeCheck className="w-3 h-3 text-primary" /> {structured.key_points.role}
+                      </span>
+                      <span className="flex items-center gap-1.5 text-xs font-subhead font-medium bg-secondary px-2.5 py-1 rounded-lg">
+                        <Building2 className="w-3 h-3 text-primary" /> {structured.key_points.company}
+                      </span>
+                    </div>
+                    {isExpanded && (
+                      <p className="text-sm text-foreground font-body leading-relaxed mb-2">{structured.body}</p>
+                    )}
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setExpandedId(isExpanded ? null : item.id)} className="text-xs text-primary font-subhead hover:underline">
+                        {isExpanded ? (isNo ? "Vis mindre" : "Show less") : (isNo ? "Les mer" : "Read more")}
+                      </button>
+                      {item.source_url && (
+                        <a href={item.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                          <ExternalLink className="w-3 h-3" /> {isNo ? "Kilde" : "Source"}
+                        </a>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  /* Fallback for old plain-text notices */
+                  <div className="flex gap-3 items-start">
+                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Briefcase className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-subhead font-semibold text-sm text-headline">{item.person_name}</span>
+                        <span className={`px-2 py-0.5 text-xs font-subhead font-medium rounded-full ${typeBg(item.change_type)}`}>
+                          {typeLabel(item.change_type)}
+                        </span>
+                      </div>
+                      {item.generated_notice && (
+                        <p className="text-sm text-foreground font-body leading-relaxed">{item.generated_notice}</p>
+                      )}
+                      <div className="flex items-center gap-3 mt-1">
+                        {item.published_at && (
+                          <span className="text-xs text-muted-foreground font-body">
+                            {new Date(item.published_at).toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "short" })}
+                          </span>
+                        )}
+                        {item.source_url && (
+                          <a href={item.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                            <ExternalLink className="w-3 h-3" /> {isNo ? "Kilde" : "Source"}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 )}
-                <div className="flex items-center gap-3 mt-1">
-                  {item.published_at && (
-                    <span className="text-xs text-muted-foreground font-body">
-                      {new Date(item.published_at).toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "short" })}
-                    </span>
-                  )}
-                  {item.source_url && (
-                    <a href={item.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
-                      <ExternalLink className="w-3 h-3" /> {isNo ? "Kilde" : "Source"}
-                    </a>
-                  )}
-                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>

@@ -6,6 +6,7 @@ import { ConversationView } from "@/components/ConversationView";
 import { RelatedArticles } from "@/components/RelatedArticles";
 import { NewsFeed } from "@/components/NewsFeed";
 import { ViewToggle } from "@/components/ViewToggle";
+import { JobChangeFeed } from "@/components/JobChangeFeed";
 
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -71,7 +72,14 @@ const Index = () => {
       <main>
         <ViewToggle view={view} onViewChange={setView} />
         
-        {view === "search" ? <SearchHero onSearch={handleSearch} /> : <NewsFeed />}
+        {view === "search" ? <SearchHero onSearch={handleSearch} /> : (
+          <>
+            <NewsFeed />
+            <div className="max-w-4xl mx-auto px-6 mt-8">
+              <JobChangeFeed />
+            </div>
+          </>
+        )}
       </main>
 
       {/* Footer */}

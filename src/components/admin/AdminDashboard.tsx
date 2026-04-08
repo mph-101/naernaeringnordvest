@@ -13,13 +13,14 @@ import {
 import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
 import { TipsList } from "./TipsList";
+import { JobChangeReview } from "./JobChangeReview";
 
 interface AdminDashboardProps {
   session: any;
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const [view, setView] = useState<View>("dashboard");
@@ -40,6 +41,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "dashboard" as View, label: "Dashboard", icon: LayoutDashboard },
     { id: "articles" as View, label: "Artikler", icon: FileText },
     { id: "tips" as View, label: "Tips", icon: MessageSquare },
+    { id: "job-changes" as View, label: "Jobbytter", icon: Users },
   ];
 
   return (
@@ -155,6 +157,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "tips" && (
           <TipsList />
+        )}
+
+        {view === "job-changes" && (
+          <JobChangeReview />
         )}
       </main>
     </div>

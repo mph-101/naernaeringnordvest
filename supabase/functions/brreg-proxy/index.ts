@@ -69,29 +69,54 @@ Deno.serve(async (req) => {
         });
       }
 
-      const res = await fetch(`${BRREG_BASE}/regnskapsregisteret/regnskap/${orgnr}`, {
-        headers: { Accept: "application/json" },
-      });
+      // Fetch all available years (paginated)
+      let allRegnskaper: any[] = [];
+      let page = 0;
+      const size = 50;
+      while (true) {
+        const res = await fetch(
+          `${BRREG_BASE}/regnskapsregisteret/regnskap/${orgnr}?size=${size}&page=${page}`,
+          { headers: { Accept: "application/json" } }
+        );
+        if (!res.ok) break;
+        const data = await res.json();
+        const items = Array.isArray(data) ? data : data?._embedded?.regnskaper || [];
+        if (items.length === 0) break;
+        allRegnskaper = allRegnskaper.concat(items);
+        const totalPages = data?.page?.totalPages || 1;
+        page++;
+        if (page >= totalPages) break;
+      }
 
-      if (!res.ok) {
+      if (allRegnskaper.length === 0) {
         return new Response(JSON.stringify({ financials: [] }), {
           status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const data = await res.json();
-      const years = (Array.isArray(data) ? data : data?._embedded?.regnskaper || []).map((r: any) => {
-        const resultat = r.resultatregnskapResultat || {};
-        const driftsres = resultat.driftsresultat;
-        return {
-          year: r.regnskapsperiode?.fraDato?.substring(0, 4) || r.journalnr,
-          omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,
-          driftsresultat: typeof driftsres === 'number' ? driftsres : (driftsres?.driftsresultat || 0),
-          arsresultat: resultat.ordinaertResultatFoerSkattekostnad || resultat.aarsresultat || 0,
-          egenkapital: r.egenkapitalGjeld?.sumEgenkapitalGjeld || r.eiendeler?.sumEgenkapitalGjeldOgAvsetningForForpliktelser || 0,
-          sumEiendeler: r.eiendeler?.sumEiendeler || 0,
-        };
-      });
+      // Deduplicate by year (keep first = most recent filing per year)
+      const seenYears = new Set<string>();
+      const years = allRegnskaper
+        .map((r: any) => {
+          const resultat = r.resultatregnskapResultat || {};
+          const driftsres = resultat.driftsresultat;
+          const eiendeler = r.eiendeler || {};
+          const egenkapitalGjeld = r.egenkapitalGjeld || {};
+          return {
+            year: r.regnskapsperiode?.fraDato?.substring(0, 4) || r.journalnr,
+            omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,
+            driftsresultat: typeof driftsres === 'number' ? driftsres : (driftsres?.driftsresultat || 0),
+            arsresultat: resultat.ordinaertResultatFoerSkattekostnad || resultat.aarsresultat || 0,
+            egenkapital: egenkapitalGjeld.sumEgenkapitalGjeld || egenkapitalGjeld.egenkapital?.sumEgenkapital || 0,
+            sumEiendeler: eiendeler.sumEiendeler || 0,
+          };
+        })
+        .filter((y: any) => {
+          if (seenYears.has(y.year)) return false;
+          seenYears.add(y.year);
+          return true;
+        })
+        .sort((a: any, b: any) => b.year.localeCompare(a.year));
 
       return new Response(JSON.stringify({ financials: years }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -15,8 +15,18 @@ const Article = () => {
   const navigate = useNavigate();
   const { language } = useTheme();
   const t = translations[language];
+  const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   
   const article = id ? getArticleById(id, language) : undefined;
+
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from("article_company_tags")
+      .select("orgnr, company_name")
+      .eq("article_id", id)
+      .then(({ data }) => setCompanyTags(data || []));
+  }, [id]);
 
   if (!article) {
     return (

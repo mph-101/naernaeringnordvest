@@ -203,7 +203,16 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
         {loadingFin ? (
           <p className="text-muted-foreground font-body text-sm">{isNo ? "Laster..." : "Loading..."}</p>
         ) : financials.length === 0 ? (
-          <p className="text-muted-foreground font-body text-sm">{isNo ? "Ingen regnskapsdata funnet" : "No financial data found"}</p>
+          <div className="text-center py-4">
+            <p className="text-muted-foreground font-body text-sm mb-1">
+              {isNo ? "Ingen regnskapsdata tilgjengelig" : "No financial data available"}
+            </p>
+            <p className="text-muted-foreground/70 font-body text-xs">
+              {isNo
+                ? "Banker, forsikringsselskaper og andre finansinstitusjoner bruker egne oppstillingsplaner som ikke er tilgjengelig via det åpne API-et."
+                : "Banks, insurance companies and other financial institutions use specific reporting formats not available via the public API."}
+            </p>
+          </div>
         ) : (
           <>
             <div className="overflow-x-auto">

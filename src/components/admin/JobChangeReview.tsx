@@ -109,8 +109,18 @@ export const JobChangeReview = () => {
       ) : (
         <div className="space-y-4">
           {items.map((item) => (
-            <div key={item.id} className="bg-card border border-border rounded-xl p-5">
-              <div className="flex items-start justify-between gap-3 mb-3">
+            <div key={item.id} className="bg-card border border-border rounded-xl overflow-hidden">
+              {item.image_url && (
+                <div className="relative">
+                  <img src={item.image_url} alt={item.person_name} className="w-full h-40 object-cover" />
+                  {item.photo_credit && (
+                    <span className="absolute bottom-2 right-2 bg-background/80 backdrop-blur-sm text-[10px] text-muted-foreground font-body px-2 py-0.5 rounded">
+                      {item.photo_credit}
+                    </span>
+                  )}
+                </div>
+              )}
+              <div className="p-5">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-headline text-base font-semibold text-headline">{item.person_name}</span>

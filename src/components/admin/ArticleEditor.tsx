@@ -23,6 +23,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [searchResults, setSearchResults] = useState<{ orgnr: string; navn: string }[]>([]);
   const [searchingCompanies, setSearchingCompanies] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [form, setForm] = useState({
     title: "",

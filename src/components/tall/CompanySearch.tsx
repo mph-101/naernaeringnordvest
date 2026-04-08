@@ -198,6 +198,15 @@ export function CompanySearch({ session, selectedFylker, selectedKommuner, onFyl
           {isNo ? `Ingen selskaper funnet for «${query}»` : `No companies found for "${query}"`}
         </div>
       )}
+
+      {addToListCompany && session && (
+        <AddToListDialog
+          orgnr={addToListCompany.orgnr}
+          companyName={addToListCompany.navn}
+          session={session}
+          onClose={() => setAddToListCompany(null)}
+        />
+      )}
     </div>
   );
 }

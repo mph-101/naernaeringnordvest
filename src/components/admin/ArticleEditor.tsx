@@ -424,17 +424,20 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               onChange={(e) => {
                 const val = e.target.value;
                 setCompanySearch(val);
+                if (debounceRef.current) clearTimeout(debounceRef.current);
                 if (val.length >= 2) {
-                  setSearchingCompanies(true);
                   setShowResults(true);
-                  const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
-                  fetch(`${baseUrl}?action=search&q=${encodeURIComponent(val)}&size=8`, {
-                    headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-                  })
-                    .then((r) => r.json())
-                    .then((d) => setSearchResults(d.companies?.map((c: any) => ({ orgnr: c.organisasjonsnummer, navn: c.navn })) || []))
-                    .catch(() => setSearchResults([]))
-                    .finally(() => setSearchingCompanies(false));
+                  debounceRef.current = setTimeout(() => {
+                    setSearchingCompanies(true);
+                    const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
+                    fetch(`${baseUrl}?action=search&q=${encodeURIComponent(val)}&size=8`, {
+                      headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+                    })
+                      .then((r) => r.json())
+                      .then((d) => setSearchResults(d.companies?.map((c: any) => ({ orgnr: c.organisasjonsnummer, navn: c.navn })) || []))
+                      .catch(() => setSearchResults([]))
+                      .finally(() => setSearchingCompanies(false));
+                  }, 350);
                 } else {
                   setSearchResults([]);
                   setShowResults(false);

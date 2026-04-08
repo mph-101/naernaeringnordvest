@@ -110,6 +110,65 @@ export type Database = {
         }
         Relationships: []
       }
+      company_list_items: {
+        Row: {
+          added_at: string
+          company_name: string
+          id: string
+          list_id: string
+          orgnr: string
+        }
+        Insert: {
+          added_at?: string
+          company_name: string
+          id?: string
+          list_id: string
+          orgnr: string
+        }
+        Update: {
+          added_at?: string
+          company_name?: string
+          id?: string
+          list_id?: string
+          orgnr?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_list_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "company_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_lists: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       group_invitations: {
         Row: {
           created_at: string

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Briefcase, Link as LinkIcon, Sparkles, Loader2, Send } from "lucide-react";
+import { useState, useRef } from "react";
+import { Briefcase, Link as LinkIcon, Sparkles, Loader2, Send, ImagePlus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
@@ -27,6 +27,11 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [photoCredit, setPhotoCredit] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const t = isNo
     ? {
         title: "Meld inn jobbendring",
@@ -52,6 +57,10 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
         success: "Takk! Jobbendringen er sendt inn og venter på godkjenning.",
         loginRequired: "Du må logge inn for å melde inn jobbendringer.",
         generatedLabel: "Generert notis (kan redigeres)",
+        addImage: "Legg til bilde",
+        photoCredit: "Fotokreditering (f.eks. Foto: Navn / Kilde)",
+        imageRequired: "Bilde er påkrevd",
+        photoCreditRequired: "Fotokreditering er påkrevd",
       }
     : {
         title: "Report a job change",
@@ -77,7 +86,28 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
         success: "Thank you! The job change has been submitted and is pending review.",
         loginRequired: "You need to log in to report job changes.",
         generatedLabel: "Generated notice (editable)",
+        addImage: "Add image",
+        photoCredit: "Photo credit (e.g. Photo: Name / Source)",
+        imageRequired: "Image is required",
+        photoCreditRequired: "Photo credit is required",
       };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(isNo ? "Maks 5 MB" : "Max 5 MB");
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -104,8 +134,25 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
       return;
     }
 
+    if (!imageFile) {
+      toast.error(t.imageRequired);
+      return;
+    }
+    if (!photoCredit.trim()) {
+      toast.error(t.photoCreditRequired);
+      return;
+    }
+
     setSubmitting(true);
     try {
+      // Upload image
+      const ext = imageFile.name.split(".").pop() || "jpg";
+      const path = `${session.user.id}/${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("job-images").upload(path, imageFile);
+      if (uploadErr) throw uploadErr;
+
+      const { data: urlData } = supabase.storage.from("job-images").getPublicUrl(path);
+
       const { error } = await supabase.from("job_changes").insert({
         person_name: personName,
         new_role: newRole || null,
@@ -117,11 +164,14 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
         source_text: mode === "paste" ? sourceText || null : null,
         generated_notice: generatedNotice || null,
         submitted_by: session.user.id,
+        image_url: urlData.publicUrl,
+        photo_credit: photoCredit.trim(),
       } as any);
       if (error) throw error;
       toast.success(t.success);
       setPersonName(""); setNewRole(""); setNewCompany(""); setOldRole(""); setOldCompany("");
       setSourceUrl(""); setSourceText(""); setGeneratedNotice("");
+      removeImage(); setPhotoCredit("");
       onSubmitted?.();
     } catch (e: any) {
       toast.error(e.message || "Feil");
@@ -131,7 +181,7 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
   };
 
   const canGenerate = mode === "paste" ? sourceText.trim().length > 10 : personName.trim().length > 0;
-  const canSubmit = personName.trim().length > 0 && generatedNotice.trim().length > 0;
+  const canSubmit = personName.trim().length > 0 && generatedNotice.trim().length > 0 && !!imageFile && photoCredit.trim().length > 0;
 
   return (
     <div className="bg-card border border-border rounded-2xl p-6">
@@ -196,6 +246,35 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
             <input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder={t.sourceUrl} className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30" />
           </>
         )}
+
+        {/* Image upload */}
+        <div>
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+          {imagePreview ? (
+            <div className="relative inline-block">
+              <img src={imagePreview} alt="Preview" className="w-24 h-24 object-cover rounded-xl border border-border" />
+              <button onClick={removeImage} className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 px-3 py-2 border border-dashed border-border rounded-lg text-sm font-subhead text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+            >
+              <ImagePlus className="w-4 h-4" /> {t.addImage} *
+            </button>
+          )}
+        </div>
+
+        {/* Photo credit */}
+        <input
+          value={photoCredit}
+          onChange={(e) => setPhotoCredit(e.target.value)}
+          placeholder={`${t.photoCredit} *`}
+          className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
+        />
 
         {/* Generate button */}
         <button

@@ -34,6 +34,7 @@ const Profile = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [userRegion, setUserRegion] = useState<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [groups, setGroups] = useState<GroupMembership[]>([]);
   const [articleTitles, setArticleTitles] = useState<Map<string, string>>(new Map());

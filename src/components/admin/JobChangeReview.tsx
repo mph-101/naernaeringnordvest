@@ -16,6 +16,8 @@ interface JobChange {
   generated_notice: string | null;
   status: string;
   created_at: string;
+  image_url: string | null;
+  photo_credit: string | null;
 }
 
 export const JobChangeReview = () => {

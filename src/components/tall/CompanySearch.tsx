@@ -89,7 +89,12 @@ export function CompanySearch({ session, selectedFylker, selectedKommuner, onFyl
     return (
       <div>
         <button
-          onClick={() => setSelectedCompany(null)}
+          onClick={() => {
+            setSelectedCompany(null);
+            // Clear selskap param from URL
+            searchParams.delete("selskap");
+            setSearchParams(searchParams, { replace: true });
+          }}
           className="text-sm text-muted-foreground hover:text-foreground mb-4 font-body transition-colors"
         >
           ← {isNo ? "Tilbake til søk" : "Back to search"}

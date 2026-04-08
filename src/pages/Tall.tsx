@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { ViewToggle } from "@/components/ViewToggle";
 import { CompanySearch } from "@/components/tall/CompanySearch";
+import { CompanyTable } from "@/components/tall/CompanyTable";
 import { CompanyLists } from "@/components/tall/CompanyLists";
 import { EstablishmentsOverview } from "@/components/tall/EstablishmentsOverview";
 import { useTheme } from "@/hooks/useTheme";
@@ -70,7 +71,12 @@ export default function Tall() {
           })}
         </div>
 
-        {tab === "search" && <CompanySearch session={session} />}
+        {tab === "search" && (
+          <div className="space-y-10">
+            <CompanySearch session={session} />
+            <CompanyTable session={session} />
+          </div>
+        )}
         {tab === "lists" && <CompanyLists session={session} />}
         {tab === "overview" && <EstablishmentsOverview />}
       </div>

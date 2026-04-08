@@ -26,26 +26,28 @@ function formatNOK(n: number): string {
   return `${n.toLocaleString()} NOK`;
 }
 
-export function CompanyDetail({ orgnr, session }: { orgnr: string; session: any }) {
+export function CompanyDetail({ orgnr, companyName: initialName, session }: { orgnr: string; companyName?: string; session: any }) {
   const { language } = useTheme();
   const isNo = language === "no";
   const [financials, setFinancials] = useState<FinancialYear[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loadingFin, setLoadingFin] = useState(true);
   const [loadingRoles, setLoadingRoles] = useState(true);
-  const [companyName, setCompanyName] = useState("");
+  const [companyName, setCompanyName] = useState(initialName || "");
   const [showAddToList, setShowAddToList] = useState(false);
 
   const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
   const headers = { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` };
 
   useEffect(() => {
-    // Fetch company info
-    fetch(`${baseUrl}?action=search&q=${orgnr}&size=1`, { headers })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.companies?.[0]) setCompanyName(d.companies[0].navn);
-      });
+    // Fetch company info only if name not provided
+    if (!companyName) {
+      fetch(`${baseUrl}?action=search&q=${orgnr}&size=1`, { headers })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.companies?.[0]) setCompanyName(d.companies[0].navn);
+        });
+    }
 
     // Fetch financials
     fetch(`${baseUrl}?action=financials&orgnr=${orgnr}`, { headers })

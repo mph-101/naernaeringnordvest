@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/useTheme";
-import { ArrowUpDown, ArrowUp, ArrowDown, Building2, Users, ChevronRight, MapPin, Filter } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, Building2, Users, ChevronRight } from "lucide-react";
 import { CompanyDetail } from "./CompanyDetail";
-import { FYLKER, getKommunenummerForFylke } from "@/data/regions";
+import { GeoFilter, getKommuneParam } from "./GeoFilter";
 
 interface TableCompany {
   orgnr: string;
@@ -16,7 +16,15 @@ interface TableCompany {
 
 type SortField = "antallAnsatte" | "navn" | "stiftelsesdato";
 
-export function CompanyTable({ session }: { session: any }) {
+interface Props {
+  session: any;
+  selectedFylker: string[];
+  selectedKommuner: string[];
+  onFylkerChange: (f: string[]) => void;
+  onKommunerChange: (k: string[]) => void;
+}
+
+export function CompanyTable({ session, selectedFylker, selectedKommuner, onFylkerChange, onKommunerChange }: Props) {
   const { language } = useTheme();
   const isNo = language === "no";
   const [companies, setCompanies] = useState<TableCompany[]>([]);
@@ -26,45 +34,30 @@ export function CompanyTable({ session }: { session: any }) {
   const [page, setPage] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [selectedOrgnr, setSelectedOrgnr] = useState<string | null>(null);
-  const [selectedName, setSelectedName] = useState<string>("");
-  const [fylke, setFylke] = useState<string>("");
-  const [kommune, setKommune] = useState<string>("");
+  const [selectedName, setSelectedName] = useState("");
 
   const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
   const headers = { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` };
   const PAGE_SIZE = 30;
 
-  const selectedFylke = FYLKER.find((f) => f.navn === fylke);
-  const kommuner = selectedFylke?.kommuner || [];
-
-  const getKommuneParam = (): string => {
-    if (kommune) return kommune;
-    if (fylke) return getKommunenummerForFylke(fylke).join(",");
-    return "";
-  };
-
   const fetchData = async (p: number, field: SortField, order: "asc" | "desc", append = false) => {
     setLoading(true);
     try {
-      const kommuneParam = getKommuneParam();
+      const kommuneParam = getKommuneParam(selectedFylker, selectedKommuner);
       let url = `${baseUrl}?action=top&page=${p}&size=${PAGE_SIZE}&sort=${field}&order=${order}`;
       if (kommuneParam) url += `&kommune=${kommuneParam}`;
-
       const res = await fetch(url, { headers });
       const json = await res.json();
-      const newCompanies = json.companies || [];
-      setCompanies(prev => append ? [...prev, ...newCompanies] : newCompanies);
+      setCompanies(prev => append ? [...prev, ...(json.companies || [])] : (json.companies || []));
       setTotalElements(json.totalElements || 0);
       setPage(p);
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
     setLoading(false);
   };
 
   useEffect(() => {
     fetchData(0, sortField, sortOrder);
-  }, [fylke, kommune]);
+  }, [selectedFylker, selectedKommuner]);
 
   const handleSort = (field: SortField) => {
     const newOrder = field === sortField ? (sortOrder === "desc" ? "asc" : "desc") : "desc";
@@ -74,24 +67,15 @@ export function CompanyTable({ session }: { session: any }) {
     fetchData(0, field, newOrder);
   };
 
-  const loadMore = () => {
-    fetchData(page + 1, sortField, sortOrder, true);
-  };
-
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="w-3 h-3 text-muted-foreground" />;
-    return sortOrder === "desc"
-      ? <ArrowDown className="w-3 h-3 text-primary" />
-      : <ArrowUp className="w-3 h-3 text-primary" />;
+    return sortOrder === "desc" ? <ArrowDown className="w-3 h-3 text-primary" /> : <ArrowUp className="w-3 h-3 text-primary" />;
   };
 
   if (selectedOrgnr) {
     return (
       <div>
-        <button
-          onClick={() => setSelectedOrgnr(null)}
-          className="text-sm text-muted-foreground hover:text-foreground mb-4 font-body transition-colors"
-        >
+        <button onClick={() => setSelectedOrgnr(null)} className="text-sm text-muted-foreground hover:text-foreground mb-4 font-body transition-colors">
           ← {isNo ? "Tilbake til oversikt" : "Back to overview"}
         </button>
         <CompanyDetail orgnr={selectedOrgnr} companyName={selectedName} session={session} />
@@ -116,43 +100,13 @@ export function CompanyTable({ session }: { session: any }) {
         </p>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-muted-foreground" />
-          <select
-            value={fylke}
-            onChange={(e) => { setFylke(e.target.value); setKommune(""); }}
-            className="px-3 py-2 rounded-lg border border-border bg-card text-sm font-body text-foreground focus:outline-none focus:border-accent transition-colors"
-          >
-            <option value="">{isNo ? "Alle fylker" : "All counties"}</option>
-            {FYLKER.map((f) => (
-              <option key={f.navn} value={f.navn}>{f.navn}</option>
-            ))}
-          </select>
-        </div>
-
-        {fylke && (
-          <select
-            value={kommune}
-            onChange={(e) => setKommune(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-border bg-card text-sm font-body text-foreground focus:outline-none focus:border-accent transition-colors"
-          >
-            <option value="">{isNo ? "Alle kommuner" : "All municipalities"}</option>
-            {kommuner.map((k) => (
-              <option key={k.nummer} value={k.nummer}>{k.navn}</option>
-            ))}
-          </select>
-        )}
-
-        {(fylke || kommune) && (
-          <button
-            onClick={() => { setFylke(""); setKommune(""); }}
-            className="px-3 py-2 rounded-lg text-sm font-subhead text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          >
-            ✕ {isNo ? "Nullstill" : "Reset"}
-          </button>
-        )}
+      <div className="mb-4">
+        <GeoFilter
+          selectedFylker={selectedFylker}
+          selectedKommuner={selectedKommuner}
+          onFylkerChange={onFylkerChange}
+          onKommunerChange={onKommunerChange}
+        />
       </div>
 
       <div className="bg-card border border-border rounded-2xl overflow-hidden">
@@ -162,49 +116,29 @@ export function CompanyTable({ session }: { session: any }) {
               <tr className="border-b border-border bg-secondary/50">
                 <th className="text-left py-3 px-4 font-subhead text-muted-foreground font-medium w-8">#</th>
                 {columns.map((col) => (
-                  <th
-                    key={col.field}
-                    className={`py-3 px-4 font-subhead text-muted-foreground font-medium cursor-pointer hover:text-foreground transition-colors ${
-                      col.align === "right" ? "text-right" : "text-left"
-                    }`}
-                    onClick={() => handleSort(col.field)}
-                  >
+                  <th key={col.field} className={`py-3 px-4 font-subhead text-muted-foreground font-medium cursor-pointer hover:text-foreground transition-colors ${col.align === "right" ? "text-right" : "text-left"}`} onClick={() => handleSort(col.field)}>
                     <span className="inline-flex items-center gap-1.5">
                       {isNo ? col.label : col.labelEn}
                       <SortIcon field={col.field} />
                     </span>
                   </th>
                 ))}
-                <th className="py-3 px-4 font-subhead text-muted-foreground font-medium text-left">
-                  {isNo ? "Kommune" : "Municipality"}
-                </th>
+                <th className="py-3 px-4 font-subhead text-muted-foreground font-medium text-left">{isNo ? "Kommune" : "Municipality"}</th>
                 <th className="w-8"></th>
               </tr>
             </thead>
             <tbody>
               {companies.map((c, i) => (
-                <tr
-                  key={c.orgnr}
-                  onClick={() => { setSelectedOrgnr(c.orgnr); setSelectedName(c.navn); }}
-                  className="border-b border-border/50 hover:bg-secondary/30 cursor-pointer transition-colors group"
-                >
-                  <td className="py-3 px-4 text-muted-foreground font-body text-xs">
-                    {i + 1}
-                  </td>
+                <tr key={c.orgnr} onClick={() => { setSelectedOrgnr(c.orgnr); setSelectedName(c.navn); }} className="border-b border-border/50 hover:bg-secondary/30 cursor-pointer transition-colors group">
+                  <td className="py-3 px-4 text-muted-foreground font-body text-xs">{i + 1}</td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-7 h-7 rounded-full bg-gradient-warm flex items-center justify-center flex-shrink-0">
                         <Building2 className="w-3.5 h-3.5 text-accent-foreground" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-subhead font-medium text-headline group-hover:text-accent transition-colors truncate text-sm">
-                          {c.navn}
-                        </p>
-                        {c.naeringsbeskriv && (
-                          <p className="text-xs text-muted-foreground font-body truncate max-w-xs">
-                            {c.naeringsbeskriv}
-                          </p>
-                        )}
+                        <p className="font-subhead font-medium text-headline group-hover:text-accent transition-colors truncate text-sm">{c.navn}</p>
+                        {c.naeringsbeskriv && <p className="text-xs text-muted-foreground font-body truncate max-w-xs">{c.naeringsbeskriv}</p>}
                       </div>
                     </div>
                   </td>
@@ -214,33 +148,18 @@ export function CompanyTable({ session }: { session: any }) {
                       {c.antallAnsatte.toLocaleString()}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-right font-body text-muted-foreground text-sm">
-                    {c.stiftelsesdato?.substring(0, 4) || "—"}
-                  </td>
-                  <td className="py-3 px-4 font-body text-muted-foreground text-sm">
-                    {c.kommune}
-                  </td>
-                  <td className="py-3 px-2">
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
-                  </td>
+                  <td className="py-3 px-4 text-right font-body text-muted-foreground text-sm">{c.stiftelsesdato?.substring(0, 4) || "—"}</td>
+                  <td className="py-3 px-4 font-body text-muted-foreground text-sm">{c.kommune}</td>
+                  <td className="py-3 px-2"><ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" /></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-
-        {loading && (
-          <div className="py-6 text-center text-muted-foreground font-body text-sm">
-            {isNo ? "Laster..." : "Loading..."}
-          </div>
-        )}
-
+        {loading && <div className="py-6 text-center text-muted-foreground font-body text-sm">{isNo ? "Laster..." : "Loading..."}</div>}
         {!loading && companies.length < totalElements && (
           <div className="py-4 text-center border-t border-border">
-            <button
-              onClick={loadMore}
-              className="px-6 py-2.5 bg-secondary text-foreground rounded-lg text-sm font-subhead hover:bg-secondary/80 transition-colors"
-            >
+            <button onClick={() => fetchData(page + 1, sortField, sortOrder, true)} className="px-6 py-2.5 bg-secondary text-foreground rounded-lg text-sm font-subhead hover:bg-secondary/80 transition-colors">
               {isNo ? `Last flere (viser ${companies.length} av ${totalElements.toLocaleString()})` : `Load more (showing ${companies.length} of ${totalElements.toLocaleString()})`}
             </button>
           </div>

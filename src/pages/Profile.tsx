@@ -71,11 +71,12 @@ const Profile = () => {
       // Fetch profile
       const { data: profile } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url")
+        .select("display_name, avatar_url, region")
         .eq("user_id", session.user.id)
         .maybeSingle();
       setDisplayName(profile?.display_name ?? null);
       setAvatarUrl(profile?.avatar_url ?? null);
+      setUserRegion((profile as any)?.region ?? null);
 
       // Fetch notes and groups in parallel
       const [notesRes, groupsRes] = await Promise.all([
@@ -198,9 +199,11 @@ const Profile = () => {
           userEmail={userEmail}
           displayName={displayName}
           avatarUrl={avatarUrl}
+          userRegion={userRegion}
           onUpdate={(updates) => {
             if (updates.displayName !== undefined) setDisplayName(updates.displayName || null);
             if (updates.avatarUrl !== undefined) setAvatarUrl(updates.avatarUrl || null);
+            if (updates.region !== undefined) setUserRegion(updates.region || null);
           }}
         />
 

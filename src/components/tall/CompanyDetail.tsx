@@ -83,7 +83,34 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
         )}
       </div>
 
-      {/* Financials */}
+      {/* Financials Chart */}
+      {!loadingFin && financials.length > 1 && (
+        <div className="bg-card border border-border rounded-2xl p-6">
+          <h3 className="font-headline text-lg font-semibold text-headline mb-4">
+            {isNo ? "Omsetning over tid" : "Revenue Over Time"}
+          </h3>
+          <div className="flex items-end gap-1 h-40">
+            {[...financials].reverse().map((f) => {
+              const maxOmsetning = Math.max(...financials.map((x) => x.omsetning), 1);
+              const heightPct = (f.omsetning / maxOmsetning) * 100;
+              return (
+                <div key={f.year} className="flex-1 flex flex-col items-center gap-1">
+                  <span className="text-[10px] font-subhead text-muted-foreground">
+                    {formatNOK(f.omsetning)}
+                  </span>
+                  <div
+                    className="w-full bg-primary/70 rounded-t-sm min-h-[2px] transition-all"
+                    style={{ height: `${Math.max(heightPct, 2)}%` }}
+                  />
+                  <span className="text-[10px] font-body text-muted-foreground">{f.year}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Financials Table */}
       <div className="bg-card border border-border rounded-2xl p-6">
         <h3 className="font-headline text-lg font-semibold text-headline mb-4">
           {isNo ? "Nøkkeltall" : "Key Figures"}
@@ -105,7 +132,7 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
                 </tr>
               </thead>
               <tbody>
-                {financials.slice(0, 5).map((f) => (
+                {financials.map((f) => (
                   <tr key={f.year} className="border-b border-border/50">
                     <td className="py-2.5 font-subhead font-medium">{f.year}</td>
                     <td className="py-2.5 text-right font-subhead">{formatNOK(f.omsetning)}</td>

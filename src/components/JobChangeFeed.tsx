@@ -12,6 +12,8 @@ interface JobChange {
   generated_notice: string | null;
   source_url: string | null;
   published_at: string | null;
+  image_url: string | null;
+  photo_credit: string | null;
 }
 
 interface StructuredNotice {
@@ -41,7 +43,7 @@ export const JobChangeFeed = () => {
     const fetch = async () => {
       const { data } = await supabase
         .from("job_changes")
-        .select("id, person_name, new_role, new_company, change_type, generated_notice, source_url, published_at")
+        .select("id, person_name, new_role, new_company, change_type, generated_notice, source_url, published_at, image_url, photo_credit")
         .eq("status", "published")
         .order("published_at", { ascending: false })
         .limit(5);
@@ -103,7 +105,18 @@ export const JobChangeFeed = () => {
             const isExpanded = expandedId === item.id;
 
             return (
-              <div key={item.id} className="border border-border rounded-xl p-4 hover:bg-secondary/30 transition-colors">
+              <div key={item.id} className="border border-border rounded-xl overflow-hidden hover:bg-secondary/30 transition-colors">
+                {item.image_url && (
+                  <div className="relative">
+                    <img src={item.image_url} alt={item.person_name} className="w-full h-48 object-cover" />
+                    {item.photo_credit && (
+                      <span className="absolute bottom-2 right-2 bg-background/80 backdrop-blur-sm text-[10px] text-muted-foreground font-body px-2 py-0.5 rounded">
+                        {item.photo_credit}
+                      </span>
+                    )}
+                  </div>
+                )}
+                <div className="p-4">
                 {structured ? (
                   <>
                     <div className="flex items-center gap-2 mb-1">
@@ -174,6 +187,7 @@ export const JobChangeFeed = () => {
                     </div>
                   </div>
                 )}
+                </div>
               </div>
             );
           })}

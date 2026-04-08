@@ -16,6 +16,8 @@ interface JobChange {
   generated_notice: string | null;
   status: string;
   created_at: string;
+  image_url: string | null;
+  photo_credit: string | null;
 }
 
 export const JobChangeReview = () => {
@@ -107,88 +109,100 @@ export const JobChangeReview = () => {
       ) : (
         <div className="space-y-4">
           {items.map((item) => (
-            <div key={item.id} className="bg-card border border-border rounded-xl p-5">
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-headline text-base font-semibold text-headline">{item.person_name}</span>
-                    <span className="px-2 py-0.5 text-xs font-subhead font-medium rounded-full bg-secondary text-muted-foreground">{typeLabel(item.change_type)}</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground font-body space-x-3">
-                    {item.new_role && <span>→ {item.new_role}</span>}
-                    {item.new_company && <span>@ {item.new_company}</span>}
-                    {item.old_role && <span>(fra {item.old_role})</span>}
-                    {item.old_company && <span>@ {item.old_company}</span>}
-                  </div>
+            <div key={item.id} className="bg-card border border-border rounded-xl overflow-hidden">
+              {item.image_url && (
+                <div className="relative">
+                  <img src={item.image_url} alt={item.person_name} className="w-full h-40 object-cover" />
+                  {item.photo_credit && (
+                    <span className="absolute bottom-2 right-2 bg-background/80 backdrop-blur-sm text-[10px] text-muted-foreground font-body px-2 py-0.5 rounded">
+                      {item.photo_credit}
+                    </span>
+                  )}
                 </div>
-                <span className="text-xs text-muted-foreground font-body flex-shrink-0">
-                  {new Date(item.created_at).toLocaleDateString("nb-NO", { day: "numeric", month: "short" })}
-                </span>
-              </div>
-
-              {item.source_text && (
-                <details className="mb-3">
-                  <summary className="text-xs text-primary font-subhead cursor-pointer">Vis kildetekst</summary>
-                  <p className="text-xs text-muted-foreground font-body mt-1 p-2 bg-secondary rounded-lg whitespace-pre-wrap">{item.source_text}</p>
-                </details>
               )}
-              {item.source_url && (
-                <a href={item.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 mb-3">
-                  <ExternalLink className="w-3 h-3" /> Kilde
-                </a>
-              )}
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-headline text-base font-semibold text-headline">{item.person_name}</span>
+                      <span className="px-2 py-0.5 text-xs font-subhead font-medium rounded-full bg-secondary text-muted-foreground">{typeLabel(item.change_type)}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground font-body space-x-3">
+                      {item.new_role && <span>→ {item.new_role}</span>}
+                      {item.new_company && <span>@ {item.new_company}</span>}
+                      {item.old_role && <span>(fra {item.old_role})</span>}
+                      {item.old_company && <span>@ {item.old_company}</span>}
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground font-body flex-shrink-0">
+                    {new Date(item.created_at).toLocaleDateString("nb-NO", { day: "numeric", month: "short" })}
+                  </span>
+                </div>
 
-              {/* Structured notice preview */}
-              {(() => {
-                try {
-                  const parsed = JSON.parse(item.generated_notice || "");
-                  if (parsed.title && parsed.key_points) {
-                    return (
-                      <div className="mb-3 p-3 bg-secondary/50 rounded-lg space-y-2">
-                        <div className="font-headline text-sm font-semibold text-headline">{parsed.title}</div>
-                        <div className="text-xs text-muted-foreground font-body">{parsed.ingress}</div>
-                        <div className="flex flex-wrap gap-2">
-                          <span className="flex items-center gap-1 text-xs bg-background px-2 py-0.5 rounded">
-                            <User className="w-3 h-3 text-primary" /> {parsed.key_points.name}
-                          </span>
-                          <span className="flex items-center gap-1 text-xs bg-background px-2 py-0.5 rounded">
-                            <BadgeCheck className="w-3 h-3 text-primary" /> {parsed.key_points.role}
-                          </span>
-                          <span className="flex items-center gap-1 text-xs bg-background px-2 py-0.5 rounded">
-                            <Building2 className="w-3 h-3 text-primary" /> {parsed.key_points.company}
-                          </span>
-                        </div>
-                        <div className="text-xs text-foreground font-body leading-relaxed">{parsed.body}</div>
-                      </div>
-                    );
-                  }
-                } catch {}
-                return null;
-              })()}
-              <textarea
-                defaultValue={item.generated_notice || ""}
-                onBlur={(e) => handleNoticeEdit(item.id, e.target.value)}
-                rows={3}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none mb-3"
-              />
-
-              <div className="flex items-center gap-2">
-                <button onClick={() => handleRegenerate(item)} disabled={regeneratingId === item.id} className="flex items-center gap-1 px-3 py-1.5 bg-secondary text-foreground rounded-lg text-xs font-subhead hover:bg-secondary/80 transition-colors disabled:opacity-50">
-                  {regeneratingId === item.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />} Regenerer
-                </button>
-                {filter === "pending" && (
-                  <>
-                    <button onClick={() => handleApprove(item.id)} className="flex items-center gap-1 px-3 py-1.5 bg-green-500/10 text-green-700 rounded-lg text-xs font-subhead hover:bg-green-500/20 transition-colors">
-                      <Check className="w-3 h-3" /> Publiser
-                    </button>
-                    <button onClick={() => handleReject(item.id)} className="flex items-center gap-1 px-3 py-1.5 bg-destructive/10 text-destructive rounded-lg text-xs font-subhead hover:bg-destructive/20 transition-colors">
-                      <X className="w-3 h-3" /> Avvis
-                    </button>
-                  </>
+                {item.source_text && (
+                  <details className="mb-3">
+                    <summary className="text-xs text-primary font-subhead cursor-pointer">Vis kildetekst</summary>
+                    <p className="text-xs text-muted-foreground font-body mt-1 p-2 bg-secondary rounded-lg whitespace-pre-wrap">{item.source_text}</p>
+                  </details>
                 )}
-                <button onClick={() => handleDelete(item.id)} className="ml-auto p-1.5 text-muted-foreground hover:text-destructive rounded-lg transition-colors">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                {item.source_url && (
+                  <a href={item.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 mb-3">
+                    <ExternalLink className="w-3 h-3" /> Kilde
+                  </a>
+                )}
+
+                {/* Structured notice preview */}
+                {(() => {
+                  try {
+                    const parsed = JSON.parse(item.generated_notice || "");
+                    if (parsed.title && parsed.key_points) {
+                      return (
+                        <div className="mb-3 p-3 bg-secondary/50 rounded-lg space-y-2">
+                          <div className="font-headline text-sm font-semibold text-headline">{parsed.title}</div>
+                          <div className="text-xs text-muted-foreground font-body">{parsed.ingress}</div>
+                          <div className="flex flex-wrap gap-2">
+                            <span className="flex items-center gap-1 text-xs bg-background px-2 py-0.5 rounded">
+                              <User className="w-3 h-3 text-primary" /> {parsed.key_points.name}
+                            </span>
+                            <span className="flex items-center gap-1 text-xs bg-background px-2 py-0.5 rounded">
+                              <BadgeCheck className="w-3 h-3 text-primary" /> {parsed.key_points.role}
+                            </span>
+                            <span className="flex items-center gap-1 text-xs bg-background px-2 py-0.5 rounded">
+                              <Building2 className="w-3 h-3 text-primary" /> {parsed.key_points.company}
+                            </span>
+                          </div>
+                          <div className="text-xs text-foreground font-body leading-relaxed">{parsed.body}</div>
+                        </div>
+                      );
+                    }
+                  } catch {}
+                  return null;
+                })()}
+                <textarea
+                  defaultValue={item.generated_notice || ""}
+                  onBlur={(e) => handleNoticeEdit(item.id, e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none mb-3"
+                />
+
+                <div className="flex items-center gap-2">
+                  <button onClick={() => handleRegenerate(item)} disabled={regeneratingId === item.id} className="flex items-center gap-1 px-3 py-1.5 bg-secondary text-foreground rounded-lg text-xs font-subhead hover:bg-secondary/80 transition-colors disabled:opacity-50">
+                    {regeneratingId === item.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />} Regenerer
+                  </button>
+                  {filter === "pending" && (
+                    <>
+                      <button onClick={() => handleApprove(item.id)} className="flex items-center gap-1 px-3 py-1.5 bg-accent/10 text-accent rounded-lg text-xs font-subhead hover:bg-accent/20 transition-colors">
+                        <Check className="w-3 h-3" /> Publiser
+                      </button>
+                      <button onClick={() => handleReject(item.id)} className="flex items-center gap-1 px-3 py-1.5 bg-destructive/10 text-destructive rounded-lg text-xs font-subhead hover:bg-destructive/20 transition-colors">
+                        <X className="w-3 h-3" /> Avvis
+                      </button>
+                    </>
+                  )}
+                  <button onClick={() => handleDelete(item.id)} className="ml-auto p-1.5 text-muted-foreground hover:text-destructive rounded-lg transition-colors">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}

@@ -168,8 +168,8 @@ Deno.serve(async (req) => {
       const tilDate = url.searchParams.get("til") || "";
 
       let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsform=AS,ASA&size=50&sort=stiftelsesdato,desc`;
-      if (fraDate) apiUrl += `&stiftelsesdato.fra=${fraDate}`;
-      if (tilDate) apiUrl += `&stiftelsesdato.til=${tilDate}`;
+      if (fraDate) apiUrl += `&fraStiftelsesdato=${fraDate}`;
+      if (tilDate) apiUrl += `&tilStiftelsesdato=${tilDate}`;
       if (kommune) apiUrl += `&kommunenummer=${kommune}`;
 
       const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
@@ -199,8 +199,8 @@ Deno.serve(async (req) => {
       const tilDate = url.searchParams.get("til") || "";
       let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsform=AS,ASA&konkurs=true&size=50&sort=registreringsdatoEnhetsregisteret,desc`;
       if (kommune) apiUrl += `&kommunenummer=${kommune}`;
-      if (fraDate) apiUrl += `&registreringsdatoEnhetsregisteret.fra=${fraDate}`;
-      if (tilDate) apiUrl += `&registreringsdatoEnhetsregisteret.til=${tilDate}`;
+      if (fraDate) apiUrl += `&fraRegistreringsdatoEnhetsregisteret=${fraDate}`;
+      if (tilDate) apiUrl += `&tilRegistreringsdatoEnhetsregisteret=${tilDate}`;
 
       const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
       const data = await res.json();

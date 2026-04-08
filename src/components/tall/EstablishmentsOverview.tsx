@@ -29,10 +29,10 @@ export function EstablishmentsOverview() {
 
   useEffect(() => {
     const now = new Date();
-    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
     Promise.all([
-      fetch(`${baseUrl}?action=new_establishments&fra=${firstOfMonth}`, { headers }).then((r) => r.json()),
+      fetch(`${baseUrl}?action=new_establishments&fra=${thirtyDaysAgo}`, { headers }).then((r) => r.json()),
       fetch(`${baseUrl}?action=bankruptcies`, { headers }).then((r) => r.json()),
     ])
       .then(([newData, bankData]) => {

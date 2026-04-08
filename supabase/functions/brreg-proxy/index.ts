@@ -251,6 +251,41 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "announcements") {
+      const orgnr = url.searchParams.get("orgnr");
+      if (!orgnr) {
+        return new Response(JSON.stringify({ error: "orgnr required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // BRREG kunngjøringer API
+      const res = await fetch(
+        `https://kunngjoring.brreg.no/api/kunngjoring?organisasjonsnummer=${orgnr}&size=20&sort=kunngjoring_dato,desc`,
+        { headers: { Accept: "application/json" } }
+      );
+
+      if (!res.ok) {
+        return new Response(JSON.stringify({ announcements: [] }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const data = await res.json();
+      const items = data?._embedded?.kunngjoeringer || data?.kunngjoeringer || [];
+
+      const announcements = items.map((k: any) => ({
+        id: k.id || `${k.kunngjoring_dato}-${k.kunngjoringstype}`,
+        kunngjoringstype: k.kunngjoringstype || k.type || "Ukjent",
+        dato: k.kunngjoring_dato || k.dato || "",
+        beskrivelse: k.beskrivelse || k.innhold || "",
+      }));
+
+      return new Response(JSON.stringify({ announcements }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

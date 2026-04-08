@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/useTheme";
-import { Building2, Users, TrendingUp, TrendingDown, User, ChevronDown, ChevronUp } from "lucide-react";
+import { Building2, Users, TrendingUp, TrendingDown, User, ChevronDown, ChevronUp, ExternalLink, FileText, Megaphone } from "lucide-react";
 import { AddToListDialog } from "./AddToListDialog";
 
 interface FinancialYear {
@@ -20,6 +20,13 @@ interface Role {
   fratradt: boolean;
 }
 
+interface Announcement {
+  id: string;
+  kunngjoringstype: string;
+  dato: string;
+  beskrivelse: string;
+}
+
 function formatNOK(n: number): string {
   if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(1)} MNOK`;
   if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(0)} TNOK`;
@@ -28,13 +35,23 @@ function formatNOK(n: number): string {
 
 type ChartMetric = "omsetning" | "driftsresultat" | "arsresultat" | "egenkapital";
 
+function SourceLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary font-body transition-colors">
+      <ExternalLink className="w-3 h-3" /> {label}
+    </a>
+  );
+}
+
 export function CompanyDetail({ orgnr, companyName: initialName, session }: { orgnr: string; companyName?: string; session: any }) {
   const { language } = useTheme();
   const isNo = language === "no";
   const [financials, setFinancials] = useState<FinancialYear[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loadingFin, setLoadingFin] = useState(true);
   const [loadingRoles, setLoadingRoles] = useState(true);
+  const [loadingAnn, setLoadingAnn] = useState(true);
   const [companyName, setCompanyName] = useState(initialName || "");
   const [showAddToList, setShowAddToList] = useState(false);
   const [antallAnsatte, setAntallAnsatte] = useState<number | null>(null);
@@ -45,6 +62,10 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
 
   const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
   const headers = { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` };
+
+  const brregEnhetUrl = `https://data.brreg.no/enhetsregisteret/api/enheter/${orgnr}`;
+  const brregRegnskapUrl = `https://data.brreg.no/regnskapsregisteret/regnskap/${orgnr}`;
+  const brregKunnUrl = `https://w2.brreg.no/kunngjoring/finn.jsp?LegacyOrgnr=${orgnr}`;
 
   useEffect(() => {
     fetch(`${baseUrl}?action=search&q=${orgnr}&size=1`, { headers })
@@ -70,6 +91,12 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
       .then((d) => setRoles(d.roles || []))
       .catch(() => {})
       .finally(() => setLoadingRoles(false));
+
+    fetch(`${baseUrl}?action=announcements&orgnr=${orgnr}`, { headers })
+      .then((r) => r.json())
+      .then((d) => setAnnouncements(d.announcements || []))
+      .catch(() => {})
+      .finally(() => setLoadingAnn(false));
   }, [orgnr]);
 
   const activeRoles = roles.filter((r) => !r.fratradt);
@@ -81,7 +108,6 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
     egenkapital: isNo ? "Egenkapital" : "Equity",
   };
 
-  // Chart data: reverse to chronological, show all years
   const chartData = [...financials].reverse();
   const visibleTableYears = showAllYears ? financials : financials.slice(0, 5);
 
@@ -90,7 +116,9 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="font-headline text-2xl font-bold text-headline">{companyName || orgnr}</h2>
-          <p className="text-sm text-muted-foreground font-body">Org.nr: {orgnr}{kommune && ` · ${kommune}`}</p>
+          <p className="text-sm text-muted-foreground font-body">
+            Org.nr: {orgnr}{kommune && ` · ${kommune}`}
+          </p>
           {naeringsbeskriv && <p className="text-xs text-muted-foreground font-body mt-1">{naeringsbeskriv}</p>}
           <div className="flex items-center gap-4 mt-2">
             {antallAnsatte !== null && (
@@ -99,6 +127,10 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
                 {antallAnsatte.toLocaleString()} {isNo ? "ansatte" : "employees"}
               </span>
             )}
+          </div>
+          <div className="flex items-center gap-3 mt-2">
+            <SourceLink href={brregEnhetUrl} label={isNo ? "Enhetsregisteret" : "Entity Registry"} />
+            <SourceLink href={brregKunnUrl} label={isNo ? "Kunngjøringer" : "Announcements"} />
           </div>
         </div>
         {session && (
@@ -143,7 +175,6 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
               const heightPct = (Math.abs(val) / maxVal) * 100;
               return (
                 <div key={f.year} className="flex-1 flex flex-col items-center justify-end gap-0.5 group relative min-w-0">
-                  {/* Tooltip */}
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground border border-border rounded px-2 py-1 text-[10px] font-subhead whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-md">
                     {f.year}: {formatNOK(val)}
                   </div>
@@ -165,14 +196,17 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
 
       {/* Financials Table */}
       <div className="bg-card border border-border rounded-2xl p-6">
-        <h3 className="font-headline text-lg font-semibold text-headline mb-4">
-          {isNo ? "Nøkkeltall" : "Key Figures"}
-          {financials.length > 0 && (
-            <span className="text-sm font-normal text-muted-foreground ml-2">
-              ({financials.length} {isNo ? "år" : "years"})
-            </span>
-          )}
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-headline text-lg font-semibold text-headline">
+            {isNo ? "Nøkkeltall" : "Key Figures"}
+            {financials.length > 0 && (
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                ({financials.length} {isNo ? "år" : "years"})
+              </span>
+            )}
+          </h3>
+          <SourceLink href={brregRegnskapUrl} label={isNo ? "Regnskapsregisteret" : "Financial Registry"} />
+        </div>
         {loadingFin ? (
           <p className="text-muted-foreground font-body text-sm">{isNo ? "Laster..." : "Loading..."}</p>
         ) : financials.length === 0 ? (
@@ -237,11 +271,71 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
         )}
       </div>
 
+      {/* Announcements */}
+      <div className="bg-card border border-border rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Megaphone className="w-5 h-5 text-primary" />
+            <h3 className="font-headline text-lg font-semibold text-headline">
+              {isNo ? "Kunngjøringer" : "Announcements"}
+            </h3>
+          </div>
+          <SourceLink href={brregKunnUrl} label={isNo ? "Alle kunngjøringer på Brreg" : "All on Brreg"} />
+        </div>
+        {loadingAnn ? (
+          <p className="text-muted-foreground font-body text-sm">{isNo ? "Laster..." : "Loading..."}</p>
+        ) : announcements.length === 0 ? (
+          <div className="text-center py-4">
+            <p className="text-muted-foreground font-body text-sm mb-2">
+              {isNo ? "Ingen kunngjøringer funnet i API-et" : "No announcements found via API"}
+            </p>
+            <a
+              href={brregKunnUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-primary font-subhead hover:underline"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              {isNo ? "Søk i kunngjøringer på Brønnøysundregistrene" : "Search announcements on Brreg"}
+            </a>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {announcements.map((ann) => (
+              <div key={ann.id} className="flex items-start gap-3 py-2 border-b border-border/50 last:border-0">
+                <FileText className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-subhead text-sm font-medium text-headline">{ann.kunngjoringstype}</span>
+                    <span className="text-xs text-muted-foreground font-body">
+                      {new Date(ann.dato).toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "short", year: "numeric" })}
+                    </span>
+                  </div>
+                  {ann.beskrivelse && <p className="text-xs text-muted-foreground font-body mt-0.5">{ann.beskrivelse}</p>}
+                </div>
+              </div>
+            ))}
+            <a
+              href={brregKunnUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs text-primary font-subhead hover:underline mt-2"
+            >
+              <ExternalLink className="w-3 h-3" />
+              {isNo ? "Se alle kunngjøringer på Brønnøysundregistrene" : "View all announcements on Brreg"}
+            </a>
+          </div>
+        )}
+      </div>
+
       {/* Roles */}
       <div className="bg-card border border-border rounded-2xl p-6">
-        <h3 className="font-headline text-lg font-semibold text-headline mb-4">
-          {isNo ? "Roller" : "Roles"}
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-headline text-lg font-semibold text-headline">
+            {isNo ? "Roller" : "Roles"}
+          </h3>
+          <SourceLink href={`${brregEnhetUrl}/roller`} label={isNo ? "Enhetsregisteret" : "Entity Registry"} />
+        </div>
         {loadingRoles ? (
           <p className="text-muted-foreground font-body text-sm">{isNo ? "Laster..." : "Loading..."}</p>
         ) : activeRoles.length === 0 ? (
@@ -265,6 +359,20 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
             ))}
           </div>
         )}
+      </div>
+
+      {/* Data source footer */}
+      <div className="text-center py-2">
+        <p className="text-[11px] text-muted-foreground font-body">
+          {isNo ? "Data hentet fra" : "Data sourced from"}{" "}
+          <a href="https://data.brreg.no" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+            Brønnøysundregistrene (data.brreg.no)
+          </a>
+          {" · "}
+          <a href="https://www.brreg.no/om-oss/informasjonskapsler-og-personvern/" target="_blank" rel="noopener noreferrer" className="hover:underline">
+            NLOD
+          </a>
+        </p>
       </div>
 
       {showAddToList && (

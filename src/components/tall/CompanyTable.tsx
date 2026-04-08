@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/useTheme";
-import { ArrowUpDown, ArrowUp, ArrowDown, Building2, Users, ChevronRight } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, Building2, Users, ChevronRight, MapPin, Filter } from "lucide-react";
 import { CompanyDetail } from "./CompanyDetail";
+import { FYLKER, getKommunenummerForFylke } from "@/data/regions";
 
 interface TableCompany {
   orgnr: string;
@@ -26,18 +27,30 @@ export function CompanyTable({ session }: { session: any }) {
   const [totalElements, setTotalElements] = useState(0);
   const [selectedOrgnr, setSelectedOrgnr] = useState<string | null>(null);
   const [selectedName, setSelectedName] = useState<string>("");
+  const [fylke, setFylke] = useState<string>("");
+  const [kommune, setKommune] = useState<string>("");
 
   const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
   const headers = { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` };
   const PAGE_SIZE = 30;
 
+  const selectedFylke = FYLKER.find((f) => f.navn === fylke);
+  const kommuner = selectedFylke?.kommuner || [];
+
+  const getKommuneParam = (): string => {
+    if (kommune) return kommune;
+    if (fylke) return getKommunenummerForFylke(fylke).join(",");
+    return "";
+  };
+
   const fetchData = async (p: number, field: SortField, order: "asc" | "desc", append = false) => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `${baseUrl}?action=top&page=${p}&size=${PAGE_SIZE}&sort=${field}&order=${order}`,
-        { headers }
-      );
+      const kommuneParam = getKommuneParam();
+      let url = `${baseUrl}?action=top&page=${p}&size=${PAGE_SIZE}&sort=${field}&order=${order}`;
+      if (kommuneParam) url += `&kommune=${kommuneParam}`;
+
+      const res = await fetch(url, { headers });
       const json = await res.json();
       const newCompanies = json.companies || [];
       setCompanies(prev => append ? [...prev, ...newCompanies] : newCompanies);
@@ -51,7 +64,7 @@ export function CompanyTable({ session }: { session: any }) {
 
   useEffect(() => {
     fetchData(0, sortField, sortOrder);
-  }, []);
+  }, [fylke, kommune]);
 
   const handleSort = (field: SortField) => {
     const newOrder = field === sortField ? (sortOrder === "desc" ? "asc" : "desc") : "desc";
@@ -94,13 +107,52 @@ export function CompanyTable({ session }: { session: any }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <h2 className="font-headline text-lg font-semibold text-headline">
           {isNo ? "Største selskaper" : "Largest Companies"}
         </h2>
         <p className="text-sm text-muted-foreground font-body">
-          {totalElements.toLocaleString()} {isNo ? "selskaper totalt" : "companies total"}
+          {totalElements.toLocaleString()} {isNo ? "selskaper" : "companies"}
         </p>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-muted-foreground" />
+          <select
+            value={fylke}
+            onChange={(e) => { setFylke(e.target.value); setKommune(""); }}
+            className="px-3 py-2 rounded-lg border border-border bg-card text-sm font-body text-foreground focus:outline-none focus:border-accent transition-colors"
+          >
+            <option value="">{isNo ? "Alle fylker" : "All counties"}</option>
+            {FYLKER.map((f) => (
+              <option key={f.navn} value={f.navn}>{f.navn}</option>
+            ))}
+          </select>
+        </div>
+
+        {fylke && (
+          <select
+            value={kommune}
+            onChange={(e) => setKommune(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-border bg-card text-sm font-body text-foreground focus:outline-none focus:border-accent transition-colors"
+          >
+            <option value="">{isNo ? "Alle kommuner" : "All municipalities"}</option>
+            {kommuner.map((k) => (
+              <option key={k.nummer} value={k.nummer}>{k.navn}</option>
+            ))}
+          </select>
+        )}
+
+        {(fylke || kommune) && (
+          <button
+            onClick={() => { setFylke(""); setKommune(""); }}
+            className="px-3 py-2 rounded-lg text-sm font-subhead text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            ✕ {isNo ? "Nullstill" : "Reset"}
+          </button>
+        )}
       </div>
 
       <div className="bg-card border border-border rounded-2xl overflow-hidden">

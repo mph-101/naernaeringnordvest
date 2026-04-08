@@ -12,11 +12,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const regionToSportLabel: Record<string, { no: string; en: string }> = {
+  more_og_romsdal: { no: "Møre og Romsdal", en: "Møre og Romsdal" },
+  vestlandet: { no: "Vestlandet", en: "Western Norway" },
+  nord_norge: { no: "Nord-Norge", en: "Northern Norway" },
+  trondelag: { no: "Trøndelag", en: "Trøndelag" },
+  ostlandet: { no: "Østlandet", en: "Eastern Norway" },
+  sorlandet: { no: "Sørlandet", en: "Southern Norway" },
+};
+
 export function NewsFeed() {
-  const [selectedTopic, setSelectedTopic] = useState("Alle");
-  const [selectedSport, setSelectedSport] = useState<string>("all");
-  const { language } = useTheme();
+  const { language, region } = useTheme();
   const t = translations[language];
+
+  const getInitialSport = () => {
+    if (region && regionToSportLabel[region]) {
+      return regionToSportLabel[region][language];
+    }
+    return "all";
+  };
+
+  const [selectedTopic, setSelectedTopic] = useState("Alle");
+  const [selectedSport, setSelectedSport] = useState<string>(getInitialSport);
   const navigate = useNavigate();
 
   const articles = getArticles(language).map((article, index) => ({

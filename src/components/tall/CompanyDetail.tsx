@@ -136,9 +136,11 @@ export function CompanyDetail({ orgnr, session }: { orgnr: string; session: any 
               <div key={i} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-subhead text-sm font-medium">
-                    {r.person ? `${r.person.fornavn} ${r.person.etternavn}` : r.enhet?.navn || "—"}
-                  </span>
+                   <span className="font-subhead text-sm font-medium">
+                     {r.person && (r.person.fornavn || r.person.etternavn)
+                       ? `${r.person.fornavn} ${r.person.etternavn}`.trim()
+                       : r.enhet?.navn || (isNo ? "Ikke oppgitt" : "Not specified")}
+                   </span>
                 </div>
                 <span className="text-xs text-muted-foreground font-body bg-secondary px-2 py-1 rounded-full">
                   {r.typeBeskrivelse}

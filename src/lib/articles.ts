@@ -16,20 +16,19 @@ export interface Article {
 
 // Generate a deterministic gradient thumbnail based on article id and category
 export function getArticleImage(id: string, category: string): string {
-  // Return a CSS gradient string used as background
   const gradients: Record<string, string> = {
-    "Medierettigheter": "linear-gradient(135deg, hsl(220, 70%, 50%), hsl(260, 60%, 40%))",
-    "Media Rights": "linear-gradient(135deg, hsl(220, 70%, 50%), hsl(260, 60%, 40%))",
-    "Transaksjoner": "linear-gradient(135deg, hsl(150, 60%, 40%), hsl(180, 50%, 35%))",
-    "Transactions": "linear-gradient(135deg, hsl(150, 60%, 40%), hsl(180, 50%, 35%))",
-    "Analyser": "linear-gradient(135deg, hsl(25, 80%, 50%), hsl(45, 70%, 45%))",
-    "Analysis": "linear-gradient(135deg, hsl(25, 80%, 50%), hsl(45, 70%, 45%))",
-    "Ligaer": "linear-gradient(135deg, hsl(0, 65%, 50%), hsl(340, 60%, 40%))",
-    "Leagues": "linear-gradient(135deg, hsl(0, 65%, 50%), hsl(340, 60%, 40%))",
-    "Sponsorater": "linear-gradient(135deg, hsl(280, 60%, 50%), hsl(310, 50%, 40%))",
-    "Sponsorship": "linear-gradient(135deg, hsl(280, 60%, 50%), hsl(310, 50%, 40%))",
-    "Verdivurderinger": "linear-gradient(135deg, hsl(200, 70%, 45%), hsl(220, 60%, 35%))",
-    "Valuations": "linear-gradient(135deg, hsl(200, 70%, 45%), hsl(220, 60%, 35%))",
+    "Eiendom": "linear-gradient(135deg, hsl(220, 70%, 50%), hsl(260, 60%, 40%))",
+    "Real Estate": "linear-gradient(135deg, hsl(220, 70%, 50%), hsl(260, 60%, 40%))",
+    "Handel": "linear-gradient(135deg, hsl(150, 60%, 40%), hsl(180, 50%, 35%))",
+    "Retail": "linear-gradient(135deg, hsl(150, 60%, 40%), hsl(180, 50%, 35%))",
+    "Industri": "linear-gradient(135deg, hsl(25, 80%, 50%), hsl(45, 70%, 45%))",
+    "Industry": "linear-gradient(135deg, hsl(25, 80%, 50%), hsl(45, 70%, 45%))",
+    "Teknologi": "linear-gradient(135deg, hsl(280, 60%, 50%), hsl(310, 50%, 40%))",
+    "Technology": "linear-gradient(135deg, hsl(280, 60%, 50%), hsl(310, 50%, 40%))",
+    "Finans": "linear-gradient(135deg, hsl(200, 70%, 45%), hsl(220, 60%, 35%))",
+    "Finance": "linear-gradient(135deg, hsl(200, 70%, 45%), hsl(220, 60%, 35%))",
+    "Reiseliv": "linear-gradient(135deg, hsl(0, 65%, 50%), hsl(340, 60%, 40%))",
+    "Tourism": "linear-gradient(135deg, hsl(0, 65%, 50%), hsl(340, 60%, 40%))",
   };
   return gradients[category] || "linear-gradient(135deg, hsl(30, 70%, 50%), hsl(20, 60%, 40%))";
 }
@@ -37,294 +36,294 @@ export function getArticleImage(id: string, category: string): string {
 export const articlesNo: Article[] = [
   {
     id: "1",
-    title: "Eliteserien TV-avtale: Viaplay og NRK forhandler om ny milliardpakke fra 2026",
-    excerpt: "Rettighetene til Eliteserien er verdt anslagsvis 500–700 millioner kroner årlig. Viaplay møter sterk konkurranse fra Discovery og en overraskende NRK-offensiv.",
-    category: "Medierettigheter",
-    sport: "Fotball",
+    title: "Ny næringspark åpner i Ålesund: 200 arbeidsplasser og 500 MNOK i investeringer",
+    excerpt: "Et konsortium av lokale investorer satser stort med en ny næringspark på Moa. Prosjektet er ventet å tiltrekke teknologibedrifter fra hele Vestlandet.",
+    category: "Eiendom",
+    sport: "Møre og Romsdal",
     readTime: "6 min lesing",
     publishedAt: "2 timer siden",
     author: "Kristoffer Haugen",
     type: "article",
     premium: false,
     keyPoints: [
-      "Viaplay og NRK er de fremste kandidatene for ny Eliteserien-avtale fra 2026",
-      "Rettighetene estimeres til 500–700 millioner kroner årlig – opp fra dagens nivå",
-      "Discovery+ og en ny strømmeallianase er mørke hester i budrunden"
+      "Næringsparken på Moa dekker 25 000 kvadratmeter og åpner i 2027",
+      "Investorgruppen består av tre lokale eiendomsselskaper med 500 MNOK i samlet kapital",
+      "Ålesund kommune har gitt tilsagn om redusert eiendomsskatt de første fem årene"
     ],
-    body: `Kampen om Eliteserien-rettighetene begynner å ta form. Gjeldende avtale med Viaplay og NRK løper ut etter 2025-sesongen, og forhandlingene om neste periode er allerede i gang bak lukkede dører.
+    body: `En ny næringspark i Ålesund tar form. Konsortiet bak prosjektet, som består av tre regionale eiendomsselskaper, har sikret finansiering på 500 millioner kroner for utviklingen av et 25 000 kvadratmeter stort næringsareal på Moa.
 
-Norges Fotballforbund (NFF) og Norsk Toppfotball (NTF) har engasjert mediebyrået Wasserman Media Group som rådgiver i prosessen. Målet er å maksimere inntektene fra en ny pakke som anslås å være verdt 500–700 millioner kroner per år.
+Prosjektet er designet for å tiltrekke seg teknologi- og innovasjonsbedrifter, med fleksible kontorløsninger, felles møterom og et dedikert gründersenter. Planen inkluderer også et laboratorium for marin teknologi, tilpasset regionens sterke maritim-klynge.
 
-Viaplay, som har slitt med nedgangen i abonnenter de siste to årene, er tydelig på at Eliteserien er et kjerneprodukt. Selskapet har signalisert vilje til å strekke seg langt for å beholde rettighetene.
+"Vi ser et enormt potensial i Ålesund som teknologiby. Med denne næringsparken ønsker vi å skape et miljø der bedrifter kan vokse sammen," sier prosjektleder Astrid Myklebust.
 
-"Norsk fotball er ryggraden i vår sportsportefølje i Norden," uttalte Viaplays norske direktør i et intervju med Kampanje denne uken.
-
-NRK, på sin side, er under press fra politisk hold for å sikre gratis tilgang til norsk toppfotball. En NRK-offensiv for minst én kamp per runde gratis er ventet i den endelige pakken, uavhengig av hvem som vinner hoverettighetene.
-
-Analytikere mener en samlet pakke kan lande på mellom 550 og 650 millioner kroner per år – en betydelig økning fra dagens anslåtte 400 millioner. Det ville gi Eliteserien-klubbene en kollektiv inntektsøkning på over 100 millioner kroner årlig.`
+Ålesund kommune har signalisert støtte gjennom redusert eiendomsskatt de første fem årene, og det er allerede signert intensjonsavtaler med fire teknologibedrifter som ønsker å flytte inn ved åpning i 2027.`
   },
   {
     id: "2",
-    title: "Bodø/Glimt-salg slår rekord: Klubben hentet 195 MNOK på spillersalg i 2023",
-    excerpt: "Gultrøyene fra nord er Norges ubestridte eksportmaskin. Vi går gjennom hvem som ble solgt, til hvilke klubber og hva det betyr for egenkapitalen.",
-    category: "Transaksjoner",
-    sport: "Fotball",
+    title: "Lokal teknologibedrift vokser internasjonalt — tredobler omsetningen på to år",
+    excerpt: "TechNord AS fra Tromsø har gått fra 30 til 120 ansatte og leverer nå til kunder i hele Norden. Vi ser på suksessoppskriften.",
+    category: "Teknologi",
+    sport: "Nord-Norge",
     readTime: "5 min lesing",
     publishedAt: "4 timer siden",
     author: "Marte Solberg",
     type: "article",
     premium: false,
     keyPoints: [
-      "Bodø/Glimt genererte 195 MNOK i spillersalgsinntekter i 2023 – ny klubbrekord",
-      "Tre spillere solgt til Serie A og Premier League-klubber",
-      "Egenkapitalen har økt med over 300% siden 2019"
+      "TechNord AS har tredoblet omsetningen fra 45 MNOK til 135 MNOK på to år",
+      "Selskapet har gått fra 30 til 120 ansatte med hovedkontor i Tromsø",
+      "Nordisk ekspansjon startet med et pilotprosjekt i Finland som ble en stor suksess"
     ],
-    body: `Bodø/Glimt skriver norsk fotballhistorie – ikke bare på banen, men i regnskapene. Med 195 millioner kroner i spillersalgsinntekter i 2023 satte den nordnorske klubben en ny nasjonal rekord.
+    body: `TechNord AS fra Tromsø skriver nordnorsk næringshistorie. Det lille programvareselskapet som startet med tre gründere i 2019 har på rekordtid vokst til 120 ansatte og en omsetning på 135 millioner kroner.
 
-Salget av Jens Petter Hauge til Genoa (40 MNOK), Ola Solbakken til Roma (18 MNOK) og ytterligere transaksjoner til Premier League-klubber utgjorde hoveddelen av inntektene. I tillegg kom salgsbonuser fra tidligere salg av Patrick Berg og Ulrik Saltnes.
+Suksessoppskriften? En skybasert plattform for logistikkstyring i arktiske strøk, utviklet spesielt for utfordringene med vær, avstand og infrastruktur i nordlige regioner.
 
-Regnskapet for 2023 viser en total omsetning på 312 millioner kroner, opp fra 287 millioner i 2022. Driftsresultatet landet på solide 67 millioner kroner, og egenkapitalen passerte 200 millioner for første gang i klubbens historie.
+"Vi bygget noe ingen andre hadde — en løsning som faktisk forstår forholdene i nord," forklarer CEO Lena Kristiansen.
 
-"Vi har bygget en modell som er finansielt bærekraftig og fotballmessig ambisiøs," sier daglig leder Frode Thomassen i et intervju med Finansavisen.
+Gjennombruddet kom da finske transportselskaper oppdaget plattformen og signerte en storkontrakt verdt 40 MNOK årlig. Nå leverer TechNord til kunder i hele Norden, og en ekspansjon mot Island og Grønland er under planlegging.
 
-Analysebyrået Football Benchmark rangerer nå Bodø/Glimt blant de ti mest effektive spillerutviklingsklubbene i Europa, målt ved avkastning på akademiinvesteringer. Det er et bemerkelsesverdig bragd for en klubb fra en by med 52 000 innbyggere nord for polarsirkelen.`
+Tromsø kommune har trukket frem TechNord som et eksempel på hvordan nordnorsk kompetanse kan bygge globalt konkurransedyktige selskaper.`
   },
   {
     id: "3",
-    title: "Dokumentar: Rosenborgs fall og forsøket på å bygge seg opp igjen",
-    excerpt: "Fra 26 seriemesterskap og Champions League til en omsetning som halveres. Vi ser nærmere på hva som gikk galt — og hva som er gjort for å snu trenden.",
-    category: "Analyser",
-    sport: "Fotball",
+    title: "Dokumentar: Havbruksnæringens fremtid på Vestlandet",
+    excerpt: "Fra tradisjonelt fiske til teknologidrevet akvakultur. Vi utforsker hvordan vestlandsbedrifter innoverer for bærekraftig vekst.",
+    category: "Industri",
+    sport: "Vestlandet",
     readTime: "24 min video",
     publishedAt: "6 timer siden",
     author: "Dokumentarteamet",
     type: "video",
     premium: true,
     keyPoints: [
-      "Rosenborgs omsetning falt fra 350 MNOK i 2019 til under 180 MNOK i 2022",
-      "Klubben mistet Champions League-inntektene og solgte nøkkelspillere",
-      "En ny sportslig og kommersiell strategi er iverksatt fra 2023"
+      "Vestlandets havbruksnæring omsetter for over 80 milliarder kroner årlig",
+      "Nye landbaserte oppdrettsanlegg reduserer miljøpåvirkningen med opptil 70%",
+      "Tre vestlandske selskaper leder utviklingen av autonom fôringsteknologi"
     ],
-    body: `Historien om Rosenborg BK de siste fem årene er historien om en stolt institusjon som møtte veggen. Fra å være Norges dominerende lag gjennom tre tiår, opplevde trønderne en dramatisk nedtur – både sportslig og økonomisk.
+    body: `Vestlandet er hjertet av Norges havbruksnæring, med en samlet omsetning på over 80 milliarder kroner. Men næringen står ved et veiskille: strengere miljøkrav, fallende laksepriser og økende internasjonal konkurranse tvinger frem innovasjon.
 
-Omsetningen falt fra 350 millioner kroner i 2019 til 178 millioner i 2022. Bortfallet av Champions League-inntekter, kombinert med covid-19 og kostbare satsinger på dyre spillere som ikke fungerte, skapte en perfekt storm av utfordringer.
+Denne dokumentaren følger tre vestlandske selskaper som leder an i omstillingen. Fra landbaserte oppdrettsanlegg i Hardanger som reduserer miljøpåvirkningen med 70%, til autonome fôringssystemer utviklet i Bergen som bruker kunstig intelligens for å optimalisere fiskehelsen.
 
-Denne dokumentaren følger klubbens forsøk på å reise seg. Vi snakker med tidligere og nåværende spillere, ledere og fotballanalytikere om hva som gikk galt, og hva som nå gjøres for å gjenreise RBK som Norges fremste fotballklubb.`
+Vi besøker også Austevoll, der en ny generasjon fiskere kombinerer tradisjonell kunnskap med moderne teknologi for å skape bærekraftige arbeidsplasser i en bygd som ellers kunne ha dødd ut.`
   },
   {
     id: "4",
-    title: "Norsk toppfotball samlet: 2,1 milliarder i omsetning — men bare halvparten er lønnsomme",
-    excerpt: "En gjennomgang av regnskapene til alle 16 Eliteserien-klubber avslører store forskjeller i lønnsomhet, gjeldsgrad og fremtidsutsikter.",
-    category: "Analyser",
-    sport: "Fotball",
+    title: "Handelsstanden i krise? Butikkdøden rammer små og mellomstore byer hardest",
+    excerpt: "En gjennomgang av handelsdata viser at sentrumsbutikkene sliter mest i byer med under 50 000 innbyggere. Men det finnes lyspunkter.",
+    category: "Handel",
+    sport: "Trøndelag",
     readTime: "8 min lesing",
     publishedAt: "8 timer siden",
     author: "Sindre Bakke",
     type: "article",
     premium: false,
     keyPoints: [
-      "Eliteserien-klubbene omsatte samlet for 2,1 milliarder kroner i 2023",
-      "Bare 8 av 16 klubber gikk med overskudd",
-      "Bodø/Glimt og Molde er de mest lønnsomme, Stabæk og HamKam sliter mest"
+      "Sentrumshandelen i byer med under 50 000 innbyggere har falt med 23% siden 2019",
+      "Steinkjer og Namsos er blant de hardest rammede i Trøndelag",
+      "Lokale initiativer som «Handl lokalt»-kampanjen i Levanger viser lovende resultater"
     ],
-    body: `En systematisk gjennomgang av regnskapene til alle 16 Eliteserien-klubber maler et nyansert bilde av norsk toppfotballs økonomi. Den gode nyheten: total omsetning passerte 2,1 milliarder kroner for første gang. Den mindre gode: lønnsomheten er svært ujevnt fordelt.
+    body: `Butikkdøden i norske småbyer er ikke bare et fenomen — det er en strukturell krise som truer sentrumslivet i byer over hele landet. Nye tall fra Virke viser at sentrumshandelen i byer med under 50 000 innbyggere har falt med 23% siden 2019.
 
-Bodø/Glimt og Molde FK skiller seg ut med driftsresultater på henholdsvis 67 og 41 millioner kroner. Begge klubber kombinerer sterk akademimodell med god kostnadsstyring.
+I Trøndelag er Steinkjer og Namsos blant de hardest rammede. I Steinkjer har antall butikker i sentrum gått fra 87 i 2018 til 54 i dag. Hovedårsakene er netthandel, kjøpesentre utenfor sentrum og endret forbrukermønster etter pandemien.
 
-I den andre enden av skalaen finner vi Stabæk IF og HamKam, som begge rapporterte negative driftsresultater på over 15 millioner kroner. Disse klubbene sliter med å balansere ambisjoner mot de kommersielle realitetene i et marked dominert av Bodø/Glimt og Rosenborg.
+Men det finnes lyspunkter. I Levanger har handelsstanden samlet seg om «Handl lokalt»-kampanjen, som kombinerer digitale lojalitetsprogram med lokale opplevelser. Resultatet: en økning i sentrumshandelen på 8% det siste året — mot den nasjonale trenden.
 
-Lønnskostnadene som andel av omsetning varierer fra 48% (Bodø/Glimt) til over 80% (Stabæk). Europeisk beste praksis tilsier maks 60-65%, noe bare fem norske klubber oppnår.`
+"Folk vil handle lokalt, men de trenger en grunn til å komme til sentrum," sier kampanjeleder Grete Hovde.`
   },
   {
     id: "5",
-    title: "Ukens transfers: Norske spillere til og fra Eliteserien",
-    excerpt: "En komplett oversikt over ukens inn- og utleieaktivitet, kjøpesum, kontraktslengder og hvilke agenter som er involvert.",
-    category: "Transaksjoner",
-    sport: "Fotball",
+    title: "Ukens næringslivsnyheter: Hvem selger, kjøper og investerer i din region?",
+    excerpt: "En komplett oversikt over ukens viktigste transaksjoner, nyetableringer og investeringer fra hele landet.",
+    category: "Finans",
+    sport: "Østlandet",
     readTime: "15 min lesing",
     publishedAt: "10 timer siden",
-    author: "Transferteamet",
+    author: "Redaksjonen",
     type: "podcast",
     premium: true,
     keyPoints: [
-      "Tre norske spillere er på vei til utenlandske klubber denne uken",
-      "Agenten Rune Hauge er involvert i to av de største transaksjonene",
-      "Molde avviste et bud på 25 MNOK for sin toppscorer"
+      "Tre store oppkjøp i Oslofjord-regionen denne uken — samlet verdi over 1,2 milliarder",
+      "Drammen-basert logistikkselskap kjøpt opp av dansk konsern",
+      "Rekordmange nyetableringer i Asker og Bærum i første kvartal"
     ],
-    body: `I denne ukens transferoppdatering gjennomgår vi alle bekreftede og nært forestående spillerbevegelser i og rundt Eliteserien. Fra sommerens tidlige aktivitet til utlånsavtaler som er på plass frem mot overgangsvinduets slutt.
+    body: `Denne ukens næringslivsoppdatering dekker de viktigste transaksjonene og bevegelsene i regionalt næringsliv. Tre store oppkjøp i Oslofjord-regionen dominerer nyhetene, med en samlet transaksjonsverdi på over 1,2 milliarder kroner.
 
-Vi ser nærmere på agentbildet bak de største avtalene, og analyserer hva de ulike kjøpesummene sier om prisutviklingen for norsk-utviklete spillere internasjonalt.`
+Det største er salget av Drammens Logistikk AS til det danske konsernet DSV Group, i en avtale verdt 680 millioner kroner. Selskapet har 340 ansatte og er en av de største aktørene innen tredjepartslogistikk i Sør-Norge.
+
+I tillegg ser vi på rekordtallene for nyetableringer i Asker og Bærum, der 487 nye selskaper ble registrert i første kvartal — en økning på 34% fra samme periode i fjor.`
   },
   {
     id: "6",
-    title: "Viking FK får ny storaksjonsær — Stavanger-investorer skyter inn 80 MNOK",
-    excerpt: "En gruppe regionale investorer med tilknytning til oljeindustrien tar en betydelig eierandel i Viking FK. Hva betyr det for klubbens ambisjoner?",
-    category: "Transaksjoner",
-    sport: "Fotball",
+    title: "Reiselivet satser: Ny hotellkjede investerer 80 MNOK i Lofoten",
+    excerpt: "Arctic Hotels planlegger tre nye boutique-hoteller i Lofoten-regionen. Hva betyr det for det lokale næringslivet?",
+    category: "Reiseliv",
+    sport: "Nord-Norge",
     readTime: "5 min lesing",
     publishedAt: "12 timer siden",
     author: "Eirik Johnsen",
     type: "article",
     premium: false,
     keyPoints: [
-      "Ny investorgruppe skyter inn 80 MNOK i Viking FK",
-      "Investeringen gir dem 22% eierandel i klubben",
-      "Midlene øremerkes spilleranskaffelser og akademiutbygging"
+      "Arctic Hotels investerer 80 MNOK i tre nye boutique-hoteller i Lofoten",
+      "Prosjektet skaper 65 nye helårsarbeidsplasser i regionen",
+      "Hotellet i Henningsvær åpner allerede til sommeren 2027"
     ],
-    body: `En gruppe Stavanger-baserte investorer med bakgrunn fra olje- og gassindustrien har inngått en avtale om å investere 80 millioner kroner i Viking FK. Transaksjonen gir investorgruppen en eierandel på 22% i klubben og representerer den største private kapitalinjeksjonen i klubbens nyere historie.
+    body: `Reiselivsbransjen i Lofoten får et betydelig løft. Arctic Hotels, et nystartet hotellselskap med base i Bodø, har annonsert en investering på 80 millioner kroner i tre boutique-hoteller i Lofoten-regionen.
 
-Daglig leder i Viking FK, Eirik Stephansen, sier midlene vil gå direkte til å styrke sportslig kapasitet.
+Det første hotellet, med 45 rom i Henningsvær, er planlagt ferdigstilt til sommeren 2027. De to øvrige — i Reine og Svolvær — følger i 2028 og 2029.
 
-"Dette gir oss muligheten til å hente inn to-tre spillere vi ellers ikke ville hatt råd til, og til å investere langsiktig i akademiet," sier Stephansen.
+"Lofoten har en unik posisjon i det internasjonale reisemarkedet, men mangler kvalitetshoteller som er åpne hele året," sier CEO Markus Fredriksen.
 
-Transaksjonen speiler en bredere trend der regionale næringslivsprofiler ser på norske fotballklubber som attraktive investeringsobjekter – både kommersielt og som del av et lokal-identitetsprosjekt.`
+Prosjektet vil skape 65 nye helårsarbeidsplasser, noe som er spesielt viktig for en region der sesongarbeid har vært normen. Nordland fylkeskommune har bidratt med 12 millioner kroner i støtte gjennom regionalt næringsfond.
+
+Lokale næringslivsaktører ser investeringen som et vendepunkt. "Dette viser at det er mulig å bygge bærekraftig helårsturisme i Lofoten," sier leder for Lofoten Næringsforum, Ingvild Strand.`
   }
 ];
 
 export const articlesEn: Article[] = [
   {
     id: "1",
-    title: "Eliteserien TV Deal: Viaplay and NRK Negotiate New Billion-Kroner Package from 2026",
-    excerpt: "The rights to Eliteserien are estimated at NOK 500–700 million annually. Viaplay faces stiff competition from Discovery and a surprising NRK offensive.",
-    category: "Media Rights",
-    sport: "Football",
+    title: "New Business Park Opens in Ålesund: 200 Jobs and NOK 500M in Investments",
+    excerpt: "A consortium of local investors is making a big bet with a new business park at Moa. The project is expected to attract tech companies from across Western Norway.",
+    category: "Real Estate",
+    sport: "Møre og Romsdal",
     readTime: "6 min read",
     publishedAt: "2 hours ago",
     author: "Kristoffer Haugen",
     type: "article",
     premium: false,
     keyPoints: [
-      "Viaplay and NRK are the leading candidates for the new Eliteserien deal from 2026",
-      "Rights estimated at NOK 500–700 million annually — up from current levels",
-      "Discovery+ and a new streaming alliance are dark horses in the bidding"
+      "The business park at Moa covers 25,000 sqm and opens in 2027",
+      "The investor group consists of three local real estate companies with NOK 500M in combined capital",
+      "Ålesund municipality has committed to reduced property tax for the first five years"
     ],
-    body: `The battle for Eliteserien broadcasting rights is taking shape. The current deal with Viaplay and NRK expires after the 2025 season, and negotiations for the next period are already underway behind closed doors.
+    body: `A new business park in Ålesund is taking shape. The consortium behind the project, consisting of three regional real estate companies, has secured NOK 500 million in financing for the development of a 25,000 square metre commercial area at Moa.
 
-The Norwegian Football Federation (NFF) and Norwegian Top Football (NTF) have engaged Wasserman Media Group as an advisor. The goal is to maximise revenue from a new package estimated to be worth NOK 500–700 million per year.
+The project is designed to attract technology and innovation companies, with flexible office solutions, shared meeting rooms and a dedicated startup centre. Plans also include a marine technology laboratory, tailored to the region's strong maritime cluster.
 
-Viaplay, which has struggled with declining subscribers over the past two years, is clear that Eliteserien is a core product. The company has signalled willingness to stretch significantly to retain the rights.
+"We see enormous potential in Ålesund as a technology city. With this business park, we want to create an environment where companies can grow together," says project manager Astrid Myklebust.
 
-"Norwegian football is the backbone of our sports portfolio in the Nordics," said Viaplay's Norwegian director in an interview with Kampanje this week.
-
-NRK, meanwhile, is under political pressure to secure free access to Norwegian top football. An NRK push for at least one free match per round is expected in the final package, regardless of who wins the main rights.
-
-Analysts believe a combined package could land between NOK 550 and 650 million per year — a significant increase from the estimated NOK 400 million today. This would give Eliteserien clubs a collective revenue increase of over NOK 100 million annually.`
+Ålesund municipality has signalled support through reduced property tax for the first five years, and letters of intent have already been signed with four technology companies wishing to move in when the park opens in 2027.`
   },
   {
     id: "2",
-    title: "Bodø/Glimt Player Sales Break Records: Club Generated 195 MNOK in 2023",
-    excerpt: "The yellow-and-black club from the north is Norway's undisputed export machine. We break down who was sold, to which clubs, and what it means for equity.",
-    category: "Transactions",
-    sport: "Football",
+    title: "Local Tech Company Goes International — Triples Revenue in Two Years",
+    excerpt: "TechNord AS from Tromsø has grown from 30 to 120 employees and now serves customers across the Nordics.",
+    category: "Technology",
+    sport: "Northern Norway",
     readTime: "5 min read",
     publishedAt: "4 hours ago",
     author: "Marte Solberg",
     type: "article",
     premium: false,
     keyPoints: [
-      "Bodø/Glimt generated NOK 195 million in player sales in 2023 — a new club record",
-      "Three players sold to Serie A and Premier League clubs",
-      "Equity has increased by over 300% since 2019"
+      "TechNord AS has tripled revenue from NOK 45M to NOK 135M in two years",
+      "The company has grown from 30 to 120 employees with headquarters in Tromsø",
+      "Nordic expansion started with a pilot project in Finland that became a major success"
     ],
-    body: `Bodø/Glimt is writing Norwegian football history — not only on the pitch, but in the accounts. With NOK 195 million in player sale revenues in 2023, the northern Norwegian club set a new national record.
+    body: `TechNord AS from Tromsø is writing northern Norwegian business history. The small software company that started with three founders in 2019 has grown at record speed to 120 employees and revenue of NOK 135 million.
 
-The sales of Jens Petter Hauge to Genoa (NOK 40m), Ola Solbakken to Roma (NOK 18m), and further transactions to Premier League clubs made up the bulk of revenues. Add-on fees from earlier sales of Patrick Berg and Ulrik Saltnes also contributed.
+The recipe for success? A cloud-based platform for logistics management in Arctic conditions, developed specifically for the challenges of weather, distance and infrastructure in northern regions.
 
-The 2023 accounts show total revenue of NOK 312 million, up from NOK 287 million in 2022. Operating profit landed at a solid NOK 67 million, and equity passed NOK 200 million for the first time in the club's history.
+"We built something no one else had — a solution that actually understands conditions in the north," explains CEO Lena Kristiansen.
 
-"We have built a model that is financially sustainable and footballing ambitious," says CEO Frode Thomassen in an interview with Finansavisen.
+The breakthrough came when Finnish transport companies discovered the platform and signed a major contract worth NOK 40M annually. TechNord now serves customers across the Nordics, and expansion towards Iceland and Greenland is being planned.
 
-Analytics firm Football Benchmark now ranks Bodø/Glimt among the ten most efficient player development clubs in Europe, measured by return on academy investment. A remarkable achievement for a club from a city of 52,000 north of the Arctic Circle.`
+Tromsø municipality has highlighted TechNord as an example of how northern Norwegian expertise can build globally competitive companies.`
   },
   {
     id: "3",
-    title: "Documentary: Rosenborg's Decline and the Effort to Rebuild",
-    excerpt: "From 26 league titles and Champions League nights to halved revenues. We examine what went wrong — and what has been done to reverse the trend.",
-    category: "Analysis",
-    sport: "Football",
+    title: "Documentary: The Future of Aquaculture in Western Norway",
+    excerpt: "From traditional fishing to tech-driven aquaculture. We explore how Western Norwegian companies innovate for sustainable growth.",
+    category: "Industry",
+    sport: "Western Norway",
     readTime: "24 min watch",
     publishedAt: "6 hours ago",
     author: "Documentary Team",
     type: "video",
     premium: true,
     keyPoints: [
-      "Rosenborg's revenue fell from NOK 350m in 2019 to under NOK 180m in 2022",
-      "The club lost Champions League revenues and sold key players",
-      "A new sporting and commercial strategy has been implemented from 2023"
+      "Western Norway's aquaculture industry generates over NOK 80 billion annually",
+      "New land-based farming facilities reduce environmental impact by up to 70%",
+      "Three Western Norwegian companies lead development of autonomous feeding technology"
     ],
-    body: `The story of Rosenborg BK over the past five years is the story of a proud institution that hit a wall. From being Norway's dominant club for three decades, the Trondheim side experienced a dramatic downturn — both on and off the pitch.
+    body: `Western Norway is the heart of Norway's aquaculture industry, with combined revenues exceeding NOK 80 billion. But the industry stands at a crossroads: stricter environmental regulations, falling salmon prices and increasing international competition are forcing innovation.
 
-Revenue fell from NOK 350 million in 2019 to NOK 178 million in 2022. The loss of Champions League income, combined with the covid-19 pandemic and costly signings that didn't work out, created a perfect storm of challenges.
+This documentary follows three Western Norwegian companies leading the transformation. From land-based farming facilities in Hardanger that reduce environmental impact by 70%, to autonomous feeding systems developed in Bergen that use artificial intelligence to optimise fish health.
 
-This documentary follows the club's attempt to recover. We speak with former and current players, executives, and football analysts about what went wrong and what is now being done to restore RBK as Norway's leading football club.`
+We also visit Austevoll, where a new generation of fishers combines traditional knowledge with modern technology to create sustainable jobs in a village that might otherwise have disappeared.`
   },
   {
     id: "4",
-    title: "Norwegian Top Football Combined: NOK 2.1 Billion Revenue — But Only Half Are Profitable",
-    excerpt: "A review of all 16 Eliteserien clubs' accounts reveals large differences in profitability, debt levels and future prospects.",
-    category: "Analysis",
-    sport: "Football",
+    title: "Retail Crisis? Small and Mid-Size Towns Hit Hardest by Store Closures",
+    excerpt: "A review of retail data shows that city centre shops struggle most in towns with under 50,000 residents. But there are bright spots.",
+    category: "Retail",
+    sport: "Trøndelag",
     readTime: "8 min read",
     publishedAt: "8 hours ago",
     author: "Sindre Bakke",
     type: "article",
     premium: false,
     keyPoints: [
-      "Eliteserien clubs generated a combined NOK 2.1 billion in revenue in 2023",
-      "Only 8 of 16 clubs turned a profit",
-      "Bodø/Glimt and Molde are the most profitable; Stabæk and HamKam struggle most"
+      "City centre retail in towns under 50,000 has fallen 23% since 2019",
+      "Steinkjer and Namsos are among the hardest hit in Trøndelag",
+      "Local initiatives like the 'Shop Local' campaign in Levanger show promising results"
     ],
-    body: `A systematic review of the accounts of all 16 Eliteserien clubs paints a nuanced picture of Norwegian top football's finances. The good news: total revenue passed NOK 2.1 billion for the first time. The less good: profitability is very unevenly distributed.
+    body: `The decline of retail in Norwegian small towns is not just a phenomenon — it's a structural crisis threatening the vitality of town centres across the country. New figures from Virke show that city centre retail in towns under 50,000 has fallen 23% since 2019.
 
-Bodø/Glimt and Molde FK stand out with operating results of NOK 67 million and NOK 41 million respectively. Both clubs combine a strong academy model with good cost management.
+In Trøndelag, Steinkjer and Namsos are among the hardest hit. In Steinkjer, the number of city centre shops has gone from 87 in 2018 to 54 today. The main causes are online shopping, out-of-town shopping centres and changed consumer patterns after the pandemic.
 
-At the other end of the scale, Stabæk IF and HamKam both reported negative operating results of over NOK 15 million. These clubs struggle to balance ambitions against the commercial realities of a market dominated by Bodø/Glimt and Rosenborg.
+But there are bright spots. In Levanger, retailers have united around the 'Shop Local' campaign, combining digital loyalty programmes with local experiences. The result: an 8% increase in city centre retail over the past year — against the national trend.
 
-Wage costs as a share of revenue vary from 48% (Bodø/Glimt) to over 80% (Stabæk). European best practice suggests a maximum of 60–65%, which only five Norwegian clubs achieve.`
+"People want to shop locally, but they need a reason to come to the town centre," says campaign leader Grete Hovde.`
   },
   {
     id: "5",
-    title: "Week in Transfers: Norwegian Players In and Out of Eliteserien",
-    excerpt: "A complete overview of this week's loan and transfer activity, fees, contract lengths and the agents involved.",
-    category: "Transactions",
-    sport: "Football",
+    title: "Weekly Business News: Who's Buying, Selling and Investing in Your Region?",
+    excerpt: "A complete overview of the week's key transactions, new businesses and investments from across the country.",
+    category: "Finance",
+    sport: "Eastern Norway",
     readTime: "15 min listen",
     publishedAt: "10 hours ago",
-    author: "Transfer Team",
+    author: "Editorial Team",
     type: "podcast",
     premium: true,
     keyPoints: [
-      "Three Norwegian players heading to foreign clubs this week",
-      "Agent Rune Hauge is involved in two of the biggest transactions",
-      "Molde rejected a NOK 25m bid for their top scorer"
+      "Three major acquisitions in the Oslo Fjord region this week — combined value over NOK 1.2 billion",
+      "Drammen-based logistics company acquired by Danish group",
+      "Record number of new businesses registered in Asker and Bærum in Q1"
     ],
-    body: `In this week's transfer update, we cover all confirmed and imminent player movements in and around Eliteserien. From early summer activity to loan deals in place ahead of the window's close.
+    body: `This week's business update covers the most important transactions and movements in regional business. Three major acquisitions in the Oslo Fjord region dominate the news, with a combined transaction value exceeding NOK 1.2 billion.
 
-We look closely at the agent landscape behind the biggest deals and analyse what the various fees tell us about the price trend for Norwegian-developed players internationally.`
+The largest is the sale of Drammens Logistikk AS to the Danish group DSV Group, in a deal worth NOK 680 million. The company has 340 employees and is one of the largest third-party logistics operators in southern Norway.
+
+We also look at the record figures for new business registrations in Asker and Bærum, where 487 new companies were registered in Q1 — an increase of 34% from the same period last year.`
   },
   {
     id: "6",
-    title: "Viking FK Gets New Major Shareholder — Stavanger Investors Inject NOK 80 Million",
-    excerpt: "A group of regional investors with ties to the oil industry take a significant stake in Viking FK. What does it mean for the club's ambitions?",
-    category: "Transactions",
-    sport: "Football",
+    title: "Tourism Boom: New Hotel Chain Invests NOK 80M in Lofoten",
+    excerpt: "Arctic Hotels plans three new boutique hotels in the Lofoten region. What does it mean for the local business landscape?",
+    category: "Tourism",
+    sport: "Northern Norway",
     readTime: "5 min read",
     publishedAt: "12 hours ago",
     author: "Eirik Johnsen",
     type: "article",
     premium: false,
     keyPoints: [
-      "New investor group injects NOK 80 million into Viking FK",
-      "The investment gives them a 22% stake in the club",
-      "Funds earmarked for player acquisitions and academy development"
+      "Arctic Hotels is investing NOK 80M in three new boutique hotels in Lofoten",
+      "The project creates 65 new year-round jobs in the region",
+      "The Henningsvær hotel opens as early as summer 2027"
     ],
-    body: `A group of Stavanger-based investors with backgrounds in the oil and gas industry have agreed to invest NOK 80 million in Viking FK. The transaction gives the investor group a 22% stake in the club and represents the largest private capital injection in the club's recent history.
+    body: `The tourism industry in Lofoten is getting a significant boost. Arctic Hotels, a newly established hotel company based in Bodø, has announced an NOK 80 million investment in three boutique hotels in the Lofoten region.
 
-Viking FK CEO Eirik Stephansen says the funds will go directly to strengthening sporting capacity.
+The first hotel, with 45 rooms in Henningsvær, is planned for completion by summer 2027. The remaining two — in Reine and Svolvær — will follow in 2028 and 2029.
 
-"This gives us the opportunity to bring in two or three players we otherwise wouldn't have been able to afford, and to invest long-term in the academy," says Stephansen.
+"Lofoten has a unique position in the international travel market, but lacks quality hotels that are open year-round," says CEO Markus Fredriksen.
 
-The transaction mirrors a broader trend of regional business figures viewing Norwegian football clubs as attractive investment targets — both commercially and as a local identity project.`
+The project will create 65 new year-round jobs, which is especially important for a region where seasonal work has been the norm. Nordland county council has contributed NOK 12 million in support through the regional business fund.
+
+Local business leaders see the investment as a turning point. "This shows it's possible to build sustainable year-round tourism in Lofoten," says Ingvild Strand, head of Lofoten Business Forum.`
   }
 ];
 

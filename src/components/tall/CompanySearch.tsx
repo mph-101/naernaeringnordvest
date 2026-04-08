@@ -36,6 +36,7 @@ export function CompanySearch({ session, selectedFylker, selectedKommuner, onFyl
   const [totalElements, setTotalElements] = useState(0);
   const [page, setPage] = useState(0);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [addToListCompany, setAddToListCompany] = useState<Company | null>(null);
 
   const search = async (p = 0) => {
     setLoading(true);

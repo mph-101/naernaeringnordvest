@@ -195,6 +195,20 @@ const Article = () => {
           ))}
         </div>
 
+        {/* Company Mini-Profiles */}
+        {companyTags.length > 0 && (
+          <div className="mb-10">
+            <h2 className="font-headline text-lg font-semibold text-headline mb-4">
+              {language === "no" ? "Omtalte selskaper" : "Featured Companies"}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {companyTags.map((tag) => (
+                <CompanyMiniProfile key={tag.orgnr} orgnr={tag.orgnr} companyName={tag.company_name} />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Discussion Section */}
         <ArticleDiscussion authorName={article.author} />
       </article>

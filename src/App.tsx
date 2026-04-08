@@ -10,6 +10,7 @@ import Team from "./pages/Team";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import Idrett from "./pages/Idrett";
+import Tall from "./pages/Tall";
 import KlubbProfil from "./pages/KlubbProfil";
 import Sammenlign from "./pages/Sammenlign";
 import Groups from "./pages/Groups";
@@ -33,7 +34,8 @@ const App = () => (
             <Route path="/article/:id" element={<Article />} />
             <Route path="/team" element={<Team />} />
             <Route path="/admin" element={<Admin />} />
-            <Route path="/idrett" element={<Idrett />} />
+            <Route path="/idrett" element={<Tall />} />
+            <Route path="/tall" element={<Tall />} />
             <Route path="/idrett/klubb/:id" element={<KlubbProfil />} />
             <Route path="/idrett/sammenlign" element={<Sammenlign />} />
             <Route path="/grupper" element={<Groups />} />

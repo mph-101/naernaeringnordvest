@@ -1,19 +1,32 @@
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, User, Calendar, Lock } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ArticleDiscussion } from "@/components/ArticleDiscussion";
 import { ArticleNotes } from "@/components/ArticleNotes";
+import { CompanyMiniProfile } from "@/components/CompanyMiniProfile";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleById } from "@/lib/articles";
+import { supabase } from "@/integrations/supabase/client";
 
 const Article = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { language } = useTheme();
   const t = translations[language];
+  const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   
   const article = id ? getArticleById(id, language) : undefined;
+
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from("article_company_tags")
+      .select("orgnr, company_name")
+      .eq("article_id", id)
+      .then(({ data }) => setCompanyTags(data || []));
+  }, [id]);
 
   if (!article) {
     return (
@@ -181,6 +194,20 @@ const Article = () => {
             </p>
           ))}
         </div>
+
+        {/* Company Mini-Profiles */}
+        {companyTags.length > 0 && (
+          <div className="mb-10">
+            <h2 className="font-headline text-lg font-semibold text-headline mb-4">
+              {language === "no" ? "Omtalte selskaper" : "Featured Companies"}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {companyTags.map((tag) => (
+                <CompanyMiniProfile key={tag.orgnr} orgnr={tag.orgnr} companyName={tag.company_name} />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Discussion Section */}
         <ArticleDiscussion authorName={article.author} />

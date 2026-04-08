@@ -35,18 +35,26 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
   const [loadingRoles, setLoadingRoles] = useState(true);
   const [companyName, setCompanyName] = useState(initialName || "");
   const [showAddToList, setShowAddToList] = useState(false);
+  const [antallAnsatte, setAntallAnsatte] = useState<number | null>(null);
+  const [kommune, setKommune] = useState("");
+  const [naeringsbeskriv, setNaeringsbeskriv] = useState("");
 
   const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
   const headers = { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` };
 
   useEffect(() => {
-    // Fetch company info only if name not provided
-    if (!companyName) {
-      fetch(`${baseUrl}?action=search&q=${orgnr}&size=1`, { headers })
-        .then((r) => r.json())
-        .then((d) => {
-          if (d.companies?.[0]) setCompanyName(d.companies[0].navn);
-        });
+    // Always fetch company info for employees/municipality
+    fetch(`${baseUrl}?action=search&q=${orgnr}&size=1`, { headers })
+      .then((r) => r.json())
+      .then((d) => {
+        const c = d.companies?.[0];
+        if (c) {
+          if (!companyName) setCompanyName(c.navn);
+          setAntallAnsatte(c.antallAnsatte ?? null);
+          setKommune(c.kommune || "");
+          setNaeringsbeskriv(c.naeringsbeskriv || "");
+        }
+      });
     }
 
     // Fetch financials

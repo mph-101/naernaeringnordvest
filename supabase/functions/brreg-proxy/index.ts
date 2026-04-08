@@ -21,7 +21,14 @@ Deno.serve(async (req) => {
       const kommune = url.searchParams.get("kommune") || "";
       const naeringskode = url.searchParams.get("naeringskode") || "";
 
-      let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?navn=${encodeURIComponent(query)}&organisasjonsform=AS,ASA&page=${page}&size=${size}&sort=navn,asc`;
+      // If query looks like an org number (9 digits), search by organisasjonsnummer
+      const isOrgnr = /^\d{9}$/.test(query.trim());
+      let apiUrl: string;
+      if (isOrgnr) {
+        apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsnummer=${query.trim()}&page=${page}&size=${size}`;
+      } else {
+        apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?navn=${encodeURIComponent(query)}&organisasjonsform=AS,ASA&page=${page}&size=${size}&sort=navn,asc`;
+      }
       if (kommune) apiUrl += `&kommunenummer=${kommune}`;
       if (naeringskode) apiUrl += `&naeringskode=${naeringskode}`;
 
@@ -136,13 +143,8 @@ Deno.serve(async (req) => {
       const tilDate = url.searchParams.get("til") || "";
 
       let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsform=AS,ASA&size=50&sort=stiftelsesdato,desc`;
-      if (kommune) apiUrl += `&kommunenummer=${kommune}`;
-      if (fraDate) apiUrl += `&registrertIMerverdiavgiftsregisteretDato.fra=${fraDate}`;
-      if (tilDate) apiUrl += `&registrertIMerverdiavgiftsregisteretDato.til=${tilDate}`;
-
-      // For new establishments, filter by registration date
-      if (fraDate) apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsform=AS,ASA&size=50&sort=registreringsdatoEnhetsregisteret,desc&registreringsdatoEnhetsregisteret.fra=${fraDate}`;
-      if (tilDate) apiUrl += `&registreringsdatoEnhetsregisteret.til=${tilDate}`;
+      if (fraDate) apiUrl += `&stiftelsesdato.fra=${fraDate}`;
+      if (tilDate) apiUrl += `&stiftelsesdato.til=${tilDate}`;
       if (kommune) apiUrl += `&kommunenummer=${kommune}`;
 
       const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
@@ -168,8 +170,12 @@ Deno.serve(async (req) => {
 
     if (action === "bankruptcies") {
       const kommune = url.searchParams.get("kommune") || "";
+      const fraDate = url.searchParams.get("fra") || "";
+      const tilDate = url.searchParams.get("til") || "";
       let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsform=AS,ASA&konkurs=true&size=50&sort=registreringsdatoEnhetsregisteret,desc`;
       if (kommune) apiUrl += `&kommunenummer=${kommune}`;
+      if (fraDate) apiUrl += `&registreringsdatoEnhetsregisteret.fra=${fraDate}`;
+      if (tilDate) apiUrl += `&registreringsdatoEnhetsregisteret.til=${tilDate}`;
 
       const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
       const data = await res.json();

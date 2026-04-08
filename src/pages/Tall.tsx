@@ -40,9 +40,6 @@ export default function Tall() {
 
       <div className="bg-gradient-warm py-10 px-6">
         <div className="max-w-6xl mx-auto">
-          <p className="font-subhead text-sm text-accent-foreground/70 mb-2 uppercase tracking-wider">
-            {isNo ? "Møre og Romsdal" : "Møre og Romsdal"}
-          </p>
           <h1 className="font-headline text-3xl md:text-4xl font-bold text-accent-foreground mb-3">
             {isNo ? "Bedriftsdatabasen" : "Company Database"}
           </h1>

@@ -187,6 +187,7 @@ export const JobChangeFeed = () => {
                     </div>
                   </div>
                 )}
+                </div>
               </div>
             );
           })}

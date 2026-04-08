@@ -13,6 +13,8 @@ interface ThemeContextType {
   setDefaultView: (view: DefaultView) => void;
   hasOnboarded: boolean;
   completeOnboarding: () => void;
+  region: string | null;
+  setRegion: (region: string) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -46,9 +48,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return false;
   });
 
+  const [region, setRegionState] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("region") || null;
+    }
+    return null;
+  });
+
   const completeOnboarding = () => {
     setHasOnboarded(true);
     localStorage.setItem("hasOnboarded", "true");
+  };
+
+  const setRegion = (r: string) => {
+    setRegionState(r);
+    localStorage.setItem("region", r);
   };
 
   useEffect(() => {
@@ -76,7 +90,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, language, toggleLanguage, defaultView, setDefaultView, hasOnboarded, completeOnboarding }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, language, toggleLanguage, defaultView, setDefaultView, hasOnboarded, completeOnboarding, region, setRegion }}>
       {children}
     </ThemeContext.Provider>
   );

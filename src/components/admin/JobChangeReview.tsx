@@ -121,7 +121,7 @@ export const JobChangeReview = () => {
                 </div>
               )}
               <div className="p-5">
-                <div>
+              <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-headline text-base font-semibold text-headline">{item.person_name}</span>
                     <span className="px-2 py-0.5 text-xs font-subhead font-medium rounded-full bg-secondary text-muted-foreground">{typeLabel(item.change_type)}</span>

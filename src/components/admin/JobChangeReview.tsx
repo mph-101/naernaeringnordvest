@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Check, X, Trash2, Loader2, ExternalLink, Sparkles } from "lucide-react";
+import { Check, X, Trash2, Loader2, ExternalLink, Sparkles, User, Building2, BadgeCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 

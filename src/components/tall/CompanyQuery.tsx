@@ -177,21 +177,27 @@ export function CompanyQuery() {
                   <li className="leading-[1.7] text-[0.95rem]">{children}</li>
                 ),
                 table: ({ children }) => (
-                  <div className="overflow-x-auto my-6 rounded-xl border border-border">
-                    <table className="w-full text-sm border-collapse">
+                  <div className="overflow-x-auto my-6 rounded-xl border border-border bg-card">
+                    <table className="w-full text-sm border-collapse min-w-[500px]">
                       {children}
                     </table>
                   </div>
                 ),
+                thead: ({ children }) => (
+                  <thead className="bg-muted/60">{children}</thead>
+                ),
                 th: ({ children }) => (
-                  <th className="text-left py-3 px-4 font-subhead font-medium text-muted-foreground border-b border-border bg-secondary/50">
+                  <th className="text-left py-3 px-4 font-subhead font-semibold text-headline border-b border-border text-sm whitespace-nowrap">
                     {children}
                   </th>
                 ),
                 td: ({ children }) => (
-                  <td className="py-3 px-4 border-b border-border/50 font-body leading-relaxed">
+                  <td className="py-2.5 px-4 border-b border-border/40 font-body leading-relaxed">
                     {children}
                   </td>
+                ),
+                tr: ({ children }) => (
+                  <tr className="hover:bg-muted/30 transition-colors">{children}</tr>
                 ),
                 strong: ({ children }) => (
                   <strong className="font-semibold text-headline">{children}</strong>

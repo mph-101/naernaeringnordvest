@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        headline: ['Fraunces', 'Georgia', 'serif'],
-        subhead: ['"DM Sans"', 'system-ui', 'sans-serif'],
-        body: ['"DM Sans"', 'system-ui', 'sans-serif'],
+        headline: ['"Playfair Display"', 'Georgia', 'serif'],
+        subhead: ['Inter', 'system-ui', 'sans-serif'],
+        body: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

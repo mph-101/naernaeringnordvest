@@ -254,6 +254,7 @@ const Profile = () => {
     toast.success(isNo ? "Eksportert som PDF" : "Exported as PDF");
   };
 
+  if (loading) return (
     <div className="min-h-screen bg-background">
       <Header showSearch={false} />
       <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>

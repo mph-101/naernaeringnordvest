@@ -7,6 +7,7 @@ import { RelatedArticles } from "@/components/RelatedArticles";
 import { NewsFeed } from "@/components/NewsFeed";
 import { ViewToggle } from "@/components/ViewToggle";
 import { JobChangeFeed } from "@/components/JobChangeFeed";
+import { TrendingSection } from "@/components/TrendingSection";
 
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -74,6 +75,7 @@ const Index = () => {
         
         {view === "search" ? <SearchHero onSearch={handleSearch} /> : (
           <>
+            <TrendingSection />
             <NewsFeed />
             {!hiddenElements.includes("job_changes") && (
               <div className="max-w-5xl mx-auto px-6 pb-16">

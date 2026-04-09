@@ -141,7 +141,7 @@ export function NewsFeed() {
             <div className="md:flex">
               <div
                 className="h-56 md:h-auto md:w-2/5 flex-shrink-0 flex items-center justify-center relative overflow-hidden"
-                style={{ background: getArticleImage(featuredItem.id, featuredItem.category) }}
+                style={{ background: getArticleImage(featuredItem.id, featuredItem.category), backgroundSize: 'cover', backgroundPosition: 'center' }}
               >
                 <div className="absolute inset-0 bg-black/10" />
                 <span className="relative text-white/80 font-headline text-3xl font-bold tracking-tight select-none">
@@ -200,7 +200,7 @@ export function NewsFeed() {
               {/* Card thumbnail */}
               <div
                 className="h-36 w-full flex items-center justify-center relative overflow-hidden"
-                style={{ background: getArticleImage(item.id, item.category) }}
+                style={{ background: getArticleImage(item.id, item.category), backgroundSize: 'cover', backgroundPosition: 'center' }}
               >
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
                 <span className="relative text-white/70 font-headline text-2xl font-bold tracking-tight select-none">

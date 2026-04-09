@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Briefcase, ArrowRight, ExternalLink, User, Building2, BadgeCheck } from "lucide-react";
+import { Briefcase, ArrowRight, ExternalLink, User, Building2, BadgeCheck, Linkedin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 

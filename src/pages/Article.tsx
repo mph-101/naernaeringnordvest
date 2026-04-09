@@ -172,9 +172,11 @@ const Article = () => {
       {/* Hero image */}
       <div className="relative w-full h-48 md:h-64 lg:h-72 overflow-hidden">
         <div
-          className="absolute inset-0 flex items-end will-change-transform"
+          className="absolute inset-0 will-change-transform"
           style={{
             background: getArticleImage(article.id, article.category),
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
             transform: `translateY(${parallaxOffset}px) scale(1.15)`,
           }}
         />

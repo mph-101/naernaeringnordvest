@@ -59,6 +59,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return null;
   });
 
+  const [hiddenElements, setHiddenElements] = useState<HideableElement[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return JSON.parse(localStorage.getItem("hiddenElements") || "[]");
+      } catch { return []; }
+    }
+    return [];
+  });
+
   const completeOnboarding = () => {
     setHasOnboarded(true);
     localStorage.setItem("hasOnboarded", "true");
@@ -67,6 +76,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const setRegion = (r: string) => {
     setRegionState(r);
     localStorage.setItem("region", r);
+  };
+
+  const toggleHiddenElement = (element: HideableElement) => {
+    setHiddenElements(prev => {
+      const next = prev.includes(element) ? prev.filter(e => e !== element) : [...prev, element];
+      localStorage.setItem("hiddenElements", JSON.stringify(next));
+      return next;
+    });
   };
 
   useEffect(() => {

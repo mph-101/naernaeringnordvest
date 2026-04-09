@@ -404,6 +404,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string | null
+          hidden_elements: string[] | null
           id: string
           region: string | null
           updated_at: string
@@ -414,6 +415,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          hidden_elements?: string[] | null
           id?: string
           region?: string | null
           updated_at?: string
@@ -424,6 +426,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          hidden_elements?: string[] | null
           id?: string
           region?: string | null
           updated_at?: string

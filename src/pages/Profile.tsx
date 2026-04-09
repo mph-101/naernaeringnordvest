@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { User, StickyNote, Users, LogOut, Loader2, Trash2, Globe, Lock } from "lucide-react";
+import { User, StickyNote, Users, LogOut, Loader2, Trash2, Globe, Lock, Settings, Eye, EyeOff } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { supabase } from "@/integrations/supabase/client";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme, HideableElement } from "@/hooks/useTheme";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 import { articlesNo, articlesEn } from "@/lib/articles";
 
 interface Note {
@@ -29,7 +30,8 @@ interface GroupMembership {
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { language } = useTheme();
+  const { language, hiddenElements, toggleHiddenElement } = useTheme();
+  const isNo = language === "no";
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
@@ -39,27 +41,38 @@ const Profile = () => {
   const [groups, setGroups] = useState<GroupMembership[]>([]);
   const [articleTitles, setArticleTitles] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"notes" | "groups">("notes");
+  const [activeTab, setActiveTab] = useState<"notes" | "groups" | "settings">("notes");
 
-  const t = language === "no"
+  const t = isNo
     ? {
-        profile: "Min profil", notes: "Notater", groups: "Grupper",
+        profile: "Min profil", notes: "Notater", groups: "Grupper", settings: "Innstillinger",
         noNotes: "Ingen notater ennå", noGroups: "Ingen grupper ennå",
         article: "Artikkel", updated: "Oppdatert", joined: "Ble med",
         admin: "Admin", member: "Medlem", delete: "Slett",
         loginRequired: "Du må logge inn for å se profilen din",
         login: "Logg inn", logout: "Logg ut", members: "medlemmer",
         deleteConfirm: "Er du sikker?", deleted: "Slettet!",
+        visibilityTitle: "Synlige elementer",
+        visibilityDesc: "Velg hvilke seksjoner du vil se i appen",
       }
     : {
-        profile: "My Profile", notes: "Notes", groups: "Groups",
+        profile: "My Profile", notes: "Notes", groups: "Groups", settings: "Settings",
         noNotes: "No notes yet", noGroups: "No groups yet",
         article: "Article", updated: "Updated", joined: "Joined",
         admin: "Admin", member: "Member", delete: "Delete",
         loginRequired: "You need to log in to view your profile",
         login: "Log in", logout: "Log out", members: "members",
         deleteConfirm: "Are you sure?", deleted: "Deleted!",
+        visibilityTitle: "Visible elements",
+        visibilityDesc: "Choose which sections to show in the app",
       };
+
+  const toggleItems: { id: HideableElement; labelNo: string; labelEn: string }[] = [
+    { id: "search", labelNo: "Spør (AI-chat)", labelEn: "Ask (AI chat)" },
+    { id: "feed", labelNo: "Utforsk (nyhetsfeed)", labelEn: "Browse (news feed)" },
+    { id: "tall", labelNo: "Tall (selskapsdatabase)", labelEn: "Numbers (company database)" },
+    { id: "job_changes", labelNo: "Jobbytter", labelEn: "Job changes" },
+  ];
 
   useEffect(() => {
     const init = async () => {

@@ -22,13 +22,27 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    const checkRole = async (uid: string) => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid);
+      setIsAdmin(!!data && data.length > 0);
+    };
+
     supabase.auth.getSession().then(({ data }) => {
       setUserId(data.session?.user?.id ?? null);
       setUserEmail(data.session?.user?.email ?? null);
+      if (data.session?.user?.id) checkRole(data.session.user.id);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUserId(session?.user?.id ?? null);
       setUserEmail(session?.user?.email ?? null);
+      if (session?.user?.id) {
+        checkRole(session.user.id);
+      } else {
+        setIsAdmin(false);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);

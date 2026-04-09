@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Briefcase, ArrowRight, ExternalLink, User, Building2, BadgeCheck } from "lucide-react";
+import { Briefcase, ArrowRight, ExternalLink, User, Building2, BadgeCheck, Linkedin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -154,6 +154,14 @@ export const JobChangeFeed = () => {
                           <ExternalLink className="w-3 h-3" /> {isNo ? "Kilde" : "Source"}
                         </a>
                       )}
+                      <a
+                        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin)}&title=${encodeURIComponent(structured.title)}&summary=${encodeURIComponent(structured.ingress)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-[#0A66C2] hover:underline flex items-center gap-1 font-subhead font-medium"
+                      >
+                        <Linkedin className="w-3 h-3" /> {isNo ? "Del på LinkedIn" : "Share on LinkedIn"}
+                      </a>
                     </div>
                   </>
                 ) : (
@@ -183,6 +191,14 @@ export const JobChangeFeed = () => {
                             <ExternalLink className="w-3 h-3" /> {isNo ? "Kilde" : "Source"}
                           </a>
                         )}
+                        <a
+                          href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin)}&title=${encodeURIComponent(item.person_name + " - " + (item.new_role || ""))}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-[#0A66C2] hover:underline flex items-center gap-1 font-subhead font-medium"
+                        >
+                          <Linkedin className="w-3 h-3" /> LinkedIn
+                        </a>
                       </div>
                     </div>
                   </div>

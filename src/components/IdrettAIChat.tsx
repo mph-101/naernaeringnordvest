@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   role: "user" | "assistant";
@@ -135,12 +136,35 @@ export function IdrettAIChat() {
                     : <Bot className="w-3.5 h-3.5 text-foreground/70" />
                   }
                 </div>
-                <div className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl font-body text-sm leading-relaxed whitespace-pre-wrap ${
+                <div className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                   msg.role === "user"
-                    ? "bg-accent text-accent-foreground rounded-tr-sm"
+                    ? "bg-accent text-accent-foreground rounded-tr-sm font-body whitespace-pre-wrap"
                     : "bg-secondary text-foreground rounded-tl-sm"
                 }`}>
-                  {msg.content}
+                  {msg.role === "user" ? msg.content : (
+                    <div className="prose prose-sm dark:prose-invert max-w-none font-body [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                      <ReactMarkdown
+                        components={{
+                          p: ({ children }) => <p className="mb-3 leading-[1.7] text-sm">{children}</p>,
+                          ul: ({ children }) => <ul className="mb-3 space-y-1 pl-4 list-disc marker:text-primary/60 text-sm">{children}</ul>,
+                          ol: ({ children }) => <ol className="mb-3 space-y-1 pl-4 list-decimal marker:text-primary/60 text-sm">{children}</ol>,
+                          li: ({ children }) => <li className="leading-[1.6] text-sm">{children}</li>,
+                          table: ({ children }) => (
+                            <div className="overflow-x-auto my-3 rounded-lg border border-border">
+                              <table className="w-full text-xs border-collapse">{children}</table>
+                            </div>
+                          ),
+                          th: ({ children }) => <th className="text-left py-2 px-3 font-medium text-muted-foreground border-b border-border bg-secondary/50 text-xs">{children}</th>,
+                          td: ({ children }) => <td className="py-2 px-3 border-b border-border/50 text-xs">{children}</td>,
+                          strong: ({ children }) => <strong className="font-semibold text-headline">{children}</strong>,
+                          h3: ({ children }) => <h3 className="font-semibold text-sm mt-4 mb-2 text-headline">{children}</h3>,
+                          a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{children}</a>,
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

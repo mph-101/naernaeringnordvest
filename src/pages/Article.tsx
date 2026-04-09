@@ -56,7 +56,7 @@ const Article = () => {
         <article className="max-w-3xl mx-auto px-6 py-12">
           {/* Back button */}
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8 font-body text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -132,7 +132,7 @@ const Article = () => {
       <article className="max-w-3xl mx-auto px-6 py-12">
         {/* Back button */}
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8 font-body text-sm"
         >
           <ArrowLeft className="w-4 h-4" />

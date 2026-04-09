@@ -1,4 +1,5 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from "react";
+import { useState, useEffect, useRef, createContext, useContext, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 type Theme = "light" | "dark";
 type Language = "no" | "en";
@@ -69,6 +70,43 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return [];
   });
 
+  // Track if we've loaded from DB to avoid overwriting with localStorage defaults
+  const dbLoadedRef = useRef(false);
+
+  // Sync hidden_elements FROM database on login
+  useEffect(() => {
+    const loadFromDb = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("hidden_elements")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      if (data?.hidden_elements && Array.isArray(data.hidden_elements)) {
+        setHiddenElements(data.hidden_elements as HideableElement[]);
+        localStorage.setItem("hiddenElements", JSON.stringify(data.hidden_elements));
+      }
+      dbLoadedRef.current = true;
+    };
+    loadFromDb();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) loadFromDb();
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Sync hidden_elements TO database when changed
+  const syncToDb = async (elements: HideableElement[]) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    await supabase
+      .from("profiles")
+      .update({ hidden_elements: elements } as any)
+      .eq("user_id", session.user.id);
+  };
+
   const completeOnboarding = () => {
     setHasOnboarded(true);
     localStorage.setItem("hasOnboarded", "true");
@@ -83,6 +121,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setHiddenElements(prev => {
       const next = prev.includes(element) ? prev.filter(e => e !== element) : [...prev, element];
       localStorage.setItem("hiddenElements", JSON.stringify(next));
+      syncToDb(next);
       return next;
     });
   };
@@ -122,6 +161,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("defaultView", "search");
     localStorage.setItem("hiddenElements", "[]");
     localStorage.removeItem("region");
+    syncToDb([]);
     const root = window.document.documentElement;
     root.classList.remove("light", "dark");
     root.classList.add("light");

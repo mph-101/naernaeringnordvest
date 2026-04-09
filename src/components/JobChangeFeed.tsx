@@ -191,6 +191,14 @@ export const JobChangeFeed = () => {
                             <ExternalLink className="w-3 h-3" /> {isNo ? "Kilde" : "Source"}
                           </a>
                         )}
+                        <a
+                          href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin)}&title=${encodeURIComponent(item.person_name + " - " + (item.new_role || ""))}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-[#0A66C2] hover:underline flex items-center gap-1 font-subhead font-medium"
+                        >
+                          <Linkedin className="w-3 h-3" /> LinkedIn
+                        </a>
                       </div>
                     </div>
                   </div>

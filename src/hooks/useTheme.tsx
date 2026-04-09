@@ -4,6 +4,8 @@ type Theme = "light" | "dark";
 type Language = "no" | "en";
 type DefaultView = "search" | "feed" | "tall";
 
+export type HideableElement = "search" | "feed" | "tall" | "job_changes";
+
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
@@ -15,6 +17,8 @@ interface ThemeContextType {
   completeOnboarding: () => void;
   region: string | null;
   setRegion: (region: string) => void;
+  hiddenElements: HideableElement[];
+  toggleHiddenElement: (element: HideableElement) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);

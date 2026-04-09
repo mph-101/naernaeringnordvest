@@ -17,6 +17,7 @@ const Article = () => {
   const t = translations[language];
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   const [readProgress, setReadProgress] = useState(0);
+  const [parallaxOffset, setParallaxOffset] = useState(0);
   
   const article = id ? getArticleById(id, language) : undefined;
 
@@ -35,6 +36,7 @@ const Article = () => {
     if (docHeight > 0) {
       setReadProgress(Math.min(100, (scrollTop / docHeight) * 100));
     }
+    setParallaxOffset(scrollTop * 0.4);
   }, []);
 
   useEffect(() => {
@@ -168,13 +170,17 @@ const Article = () => {
       <Header showSearch={false} />
 
       {/* Hero image */}
-      <div
-        className="relative w-full h-48 md:h-64 lg:h-72 flex items-end overflow-hidden"
-        style={{ background: getArticleImage(article.id, article.category) }}
-      >
+      <div className="relative w-full h-48 md:h-64 lg:h-72 overflow-hidden">
+        <div
+          className="absolute inset-0 flex items-end will-change-transform"
+          style={{
+            background: getArticleImage(article.id, article.category),
+            transform: `translateY(${parallaxOffset}px) scale(1.15)`,
+          }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
-        <div className="relative max-w-2xl mx-auto w-full px-6 pb-8">
-          <span className="inline-block px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white text-sm font-subhead font-medium rounded-full mb-4 border border-white/20">
+        <div className="relative flex items-end h-full max-w-2xl mx-auto w-full px-6 pb-8">
+          <span className="inline-block px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white text-sm font-subhead font-medium rounded-full border border-white/20">
             {article.category}
           </span>
         </div>

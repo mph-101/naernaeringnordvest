@@ -180,7 +180,80 @@ const Profile = () => {
     toast.success(t.deleted);
   };
 
-  if (loading) return (
+  const buildNotesText = () => {
+    return notes.map(note => {
+      const title = articleTitles.get(note.article_id) || `${t.article} #${note.article_id}`;
+      const date = new Date(note.updated_at).toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "long", year: "numeric" });
+      return `${title}\n${date}\n${"—".repeat(40)}\n${note.content}\n`;
+    }).join("\n\n");
+  };
+
+  const exportAsTxt = () => {
+    if (notes.length === 0) return;
+    const text = buildNotesText();
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `notater-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(isNo ? "Eksportert som tekstfil" : "Exported as text file");
+  };
+
+  const exportAsPdf = async () => {
+    if (notes.length === 0) return;
+    const { default: jsPDF } = await import("jspdf");
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const maxWidth = pageWidth - margin * 2;
+    let y = 20;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text(isNo ? "Mine notater" : "My Notes", margin, y);
+    y += 12;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text(new Date().toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "long", year: "numeric" }), margin, y);
+    doc.setTextColor(0);
+    y += 12;
+
+    for (const note of notes) {
+      const title = articleTitles.get(note.article_id) || `${t.article} #${note.article_id}`;
+      const date = new Date(note.updated_at).toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "short", year: "numeric" });
+
+      if (y > 260) { doc.addPage(); y = 20; }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text(title, margin, y);
+      y += 6;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(120);
+      doc.text(date, margin, y);
+      doc.setTextColor(0);
+      y += 8;
+
+      doc.setFontSize(10);
+      const lines = doc.splitTextToSize(note.content, maxWidth);
+      for (const line of lines) {
+        if (y > 280) { doc.addPage(); y = 20; }
+        doc.text(line, margin, y);
+        y += 5;
+      }
+      y += 10;
+    }
+
+    doc.save(`notater-${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast.success(isNo ? "Eksportert som PDF" : "Exported as PDF");
+  };
+
     <div className="min-h-screen bg-background">
       <Header showSearch={false} />
       <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -118,14 +118,14 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Source Sans 3', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     background-image: 
       radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.06) 1.5px, transparent 0);
     background-size: 32px 32px;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Lora', Georgia, serif;
+    font-family: 'Playfair Display', Georgia, serif;
     color: hsl(var(--headline));
     letter-spacing: -0.02em;
   }
@@ -133,17 +133,17 @@
 
 @layer utilities {
   .font-headline {
-    font-family: 'Lora', Georgia, serif;
+    font-family: 'Playfair Display', Georgia, serif;
     letter-spacing: -0.02em;
   }
 
   .font-subhead {
-    font-family: 'Source Sans 3', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-weight: 500;
   }
 
   .font-body {
-    font-family: 'Source Sans 3', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
   .text-headline {

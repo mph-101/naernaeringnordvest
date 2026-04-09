@@ -4,6 +4,8 @@ type Theme = "light" | "dark";
 type Language = "no" | "en";
 type DefaultView = "search" | "feed" | "tall";
 
+export type HideableElement = "search" | "feed" | "tall" | "job_changes";
+
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
@@ -15,6 +17,8 @@ interface ThemeContextType {
   completeOnboarding: () => void;
   region: string | null;
   setRegion: (region: string) => void;
+  hiddenElements: HideableElement[];
+  toggleHiddenElement: (element: HideableElement) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -55,6 +59,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return null;
   });
 
+  const [hiddenElements, setHiddenElements] = useState<HideableElement[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return JSON.parse(localStorage.getItem("hiddenElements") || "[]");
+      } catch { return []; }
+    }
+    return [];
+  });
+
   const completeOnboarding = () => {
     setHasOnboarded(true);
     localStorage.setItem("hasOnboarded", "true");
@@ -63,6 +76,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const setRegion = (r: string) => {
     setRegionState(r);
     localStorage.setItem("region", r);
+  };
+
+  const toggleHiddenElement = (element: HideableElement) => {
+    setHiddenElements(prev => {
+      const next = prev.includes(element) ? prev.filter(e => e !== element) : [...prev, element];
+      localStorage.setItem("hiddenElements", JSON.stringify(next));
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -90,7 +111,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, language, toggleLanguage, defaultView, setDefaultView, hasOnboarded, completeOnboarding, region, setRegion }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, language, toggleLanguage, defaultView, setDefaultView, hasOnboarded, completeOnboarding, region, setRegion, hiddenElements, toggleHiddenElement }}>
       {children}
     </ThemeContext.Provider>
   );

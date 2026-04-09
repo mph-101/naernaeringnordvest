@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, User, Calendar, Lock, BookOpen } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -16,6 +16,7 @@ const Article = () => {
   const { language } = useTheme();
   const t = translations[language];
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
+  const [readProgress, setReadProgress] = useState(0);
   
   const article = id ? getArticleById(id, language) : undefined;
 
@@ -27,6 +28,19 @@ const Article = () => {
       .eq("article_id", id)
       .then(({ data }) => setCompanyTags(data || []));
   }, [id]);
+
+  const handleScroll = useCallback(() => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    if (docHeight > 0) {
+      setReadProgress(Math.min(100, (scrollTop / docHeight) * 100));
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   if (!article) {
     return (
@@ -143,6 +157,14 @@ const Article = () => {
   // Free article - show full content
   return (
     <div className="min-h-screen bg-background">
+      {/* Reading progress bar */}
+      <div className="fixed top-0 left-0 right-0 z-[60] h-[3px] bg-transparent">
+        <div
+          className="h-full bg-accent transition-[width] duration-100 ease-out"
+          style={{ width: `${readProgress}%` }}
+        />
+      </div>
+
       <Header showSearch={false} />
       
       <article className="max-w-2xl mx-auto px-6 py-14">

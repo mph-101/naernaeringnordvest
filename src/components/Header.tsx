@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import logoImg from "@/assets/logo.png";
-import { Menu, X, Search, Moon, Sun, Globe, Users, LogIn, LogOut, UserCircle } from "lucide-react";
+import { Menu, X, Search, Moon, Sun, Globe, Users, LogIn, LogOut, UserCircle, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -19,15 +19,30 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
   const t = translations[language];
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    const checkRole = async (uid: string) => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid);
+      setIsAdmin(!!data && data.length > 0);
+    };
+
     supabase.auth.getSession().then(({ data }) => {
       setUserId(data.session?.user?.id ?? null);
       setUserEmail(data.session?.user?.email ?? null);
+      if (data.session?.user?.id) checkRole(data.session.user.id);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUserId(session?.user?.id ?? null);
       setUserEmail(session?.user?.email ?? null);
+      if (session?.user?.id) {
+        checkRole(session.user.id);
+      } else {
+        setIsAdmin(false);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -92,6 +107,15 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
 
             {userId ? (
               <div className="flex items-center gap-1">
+                {isAdmin && (
+                  <button
+                    onClick={() => navigate("/admin")}
+                    className="p-2.5 hover:bg-secondary rounded-full transition-colors"
+                    title="Admin"
+                  >
+                    <Shield className="w-4 h-4 text-foreground/70" />
+                  </button>
+                )}
                 <button
                   onClick={() => navigate("/profil")}
                   className="p-2.5 hover:bg-secondary rounded-full transition-colors"
@@ -139,6 +163,12 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
             <nav className="flex flex-col gap-2">
               {userId ? (
                 <>
+                  {isAdmin && (
+                    <button onClick={() => { navigate("/admin"); setIsMobileMenuOpen(false); }} className="w-full px-5 py-3 bg-primary text-primary-foreground rounded-full font-subhead text-sm font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      Admin
+                    </button>
+                  )}
                   <button onClick={() => { navigate("/profil"); setIsMobileMenuOpen(false); }} className="w-full px-5 py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors">
                     {language === "no" ? "Min profil" : "My profile"}
                   </button>

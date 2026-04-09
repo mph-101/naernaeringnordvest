@@ -30,7 +30,7 @@ interface GroupMembership {
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { language, hiddenElements, toggleHiddenElement } = useTheme();
+  const { language, hiddenElements, toggleHiddenElement, resetAllSettings } = useTheme();
   const isNo = language === "no";
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -373,6 +373,13 @@ const Profile = () => {
                 })}
               </div>
             </div>
+
+            <button
+              onClick={() => { resetAllSettings(); toast.success(isNo ? "Innstillinger tilbakestilt" : "Settings reset"); }}
+              className="w-full py-3 px-4 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-xl font-subhead text-sm font-medium transition-colors"
+            >
+              {isNo ? "Tilbakestill alle innstillinger" : "Reset all settings"}
+            </button>
           </div>
         )}
       </div>

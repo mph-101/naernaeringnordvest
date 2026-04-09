@@ -30,7 +30,7 @@ export default function Tall() {
     { id: "search", label: isNo ? "Selskapssøk" : "Company Search", icon: Search },
     { id: "query", label: isNo ? "Spør databasen" : "Ask Database", icon: MessageSquare },
     { id: "lists", label: isNo ? "Mine lister" : "My Lists", icon: List },
-    { id: "overview", label: isNo ? "Nyetableringer" : "New Businesses", icon: TrendingUp },
+    { id: "overview", label: isNo ? "Etablering og konkurs" : "Establishments & Bankruptcies", icon: TrendingUp },
   ];
 
   return (

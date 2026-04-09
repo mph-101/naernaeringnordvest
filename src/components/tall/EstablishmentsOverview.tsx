@@ -21,16 +21,36 @@ interface Props {
   onKommunerChange: (k: string[]) => void;
 }
 
+function pad(n: number) { return n.toString().padStart(2, "0"); }
+
 function getMonthOptions(isNo: boolean) {
   const months: { value: string; label: string }[] = [];
   const now = new Date();
   for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const value = d.toISOString().split("T")[0];
+    const year = now.getFullYear();
+    const month = now.getMonth() - i;
+    const d = new Date(year, month, 1);
+    // Use local date parts to avoid timezone shift
+    const value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-01`;
     const label = d.toLocaleDateString(isNo ? "nb-NO" : "en-US", { month: "long", year: "numeric" });
     months.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
   }
   return months;
+}
+
+function getLastDayOfMonth(yearMonth: string) {
+  // yearMonth = "YYYY-MM-01"
+  const [y, m] = yearMonth.split("-").map(Number);
+  const last = new Date(y, m, 0); // day 0 of next month = last day of this month
+  return `${last.getFullYear()}-${pad(last.getMonth() + 1)}-${pad(last.getDate())}`;
+}
+
+function formatDate(dateStr: string | undefined, isNo: boolean) {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "short", year: "numeric" });
+  } catch { return dateStr; }
 }
 
 export function EstablishmentsOverview({ selectedFylker, selectedKommuner, onFylkerChange, onKommunerChange }: Props) {
@@ -55,21 +75,19 @@ export function EstablishmentsOverview({ selectedFylker, selectedKommuner, onFyl
       let fraDate: string;
       let tilDate: string;
       if (selectedMonth) {
-        const d = new Date(selectedMonth);
         fraDate = selectedMonth;
-        tilDate = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split("T")[0];
+        tilDate = getLastDayOfMonth(selectedMonth);
       } else {
-        fraDate = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
-        tilDate = "";
+        const now = new Date();
+        const ago = new Date(now.getTime() - 30 * 86400000);
+        fraDate = `${ago.getFullYear()}-${pad(ago.getMonth() + 1)}-${pad(ago.getDate())}`;
+        tilDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
       }
 
-      let newUrl = `${baseUrl}?action=new_establishments&fra=${fraDate}`;
-      if (tilDate) newUrl += `&til=${tilDate}`;
+      let newUrl = `${baseUrl}?action=new_establishments&fra=${fraDate}&til=${tilDate}`;
       if (kommuneParam) newUrl += `&kommune=${kommuneParam}`;
 
-      let bankUrl = `${baseUrl}?action=bankruptcies`;
-      if (fraDate) bankUrl += `&fra=${fraDate}`;
-      if (tilDate) bankUrl += `&til=${tilDate}`;
+      let bankUrl = `${baseUrl}?action=bankruptcies&fra=${fraDate}&til=${tilDate}`;
       if (kommuneParam) bankUrl += `&kommune=${kommuneParam}`;
 
       const [newData, bankData] = await Promise.all([
@@ -77,9 +95,18 @@ export function EstablishmentsOverview({ selectedFylker, selectedKommuner, onFyl
         fetch(bankUrl, { headers }).then((r) => r.json()),
       ]);
 
-      setNewCompanies(newData.companies || []);
+      // Sort new establishments by stiftelsesdato desc
+      const sortedNew = (newData.companies || []).sort((a: SimpleCompany, b: SimpleCompany) =>
+        (b.stiftelsesdato || "").localeCompare(a.stiftelsesdato || "")
+      );
+      // Sort bankruptcies by registreringsdato desc
+      const sortedBankrupt = (bankData.companies || []).sort((a: SimpleCompany, b: SimpleCompany) =>
+        (b.registreringsdato || b.stiftelsesdato || "").localeCompare(a.registreringsdato || a.stiftelsesdato || "")
+      );
+
+      setNewCompanies(sortedNew);
       setNewTotal(newData.total || 0);
-      setBankruptcies(bankData.companies || []);
+      setBankruptcies(sortedBankrupt);
       setBankruptTotal(bankData.total || 0);
     } catch (e) { console.error(e); }
     setLoading(false);
@@ -88,6 +115,9 @@ export function EstablishmentsOverview({ selectedFylker, selectedKommuner, onFyl
   useEffect(() => { fetchData(); }, [selectedFylker, selectedKommuner, selectedMonth]);
 
   const items = tab === "new" ? newCompanies : bankruptcies;
+  const periodLabel = selectedMonth
+    ? monthOptions.find(m => m.value === selectedMonth)?.label || ""
+    : isNo ? "siste 30 dager" : "last 30 days";
 
   return (
     <div>
@@ -134,10 +164,16 @@ export function EstablishmentsOverview({ selectedFylker, selectedKommuner, onFyl
         </button>
       </div>
 
+      {!loading && items.length > 0 && (
+        <p className="text-xs text-muted-foreground font-body mb-3">
+          {isNo ? `Viser ${items.length} av ${tab === "new" ? newTotal : bankruptTotal} for ${periodLabel}` : `Showing ${items.length} of ${tab === "new" ? newTotal : bankruptTotal} for ${periodLabel}`}
+        </p>
+      )}
+
       {loading ? (
         <p className="text-center text-muted-foreground font-body py-8">{isNo ? "Laster data fra Brønnøysundregistrene..." : "Loading data..."}</p>
       ) : items.length === 0 ? (
-        <p className="text-center text-muted-foreground font-body py-8">{isNo ? "Ingen data funnet" : "No data found"}</p>
+        <p className="text-center text-muted-foreground font-body py-8">{isNo ? "Ingen data funnet for valgt periode" : "No data found for selected period"}</p>
       ) : (
         <div className="space-y-2">
           {items.map((c) => (
@@ -161,7 +197,8 @@ export function EstablishmentsOverview({ selectedFylker, selectedKommuner, onFyl
                   </div>
                   <p className="text-xs text-muted-foreground font-body mt-0.5">
                     {c.orgnr} · {c.kommune}
-                    {c.registreringsdato && ` · ${isNo ? "Reg." : "Reg."} ${c.registreringsdato}`}
+                    {tab === "new" && c.stiftelsesdato && ` · ${isNo ? "Stiftet" : "Founded"} ${formatDate(c.stiftelsesdato, isNo)}`}
+                    {tab === "bankrupt" && c.registreringsdato && ` · ${isNo ? "Reg." : "Reg."} ${formatDate(c.registreringsdato, isNo)}`}
                   </p>
                   {c.naeringsbeskriv && <p className="text-xs text-muted-foreground font-body mt-1">{c.naeringsbeskriv}</p>}
                 </div>

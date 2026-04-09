@@ -334,6 +334,24 @@ const Profile = () => {
         {/* Notes Tab */}
         {activeTab === "notes" && (
           <div className="space-y-3">
+            {notes.length > 0 && (
+              <div className="flex gap-2 justify-end mb-2">
+                <button
+                  onClick={exportAsTxt}
+                  className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-sm font-subhead font-medium text-foreground hover:bg-secondary transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  {isNo ? "Eksporter .txt" : "Export .txt"}
+                </button>
+                <button
+                  onClick={exportAsPdf}
+                  className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-sm font-subhead font-medium text-foreground hover:bg-secondary transition-colors"
+                >
+                  <FileDown className="w-4 h-4" />
+                  {isNo ? "Eksporter PDF" : "Export PDF"}
+                </button>
+              </div>
+            )}
             {notes.length === 0 ? (
               <div className="text-center py-12">
                 <StickyNote className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />

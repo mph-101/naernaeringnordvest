@@ -7,7 +7,7 @@ import { ArticleNotes } from "@/components/ArticleNotes";
 import { CompanyMiniProfile } from "@/components/CompanyMiniProfile";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-import { getArticleById } from "@/lib/articles";
+import { getArticleById, getArticleImage } from "@/lib/articles";
 import { supabase } from "@/integrations/supabase/client";
 
 const Article = () => {
@@ -166,16 +166,22 @@ const Article = () => {
       </div>
 
       <Header showSearch={false} />
-      
-      <article className="max-w-2xl mx-auto px-6 py-14">
-        <BackButton />
 
-        {/* Category */}
-        <div className="mb-5 animate-fade-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
-          <span className="px-3 py-1.5 bg-accent/10 text-accent text-sm font-subhead font-medium rounded-full border border-accent/20">
+      {/* Hero image */}
+      <div
+        className="relative w-full h-48 md:h-64 lg:h-72 flex items-end overflow-hidden"
+        style={{ background: getArticleImage(article.id, article.category) }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
+        <div className="relative max-w-2xl mx-auto w-full px-6 pb-8">
+          <span className="inline-block px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white text-sm font-subhead font-medium rounded-full mb-4 border border-white/20">
             {article.category}
           </span>
         </div>
+      </div>
+      
+      <article className="max-w-2xl mx-auto px-6 pt-10 pb-14">
+        <BackButton />
 
         {/* Title */}
         <h1 className="font-headline text-3xl md:text-4xl lg:text-[2.75rem] font-bold text-headline leading-[1.15] mb-6 animate-fade-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>

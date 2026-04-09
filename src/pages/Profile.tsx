@@ -244,6 +244,17 @@ const Profile = () => {
             <Users className="w-4 h-4" />
             {t.groups} ({groups.length})
           </button>
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-subhead font-medium transition-all ${
+              activeTab === "settings"
+                ? "bg-primary text-primary-foreground shadow-soft"
+                : "bg-card border border-border text-foreground hover:bg-secondary"
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            {t.settings}
+          </button>
         </div>
 
         {/* Notes Tab */}

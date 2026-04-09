@@ -12,7 +12,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 
 const Index = () => {
-  const { language, defaultView, hasOnboarded } = useTheme();
+  const { language, defaultView, hasOnboarded, hiddenElements } = useTheme();
   const t = translations[language];
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();

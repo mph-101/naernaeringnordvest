@@ -15,18 +15,20 @@ interface ViewToggleProps {
 }
 
 export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
-  const { language, defaultView, setDefaultView } = useTheme();
+  const { language, defaultView, setDefaultView, hiddenElements } = useTheme();
   const t = translations[language];
   const location = useLocation();
   const navigate = useNavigate();
   const isIdrett = location.pathname.startsWith("/idrett");
   const isTall = location.pathname.startsWith("/tall");
 
-  const tabs = [
+  const allTabs = [
     { id: "search" as const, label: t.ask, icon: MessageSquare },
     { id: "feed" as const, label: t.browse, icon: Newspaper },
     { id: "tall" as const, label: "Tall", icon: BarChart2 },
   ];
+
+  const tabs = allTabs.filter(tab => !hiddenElements.includes(tab.id));
 
   const handleClick = (tabId: "search" | "feed" | "tall") => {
     if (tabId === "tall") {

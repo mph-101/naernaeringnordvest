@@ -75,9 +75,11 @@ const Index = () => {
         {view === "search" ? <SearchHero onSearch={handleSearch} /> : (
           <>
             <NewsFeed />
-            <div className="max-w-4xl mx-auto px-6 mt-8">
-              <JobChangeFeed />
-            </div>
+            {!hiddenElements.includes("job_changes") && (
+              <div className="max-w-4xl mx-auto px-6 mt-8">
+                <JobChangeFeed />
+              </div>
+            )}
           </>
         )}
       </main>

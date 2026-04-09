@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        headline: ['Lora', 'Georgia', 'serif'],
-        subhead: ['"Source Sans 3"', 'system-ui', 'sans-serif'],
-        body: ['"Source Sans 3"', 'system-ui', 'sans-serif'],
+        headline: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+        subhead: ['Karla', 'system-ui', 'sans-serif'],
+        body: ['Karla', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

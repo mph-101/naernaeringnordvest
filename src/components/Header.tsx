@@ -43,7 +43,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <a href="/" className="flex items-center gap-3">
-            <img src={logoImg} alt="Nær Næring" className="w-10 h-10 object-contain" width={40} height={40} />
+            <img src={logoImg} alt="Nær Næring" className="w-10 h-10 object-contain dark:bg-white dark:rounded-full dark:p-0.5" width={40} height={40} />
             <div className="flex flex-col">
               <span className="font-headline text-lg font-bold text-headline leading-none">
                 {t.brandName}

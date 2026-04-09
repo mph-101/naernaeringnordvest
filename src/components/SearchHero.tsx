@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, ArrowRight } from "lucide-react";
+import { Search, ArrowRight, Sparkles } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 
@@ -25,25 +25,35 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[55vh] px-6 animate-fade-up">
-      <div className="text-center mb-10 max-w-2xl">
-        <h1 className="font-headline text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-5 text-headline leading-tight">
-          <span className="inline-block animate-fade-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 pt-8 pb-16">
+      {/* Decorative badge */}
+      <div className="animate-fade-up mb-8" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
+        <span className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 text-accent rounded-full text-sm font-subhead font-medium border border-accent/20">
+          <Sparkles className="w-3.5 h-3.5" />
+          {language === "no" ? "Drevet av AI" : "Powered by AI"}
+        </span>
+      </div>
+
+      {/* Headline */}
+      <div className="text-center mb-12 max-w-2xl">
+        <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-headline leading-[1.1]">
+          <span className="inline-block animate-fade-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
             {t.heroTitle1}
           </span>
           <br />
-          <span className="inline-block text-accent animate-fade-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+          <span className="inline-block text-accent animate-fade-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
             {t.heroTitle2}
           </span>
         </h1>
-        <p className="text-base md:text-lg text-muted-foreground font-body leading-relaxed max-w-lg mx-auto animate-fade-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
+        <p className="text-lg md:text-xl text-muted-foreground font-body leading-relaxed max-w-lg mx-auto animate-fade-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
           {t.heroSubtitle}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="w-full max-w-xl mb-8">
+      {/* Search */}
+      <form onSubmit={handleSubmit} className="w-full max-w-xl mb-10 animate-fade-up" style={{ animationDelay: '500ms', animationFillMode: 'both' }}>
         <div className="relative group">
-          <div className="relative bg-card border border-border rounded-2xl shadow-soft group-focus-within:border-accent group-focus-within:shadow-elevated transition-all duration-200">
+          <div className="relative bg-card border-2 border-border rounded-2xl shadow-elevated group-focus-within:border-accent group-focus-within:shadow-elevated transition-all duration-300">
             <div className="flex items-center px-5 py-4">
               <Search className="w-5 h-5 text-muted-foreground mr-4 flex-shrink-0" />
               <input
@@ -66,8 +76,9 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
         </div>
       </form>
 
-      <div className="w-full max-w-xl">
-        <p className="font-subhead text-sm text-muted-foreground mb-4 text-center">
+      {/* Prompts */}
+      <div className="w-full max-w-xl animate-fade-up" style={{ animationDelay: '600ms', animationFillMode: 'both' }}>
+        <p className="font-subhead text-xs text-muted-foreground mb-3 text-center uppercase tracking-widest">
           {t.popularQuestions}
         </p>
         <div className="flex flex-wrap justify-center gap-2">
@@ -75,8 +86,7 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
             <button
               key={index}
               onClick={() => handlePromptClick(prompt)}
-              className="px-4 py-2.5 bg-card hover:bg-secondary border border-border rounded-full text-sm font-body text-foreground/80 hover:text-foreground transition-all duration-200 hover:shadow-soft hover:border-accent/30"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="px-4 py-2 bg-card hover:bg-secondary border border-border rounded-full text-sm font-body text-foreground/80 hover:text-foreground transition-all duration-200 hover:shadow-soft hover:border-accent/30"
             >
               {prompt}
             </button>

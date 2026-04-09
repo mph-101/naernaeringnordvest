@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Karla:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -118,32 +118,32 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'Karla', system-ui, sans-serif;
     background-image: 
       radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.06) 1.5px, transparent 0);
     background-size: 32px 32px;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Cormorant Garamond', Georgia, serif;
     color: hsl(var(--headline));
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
   }
 }
 
 @layer utilities {
   .font-headline {
-    font-family: 'Fraunces', Georgia, serif;
-    letter-spacing: -0.02em;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    letter-spacing: -0.01em;
   }
 
   .font-subhead {
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'Karla', system-ui, sans-serif;
     font-weight: 500;
   }
 
   .font-body {
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'Karla', system-ui, sans-serif;
   }
 
   .text-headline {

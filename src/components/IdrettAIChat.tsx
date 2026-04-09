@@ -136,10 +136,10 @@ export function IdrettAIChat() {
                     : <Bot className="w-3.5 h-3.5 text-foreground/70" />
                   }
                 </div>
-                <div className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                   msg.role === "user"
-                    ? "bg-accent text-accent-foreground rounded-tr-sm font-body whitespace-pre-wrap"
-                    : "bg-secondary text-foreground rounded-tl-sm"
+                    ? "max-w-[80%] bg-accent text-accent-foreground rounded-tr-sm font-body whitespace-pre-wrap"
+                    : "max-w-[95%] bg-secondary text-foreground rounded-tl-sm"
                 }`}>
                   {msg.role === "user" ? msg.content : (
                     <div className="prose prose-sm dark:prose-invert max-w-none font-body [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
@@ -150,12 +150,14 @@ export function IdrettAIChat() {
                           ol: ({ children }) => <ol className="mb-3 space-y-1 pl-4 list-decimal marker:text-primary/60 text-sm">{children}</ol>,
                           li: ({ children }) => <li className="leading-[1.6] text-sm">{children}</li>,
                           table: ({ children }) => (
-                            <div className="overflow-x-auto my-3 rounded-lg border border-border">
-                              <table className="w-full text-xs border-collapse">{children}</table>
+                            <div className="overflow-x-auto my-3 -mx-1 rounded-lg border border-border bg-card">
+                              <table className="w-full text-[11px] border-collapse min-w-[400px]">{children}</table>
                             </div>
                           ),
-                          th: ({ children }) => <th className="text-left py-2 px-3 font-medium text-muted-foreground border-b border-border bg-secondary/50 text-xs">{children}</th>,
-                          td: ({ children }) => <td className="py-2 px-3 border-b border-border/50 text-xs">{children}</td>,
+                          thead: ({ children }) => <thead className="bg-muted/60">{children}</thead>,
+                          th: ({ children }) => <th className="text-left py-2 px-2.5 font-subhead font-semibold text-headline border-b border-border text-[11px] whitespace-nowrap">{children}</th>,
+                          td: ({ children }) => <td className="py-1.5 px-2.5 border-b border-border/40 text-[11px] whitespace-nowrap">{children}</td>,
+                          tr: ({ children }) => <tr className="hover:bg-muted/30 transition-colors">{children}</tr>,
                           strong: ({ children }) => <strong className="font-semibold text-headline">{children}</strong>,
                           h3: ({ children }) => <h3 className="font-semibold text-sm mt-4 mb-2 text-headline">{children}</h3>,
                           a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{children}</a>,

@@ -163,6 +163,12 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
             <nav className="flex flex-col gap-2">
               {userId ? (
                 <>
+                  {isAdmin && (
+                    <button onClick={() => { navigate("/admin"); setIsMobileMenuOpen(false); }} className="w-full px-5 py-3 bg-primary text-primary-foreground rounded-full font-subhead text-sm font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      Admin
+                    </button>
+                  )}
                   <button onClick={() => { navigate("/profil"); setIsMobileMenuOpen(false); }} className="w-full px-5 py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors">
                     {language === "no" ? "Min profil" : "My profile"}
                   </button>

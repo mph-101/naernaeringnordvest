@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { User, StickyNote, Users, LogOut, Loader2, Trash2, Globe, Lock, Settings, Eye, EyeOff } from "lucide-react";
+import { User, StickyNote, Users, LogOut, Loader2, Trash2, Globe, Lock, Settings, Eye, EyeOff, Download, FileText, FileDown } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { supabase } from "@/integrations/supabase/client";
@@ -180,6 +180,80 @@ const Profile = () => {
     toast.success(t.deleted);
   };
 
+  const buildNotesText = () => {
+    return notes.map(note => {
+      const title = articleTitles.get(note.article_id) || `${t.article} #${note.article_id}`;
+      const date = new Date(note.updated_at).toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "long", year: "numeric" });
+      return `${title}\n${date}\n${"—".repeat(40)}\n${note.content}\n`;
+    }).join("\n\n");
+  };
+
+  const exportAsTxt = () => {
+    if (notes.length === 0) return;
+    const text = buildNotesText();
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `notater-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(isNo ? "Eksportert som tekstfil" : "Exported as text file");
+  };
+
+  const exportAsPdf = async () => {
+    if (notes.length === 0) return;
+    const { default: jsPDF } = await import("jspdf");
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const maxWidth = pageWidth - margin * 2;
+    let y = 20;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text(isNo ? "Mine notater" : "My Notes", margin, y);
+    y += 12;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text(new Date().toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "long", year: "numeric" }), margin, y);
+    doc.setTextColor(0);
+    y += 12;
+
+    for (const note of notes) {
+      const title = articleTitles.get(note.article_id) || `${t.article} #${note.article_id}`;
+      const date = new Date(note.updated_at).toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "short", year: "numeric" });
+
+      if (y > 260) { doc.addPage(); y = 20; }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text(title, margin, y);
+      y += 6;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(120);
+      doc.text(date, margin, y);
+      doc.setTextColor(0);
+      y += 8;
+
+      doc.setFontSize(10);
+      const lines = doc.splitTextToSize(note.content, maxWidth);
+      for (const line of lines) {
+        if (y > 280) { doc.addPage(); y = 20; }
+        doc.text(line, margin, y);
+        y += 5;
+      }
+      y += 10;
+    }
+
+    doc.save(`notater-${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast.success(isNo ? "Eksportert som PDF" : "Exported as PDF");
+  };
+
   if (loading) return (
     <div className="min-h-screen bg-background">
       <Header showSearch={false} />
@@ -260,6 +334,24 @@ const Profile = () => {
         {/* Notes Tab */}
         {activeTab === "notes" && (
           <div className="space-y-3">
+            {notes.length > 0 && (
+              <div className="flex gap-2 justify-end mb-2">
+                <button
+                  onClick={exportAsTxt}
+                  className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-sm font-subhead font-medium text-foreground hover:bg-secondary transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  {isNo ? "Eksporter .txt" : "Export .txt"}
+                </button>
+                <button
+                  onClick={exportAsPdf}
+                  className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-sm font-subhead font-medium text-foreground hover:bg-secondary transition-colors"
+                >
+                  <FileDown className="w-4 h-4" />
+                  {isNo ? "Eksporter PDF" : "Export PDF"}
+                </button>
+              </div>
+            )}
             {notes.length === 0 ? (
               <div className="text-center py-12">
                 <StickyNote className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />

@@ -123,7 +123,33 @@ export const AdminLogin = () => {
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
+        {!isSignUp && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={async () => {
+                if (!email) {
+                  toast({ title: "Skriv inn e-post", description: "Fyll inn e-postadressen din først.", variant: "destructive" });
+                  return;
+                }
+                setIsLoading(true);
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                  redirectTo: `${window.location.origin}/reset-password`,
+                });
+                setIsLoading(false);
+                if (error) {
+                  toast({ title: "Feil", description: error.message, variant: "destructive" });
+                } else {
+                  toast({ title: "E-post sendt", description: "Sjekk innboksen din for å tilbakestille passordet." });
+                }
+              }}
+              className="text-sm text-primary hover:text-primary/80 transition-colors"
+            >
+              Glemt passord?
+            </button>
+          </div>
+        )}
+
+        <div className="mt-4 text-center">
           <button
             onClick={() => setIsSignUp(!isSignUp)}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"

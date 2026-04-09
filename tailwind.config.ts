@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        headline: ['"Playfair Display"', 'Georgia', 'serif'],
-        subhead: ['Inter', 'system-ui', 'sans-serif'],
-        body: ['Inter', 'system-ui', 'sans-serif'],
+        headline: ['Lora', 'Georgia', 'serif'],
+        subhead: ['"Source Sans 3"', 'system-ui', 'sans-serif'],
+        body: ['"Source Sans 3"', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

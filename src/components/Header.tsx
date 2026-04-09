@@ -19,6 +19,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
   const t = translations[language];
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {

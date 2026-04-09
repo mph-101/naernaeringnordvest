@@ -111,7 +111,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, language, toggleLanguage, defaultView, setDefaultView, hasOnboarded, completeOnboarding, region, setRegion }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, language, toggleLanguage, defaultView, setDefaultView, hasOnboarded, completeOnboarding, region, setRegion, hiddenElements, toggleHiddenElement }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { StickyNote, X, Save, Loader2 } from "lucide-react";
+import { StickyNote, X, Save, Loader2, FileText, FileDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
 
 interface ArticleNotesProps {
   articleId: string;
+  articleTitle?: string;
 }
 
-export function ArticleNotes({ articleId }: ArticleNotesProps) {
+export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
@@ -17,8 +18,9 @@ export function ArticleNotes({ articleId }: ArticleNotesProps) {
   const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { language } = useTheme();
+  const isNo = language === "no";
 
-  const t = language === "no"
+  const t = isNo
     ? { notes: "Mine notater", placeholder: "Skriv notater om denne artikkelen...", save: "Lagre", saved: "Lagret!", login: "Logg inn for å bruke notater" }
     : { notes: "My Notes", placeholder: "Write notes about this article...", save: "Save", saved: "Saved!", login: "Log in to use notes" };
 
@@ -61,6 +63,58 @@ export function ArticleNotes({ articleId }: ArticleNotesProps) {
     }
   }, [userId, articleId, content, t.saved]);
 
+  const title = articleTitle || `Artikkel #${articleId}`;
+  const dateStr = new Date().toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "long", year: "numeric" });
+
+  const exportAsTxt = () => {
+    if (!content.trim()) return;
+    const text = `${title}\n${dateStr}\n${"—".repeat(40)}\n${content}\n`;
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `notat-${articleId}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(isNo ? "Eksportert som tekstfil" : "Exported as text file");
+  };
+
+  const exportAsPdf = async () => {
+    if (!content.trim()) return;
+    const { default: jsPDF } = await import("jspdf");
+    const doc = new jsPDF();
+    const margin = 20;
+    const maxWidth = doc.internal.pageSize.getWidth() - margin * 2;
+    let y = 20;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    const titleLines = doc.splitTextToSize(title, maxWidth);
+    for (const line of titleLines) {
+      doc.text(line, margin, y);
+      y += 7;
+    }
+    y += 4;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text(dateStr, margin, y);
+    doc.setTextColor(0);
+    y += 12;
+
+    doc.setFontSize(11);
+    const lines = doc.splitTextToSize(content, maxWidth);
+    for (const line of lines) {
+      if (y > 280) { doc.addPage(); y = 20; }
+      doc.text(line, margin, y);
+      y += 6;
+    }
+
+    doc.save(`notat-${articleId}.pdf`);
+    toast.success(isNo ? "Eksportert som PDF" : "Exported as PDF");
+  };
+
   return (
     <>
       {/* FAB */}
@@ -95,7 +149,7 @@ export function ArticleNotes({ articleId }: ArticleNotesProps) {
                 <div className="text-center py-8">
                   <p className="text-muted-foreground font-body mb-4">{t.login}</p>
                   <button onClick={() => { setIsOpen(false); navigate("/login"); }} className="px-5 py-2.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
-                    {language === "no" ? "Logg inn" : "Log in"}
+                    {isNo ? "Logg inn" : "Log in"}
                   </button>
                 </div>
               ) : loading ? (
@@ -114,7 +168,7 @@ export function ArticleNotes({ articleId }: ArticleNotesProps) {
 
             {/* Footer */}
             {userId && !loading && (
-              <div className="p-5 border-t border-border">
+              <div className="p-5 border-t border-border space-y-3">
                 <button
                   onClick={handleSave}
                   disabled={saving}
@@ -123,6 +177,25 @@ export function ArticleNotes({ articleId }: ArticleNotesProps) {
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   {t.save}
                 </button>
+
+                {content.trim() && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={exportAsTxt}
+                      className="flex-1 py-2.5 bg-card border border-border rounded-full font-subhead text-xs font-medium text-foreground hover:bg-secondary transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      {isNo ? "Eksporter .txt" : "Export .txt"}
+                    </button>
+                    <button
+                      onClick={exportAsPdf}
+                      className="flex-1 py-2.5 bg-card border border-border rounded-full font-subhead text-xs font-medium text-foreground hover:bg-secondary transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      {isNo ? "Eksporter PDF" : "Export PDF"}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

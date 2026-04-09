@@ -19,6 +19,7 @@ interface ThemeContextType {
   setRegion: (region: string) => void;
   hiddenElements: HideableElement[];
   toggleHiddenElement: (element: HideableElement) => void;
+  resetAllSettings: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -110,8 +111,24 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("defaultView", view);
   };
 
+  const resetAllSettings = () => {
+    setTheme("light");
+    setLanguage("no");
+    setDefaultViewState("search");
+    setHiddenElements([]);
+    setRegionState(null);
+    localStorage.setItem("theme", "light");
+    localStorage.setItem("language", "no");
+    localStorage.setItem("defaultView", "search");
+    localStorage.setItem("hiddenElements", "[]");
+    localStorage.removeItem("region");
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add("light");
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, language, toggleLanguage, defaultView, setDefaultView, hasOnboarded, completeOnboarding, region, setRegion, hiddenElements, toggleHiddenElement }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, language, toggleLanguage, defaultView, setDefaultView, hasOnboarded, completeOnboarding, region, setRegion, hiddenElements, toggleHiddenElement, resetAllSettings }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -1,3 +1,19 @@
+import article1Img from "@/assets/articles/article-1.jpg";
+import article2Img from "@/assets/articles/article-2.jpg";
+import article3Img from "@/assets/articles/article-3.jpg";
+import article4Img from "@/assets/articles/article-4.jpg";
+import article5Img from "@/assets/articles/article-5.jpg";
+import article6Img from "@/assets/articles/article-6.jpg";
+
+const articleImages: Record<string, string> = {
+  "1": article1Img,
+  "2": article2Img,
+  "3": article3Img,
+  "4": article4Img,
+  "5": article5Img,
+  "6": article6Img,
+};
+
 export interface Article {
   id: string;
   title: string;
@@ -16,6 +32,9 @@ export interface Article {
 
 // Generate a deterministic gradient thumbnail based on article id and category
 export function getArticleImage(id: string, category: string): string {
+  if (articleImages[id]) {
+    return `url(${articleImages[id]})`;
+  }
   const gradients: Record<string, string> = {
     "Eiendom": "linear-gradient(135deg, hsl(220, 70%, 50%), hsl(260, 60%, 40%))",
     "Real Estate": "linear-gradient(135deg, hsl(220, 70%, 50%), hsl(260, 60%, 40%))",

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import logoImg from "@/assets/logo.png";
 import { Menu, X, Search, Moon, Sun, Globe, Users, LogIn, LogOut, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
@@ -42,9 +43,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <a href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-warm rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground font-headline font-bold text-lg">S</span>
-            </div>
+            <img src={logoImg} alt="Nær Næring" className="w-10 h-10 object-contain" width={40} height={40} />
             <div className="flex flex-col">
               <span className="font-headline text-lg font-bold text-headline leading-none">
                 {t.brandName}

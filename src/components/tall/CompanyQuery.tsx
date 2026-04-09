@@ -152,23 +152,44 @@ export function CompanyQuery() {
               {isNo ? "Svar" : "Answer"}
             </h3>
           </div>
-          <div className="prose prose-sm dark:prose-invert max-w-none font-body text-foreground">
+          <div className="prose prose-base dark:prose-invert max-w-none font-body text-foreground leading-relaxed">
             <ReactMarkdown
               components={{
+                p: ({ children }) => (
+                  <p className="mb-5 leading-[1.8] text-[0.95rem]">{children}</p>
+                ),
+                h1: ({ children }) => (
+                  <h1 className="font-headline text-2xl font-bold text-headline mt-8 mb-4">{children}</h1>
+                ),
+                h2: ({ children }) => (
+                  <h2 className="font-headline text-xl font-semibold text-headline mt-7 mb-3">{children}</h2>
+                ),
+                h3: ({ children }) => (
+                  <h3 className="font-headline text-lg font-semibold text-headline mt-6 mb-3">{children}</h3>
+                ),
+                ul: ({ children }) => (
+                  <ul className="mb-5 space-y-2 pl-5 list-disc marker:text-primary/60">{children}</ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="mb-5 space-y-2 pl-5 list-decimal marker:text-primary/60">{children}</ol>
+                ),
+                li: ({ children }) => (
+                  <li className="leading-[1.7] text-[0.95rem]">{children}</li>
+                ),
                 table: ({ children }) => (
-                  <div className="overflow-x-auto my-3">
+                  <div className="overflow-x-auto my-6 rounded-xl border border-border">
                     <table className="w-full text-sm border-collapse">
                       {children}
                     </table>
                   </div>
                 ),
                 th: ({ children }) => (
-                  <th className="text-left py-2 px-3 font-subhead font-medium text-muted-foreground border-b border-border bg-secondary/50">
+                  <th className="text-left py-3 px-4 font-subhead font-medium text-muted-foreground border-b border-border bg-secondary/50">
                     {children}
                   </th>
                 ),
                 td: ({ children }) => (
-                  <td className="py-2 px-3 border-b border-border/50 font-body">
+                  <td className="py-3 px-4 border-b border-border/50 font-body leading-relaxed">
                     {children}
                   </td>
                 ),
@@ -179,6 +200,12 @@ export function CompanyQuery() {
                   <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                     {children}
                   </a>
+                ),
+                hr: () => (
+                  <hr className="my-6 border-border/60" />
+                ),
+                blockquote: ({ children }) => (
+                  <blockquote className="border-l-4 border-primary/30 pl-5 my-5 italic text-muted-foreground">{children}</blockquote>
                 ),
               }}
             >

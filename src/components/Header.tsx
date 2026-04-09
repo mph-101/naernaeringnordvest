@@ -107,6 +107,15 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
 
             {userId ? (
               <div className="flex items-center gap-1">
+                {isAdmin && (
+                  <button
+                    onClick={() => navigate("/admin")}
+                    className="p-2.5 hover:bg-secondary rounded-full transition-colors"
+                    title="Admin"
+                  >
+                    <Shield className="w-4 h-4 text-foreground/70" />
+                  </button>
+                )}
                 <button
                   onClick={() => navigate("/profil")}
                   className="p-2.5 hover:bg-secondary rounded-full transition-colors"

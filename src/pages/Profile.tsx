@@ -348,6 +348,33 @@ const Profile = () => {
             )}
           </div>
         )}
+
+        {/* Settings Tab */}
+        {activeTab === "settings" && (
+          <div className="space-y-6">
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h3 className="font-headline text-lg font-semibold text-headline mb-1">{t.visibilityTitle}</h3>
+              <p className="text-sm text-muted-foreground font-body mb-5">{t.visibilityDesc}</p>
+              <div className="space-y-4">
+                {toggleItems.map(item => {
+                  const isVisible = !hiddenElements.includes(item.id);
+                  return (
+                    <div key={item.id} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {isVisible ? <Eye className="w-4 h-4 text-accent" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                        <span className="text-sm font-body text-foreground">{isNo ? item.labelNo : item.labelEn}</span>
+                      </div>
+                      <Switch
+                        checked={isVisible}
+                        onCheckedChange={() => toggleHiddenElement(item.id)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

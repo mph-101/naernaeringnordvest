@@ -264,7 +264,7 @@ const Article = () => {
       </article>
 
       {/* Floating Notes */}
-      <ArticleNotes articleId={id!} />
+      <ArticleNotes articleId={id!} articleTitle={article.title} />
 
       {/* Footer */}
       <footer className="border-t border-border bg-card/50">

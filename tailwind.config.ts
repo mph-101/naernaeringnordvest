@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        headline: ['"Cormorant Garamond"', 'Georgia', 'serif'],
-        subhead: ['Karla', 'system-ui', 'sans-serif'],
-        body: ['Karla', 'system-ui', 'sans-serif'],
+        headline: ['"Playfair Display"', 'Georgia', 'serif'],
+        subhead: ['Inter', 'system-ui', 'sans-serif'],
+        body: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

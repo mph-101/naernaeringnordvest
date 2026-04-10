@@ -87,7 +87,7 @@ export function EstablishmentsOverview({ selectedFylker, selectedKommuner, onFyl
       let newUrl = `${baseUrl}?action=new_establishments&fra=${fraDate}&til=${tilDate}`;
       if (kommuneParam) newUrl += `&kommune=${kommuneParam}`;
 
-      let bankUrl = `${baseUrl}?action=bankruptcies&fra=${fraDate}&til=${tilDate}`;
+      let bankUrl = `${baseUrl}?action=bankruptcies`;
       if (kommuneParam) bankUrl += `&kommune=${kommuneParam}`;
 
       const [newData, bankData] = await Promise.all([
@@ -166,7 +166,9 @@ export function EstablishmentsOverview({ selectedFylker, selectedKommuner, onFyl
 
       {!loading && items.length > 0 && (
         <p className="text-xs text-muted-foreground font-body mb-3">
-          {isNo ? `Viser ${items.length} av ${tab === "new" ? newTotal : bankruptTotal} for ${periodLabel}` : `Showing ${items.length} of ${tab === "new" ? newTotal : bankruptTotal} for ${periodLabel}`}
+          {tab === "new"
+            ? (isNo ? `Viser ${items.length} av ${newTotal} for ${periodLabel}` : `Showing ${items.length} of ${newTotal} for ${periodLabel}`)
+            : (isNo ? `Viser ${items.length} av ${bankruptTotal} selskaper under konkursbehandling` : `Showing ${items.length} of ${bankruptTotal} companies in bankruptcy`)}
         </p>
       )}
 

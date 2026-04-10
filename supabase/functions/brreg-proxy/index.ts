@@ -195,12 +195,8 @@ Deno.serve(async (req) => {
 
     if (action === "bankruptcies") {
       const kommune = url.searchParams.get("kommune") || "";
-      const fraDate = url.searchParams.get("fra") || "";
-      const tilDate = url.searchParams.get("til") || "";
       let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsform=AS,ASA&konkurs=true&size=50&sort=registreringsdatoEnhetsregisteret,desc`;
       if (kommune) apiUrl += `&kommunenummer=${kommune}`;
-      if (fraDate) apiUrl += `&fraRegistreringsdatoEnhetsregisteret=${fraDate}`;
-      if (tilDate) apiUrl += `&tilRegistreringsdatoEnhetsregisteret=${tilDate}`;
 
       const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
       const data = await res.json();

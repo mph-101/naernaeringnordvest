@@ -5,18 +5,32 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, X, Plus } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { RichTextEditor } from "./RichTextEditor";
+import { ImageUpload } from "./ImageUpload";
+import { CategorySelect } from "./CategorySelect";
+import { AudioTranscriber } from "./AudioTranscriber";
 
 interface ArticleEditorProps {
   articleId: string | null;
   onBack: () => void;
 }
 
+type ArticleStatus = "draft" | "review" | "published";
+
+const STATUS_CONFIG: Record<ArticleStatus, { label: string; color: string; bg: string }> = {
+  draft: { label: "Kladd", color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-100 dark:bg-amber-900/30" },
+  review: { label: "Klar til gjennomlesning", color: "text-blue-700 dark:text-blue-400", bg: "bg-blue-100 dark:bg-blue-900/30" },
+  published: { label: "Publisert", color: "text-green-700 dark:text-green-400", bg: "bg-green-100 dark:bg-green-900/30" },
+};
+
 export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
+  const [generatingPoints, setGeneratingPoints] = useState(false);
   const { toast } = useToast();
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   const [companySearch, setCompanySearch] = useState("");
@@ -24,6 +38,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [searchingCompanies, setSearchingCompanies] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const formRef = useRef<any>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -40,13 +56,61 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     image_url: "",
     key_points: [] as string[],
     key_points_en: [] as string[],
+    status: "draft" as ArticleStatus,
   });
+
+  // Keep formRef in sync
+  useEffect(() => {
+    formRef.current = form;
+  }, [form]);
 
   useEffect(() => {
     if (articleId) {
       fetchArticle();
     }
   }, [articleId]);
+
+  // Auto-save (debounced, only for existing articles)
+  const triggerAutoSave = useCallback(() => {
+    if (!articleId) return;
+    setAutoSaveStatus("unsaved");
+    if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
+    autoSaveRef.current = setTimeout(async () => {
+      const currentForm = formRef.current;
+      if (!currentForm || !currentForm.title) return;
+      setAutoSaveStatus("saving");
+      try {
+        const { error } = await supabase.from("articles").update({
+          title: currentForm.title,
+          title_en: currentForm.title_en || null,
+          excerpt: currentForm.excerpt,
+          excerpt_en: currentForm.excerpt_en || null,
+          body: currentForm.body,
+          body_en: currentForm.body_en || null,
+          category: currentForm.category,
+          author: currentForm.author,
+          type: currentForm.type,
+          premium: currentForm.premium,
+          read_time: currentForm.read_time || null,
+          image_url: currentForm.image_url || null,
+          key_points: currentForm.key_points,
+          key_points_en: currentForm.key_points_en,
+          status: currentForm.status,
+          published: currentForm.status === "published",
+          published_at: currentForm.status === "published" ? new Date().toISOString() : null,
+        }).eq("id", articleId);
+        if (!error) setAutoSaveStatus("saved");
+        else setAutoSaveStatus("unsaved");
+      } catch {
+        setAutoSaveStatus("unsaved");
+      }
+    }, 3000);
+  }, [articleId]);
+
+  const updateForm = (updates: Partial<typeof form>) => {
+    setForm((prev) => ({ ...prev, ...updates }));
+    triggerAutoSave();
+  };
 
   const fetchArticle = async () => {
     if (!articleId) return;
@@ -76,20 +140,16 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         image_url: data.image_url || "",
         key_points: (data.key_points as string[]) || [],
         key_points_en: (data.key_points_en as string[]) || [],
+        status: ((data as any).status as ArticleStatus) || (data.published ? "published" : "draft"),
       });
 
-      // Fetch company tags
       const { data: tags } = await supabase
         .from("article_company_tags")
         .select("orgnr, company_name")
         .eq("article_id", articleId);
       setCompanyTags(tags || []);
     } catch (error: any) {
-      toast({
-        title: "Feil",
-        description: "Kunne ikke hente artikkelen",
-        variant: "destructive",
-      });
+      toast({ title: "Feil", description: "Kunne ikke hente artikkelen", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -115,17 +175,15 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         image_url: form.image_url || null,
         key_points: form.key_points,
         key_points_en: form.key_points_en,
+        status: form.status,
+        published: form.status === "published",
+        published_at: form.status === "published" ? new Date().toISOString() : null,
       };
 
       if (articleId) {
-        const { error } = await supabase
-          .from("articles")
-          .update(articleData)
-          .eq("id", articleId);
-
+        const { error } = await supabase.from("articles").update(articleData).eq("id", articleId);
         if (error) throw error;
 
-        // Sync company tags
         await supabase.from("article_company_tags").delete().eq("article_id", articleId);
         if (companyTags.length > 0) {
           await supabase.from("article_company_tags").insert(
@@ -133,48 +191,88 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           );
         }
 
-        toast({
-          title: "Lagret",
-          description: "Artikkelen er oppdatert",
-        });
+        toast({ title: "Lagret", description: "Artikkelen er oppdatert" });
       } else {
-        const { error } = await supabase
-          .from("articles")
-          .insert(articleData);
-
+        const { error } = await supabase.from("articles").insert(articleData);
         if (error) throw error;
-        toast({
-          title: "Opprettet",
-          description: "Artikkelen er opprettet",
-        });
+        toast({ title: "Opprettet", description: "Artikkelen er opprettet" });
         onBack();
       }
     } catch (error: any) {
-      toast({
-        title: "Feil",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Feil", description: error.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
   };
 
-  const handleKeyPointChange = (index: number, value: string, isEnglish: boolean = false) => {
+  const generateKeyPoints = async (isEnglish = false) => {
+    const bodyText = isEnglish ? form.body_en : form.body;
+    if (!bodyText || bodyText.length < 50) {
+      toast({ title: "For kort", description: "Brødteksten må være minst 50 tegn", variant: "destructive" });
+      return;
+    }
+
+    setGeneratingPoints(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-key-points", {
+        body: { body: bodyText, language: isEnglish ? "en" : "no" },
+      });
+
+      if (error) throw error;
+
+      if (data?.points?.length) {
+        const field = isEnglish ? "key_points_en" : "key_points";
+        updateForm({ [field]: data.points });
+        toast({ title: "Generert", description: "Hovedpunktene er generert" });
+      }
+    } catch (err: any) {
+      toast({ title: "Feil", description: err.message, variant: "destructive" });
+    } finally {
+      setGeneratingPoints(false);
+    }
+  };
+
+  const handleKeyPointChange = (index: number, value: string, isEnglish = false) => {
     const field = isEnglish ? "key_points_en" : "key_points";
     const newPoints = [...form[field]];
     newPoints[index] = value;
-    setForm({ ...form, [field]: newPoints });
+    updateForm({ [field]: newPoints });
   };
 
-  const addKeyPoint = (isEnglish: boolean = false) => {
+  const addKeyPoint = (isEnglish = false) => {
     const field = isEnglish ? "key_points_en" : "key_points";
-    setForm({ ...form, [field]: [...form[field], ""] });
+    updateForm({ [field]: [...form[field], ""] });
   };
 
-  const removeKeyPoint = (index: number, isEnglish: boolean = false) => {
+  const removeKeyPoint = (index: number, isEnglish = false) => {
     const field = isEnglish ? "key_points_en" : "key_points";
-    setForm({ ...form, [field]: form[field].filter((_, i) => i !== index) });
+    updateForm({ [field]: form[field].filter((_, i) => i !== index) });
+  };
+
+  const handleAudioTranscript = (text: string) => {
+    const current = form.body;
+    const separator = current ? "<p></p>" : "";
+    updateForm({ body: current + separator + `<p>${text}</p>` });
+  };
+
+  const handleInsertImage = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const ext = file.name.split(".").pop();
+      const path = `inline/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("article-images").upload(path, file);
+      if (error) {
+        toast({ title: "Feil", description: error.message, variant: "destructive" });
+        return;
+      }
+      const { data: { publicUrl } } = supabase.storage.from("article-images").getPublicUrl(path);
+      updateForm({ body: form.body + `<img src="${publicUrl}" alt="" />` });
+    };
+    input.click();
   };
 
   if (loading) {
@@ -187,145 +285,223 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
   return (
     <div>
+      {/* Header with status */}
       <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={onBack}
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-        >
+        <button onClick={onBack} className="p-2 hover:bg-muted rounded-lg transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h2 className="font-headline text-2xl font-semibold text-headline">
-          {articleId ? "Rediger artikkel" : "Ny artikkel"}
-        </h2>
+        <div className="flex-1">
+          <h2 className="font-headline text-2xl font-semibold text-headline">
+            {articleId ? "Rediger artikkel" : "Ny artikkel"}
+          </h2>
+        </div>
+
+        {/* Auto-save indicator */}
+        {articleId && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {autoSaveStatus === "saved" && <><Cloud className="w-3.5 h-3.5 text-green-500" /> Lagret</>}
+            {autoSaveStatus === "saving" && <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Lagrer...</>}
+            {autoSaveStatus === "unsaved" && <><CloudOff className="w-3.5 h-3.5 text-amber-500" /> Ulagret</>}
+          </div>
+        )}
+
+        {/* Status selector */}
+        <div className="flex items-center gap-2">
+          {(["draft", "review", "published"] as ArticleStatus[]).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => updateForm({ status: s })}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                form.status === s
+                  ? `${STATUS_CONFIG[s].bg} ${STATUS_CONFIG[s].color}`
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {STATUS_CONFIG[s].label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
+        {/* Featured Image */}
+        <div className="bg-card rounded-xl p-6 shadow-soft space-y-4">
           <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">
-            Norsk innhold
+            Hovedbilde
           </h3>
+          <ImageUpload
+            currentUrl={form.image_url}
+            onUpload={(url) => updateForm({ image_url: url })}
+          />
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <Label htmlFor="title">Tittel *</Label>
-              <Input
-                id="title"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="Artikkelens tittel"
-                className="mt-1.5"
-                required
+        {/* Norwegian content */}
+        <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <h3 className="font-headline text-lg font-medium text-headline">
+              Norsk innhold
+            </h3>
+            <AudioTranscriber onTranscript={handleAudioTranscript} />
+          </div>
+
+          <div>
+            <Label htmlFor="title">Tittel *</Label>
+            <Input
+              id="title"
+              value={form.title}
+              onChange={(e) => updateForm({ title: e.target.value })}
+              placeholder="Artikkelens tittel"
+              className="mt-1.5"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="excerpt">Ingress *</Label>
+            <Textarea
+              id="excerpt"
+              value={form.excerpt}
+              onChange={(e) => updateForm({ excerpt: e.target.value })}
+              placeholder="Kort beskrivelse av artikkelen"
+              className="mt-1.5"
+              required
+            />
+          </div>
+
+          <div>
+            <Label>Brødtekst *</Label>
+            <div className="mt-1.5">
+              <RichTextEditor
+                content={form.body}
+                onChange={(html) => updateForm({ body: html })}
+                onImageUpload={handleInsertImage}
+                placeholder="Skriv artikkelens innhold her..."
               />
             </div>
+          </div>
 
-            <div className="md:col-span-2">
-              <Label htmlFor="excerpt">Ingress *</Label>
-              <Textarea
-                id="excerpt"
-                value={form.excerpt}
-                onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
-                placeholder="Kort beskrivelse av artikkelen"
-                className="mt-1.5"
-                required
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <Label htmlFor="body">Brødtekst *</Label>
-              <Textarea
-                id="body"
-                value={form.body}
-                onChange={(e) => setForm({ ...form, body: e.target.value })}
-                placeholder="Artikkelens innhold"
-                className="mt-1.5 min-h-[300px]"
-                required
-              />
-            </div>
-
-            <div className="md:col-span-2">
+          <div>
+            <div className="flex items-center justify-between mb-2">
               <Label>Hovedpunkter</Label>
-              <div className="space-y-2 mt-1.5">
-                {form.key_points.map((point, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      value={point}
-                      onChange={(e) => handleKeyPointChange(index, e.target.value)}
-                      placeholder={`Punkt ${index + 1}`}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => removeKeyPoint(index)}
-                    >
-                      Fjern
-                    </Button>
-                  </div>
-                ))}
-                <Button type="button" variant="outline" onClick={() => addKeyPoint()}>
-                  Legg til punkt
-                </Button>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => generateKeyPoints(false)}
+                disabled={generatingPoints}
+                className="gap-2"
+              >
+                {generatingPoints ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                Generer automatisk
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {form.key_points.map((point, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={point}
+                    onChange={(e) => handleKeyPointChange(index, e.target.value)}
+                    placeholder={`Punkt ${index + 1}`}
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={() => removeKeyPoint(index)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => addKeyPoint()}>
+                <Plus className="w-4 h-4 mr-1" /> Legg til punkt
+              </Button>
             </div>
           </div>
         </div>
 
+        {/* English content */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
           <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">
             Engelsk innhold (valgfritt)
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <Label htmlFor="title_en">Title</Label>
-              <Input
-                id="title_en"
-                value={form.title_en}
-                onChange={(e) => setForm({ ...form, title_en: e.target.value })}
-                placeholder="Article title in English"
-                className="mt-1.5"
+          <div>
+            <Label htmlFor="title_en">Title</Label>
+            <Input
+              id="title_en"
+              value={form.title_en}
+              onChange={(e) => updateForm({ title_en: e.target.value })}
+              placeholder="Article title in English"
+              className="mt-1.5"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="excerpt_en">Excerpt</Label>
+            <Textarea
+              id="excerpt_en"
+              value={form.excerpt_en}
+              onChange={(e) => updateForm({ excerpt_en: e.target.value })}
+              placeholder="Short description in English"
+              className="mt-1.5"
+            />
+          </div>
+
+          <div>
+            <Label>Body</Label>
+            <div className="mt-1.5">
+              <RichTextEditor
+                content={form.body_en}
+                onChange={(html) => updateForm({ body_en: html })}
+                placeholder="Article content in English..."
               />
             </div>
+          </div>
 
-            <div className="md:col-span-2">
-              <Label htmlFor="excerpt_en">Excerpt</Label>
-              <Textarea
-                id="excerpt_en"
-                value={form.excerpt_en}
-                onChange={(e) => setForm({ ...form, excerpt_en: e.target.value })}
-                placeholder="Short description in English"
-                className="mt-1.5"
-              />
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <Label>Key Points (English)</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => generateKeyPoints(true)}
+                disabled={generatingPoints || !form.body_en}
+                className="gap-2"
+              >
+                {generatingPoints ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                Auto-generate
+              </Button>
             </div>
-
-            <div className="md:col-span-2">
-              <Label htmlFor="body_en">Body</Label>
-              <Textarea
-                id="body_en"
-                value={form.body_en}
-                onChange={(e) => setForm({ ...form, body_en: e.target.value })}
-                placeholder="Article content in English"
-                className="mt-1.5 min-h-[200px]"
-              />
+            <div className="space-y-2">
+              {form.key_points_en.map((point, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={point}
+                    onChange={(e) => handleKeyPointChange(index, e.target.value, true)}
+                    placeholder={`Point ${index + 1}`}
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={() => removeKeyPoint(index, true)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => addKeyPoint(true)}>
+                <Plus className="w-4 h-4 mr-1" /> Add point
+              </Button>
             </div>
           </div>
         </div>
 
+        {/* Metadata */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
           <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">
             Metadata
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div>
-              <Label htmlFor="category">Kategori *</Label>
-              <Input
-                id="category"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                placeholder="f.eks. Medierettigheter"
-                className="mt-1.5"
-                required
-              />
+            <div className="md:col-span-2 lg:col-span-3">
+              <Label>Kategori *</Label>
+              <div className="mt-1.5">
+                <CategorySelect value={form.category} onChange={(val) => updateForm({ category: val })} />
+              </div>
             </div>
 
             <div>
@@ -333,7 +509,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               <Input
                 id="author"
                 value={form.author}
-                onChange={(e) => setForm({ ...form, author: e.target.value })}
+                onChange={(e) => updateForm({ author: e.target.value })}
                 placeholder="Forfatterens navn"
                 className="mt-1.5"
                 required
@@ -345,7 +521,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               <select
                 id="type"
                 value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value as any })}
+                onChange={(e) => updateForm({ type: e.target.value as any })}
                 className="mt-1.5 w-full h-10 px-3 rounded-md border border-input bg-background"
               >
                 <option value="article">Artikkel</option>
@@ -359,19 +535,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               <Input
                 id="read_time"
                 value={form.read_time}
-                onChange={(e) => setForm({ ...form, read_time: e.target.value })}
+                onChange={(e) => updateForm({ read_time: e.target.value })}
                 placeholder="f.eks. 5 min lesing"
-                className="mt-1.5"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="image_url">Bilde-URL</Label>
-              <Input
-                id="image_url"
-                value={form.image_url}
-                onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                placeholder="https://..."
                 className="mt-1.5"
               />
             </div>
@@ -380,7 +545,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               <Switch
                 id="premium"
                 checked={form.premium}
-                onCheckedChange={(checked) => setForm({ ...form, premium: checked })}
+                onCheckedChange={(checked) => updateForm({ premium: checked })}
               />
               <Label htmlFor="premium" className="cursor-pointer">
                 Premium-artikkel
@@ -395,7 +560,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             Selskapskobling
           </h3>
           <p className="text-sm text-muted-foreground">
-            Koble artikkelen til selskaper via organisasjonsnummer. Artikkelen vises da på selskapsprofilen.
+            Koble artikkelen til selskaper via organisasjonsnummer.
           </p>
 
           {companyTags.length > 0 && (

@@ -14,6 +14,7 @@ interface Article {
   published: boolean;
   created_at: string;
   type: string;
+  status: string;
 }
 
 interface ArticlesListProps {
@@ -33,7 +34,7 @@ export const ArticlesList = ({ onEdit }: ArticlesListProps) => {
     try {
       const { data, error } = await supabase
         .from("articles")
-        .select("id, title, category, author, published, created_at, type")
+        .select("id, title, category, author, published, created_at, type, status")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -176,21 +177,19 @@ export const ArticlesList = ({ onEdit }: ArticlesListProps) => {
                     <td className="px-6 py-4">
                       <span className={`
                         inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-                        ${article.published 
+                        ${article.status === "published" 
                           ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
+                          : article.status === "review"
+                          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                           : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
                         }
                       `}>
-                        {article.published ? (
-                          <>
-                            <Eye className="w-3 h-3" />
-                            Publisert
-                          </>
+                        {article.status === "published" ? (
+                          <><Eye className="w-3 h-3" /> Publisert</>
+                        ) : article.status === "review" ? (
+                          <><Eye className="w-3 h-3" /> Gjennomlesning</>
                         ) : (
-                          <>
-                            <EyeOff className="w-3 h-3" />
-                            Utkast
-                          </>
+                          <><EyeOff className="w-3 h-3" /> Kladd</>
                         )}
                       </span>
                     </td>

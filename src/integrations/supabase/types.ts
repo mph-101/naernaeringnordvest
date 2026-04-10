@@ -83,6 +83,7 @@ export type Database = {
           published: boolean
           published_at: string | null
           read_time: string | null
+          status: string
           title: string
           title_en: string | null
           type: string
@@ -105,6 +106,7 @@ export type Database = {
           published?: boolean
           published_at?: string | null
           read_time?: string | null
+          status?: string
           title: string
           title_en?: string | null
           type?: string
@@ -127,10 +129,41 @@ export type Database = {
           published?: boolean
           published_at?: string | null
           read_time?: string | null
+          status?: string
           title?: string
           title_en?: string | null
           type?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          name_en: string | null
+          slug: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          name_en?: string | null
+          slug: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          name_en?: string | null
+          slug?: string
         }
         Relationships: []
       }

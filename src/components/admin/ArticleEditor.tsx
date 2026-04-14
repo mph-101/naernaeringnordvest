@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "./RichTextEditor";
@@ -26,17 +26,31 @@ const STATUS_CONFIG: Record<ArticleStatus, { label: string; color: string; bg: s
   published: { label: "Publisert", color: "text-green-700 dark:text-green-400", bg: "bg-green-100 dark:bg-green-900/30" },
 };
 
+function stripHtml(html: string) {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function calcReadTime(body: string, type: string): string {
+  const words = stripHtml(body).split(/\s+/).filter(Boolean).length;
+  const mins = Math.max(1, Math.ceil(words / 220));
+  const suffix = type === "video" ? "min video" : type === "podcast" ? "min lytting" : "min lesing";
+  return `${mins} ${suffix}`;
+}
+
 export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
   const [generatingPoints, setGeneratingPoints] = useState(false);
+  const [translating, setTranslating] = useState(false);
+  const [suggestingCompanies, setSuggestingCompanies] = useState(false);
   const { toast } = useToast();
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   const [companySearch, setCompanySearch] = useState("");
   const [searchResults, setSearchResults] = useState<{ orgnr: string; navn: string }[]>([]);
   const [searchingCompanies, setSearchingCompanies] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [suggestedCompanyNames, setSuggestedCompanyNames] = useState<string[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formRef = useRef<any>(null);
@@ -59,16 +73,23 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     status: "draft" as ArticleStatus,
   });
 
-  // Keep formRef in sync
   useEffect(() => {
     formRef.current = form;
   }, [form]);
 
   useEffect(() => {
-    if (articleId) {
-      fetchArticle();
-    }
+    if (articleId) fetchArticle();
   }, [articleId]);
+
+  // Auto-calculate read time when body or type changes
+  useEffect(() => {
+    if (form.body && form.body.length > 20) {
+      const calculated = calcReadTime(form.body, form.type);
+      if (calculated !== form.read_time) {
+        setForm(prev => ({ ...prev, read_time: calculated }));
+      }
+    }
+  }, [form.body, form.type]);
 
   // Auto-save (debounced, only for existing articles)
   const triggerAutoSave = useCallback(() => {
@@ -115,16 +136,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const fetchArticle = async () => {
     if (!articleId) return;
     setLoading(true);
-
     try {
-      const { data, error } = await supabase
-        .from("articles")
-        .select("*")
-        .eq("id", articleId)
-        .single();
-
+      const { data, error } = await supabase.from("articles").select("*").eq("id", articleId).single();
       if (error) throw error;
-
       setForm({
         title: data.title || "",
         title_en: data.title_en || "",
@@ -142,13 +156,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         key_points_en: (data.key_points_en as string[]) || [],
         status: ((data as any).status as ArticleStatus) || (data.published ? "published" : "draft"),
       });
-
-      const { data: tags } = await supabase
-        .from("article_company_tags")
-        .select("orgnr, company_name")
-        .eq("article_id", articleId);
+      const { data: tags } = await supabase.from("article_company_tags").select("orgnr, company_name").eq("article_id", articleId);
       setCompanyTags(tags || []);
-    } catch (error: any) {
+    } catch {
       toast({ title: "Feil", description: "Kunne ikke hente artikkelen", variant: "destructive" });
     } finally {
       setLoading(false);
@@ -158,7 +168,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-
     try {
       const articleData = {
         title: form.title,
@@ -183,14 +192,12 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       if (articleId) {
         const { error } = await supabase.from("articles").update(articleData).eq("id", articleId);
         if (error) throw error;
-
         await supabase.from("article_company_tags").delete().eq("article_id", articleId);
         if (companyTags.length > 0) {
           await supabase.from("article_company_tags").insert(
             companyTags.map((t) => ({ article_id: articleId, orgnr: t.orgnr, company_name: t.company_name }))
           );
         }
-
         toast({ title: "Lagret", description: "Artikkelen er oppdatert" });
       } else {
         const { error } = await supabase.from("articles").insert(articleData);
@@ -211,18 +218,14 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       toast({ title: "For kort", description: "Brødteksten må være minst 50 tegn", variant: "destructive" });
       return;
     }
-
     setGeneratingPoints(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-key-points", {
         body: { body: bodyText, language: isEnglish ? "en" : "no" },
       });
-
       if (error) throw error;
-
       if (data?.points?.length) {
-        const field = isEnglish ? "key_points_en" : "key_points";
-        updateForm({ [field]: data.points });
+        updateForm({ [isEnglish ? "key_points_en" : "key_points"]: data.points });
         toast({ title: "Generert", description: "Hovedpunktene er generert" });
       }
     } catch (err: any) {
@@ -230,6 +233,71 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     } finally {
       setGeneratingPoints(false);
     }
+  };
+
+  const translateToEnglish = async () => {
+    if (!form.body || form.body.length < 20) {
+      toast({ title: "For kort", description: "Skriv norsk innhold først", variant: "destructive" });
+      return;
+    }
+    setTranslating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-article", {
+        body: { title: form.title, excerpt: form.excerpt, body: form.body },
+      });
+      if (error) throw error;
+      if (data?.title_en || data?.body_en) {
+        updateForm({
+          title_en: data.title_en || form.title_en,
+          excerpt_en: data.excerpt_en || form.excerpt_en,
+          body_en: data.body_en || form.body_en,
+        });
+        toast({ title: "Oversatt", description: "Artikkelen er oversatt til engelsk" });
+      }
+    } catch (err: any) {
+      toast({ title: "Feil", description: err.message, variant: "destructive" });
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+  const suggestCompanies = async () => {
+    if (!form.body || form.body.length < 50) return;
+    setSuggestingCompanies(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("suggest-companies", {
+        body: { body: form.body },
+      });
+      if (error) throw error;
+      if (data?.companies?.length) {
+        setSuggestedCompanyNames(data.companies);
+        toast({ title: "Foreslått", description: `${data.companies.length} selskaper funnet i teksten` });
+      } else {
+        toast({ title: "Ingen funnet", description: "Ingen selskaper identifisert i teksten" });
+      }
+    } catch (err: any) {
+      toast({ title: "Feil", description: err.message, variant: "destructive" });
+    } finally {
+      setSuggestingCompanies(false);
+    }
+  };
+
+  const lookupAndAddCompany = async (name: string) => {
+    try {
+      const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
+      const res = await fetch(`${baseUrl}?action=search&q=${encodeURIComponent(name)}&size=1`, {
+        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+      });
+      const d = await res.json();
+      const c = d.companies?.[0];
+      if (c) {
+        const orgnr = c.organisasjonsnummer;
+        if (!companyTags.some(t => t.orgnr === orgnr)) {
+          setCompanyTags(prev => [...prev, { orgnr, company_name: c.navn }]);
+        }
+      }
+      setSuggestedCompanyNames(prev => prev.filter(n => n !== name));
+    } catch {}
   };
 
   const handleKeyPointChange = (index: number, value: string, isEnglish = false) => {
@@ -296,7 +364,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </h2>
         </div>
 
-        {/* Auto-save indicator */}
         {articleId && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {autoSaveStatus === "saved" && <><Cloud className="w-3.5 h-3.5 text-green-500" /> Lagret</>}
@@ -305,7 +372,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </div>
         )}
 
-        {/* Status selector */}
         <div className="flex items-center gap-2">
           {(["draft", "review", "published"] as ArticleStatus[]).map((s) => (
             <button
@@ -327,71 +393,38 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Featured Image */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-4">
-          <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">
-            Hovedbilde
-          </h3>
-          <ImageUpload
-            currentUrl={form.image_url}
-            onUpload={(url) => updateForm({ image_url: url })}
-          />
+          <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">Hovedbilde</h3>
+          <ImageUpload currentUrl={form.image_url} onUpload={(url) => updateForm({ image_url: url })} />
         </div>
 
         {/* Norwegian content */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
           <div className="flex items-center justify-between border-b border-border pb-3">
-            <h3 className="font-headline text-lg font-medium text-headline">
-              Norsk innhold
-            </h3>
+            <h3 className="font-headline text-lg font-medium text-headline">Norsk innhold</h3>
             <AudioTranscriber onTranscript={handleAudioTranscript} />
           </div>
 
           <div>
             <Label htmlFor="title">Tittel *</Label>
-            <Input
-              id="title"
-              value={form.title}
-              onChange={(e) => updateForm({ title: e.target.value })}
-              placeholder="Artikkelens tittel"
-              className="mt-1.5"
-              required
-            />
+            <Input id="title" value={form.title} onChange={(e) => updateForm({ title: e.target.value })} placeholder="Artikkelens tittel" className="mt-1.5" required />
           </div>
 
           <div>
             <Label htmlFor="excerpt">Ingress *</Label>
-            <Textarea
-              id="excerpt"
-              value={form.excerpt}
-              onChange={(e) => updateForm({ excerpt: e.target.value })}
-              placeholder="Kort beskrivelse av artikkelen"
-              className="mt-1.5"
-              required
-            />
+            <Textarea id="excerpt" value={form.excerpt} onChange={(e) => updateForm({ excerpt: e.target.value })} placeholder="Kort beskrivelse av artikkelen" className="mt-1.5" required />
           </div>
 
           <div>
             <Label>Brødtekst *</Label>
             <div className="mt-1.5">
-              <RichTextEditor
-                content={form.body}
-                onChange={(html) => updateForm({ body: html })}
-                onImageUpload={handleInsertImage}
-                placeholder="Skriv artikkelens innhold her..."
-              />
+              <RichTextEditor content={form.body} onChange={(html) => updateForm({ body: html })} onImageUpload={handleInsertImage} placeholder="Skriv artikkelens innhold her..." />
             </div>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
               <Label>Hovedpunkter</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => generateKeyPoints(false)}
-                disabled={generatingPoints}
-                className="gap-2"
-              >
+              <Button type="button" variant="outline" size="sm" onClick={() => generateKeyPoints(false)} disabled={generatingPoints} className="gap-2">
                 {generatingPoints ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                 Generer automatisk
               </Button>
@@ -399,73 +432,46 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             <div className="space-y-2">
               {form.key_points.map((point, index) => (
                 <div key={index} className="flex gap-2">
-                  <Input
-                    value={point}
-                    onChange={(e) => handleKeyPointChange(index, e.target.value)}
-                    placeholder={`Punkt ${index + 1}`}
-                  />
-                  <Button type="button" variant="outline" size="sm" onClick={() => removeKeyPoint(index)}>
-                    <X className="w-4 h-4" />
-                  </Button>
+                  <Input value={point} onChange={(e) => handleKeyPointChange(index, e.target.value)} placeholder={`Punkt ${index + 1}`} />
+                  <Button type="button" variant="outline" size="sm" onClick={() => removeKeyPoint(index)}><X className="w-4 h-4" /></Button>
                 </div>
               ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => addKeyPoint()}>
-                <Plus className="w-4 h-4 mr-1" /> Legg til punkt
-              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => addKeyPoint()}><Plus className="w-4 h-4 mr-1" /> Legg til punkt</Button>
             </div>
           </div>
         </div>
 
         {/* English content */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
-          <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">
-            Engelsk innhold (valgfritt)
-          </h3>
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <h3 className="font-headline text-lg font-medium text-headline">Engelsk innhold</h3>
+            <Button type="button" variant="outline" size="sm" onClick={translateToEnglish} disabled={translating} className="gap-2">
+              {translating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
+              {translating ? "Oversetter..." : "Oversett automatisk"}
+            </Button>
+          </div>
 
           <div>
             <Label htmlFor="title_en">Title</Label>
-            <Input
-              id="title_en"
-              value={form.title_en}
-              onChange={(e) => updateForm({ title_en: e.target.value })}
-              placeholder="Article title in English"
-              className="mt-1.5"
-            />
+            <Input id="title_en" value={form.title_en} onChange={(e) => updateForm({ title_en: e.target.value })} placeholder="Article title in English" className="mt-1.5" />
           </div>
 
           <div>
             <Label htmlFor="excerpt_en">Excerpt</Label>
-            <Textarea
-              id="excerpt_en"
-              value={form.excerpt_en}
-              onChange={(e) => updateForm({ excerpt_en: e.target.value })}
-              placeholder="Short description in English"
-              className="mt-1.5"
-            />
+            <Textarea id="excerpt_en" value={form.excerpt_en} onChange={(e) => updateForm({ excerpt_en: e.target.value })} placeholder="Short description in English" className="mt-1.5" />
           </div>
 
           <div>
             <Label>Body</Label>
             <div className="mt-1.5">
-              <RichTextEditor
-                content={form.body_en}
-                onChange={(html) => updateForm({ body_en: html })}
-                placeholder="Article content in English..."
-              />
+              <RichTextEditor content={form.body_en} onChange={(html) => updateForm({ body_en: html })} placeholder="Article content in English..." />
             </div>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
               <Label>Key Points (English)</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => generateKeyPoints(true)}
-                disabled={generatingPoints || !form.body_en}
-                className="gap-2"
-              >
+              <Button type="button" variant="outline" size="sm" onClick={() => generateKeyPoints(true)} disabled={generatingPoints || !form.body_en} className="gap-2">
                 {generatingPoints ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                 Auto-generate
               </Button>
@@ -473,28 +479,18 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             <div className="space-y-2">
               {form.key_points_en.map((point, index) => (
                 <div key={index} className="flex gap-2">
-                  <Input
-                    value={point}
-                    onChange={(e) => handleKeyPointChange(index, e.target.value, true)}
-                    placeholder={`Point ${index + 1}`}
-                  />
-                  <Button type="button" variant="outline" size="sm" onClick={() => removeKeyPoint(index, true)}>
-                    <X className="w-4 h-4" />
-                  </Button>
+                  <Input value={point} onChange={(e) => handleKeyPointChange(index, e.target.value, true)} placeholder={`Point ${index + 1}`} />
+                  <Button type="button" variant="outline" size="sm" onClick={() => removeKeyPoint(index, true)}><X className="w-4 h-4" /></Button>
                 </div>
               ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => addKeyPoint(true)}>
-                <Plus className="w-4 h-4 mr-1" /> Add point
-              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => addKeyPoint(true)}><Plus className="w-4 h-4 mr-1" /> Add point</Button>
             </div>
           </div>
         </div>
 
         {/* Metadata */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
-          <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">
-            Metadata
-          </h3>
+          <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">Metadata</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="md:col-span-2 lg:col-span-3">
@@ -506,24 +502,12 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
             <div>
               <Label htmlFor="author">Forfatter *</Label>
-              <Input
-                id="author"
-                value={form.author}
-                onChange={(e) => updateForm({ author: e.target.value })}
-                placeholder="Forfatterens navn"
-                className="mt-1.5"
-                required
-              />
+              <Input id="author" value={form.author} onChange={(e) => updateForm({ author: e.target.value })} placeholder="Forfatterens navn" className="mt-1.5" required />
             </div>
 
             <div>
               <Label htmlFor="type">Type</Label>
-              <select
-                id="type"
-                value={form.type}
-                onChange={(e) => updateForm({ type: e.target.value as any })}
-                className="mt-1.5 w-full h-10 px-3 rounded-md border border-input bg-background"
-              >
+              <select id="type" value={form.type} onChange={(e) => updateForm({ type: e.target.value as any })} className="mt-1.5 w-full h-10 px-3 rounded-md border border-input bg-background">
                 <option value="article">Artikkel</option>
                 <option value="video">Video</option>
                 <option value="podcast">Podcast</option>
@@ -531,37 +515,45 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             </div>
 
             <div>
-              <Label htmlFor="read_time">Lesetid</Label>
-              <Input
-                id="read_time"
-                value={form.read_time}
-                onChange={(e) => updateForm({ read_time: e.target.value })}
-                placeholder="f.eks. 5 min lesing"
-                className="mt-1.5"
-              />
+              <Label htmlFor="read_time">Lesetid (auto)</Label>
+              <Input id="read_time" value={form.read_time} onChange={(e) => updateForm({ read_time: e.target.value })} placeholder="Beregnes automatisk" className="mt-1.5" />
             </div>
 
             <div className="flex items-center gap-3 pt-6">
-              <Switch
-                id="premium"
-                checked={form.premium}
-                onCheckedChange={(checked) => updateForm({ premium: checked })}
-              />
-              <Label htmlFor="premium" className="cursor-pointer">
-                Premium-artikkel
-              </Label>
+              <Switch id="premium" checked={form.premium} onCheckedChange={(checked) => updateForm({ premium: checked })} />
+              <Label htmlFor="premium" className="cursor-pointer">Premium-artikkel</Label>
             </div>
           </div>
         </div>
 
         {/* Company Tags */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
-          <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">
-            Selskapskobling
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Koble artikkelen til selskaper via organisasjonsnummer.
-          </p>
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <h3 className="font-headline text-lg font-medium text-headline">Selskapskobling</h3>
+            <Button type="button" variant="outline" size="sm" onClick={suggestCompanies} disabled={suggestingCompanies} className="gap-2">
+              {suggestingCompanies ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Building2 className="w-3.5 h-3.5" />}
+              Foreslå fra tekst
+            </Button>
+          </div>
+
+          {/* AI Suggestions */}
+          {suggestedCompanyNames.length > 0 && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">AI-forslag (klikk for å legge til):</p>
+              <div className="flex flex-wrap gap-2">
+                {suggestedCompanyNames.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => lookupAndAddCompany(name)}
+                    className="px-3 py-1 text-xs rounded-full bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
+                  >
+                    + {name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {companyTags.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -569,11 +561,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 <Badge key={tag.orgnr} variant="secondary" className="flex items-center gap-1.5 py-1 px-3">
                   <span className="font-subhead text-xs">{tag.company_name || tag.orgnr}</span>
                   <span className="text-[10px] text-muted-foreground">({tag.orgnr})</span>
-                  <button
-                    type="button"
-                    onClick={() => setCompanyTags(companyTags.filter((t) => t.orgnr !== tag.orgnr))}
-                    className="ml-1 hover:text-destructive"
-                  >
+                  <button type="button" onClick={() => setCompanyTags(companyTags.filter((t) => t.orgnr !== tag.orgnr))} className="ml-1 hover:text-destructive">
                     <X className="w-3 h-3" />
                   </button>
                 </Badge>
@@ -645,9 +633,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         </div>
 
         <div className="flex items-center justify-end gap-4">
-          <Button type="button" variant="outline" onClick={onBack}>
-            Avbryt
-          </Button>
+          <Button type="button" variant="outline" onClick={onBack}>Avbryt</Button>
           <Button type="submit" disabled={saving}>
             <Save className="w-4 h-4 mr-2" />
             {saving ? "Lagrer..." : "Lagre"}

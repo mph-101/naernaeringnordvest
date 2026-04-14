@@ -11,18 +11,23 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { body, language } = await req.json();
+    const { title, excerpt, body } = await req.json();
 
-    if (!body || body.length < 50) {
-      return new Response(JSON.stringify({ error: "Body text too short" }), {
+    if (!title || !body) {
+      return new Response(JSON.stringify({ error: "Title and body are required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const plainText = body.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-    const lang = language === "en" ? "English" : "Norwegian";
-    const prompt = `Extract exactly 3 key points from the following article text. Each point should be a concise, informative sentence (max 15 words). Return ONLY a JSON array of 3 strings, no other text. Language: ${lang}.\n\nArticle:\n${plainText.slice(0, 4000)}`;
+    const prompt = `Translate the following Norwegian article to English. Preserve all HTML formatting in the body. Return a JSON object with keys: title_en, excerpt_en, body_en. Return ONLY the JSON, no markdown fences.
+
+Title: ${title}
+
+Excerpt: ${excerpt || ""}
+
+Body:
+${body.slice(0, 8000)}`;
 
     const response = await fetch("https://ai-gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -43,15 +48,17 @@ Deno.serve(async (req) => {
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "[]";
-    const match = content.match(/\[[\s\S]*\]/);
-    const points = match ? JSON.parse(match[0]) : [];
+    const content = data.choices?.[0]?.message?.content || "{}";
+    
+    // Extract JSON from response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const translation = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
 
-    return new Response(JSON.stringify({ points }), {
+    return new Response(JSON.stringify(translation), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("generate-key-points error:", err);
+    console.error("translate-article error:", err);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

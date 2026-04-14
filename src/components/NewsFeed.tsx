@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, Play, Headphones, FileText, Lock, BarChart3, TrendingUp } from "lucide-react";
+import { Clock, Play, Headphones, FileText, Lock, TrendingUp } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-import { getArticles, getArticleImage, Article } from "@/lib/articles";
+import { getArticleImage } from "@/lib/articles";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -11,6 +12,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+interface DbArticle {
+  id: string;
+  title: string;
+  title_en: string | null;
+  excerpt: string;
+  excerpt_en: string | null;
+  body: string;
+  category: string;
+  author: string;
+  type: string;
+  premium: boolean;
+  read_time: string | null;
+  image_url: string | null;
+  published_at: string | null;
+  key_points: any;
+}
 
 const regionToSportLabel: Record<string, { no: string; en: string }> = {
   more_og_romsdal: { no: "Møre og Romsdal", en: "Møre og Romsdal" },
@@ -21,28 +39,79 @@ const regionToSportLabel: Record<string, { no: string; en: string }> = {
   sorlandet: { no: "Sørlandet", en: "Southern Norway" },
 };
 
+function timeAgo(dateStr: string, lang: "no" | "en"): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(hours / 24);
+  if (days > 0) return lang === "no" ? `${days}d siden` : `${days}d ago`;
+  if (hours > 0) return lang === "no" ? `${hours}t siden` : `${hours}h ago`;
+  return lang === "no" ? "Nå" : "Now";
+}
+
+function estimateReadTime(body: string, type: string, lang: "no" | "en"): string {
+  const words = body.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
+  const mins = Math.max(1, Math.ceil(words / 220));
+  const suffix = type === "video" ? (lang === "no" ? "min video" : "min watch") :
+                 type === "podcast" ? (lang === "no" ? "min lytting" : "min listen") :
+                 (lang === "no" ? "min lesing" : "min read");
+  return `${mins} ${suffix}`;
+}
+
 export function NewsFeed() {
   const { language, region } = useTheme();
   const t = translations[language];
-
-  const getInitialSport = () => {
+  const [dbArticles, setDbArticles] = useState<DbArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedTopic, setSelectedTopic] = useState("Alle");
+  const [selectedSport, setSelectedSport] = useState<string>(() => {
     if (region && regionToSportLabel[region]) {
       return regionToSportLabel[region][language];
     }
     return "all";
-  };
-
-  const [selectedTopic, setSelectedTopic] = useState("Alle");
-  const [selectedSport, setSelectedSport] = useState<string>(getInitialSport);
+  });
   const navigate = useNavigate();
 
-  const articles = getArticles(language).map((article, index) => ({
-    ...article,
+  useEffect(() => {
+    const fetchArticles = async () => {
+      const { data } = await supabase
+        .from("articles")
+        .select("id, title, title_en, excerpt, excerpt_en, body, category, author, type, premium, read_time, image_url, published_at, key_points")
+        .eq("published", true)
+        .order("published_at", { ascending: false })
+        .limit(20);
+      setDbArticles(data || []);
+      setLoading(false);
+    };
+    fetchArticles();
+  }, []);
+
+  // Fetch categories for topic filtering
+  const [categories, setCategories] = useState<{name: string; name_en: string | null}[]>([]);
+  useEffect(() => {
+    supabase.from("categories").select("name, name_en").then(({ data }) => {
+      setCategories(data || []);
+    });
+  }, []);
+
+  const topics = language === "no"
+    ? ["Alle", ...categories.map(c => c.name)]
+    : ["All", ...categories.map(c => c.name_en || c.name)];
+  const allTopic = topics[0];
+
+  const articles = dbArticles.map((a, index) => ({
+    id: a.id,
+    title: language === "en" && a.title_en ? a.title_en : a.title,
+    excerpt: language === "en" && a.excerpt_en ? a.excerpt_en : a.excerpt,
+    category: a.category,
+    readTime: a.read_time || estimateReadTime(a.body, a.type, language),
+    publishedAt: a.published_at ? timeAgo(a.published_at, language) : "",
+    author: a.author,
+    type: a.type as "article" | "video" | "podcast",
+    premium: a.premium,
+    image_url: a.image_url,
     featured: index === 0,
   }));
 
-  const topics = t.topics;
-  const allTopic = topics[0];
   const sports = t.sports;
   const allSport = sports[0];
 
@@ -50,41 +119,56 @@ export function NewsFeed() {
     ? articles
     : articles.filter((item) => item.category === selectedTopic);
 
-  if (selectedSport !== "all") {
-    filteredNews = filteredNews.filter((item) => item.sport === selectedSport);
-  }
-
-  const getTypeIcon = (type: Article["type"]) => {
+  const getTypeIcon = (type: string) => {
     switch (type) {
-      case "video":
-        return <Play className="w-3.5 h-3.5" />;
-      case "podcast":
-        return <Headphones className="w-3.5 h-3.5" />;
-      default:
-        return <FileText className="w-3.5 h-3.5" />;
+      case "video": return <Play className="w-3.5 h-3.5" />;
+      case "podcast": return <Headphones className="w-3.5 h-3.5" />;
+      default: return <FileText className="w-3.5 h-3.5" />;
     }
   };
 
-  const handleArticleClick = (item: Article) => {
+  const handleArticleClick = (item: typeof articles[0]) => {
     navigate(`/article/${item.id}`);
+  };
+
+  const getBackground = (item: typeof articles[0]) => {
+    if (item.image_url) return `url(${item.image_url})`;
+    return getArticleImage(item.id, item.category);
   };
 
   const featuredItem = filteredNews.find((item) => item.featured);
   const regularItems = filteredNews.filter((item) => !item.featured);
 
+  if (loading) {
+    return (
+      <section className="py-16">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+        </div>
+      </section>
+    );
+  }
+
+  if (articles.length === 0) {
+    return (
+      <section className="py-16">
+        <div className="max-w-5xl mx-auto px-6 text-center text-muted-foreground">
+          {language === "no" ? "Ingen publiserte artikler ennå." : "No published articles yet."}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-16">
       <div className="max-w-5xl mx-auto px-6">
-        {/* Section Header */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <h2 className="font-headline text-2xl font-bold text-headline">
-                {t.latestAnalysis}
-              </h2>
+              <h2 className="font-headline text-2xl font-bold text-headline">{t.latestAnalysis}</h2>
               <p className="text-sm text-muted-foreground font-body mt-0.5">
                 {language === "no" ? "Siste nyheter og analyser" : "Latest news and analysis"}
               </p>
@@ -93,29 +177,8 @@ export function NewsFeed() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col gap-4 mb-10">
-          {/* Sport Filter */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-subhead text-muted-foreground whitespace-nowrap">
-              {t.sportFilterLabel}:
-            </span>
-            <Select value={selectedSport} onValueChange={setSelectedSport}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{allSport}</SelectItem>
-                {sports.slice(1).map((sport) => (
-                  <SelectItem key={sport} value={sport}>
-                    {sport}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Topic Filters */}
-          <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6">
+        {topics.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 mb-10">
             {topics.map((topic) => (
               <button
                 key={topic}
@@ -130,7 +193,7 @@ export function NewsFeed() {
               </button>
             ))}
           </div>
-        </div>
+        )}
 
         {/* Featured Article */}
         {featuredItem && (
@@ -141,12 +204,14 @@ export function NewsFeed() {
             <div className="md:flex">
               <div
                 className="h-56 md:h-auto md:w-2/5 flex-shrink-0 flex items-center justify-center relative overflow-hidden"
-                style={{ background: getArticleImage(featuredItem.id, featuredItem.category), backgroundSize: 'cover', backgroundPosition: 'center' }}
+                style={{ background: getBackground(featuredItem), backgroundSize: 'cover', backgroundPosition: 'center' }}
               >
                 <div className="absolute inset-0 bg-black/10" />
-                <span className="relative text-white/80 font-headline text-3xl font-bold tracking-tight select-none">
-                  {featuredItem.category.slice(0, 2).toUpperCase()}
-                </span>
+                {!featuredItem.image_url && (
+                  <span className="relative text-white/80 font-headline text-3xl font-bold tracking-tight select-none">
+                    {featuredItem.category.slice(0, 2).toUpperCase()}
+                  </span>
+                )}
                 {featuredItem.type === "video" && (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -163,12 +228,8 @@ export function NewsFeed() {
                       {t.premium}
                     </span>
                   )}
-                  <span className="font-subhead text-sm text-accent font-medium">
-                    {featuredItem.category}
-                  </span>
-                  <span className="text-sm text-muted-foreground font-body">
-                    {featuredItem.publishedAt}
-                  </span>
+                  <span className="font-subhead text-sm text-accent font-medium">{featuredItem.category}</span>
+                  <span className="text-sm text-muted-foreground font-body">{featuredItem.publishedAt}</span>
                 </div>
                 <h3 className="font-headline text-xl md:text-2xl font-bold text-headline group-hover:text-accent transition-colors mb-3 leading-snug">
                   {featuredItem.title}
@@ -197,15 +258,16 @@ export function NewsFeed() {
               className="group block w-full text-left bg-card rounded-2xl border border-border hover:border-accent/30 hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              {/* Card thumbnail */}
               <div
                 className="h-36 w-full flex items-center justify-center relative overflow-hidden"
-                style={{ background: getArticleImage(item.id, item.category), backgroundSize: 'cover', backgroundPosition: 'center' }}
+                style={{ background: getBackground(item), backgroundSize: 'cover', backgroundPosition: 'center' }}
               >
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
-                <span className="relative text-white/70 font-headline text-2xl font-bold tracking-tight select-none">
-                  {item.category.slice(0, 2).toUpperCase()}
-                </span>
+                {!item.image_url && (
+                  <span className="relative text-white/70 font-headline text-2xl font-bold tracking-tight select-none">
+                    {item.category.slice(0, 2).toUpperCase()}
+                  </span>
+                )}
                 {item.type === "video" && (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -228,19 +290,14 @@ export function NewsFeed() {
                     {getTypeIcon(item.type)}
                     {item.category}
                   </span>
-                  {item.premium && (
-                    <Lock className="w-3 h-3 text-muted-foreground ml-auto" />
-                  )}
+                  {item.premium && <Lock className="w-3 h-3 text-muted-foreground ml-auto" />}
                 </div>
-                
                 <h3 className="font-headline text-base font-bold text-headline group-hover:text-accent transition-colors mb-2.5 leading-snug line-clamp-2">
                   {item.title}
                 </h3>
-                
                 <p className="text-sm text-muted-foreground font-body leading-relaxed mb-4 line-clamp-2">
                   {item.excerpt}
                 </p>
-                
                 <div className="flex items-center justify-between text-xs text-muted-foreground font-body pt-3 border-t border-border">
                   <span className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
@@ -251,13 +308,6 @@ export function NewsFeed() {
               </div>
             </button>
           ))}
-        </div>
-
-        {/* Load More */}
-        <div className="text-center mt-12">
-          <button className="px-8 py-3.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-all duration-200 shadow-soft hover:shadow-elevated">
-            {t.loadMore}
-          </button>
         </div>
       </div>
     </section>

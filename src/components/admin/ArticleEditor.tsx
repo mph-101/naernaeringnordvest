@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2 } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "./RichTextEditor";
@@ -45,6 +45,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [translating, setTranslating] = useState(false);
   const [suggestingCompanies, setSuggestingCompanies] = useState(false);
   const [generatingTitleExcerpt, setGeneratingTitleExcerpt] = useState(false);
+  const [proofreading, setProofreading] = useState(false);
+  const [proofSuggestions, setProofSuggestions] = useState<{ original: string; suggestion: string; reason: string; category: string }[]>([]);
   const { toast } = useToast();
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   const [companySearch, setCompanySearch] = useState("");
@@ -261,6 +263,44 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
   };
 
+  const proofreadBody = async () => {
+    if (!form.body || form.body.length < 50) {
+      toast({ title: "For kort", description: "Brødteksten må være minst 50 tegn", variant: "destructive" });
+      return;
+    }
+    setProofreading(true);
+    setProofSuggestions([]);
+    try {
+      const { data, error } = await supabase.functions.invoke("proofread-article", {
+        body: { body: form.body },
+      });
+      if (error) throw error;
+      if (data?.suggestions?.length) {
+        setProofSuggestions(data.suggestions);
+        toast({ title: "Språkvask fullført", description: `${data.suggestions.length} forslag funnet` });
+      } else {
+        toast({ title: "Ingen forslag", description: "Teksten ser bra ut!" });
+      }
+    } catch (err: any) {
+      toast({ title: "Feil", description: err.message, variant: "destructive" });
+    } finally {
+      setProofreading(false);
+    }
+  };
+
+  const applyProofSuggestion = (index: number) => {
+    const s = proofSuggestions[index];
+    if (!s) return;
+    const newBody = form.body.replace(s.original, s.suggestion);
+    updateForm({ body: newBody });
+    setProofSuggestions(prev => prev.filter((_, i) => i !== index));
+    toast({ title: "Endret", description: `"${s.original}" → "${s.suggestion}"` });
+  };
+
+  const dismissProofSuggestion = (index: number) => {
+    setProofSuggestions(prev => prev.filter((_, i) => i !== index));
+  };
+
   const translateToEnglish = async () => {
     if (!form.body || form.body.length < 20) {
       toast({ title: "For kort", description: "Skriv norsk innhold først", variant: "destructive" });
@@ -447,10 +487,50 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </div>
 
           <div>
-            <Label>Brødtekst *</Label>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label>Brødtekst *</Label>
+              <Button type="button" variant="outline" size="sm" onClick={proofreadBody} disabled={proofreading || !form.body || form.body.length < 50} className="gap-2">
+                {proofreading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SpellCheck className="w-3.5 h-3.5" />}
+                {proofreading ? "Analyserer..." : "Språkvask"}
+              </Button>
+            </div>
             <div className="mt-1.5">
               <RichTextEditor content={form.body} onChange={(html) => updateForm({ body: html })} onImageUpload={handleInsertImage} placeholder="Skriv artikkelens innhold her..." />
             </div>
+
+            {proofSuggestions.length > 0 && (
+              <div className="mt-3 border border-border rounded-lg overflow-hidden">
+                <div className="bg-muted/50 px-4 py-2 flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">{proofSuggestions.length} forslag til forbedring</span>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="text-xs">Lukk alle</Button>
+                </div>
+                <div className="divide-y divide-border max-h-80 overflow-y-auto">
+                  {proofSuggestions.map((s, i) => (
+                    <div key={i} className="px-4 py-3 flex items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline" className="text-[10px] capitalize">{s.category}</Badge>
+                          <span className="text-xs text-muted-foreground">{s.reason}</span>
+                        </div>
+                        <div className="text-sm">
+                          <span className="line-through text-destructive/70">{s.original}</span>
+                          <span className="mx-1.5 text-muted-foreground">→</span>
+                          <span className="font-medium text-foreground">{s.suggestion}</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950" onClick={() => applyProofSuggestion(i)}>
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => dismissProofSuggestion(i)}>
+                          <XCircle className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div>

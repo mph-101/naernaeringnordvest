@@ -13,8 +13,8 @@ Deno.serve(async (req) => {
   try {
     const { title, excerpt, body } = await req.json();
 
-    if (!title || !body) {
-      return new Response(JSON.stringify({ error: "Title and body are required" }), {
+    if (!body) {
+      return new Response(JSON.stringify({ error: "Body is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

@@ -1,3 +1,5 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -11,17 +13,30 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const formData = await req.formData();
-    const audioFile = formData.get("audio") as File;
+    const { storagePath } = await req.json();
 
-    if (!audioFile) {
-      return new Response(JSON.stringify({ error: "No audio file provided" }), {
+    if (!storagePath) {
+      return new Response(JSON.stringify({ error: "No storage path provided" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const buffer = await audioFile.arrayBuffer();
+    // Download audio from storage
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from("audio-uploads")
+      .download(storagePath);
+
+    if (downloadError || !fileData) {
+      throw new Error(`Failed to download audio: ${downloadError?.message}`);
+    }
+
+    // Convert to base64 in chunks to avoid stack overflow
+    const buffer = await fileData.arrayBuffer();
     const uint8 = new Uint8Array(buffer);
     let binary = "";
     const CHUNK = 8192;
@@ -29,7 +44,8 @@ Deno.serve(async (req) => {
       binary += String.fromCharCode(...uint8.subarray(i, Math.min(i + CHUNK, uint8.length)));
     }
     const base64 = btoa(binary);
-    const mimeType = audioFile.type || "audio/mp3";
+
+    const mimeType = fileData.type || "audio/mp3";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -67,6 +83,9 @@ Deno.serve(async (req) => {
 
     const data = await response.json();
     const text = data.choices?.[0]?.message?.content || "";
+
+    // Clean up the uploaded file
+    await supabase.storage.from("audio-uploads").remove([storagePath]);
 
     return new Response(JSON.stringify({ text }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     const lang = language === "en" ? "English" : "Norwegian";
     const prompt = `Extract exactly 3 key points from the following article text. Each point should be a concise, informative sentence (max 15 words). Return ONLY a JSON array of 3 strings, no other text. Language: ${lang}.\n\nArticle:\n${plainText.slice(0, 4000)}`;
 
-    const response = await fetch("https://ai-gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${LOVABLE_API_KEY}`,

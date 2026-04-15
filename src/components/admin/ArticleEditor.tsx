@@ -236,7 +236,29 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
   };
 
-  const translateToEnglish = async () => {
+  const generateTitleExcerpt = async () => {
+    if (!form.body || form.body.length < 50) {
+      toast({ title: "For kort", description: "Brødteksten må være minst 50 tegn", variant: "destructive" });
+      return;
+    }
+    setGeneratingTitleExcerpt(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-title-excerpt", {
+        body: { body: form.body },
+      });
+      if (error) throw error;
+      if (data?.title || data?.excerpt) {
+        updateForm({
+          ...(data.title ? { title: data.title } : {}),
+          ...(data.excerpt ? { excerpt: data.excerpt } : {}),
+        });
+        toast({ title: "Generert", description: "Tittel og ingress er generert" });
+      }
+    } catch (err: any) {
+      toast({ title: "Feil", description: err.message, variant: "destructive" });
+    } finally {
+      setGeneratingTitleExcerpt(false);
+    }
     if (!form.body || form.body.length < 20) {
       toast({ title: "For kort", description: "Skriv norsk innhold først", variant: "destructive" });
       return;

@@ -258,6 +258,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       toast({ title: "Feil", description: err.message, variant: "destructive" });
     } finally {
       setGeneratingTitleExcerpt(false);
+    }
   };
 
   const translateToEnglish = async () => {

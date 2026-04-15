@@ -45,6 +45,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [translating, setTranslating] = useState(false);
   const [suggestingCompanies, setSuggestingCompanies] = useState(false);
   const [generatingTitleExcerpt, setGeneratingTitleExcerpt] = useState(false);
+  const [proofreading, setProofreading] = useState(false);
+  const [proofSuggestions, setProofSuggestions] = useState<{ original: string; suggestion: string; reason: string; category: string }[]>([]);
   const { toast } = useToast();
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   const [companySearch, setCompanySearch] = useState("");

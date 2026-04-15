@@ -22,7 +22,13 @@ Deno.serve(async (req) => {
     }
 
     const buffer = await audioFile.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    const uint8 = new Uint8Array(buffer);
+    let binary = "";
+    const CHUNK = 8192;
+    for (let i = 0; i < uint8.length; i += CHUNK) {
+      binary += String.fromCharCode(...uint8.subarray(i, Math.min(i + CHUNK, uint8.length)));
+    }
+    const base64 = btoa(binary);
     const mimeType = audioFile.type || "audio/mp3";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

@@ -263,6 +263,44 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
   };
 
+  const proofreadBody = async () => {
+    if (!form.body || form.body.length < 50) {
+      toast({ title: "For kort", description: "Brødteksten må være minst 50 tegn", variant: "destructive" });
+      return;
+    }
+    setProofreading(true);
+    setProofSuggestions([]);
+    try {
+      const { data, error } = await supabase.functions.invoke("proofread-article", {
+        body: { body: form.body },
+      });
+      if (error) throw error;
+      if (data?.suggestions?.length) {
+        setProofSuggestions(data.suggestions);
+        toast({ title: "Språkvask fullført", description: `${data.suggestions.length} forslag funnet` });
+      } else {
+        toast({ title: "Ingen forslag", description: "Teksten ser bra ut!" });
+      }
+    } catch (err: any) {
+      toast({ title: "Feil", description: err.message, variant: "destructive" });
+    } finally {
+      setProofreading(false);
+    }
+  };
+
+  const applyProofSuggestion = (index: number) => {
+    const s = proofSuggestions[index];
+    if (!s) return;
+    const newBody = form.body.replace(s.original, s.suggestion);
+    updateForm({ body: newBody });
+    setProofSuggestions(prev => prev.filter((_, i) => i !== index));
+    toast({ title: "Endret", description: `"${s.original}" → "${s.suggestion}"` });
+  };
+
+  const dismissProofSuggestion = (index: number) => {
+    setProofSuggestions(prev => prev.filter((_, i) => i !== index));
+  };
+
   const translateToEnglish = async () => {
     if (!form.body || form.body.length < 20) {
       toast({ title: "For kort", description: "Skriv norsk innhold først", variant: "destructive" });

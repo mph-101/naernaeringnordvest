@@ -258,7 +258,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       toast({ title: "Feil", description: err.message, variant: "destructive" });
     } finally {
       setGeneratingTitleExcerpt(false);
-    }
+  };
+
+  const translateToEnglish = async () => {
     if (!form.body || form.body.length < 20) {
       toast({ title: "For kort", description: "Skriv norsk innhold først", variant: "destructive" });
       return;

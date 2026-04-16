@@ -16,6 +16,20 @@ export interface ProofreadRule {
 }
 
 const STORAGE_KEY = "proofread_custom_rules_v1";
+const SETTINGS_KEY = "proofread_settings_v1";
+
+export type LanguageProfile = "konservativt" | "moderat" | "radikalt" | "nynorsk";
+export type FocusArea = "anglisismer" | "stil" | "grammatikk" | "forenkling" | "idiomatisk";
+
+export interface ProofreadSettings {
+  profile: LanguageProfile;
+  focusAreas: FocusArea[];
+}
+
+const DEFAULT_SETTINGS: ProofreadSettings = {
+  profile: "moderat",
+  focusAreas: ["anglisismer", "stil", "grammatikk", "forenkling", "idiomatisk"],
+};
 
 export function loadProofreadRules(): ProofreadRule[] {
   try {
@@ -31,6 +45,36 @@ export function loadProofreadRules(): ProofreadRule[] {
 export function saveProofreadRules(rules: ProofreadRule[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(rules));
 }
+
+export function loadProofreadSettings(): ProofreadSettings {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return DEFAULT_SETTINGS;
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_SETTINGS, ...parsed };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
+
+export function saveProofreadSettings(s: ProofreadSettings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+}
+
+const PROFILE_LABELS: Record<LanguageProfile, { label: string; desc: string }> = {
+  konservativt: { label: "Konservativt bokmål", desc: "Riksmålsnært (boken, regjeringen, frem)" },
+  moderat: { label: "Moderat bokmål", desc: "Avisstandard (boken/jenta, kastet)" },
+  radikalt: { label: "Radikalt bokmål", desc: "Folkenært (boka, jenta, kasta, fram)" },
+  nynorsk: { label: "Nynorsk", desc: "Eg, ikkje, kva, frå" },
+};
+
+const FOCUS_LABELS: Record<FocusArea, string> = {
+  anglisismer: "Anglisismer",
+  stil: "Målform/stil",
+  grammatikk: "Grammatikk og skrivefeil",
+  forenkling: "Forenkling av tunge formuleringer",
+  idiomatisk: "Uidiomatiske uttrykk",
+};
 
 interface Props {
   onRulesChange?: (rules: ProofreadRule[]) => void;

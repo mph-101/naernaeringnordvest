@@ -331,6 +331,31 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     toast({ title: "Endret", description: `"${s.original}" → "${s.suggestion}"` });
   };
 
+  const applyAllProofSuggestions = () => {
+    if (proofSuggestions.length === 0) return;
+    let newBody = form.body;
+    let applied = 0;
+    const skipped: typeof proofSuggestions = [];
+    for (const s of proofSuggestions) {
+      if (newBody.includes(s.original)) {
+        newBody = newBody.replace(s.original, s.suggestion);
+        applied++;
+      } else {
+        skipped.push(s);
+      }
+    }
+    updateForm({ body: newBody });
+    setProofSuggestions(skipped);
+    if (applied > 0) {
+      toast({
+        title: "Alle forslag godtatt",
+        description: `${applied} endring${applied === 1 ? "" : "er"} brukt${skipped.length ? `, ${skipped.length} hoppet over` : ""}`,
+      });
+    } else {
+      toast({ title: "Ingen endringer", description: "Fant ingen treff å bruke", variant: "destructive" });
+    }
+  };
+
   const dismissProofSuggestion = (index: number) => {
     setProofSuggestions(prev => prev.filter((_, i) => i !== index));
   };
@@ -582,9 +607,15 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
             {proofSuggestions.length > 0 && (
               <div className="mt-3 border border-border rounded-lg overflow-hidden">
-                <div className="bg-muted/50 px-4 py-2 flex items-center justify-between">
+                <div className="bg-muted/50 px-4 py-2 flex items-center justify-between gap-2">
                   <span className="text-sm font-medium text-foreground">{proofSuggestions.length} forslag til forbedring</span>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="text-xs">Lukk alle</Button>
+                  <div className="flex items-center gap-1">
+                    <Button type="button" variant="outline" size="sm" onClick={applyAllProofSuggestions} className="h-7 gap-1.5 text-xs">
+                      <Check className="w-3.5 h-3.5" />
+                      Godta alle
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="text-xs">Lukk alle</Button>
+                  </div>
                 </div>
                 <div className="divide-y divide-border max-h-80 overflow-y-auto">
                   {proofSuggestions.map((s, i) => (

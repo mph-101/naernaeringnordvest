@@ -67,8 +67,8 @@ Vurder dataformen (kategorisk vs tidsserie, antall serier, st\u00f8rrelsesforhol
                 properties: {
                   chartType: {
                     type: "string",
-                    enum: ["bar", "line", "area", "pie"],
-                    description: "Best egnede diagramtype: bar=s\u00f8yle, line=linje (tidsserie), area=areal, pie=kake (\u22645 kategorier som summerer til helhet)",
+                    enum: ["bar", "stackedBar", "horizontalBar", "line", "area", "scatter", "pie"],
+                    description: "Best egnede diagramtype: bar=s\u00f8yle (kategorier), stackedBar=stablet s\u00f8yle (deler av helhet over kategorier), horizontalBar=horisontal s\u00f8yle (lange etiketter eller rangering), line=linje (tidsserie), area=areal (volum over tid), scatter=punktdiagram (sammenheng mellom to numeriske variabler), pie=kake (\u22645 kategorier som summerer til helhet)",
                   },
                   title: { type: "string", description: "Kort, journalistisk tittel p\u00e5 bokm\u00e5l, maks 70 tegn" },
                   subtitle: { type: "string", description: "Valgfri undertittel som forklarer kontekst (maks 100 tegn)" },

@@ -156,6 +156,7 @@ export const RichTextEditor = ({
   onImageUpload,
   onInsertChart,
   onEditChart,
+  editorRef,
   placeholder = "Start å skrive...",
   className = "",
   highlights,

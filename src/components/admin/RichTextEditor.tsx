@@ -38,6 +38,7 @@ interface RichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
   onImageUpload?: () => void;
+  onInsertChart?: () => void;
   placeholder?: string;
   className?: string;
   highlights?: ProofreadHighlight[];
@@ -90,6 +91,7 @@ export const RichTextEditor = ({
   content,
   onChange,
   onImageUpload,
+  onInsertChart,
   placeholder = "Start å skrive...",
   className = "",
   highlights,

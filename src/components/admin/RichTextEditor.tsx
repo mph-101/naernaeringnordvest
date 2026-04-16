@@ -107,7 +107,7 @@ const ChartFigureNode = Node.create({
   group: "block",
   atom: true,
   selectable: true,
-  draggable: false,
+  draggable: true,
   addAttributes() {
     return {
       "data-chart": { default: null },

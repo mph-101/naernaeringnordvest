@@ -607,9 +607,15 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
             {proofSuggestions.length > 0 && (
               <div className="mt-3 border border-border rounded-lg overflow-hidden">
-                <div className="bg-muted/50 px-4 py-2 flex items-center justify-between">
+                <div className="bg-muted/50 px-4 py-2 flex items-center justify-between gap-2">
                   <span className="text-sm font-medium text-foreground">{proofSuggestions.length} forslag til forbedring</span>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="text-xs">Lukk alle</Button>
+                  <div className="flex items-center gap-1">
+                    <Button type="button" variant="outline" size="sm" onClick={applyAllProofSuggestions} className="h-7 gap-1.5 text-xs">
+                      <Check className="w-3.5 h-3.5" />
+                      Godta alle
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="text-xs">Lukk alle</Button>
+                  </div>
                 </div>
                 <div className="divide-y divide-border max-h-80 overflow-y-auto">
                   {proofSuggestions.map((s, i) => (

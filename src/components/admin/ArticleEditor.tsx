@@ -595,7 +595,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 audioRef.current?.uploadFile(file);
               }}
             >
-              <RichTextEditor content={form.body} onChange={(html) => updateForm({ body: html })} onImageUpload={handleInsertImage} placeholder="Skriv artikkelens innhold her..." />
+              <RichTextEditor
+                content={form.body}
+                onChange={(html) => updateForm({ body: html })}
+                onImageUpload={handleInsertImage}
+                placeholder="Skriv artikkelens innhold her..."
+                highlights={proofSuggestions.map((s) => ({ text: s.original, category: s.category }))}
+              />
               {isDraggingAudio && (
                 <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center pointer-events-none z-10">
                   <div className="bg-card px-4 py-2 rounded-lg shadow-soft text-sm font-medium text-foreground">

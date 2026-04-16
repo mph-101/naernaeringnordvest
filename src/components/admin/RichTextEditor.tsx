@@ -216,6 +216,12 @@ export const RichTextEditor = ({
     return () => el.removeEventListener("nn-chart-edit", handler as EventListener);
   }, [editor, onEditChart]);
 
+  // Expose the editor to the parent for imperative operations
+  useEffect(() => {
+    editorRef?.(editor || null);
+    return () => editorRef?.(null);
+  }, [editor, editorRef]);
+
   const addLink = useCallback(() => {
     if (!editor) return;
     const url = window.prompt("URL:");

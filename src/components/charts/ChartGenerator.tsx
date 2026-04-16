@@ -210,7 +210,9 @@ export const ChartGenerator = ({
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={onClose}>Avbryt</Button>
-            <Button type="button" onClick={() => { onInsert(chart); onClose(); }}>Sett inn graf</Button>
+            <Button type="button" onClick={() => { onInsert(chart); onClose(); }}>
+              {isEditing ? "Oppdater graf" : "Sett inn graf"}
+            </Button>
           </div>
         </div>
       )}

@@ -45,9 +45,12 @@ interface RichTextEditorProps {
   onChange: (html: string) => void;
   onImageUpload?: () => void;
   onInsertChart?: () => void;
+  onInsertFactBox?: () => void;
   /** Called when the user clicks an existing chart in the editor.
    *  `pos` is the ProseMirror position of the figure node, used to replace it. */
   onEditChart?: (chart: ChartData, pos: number) => void;
+  /** Called when the user clicks an existing fact box in the editor. */
+  onEditFactBox?: (data: FactBoxData, pos: number) => void;
   /** Called once with the underlying TipTap editor instance, so the parent
    *  can imperatively replace nodes (e.g. swap an existing chart for an updated one). */
   editorRef?: (editor: ReturnType<typeof useEditor> | null) => void;

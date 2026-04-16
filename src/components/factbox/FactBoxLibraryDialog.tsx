@@ -162,7 +162,7 @@ export const FactBoxLibraryDialog = ({
       if (form.id) {
         const { data, error } = await supabase
           .from("fact_boxes")
-          .update(payload)
+          .update(payload as never)
           .eq("id", form.id)
           .select("id, title, variant, body, image_url, image_caption, items, tags")
           .single();
@@ -171,7 +171,7 @@ export const FactBoxLibraryDialog = ({
       } else {
         const { data, error } = await supabase
           .from("fact_boxes")
-          .insert(payload)
+          .insert(payload as never)
           .select("id, title, variant, body, image_url, image_caption, items, tags")
           .single();
         if (error) throw error;

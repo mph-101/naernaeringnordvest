@@ -42,6 +42,9 @@ interface RichTextEditorProps {
   onChange: (html: string) => void;
   onImageUpload?: () => void;
   onInsertChart?: () => void;
+  /** Called when the user clicks an existing chart in the editor.
+   *  `pos` is the ProseMirror position of the figure node, used to replace it. */
+  onEditChart?: (chart: ChartData, pos: number) => void;
   placeholder?: string;
   className?: string;
   highlights?: ProofreadHighlight[];

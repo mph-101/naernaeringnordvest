@@ -695,6 +695,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 onImageUpload={handleInsertImage}
                 onInsertChart={() => { setEditingChart(null); setChartDialogOpen(true); }}
                 onEditChart={handleEditChart}
+                onInsertFactBox={() => { setEditingFactBox(null); setFactBoxDialogOpen(true); }}
+                onEditFactBox={handleEditFactBox}
                 editorRef={(ed) => { editorInstanceRef.current = ed; }}
                 placeholder="Skriv artikkelens innhold her..."
                 highlights={proofSuggestions.map((s) => ({ text: s.original, category: s.category }))}
@@ -987,6 +989,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           />
         </DialogContent>
       </Dialog>
+
+      <FactBoxLibraryDialog
+        open={factBoxDialogOpen}
+        onOpenChange={(open) => (open ? setFactBoxDialogOpen(true) : handleCloseFactBoxDialog())}
+        onInsert={handleInsertFactBox}
+        initial={editingFactBox?.data || null}
+      />
     </div>
   );
 };

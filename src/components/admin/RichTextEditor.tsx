@@ -156,6 +156,55 @@ const ChartFigureNode = Node.create({
   },
 });
 
+/**
+ * Atom-block node that preserves Nær Næring fact boxes verbatim
+ * (`<aside data-nn-factbox="true" data-factbox="<base64>">`).
+ */
+const FactBoxNode = Node.create({
+  name: "factBox",
+  group: "block",
+  atom: true,
+  selectable: true,
+  draggable: true,
+  addAttributes() {
+    return {
+      "data-factbox": { default: null },
+      title: { default: "" },
+    };
+  },
+  parseHTML() {
+    return [
+      {
+        tag: "aside[data-nn-factbox]",
+        getAttrs: (el) => {
+          if (!(el instanceof HTMLElement)) return false;
+          const data = el.getAttribute("data-factbox") || "";
+          let title = "";
+          try {
+            const json = decodeURIComponent(escape(atob(data)));
+            const parsed = JSON.parse(json);
+            title = parsed.title || "";
+          } catch {
+            // ignore
+          }
+          return { "data-factbox": data, title };
+        },
+      },
+    ];
+  },
+  renderHTML({ HTMLAttributes }) {
+    const { title, ...rest } = HTMLAttributes as Record<string, string>;
+    return [
+      "aside",
+      mergeAttributes(rest, { "data-nn-factbox": "true" }),
+      ["p", {}, ["strong", {}, title || "Faktaboks"]],
+    ];
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(FactBoxNodeView);
+  },
+});
+
 export const RichTextEditor = ({
   content,
   onChange,

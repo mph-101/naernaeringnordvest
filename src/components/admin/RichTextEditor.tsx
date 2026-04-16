@@ -88,6 +88,57 @@ const HighlightExtension = Extension.create<{ highlights: ProofreadHighlight[] }
   },
 });
 
+/**
+ * Atom-block node that preserves Nær Næring chart figures verbatim
+ * (`<figure data-nn-chart="true" data-chart="<base64>">`). The editor
+ * shows a simple placeholder; the public article view re-renders the
+ * real chart component from the encoded JSON.
+ */
+const ChartFigureNode = Node.create({
+  name: "chartFigure",
+  group: "block",
+  atom: true,
+  selectable: true,
+  draggable: false,
+  addAttributes() {
+    return {
+      "data-chart": { default: null },
+      title: { default: "" },
+      source: { default: "" },
+    };
+  },
+  parseHTML() {
+    return [
+      {
+        tag: "figure[data-nn-chart]",
+        getAttrs: (el) => {
+          if (!(el instanceof HTMLElement)) return false;
+          const data = el.getAttribute("data-chart") || "";
+          let title = "";
+          let source = "";
+          try {
+            const json = decodeURIComponent(escape(atob(data)));
+            const parsed = JSON.parse(json);
+            title = parsed.title || "";
+            source = parsed.source || "";
+          } catch {
+            // ignore
+          }
+          return { "data-chart": data, title, source };
+        },
+      },
+    ];
+  },
+  renderHTML({ HTMLAttributes }) {
+    const { title, source, ...rest } = HTMLAttributes as Record<string, string>;
+    return [
+      "figure",
+      mergeAttributes(rest, { "data-nn-chart": "true" }),
+      ["p", {}, ["strong", {}, title || "Graf"], ` — ${source || ""}`],
+    ];
+  },
+});
+
 export const RichTextEditor = ({
   content,
   onChange,

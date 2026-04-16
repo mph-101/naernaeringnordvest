@@ -84,11 +84,24 @@ export const ProofreadRules = ({ onRulesChange }: Props) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [rules, setRules] = useState<ProofreadRule[]>([]);
+  const [settings, setSettings] = useState<ProofreadSettings>(DEFAULT_SETTINGS);
   const [draft, setDraft] = useState({ from: "", to: "", reason: "", category: "anglisisme" });
 
   useEffect(() => {
     setRules(loadProofreadRules());
+    setSettings(loadProofreadSettings());
   }, [open]);
+
+  const updateSettings = (next: ProofreadSettings) => {
+    setSettings(next);
+    saveProofreadSettings(next);
+  };
+
+  const toggleFocus = (area: FocusArea) => {
+    const has = settings.focusAreas.includes(area);
+    const nextAreas = has ? settings.focusAreas.filter((a) => a !== area) : [...settings.focusAreas, area];
+    updateSettings({ ...settings, focusAreas: nextAreas });
+  };
 
   const persist = (next: ProofreadRule[]) => {
     setRules(next);

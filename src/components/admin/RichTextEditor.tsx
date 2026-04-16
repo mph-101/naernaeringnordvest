@@ -1,4 +1,4 @@
-import { useEditor, EditorContent, Extension } from "@tiptap/react";
+import { useEditor, EditorContent, Extension, Node, mergeAttributes } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -23,6 +23,7 @@ import {
   AlignCenter,
   AlignRight,
   ImageIcon,
+  BarChart3,
   Undo,
   Redo,
   Code,
@@ -38,6 +39,7 @@ interface RichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
   onImageUpload?: () => void;
+  onInsertChart?: () => void;
   placeholder?: string;
   className?: string;
   highlights?: ProofreadHighlight[];
@@ -86,10 +88,62 @@ const HighlightExtension = Extension.create<{ highlights: ProofreadHighlight[] }
   },
 });
 
+/**
+ * Atom-block node that preserves Nær Næring chart figures verbatim
+ * (`<figure data-nn-chart="true" data-chart="<base64>">`). The editor
+ * shows a simple placeholder; the public article view re-renders the
+ * real chart component from the encoded JSON.
+ */
+const ChartFigureNode = Node.create({
+  name: "chartFigure",
+  group: "block",
+  atom: true,
+  selectable: true,
+  draggable: false,
+  addAttributes() {
+    return {
+      "data-chart": { default: null },
+      title: { default: "" },
+      source: { default: "" },
+    };
+  },
+  parseHTML() {
+    return [
+      {
+        tag: "figure[data-nn-chart]",
+        getAttrs: (el) => {
+          if (!(el instanceof HTMLElement)) return false;
+          const data = el.getAttribute("data-chart") || "";
+          let title = "";
+          let source = "";
+          try {
+            const json = decodeURIComponent(escape(atob(data)));
+            const parsed = JSON.parse(json);
+            title = parsed.title || "";
+            source = parsed.source || "";
+          } catch {
+            // ignore
+          }
+          return { "data-chart": data, title, source };
+        },
+      },
+    ];
+  },
+  renderHTML({ HTMLAttributes }) {
+    const { title, source, ...rest } = HTMLAttributes as Record<string, string>;
+    return [
+      "figure",
+      mergeAttributes(rest, { "data-nn-chart": "true" }),
+      ["p", {}, ["strong", {}, title || "Graf"], ` — ${source || ""}`],
+    ];
+  },
+});
+
 export const RichTextEditor = ({
   content,
   onChange,
   onImageUpload,
+  onInsertChart,
   placeholder = "Start å skrive...",
   className = "",
   highlights,
@@ -107,6 +161,7 @@ export const RichTextEditor = ({
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder }),
       HighlightExtension.configure({ highlights: highlights || [] }),
+      ChartFigureNode,
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -298,6 +353,11 @@ export const RichTextEditor = ({
         {onImageUpload && (
           <ToolButton onClick={onImageUpload} title="Sett inn bilde">
             <ImageIcon className="w-4 h-4" />
+          </ToolButton>
+        )}
+        {onInsertChart && (
+          <ToolButton onClick={onInsertChart} title="Sett inn graf">
+            <BarChart3 className="w-4 h-4" />
           </ToolButton>
         )}
       </div>

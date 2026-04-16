@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { ArticleDiscussion } from "@/components/ArticleDiscussion";
 import { ArticleNotes } from "@/components/ArticleNotes";
 import { CompanyMiniProfile } from "@/components/CompanyMiniProfile";
+import { ArticleBody } from "@/components/charts/ArticleBody";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/articles";
@@ -210,7 +211,7 @@ const Article = () => {
 
         <div className="mb-12 animate-fade-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
           {isHtml ? (
-            <div className="prose prose-lg dark:prose-invert max-w-none font-body" dangerouslySetInnerHTML={{ __html: body }} />
+            <ArticleBody html={body} />
           ) : (
             body.split('\n\n').map((paragraph, index) => (
               <p key={index} className={`text-foreground font-body leading-[1.85] mb-7 ${index === 0 ? "text-lg md:text-xl font-medium text-headline" : "text-base md:text-lg"}`}>

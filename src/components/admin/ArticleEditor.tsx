@@ -13,6 +13,9 @@ import { ImageUpload } from "./ImageUpload";
 import { CategorySelect } from "./CategorySelect";
 import { AudioTranscriber, type AudioTranscriberHandle } from "./AudioTranscriber";
 import { ProofreadRules, loadProofreadRules, loadProofreadSettings, type ProofreadRule } from "./ProofreadRules";
+import { ChartGenerator } from "@/components/charts/ChartGenerator";
+import type { ChartData } from "@/components/charts/ArticleChart";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ArticleEditorProps {
   articleId: string | null;
@@ -48,6 +51,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [generatingTitleExcerpt, setGeneratingTitleExcerpt] = useState(false);
   const [proofreading, setProofreading] = useState(false);
   const [proofSuggestions, setProofSuggestions] = useState<{ original: string; suggestion: string; reason: string; category: string }[]>([]);
+  const [chartDialogOpen, setChartDialogOpen] = useState(false);
   const { toast } = useToast();
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   const [companySearch, setCompanySearch] = useState("");
@@ -468,6 +472,17 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     input.click();
   };
 
+  const handleInsertChart = (chart: ChartData) => {
+    // Encode chart data as base64 JSON inside a figure block so it survives
+    // round-trips through the rich text editor and is rendered as a React
+    // component on the public article page.
+    const json = JSON.stringify(chart);
+    const encoded = btoa(unescape(encodeURIComponent(json)));
+    const figure = `<figure data-nn-chart="true" data-chart="${encoded}"><p><strong>${chart.title}</strong> — ${chart.source}</p></figure><p></p>`;
+    updateForm({ body: form.body + figure });
+    toast({ title: "Graf satt inn", description: chart.title });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -599,6 +614,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 content={form.body}
                 onChange={(html) => updateForm({ body: html })}
                 onImageUpload={handleInsertImage}
+                onInsertChart={() => setChartDialogOpen(true)}
                 placeholder="Skriv artikkelens innhold her..."
                 highlights={proofSuggestions.map((s) => ({ text: s.original, category: s.category }))}
               />
@@ -871,6 +887,20 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </Button>
         </div>
       </form>
+
+      <Dialog open={chartDialogOpen} onOpenChange={setChartDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Sett inn graf</DialogTitle>
+          </DialogHeader>
+          <ChartGenerator
+            articleTitle={form.title}
+            articleExcerpt={form.excerpt}
+            onInsert={handleInsertChart}
+            onClose={() => setChartDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

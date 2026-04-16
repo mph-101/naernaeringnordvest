@@ -1,4 +1,4 @@
-import { useEditor, EditorContent, Extension, Node, mergeAttributes } from "@tiptap/react";
+import { useEditor, EditorContent, Extension, Node, mergeAttributes, ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -7,6 +7,8 @@ import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { ChartFigureView } from "@/components/charts/ChartFigureView";
+import type { ChartData } from "@/components/charts/ArticleChart";
 import {
   Bold,
   Italic,

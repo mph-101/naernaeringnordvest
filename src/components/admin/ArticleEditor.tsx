@@ -12,6 +12,7 @@ import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
 import { CategorySelect } from "./CategorySelect";
 import { AudioTranscriber } from "./AudioTranscriber";
+import { ProofreadRules, loadProofreadRules, type ProofreadRule } from "./ProofreadRules";
 
 interface ArticleEditorProps {
   articleId: string | null;
@@ -271,13 +272,43 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     setProofreading(true);
     setProofSuggestions([]);
     try {
+      const customRules = loadProofreadRules();
+
+      // Apply local rule matches first (deterministic, fast)
+      const localSuggestions: { original: string; suggestion: string; reason: string; category: string }[] = [];
+      const plainText = form.body.replace(/<[^>]*>/g, " ");
+      for (const r of customRules) {
+        if (!r.from) continue;
+        // Word-boundary, case-insensitive search
+        const escaped = r.from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const re = new RegExp(`\\b${escaped}\\b`, "i");
+        const match = plainText.match(re);
+        if (match) {
+          localSuggestions.push({
+            original: match[0],
+            suggestion: r.to,
+            reason: r.reason || "Egen regel",
+            category: r.category || "stil",
+          });
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke("proofread-article", {
-        body: { body: form.body },
+        body: { body: form.body, customRules },
       });
       if (error) throw error;
-      if (data?.suggestions?.length) {
-        setProofSuggestions(data.suggestions);
-        toast({ title: "Språkvask fullført", description: `${data.suggestions.length} forslag funnet` });
+      const aiSuggestions = data?.suggestions || [];
+      // Merge, dedupe by original+suggestion
+      const seen = new Set<string>();
+      const merged = [...localSuggestions, ...aiSuggestions].filter((s: any) => {
+        const key = `${s.original}→${s.suggestion}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      if (merged.length) {
+        setProofSuggestions(merged);
+        toast({ title: "Språkvask fullført", description: `${merged.length} forslag funnet` });
       } else {
         toast({ title: "Ingen forslag", description: "Teksten ser bra ut!" });
       }
@@ -489,10 +520,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <Label>Brødtekst *</Label>
-              <Button type="button" variant="outline" size="sm" onClick={proofreadBody} disabled={proofreading || !form.body || form.body.length < 50} className="gap-2">
-                {proofreading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SpellCheck className="w-3.5 h-3.5" />}
-                {proofreading ? "Analyserer..." : "Språkvask"}
-              </Button>
+              <div className="flex items-center gap-1">
+                <ProofreadRules />
+                <Button type="button" variant="outline" size="sm" onClick={proofreadBody} disabled={proofreading || !form.body || form.body.length < 50} className="gap-2">
+                  {proofreading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SpellCheck className="w-3.5 h-3.5" />}
+                  {proofreading ? "Analyserer..." : "Språkvask"}
+                </Button>
+              </div>
             </div>
             <div className="mt-1.5">
               <RichTextEditor content={form.body} onChange={(html) => updateForm({ body: html })} onImageUpload={handleInsertImage} placeholder="Skriv artikkelens innhold her..." />

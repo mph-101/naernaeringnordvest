@@ -274,6 +274,20 @@ export const RichTextEditor = ({
     return () => el.removeEventListener("nn-chart-edit", handler as EventListener);
   }, [editor, onEditChart]);
 
+  // Listen for fact-box edit requests
+  useEffect(() => {
+    if (!editor || !onEditFactBox) return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { data: FactBoxData; pos: number | null };
+      if (detail?.data && typeof detail.pos === "number") {
+        onEditFactBox(detail.data, detail.pos);
+      }
+    };
+    const el = editor.view.dom;
+    el.addEventListener("nn-factbox-edit", handler as EventListener);
+    return () => el.removeEventListener("nn-factbox-edit", handler as EventListener);
+  }, [editor, onEditFactBox]);
+
   // Expose the editor to the parent for imperative operations
   useEffect(() => {
     editorRef?.(editor || null);

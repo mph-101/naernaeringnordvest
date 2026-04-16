@@ -226,6 +226,51 @@ export type Database = {
         }
         Relationships: []
       }
+      fact_boxes: {
+        Row: {
+          body: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          image_caption: string | null
+          image_url: string | null
+          items: Json
+          search_text: string
+          tags: string[]
+          title: string
+          updated_at: string
+          variant: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_caption?: string | null
+          image_url?: string | null
+          items?: Json
+          search_text?: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+          variant?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_caption?: string | null
+          image_url?: string | null
+          items?: Json
+          search_text?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          variant?: string
+        }
+        Relationships: []
+      }
       group_invitations: {
         Row: {
           created_at: string

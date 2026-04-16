@@ -15,6 +15,8 @@ import { AudioTranscriber, type AudioTranscriberHandle } from "./AudioTranscribe
 import { ProofreadRules, loadProofreadRules, loadProofreadSettings, type ProofreadRule } from "./ProofreadRules";
 import { ChartGenerator } from "@/components/charts/ChartGenerator";
 import type { ChartData } from "@/components/charts/ArticleChart";
+import { FactBoxLibraryDialog } from "@/components/factbox/FactBoxLibraryDialog";
+import { encodeFactBox, type FactBoxData } from "@/components/factbox/FactBox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ArticleEditorProps {
@@ -53,6 +55,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [proofSuggestions, setProofSuggestions] = useState<{ original: string; suggestion: string; reason: string; category: string }[]>([]);
   const [chartDialogOpen, setChartDialogOpen] = useState(false);
   const [editingChart, setEditingChart] = useState<{ chart: ChartData; pos: number } | null>(null);
+  const [factBoxDialogOpen, setFactBoxDialogOpen] = useState(false);
+  const [editingFactBox, setEditingFactBox] = useState<{ data: FactBoxData; pos: number } | null>(null);
   const editorInstanceRef = useRef<any>(null);
   const { toast } = useToast();
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
@@ -520,7 +524,45 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     setEditingChart(null);
   };
 
-  if (loading) {
+  const handleInsertFactBox = (data: FactBoxData) => {
+    const encoded = encodeFactBox(data);
+    const html = `<aside data-nn-factbox="true" data-factbox="${encoded}"><p><strong>${data.title}</strong></p></aside>`;
+    const editor = editorInstanceRef.current;
+
+    if (editingFactBox && editor) {
+      const node = editor.state.doc.nodeAt(editingFactBox.pos);
+      if (node && node.type.name === "factBox") {
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(
+            { from: editingFactBox.pos, to: editingFactBox.pos + node.nodeSize },
+            html,
+          )
+          .run();
+        toast({ title: "Faktaboks oppdatert", description: data.title });
+        setEditingFactBox(null);
+        return;
+      }
+    }
+
+    if (editor) {
+      editor.chain().focus().insertContent(html + "<p></p>").run();
+    } else {
+      updateForm({ body: form.body + html + "<p></p>" });
+    }
+    toast({ title: "Faktaboks satt inn", description: data.title });
+  };
+
+  const handleEditFactBox = (data: FactBoxData, pos: number) => {
+    setEditingFactBox({ data, pos });
+    setFactBoxDialogOpen(true);
+  };
+
+  const handleCloseFactBoxDialog = () => {
+    setFactBoxDialogOpen(false);
+    setEditingFactBox(null);
+  };
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -653,6 +695,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 onImageUpload={handleInsertImage}
                 onInsertChart={() => { setEditingChart(null); setChartDialogOpen(true); }}
                 onEditChart={handleEditChart}
+                onInsertFactBox={() => { setEditingFactBox(null); setFactBoxDialogOpen(true); }}
+                onEditFactBox={handleEditFactBox}
                 editorRef={(ed) => { editorInstanceRef.current = ed; }}
                 placeholder="Skriv artikkelens innhold her..."
                 highlights={proofSuggestions.map((s) => ({ text: s.original, category: s.category }))}
@@ -945,6 +989,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           />
         </DialogContent>
       </Dialog>
+
+      <FactBoxLibraryDialog
+        open={factBoxDialogOpen}
+        onOpenChange={(open) => (open ? setFactBoxDialogOpen(true) : handleCloseFactBoxDialog())}
+        onInsert={handleInsertFactBox}
+        initial={editingFactBox?.data || null}
+      />
     </div>
   );
 };

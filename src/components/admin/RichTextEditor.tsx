@@ -142,6 +142,9 @@ const ChartFigureNode = Node.create({
       ["p", {}, ["strong", {}, title || "Graf"], ` — ${source || ""}`],
     ];
   },
+  addNodeView() {
+    return ReactNodeViewRenderer(ChartFigureView);
+  },
 });
 
 export const RichTextEditor = ({

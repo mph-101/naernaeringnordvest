@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Sparkles, Loader2, BarChart3, LineChart as LineIcon, AreaChart as AreaIcon, PieChart as PieIcon } from "lucide-react";
+import {
+  Sparkles,
+  Loader2,
+  BarChart3,
+  BarChart2,
+  LineChart as LineIcon,
+  AreaChart as AreaIcon,
+  PieChart as PieIcon,
+  ScatterChart as ScatterIcon,
+  Layers,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -20,8 +30,11 @@ interface ChartGeneratorProps {
 
 const CHART_TYPE_META: Record<ChartType, { label: string; Icon: typeof BarChart3 }> = {
   bar: { label: "Søyle", Icon: BarChart3 },
+  stackedBar: { label: "Stablet søyle", Icon: Layers },
+  horizontalBar: { label: "Horisontal", Icon: BarChart2 },
   line: { label: "Linje", Icon: LineIcon },
   area: { label: "Areal", Icon: AreaIcon },
+  scatter: { label: "Punkt", Icon: ScatterIcon },
   pie: { label: "Kake", Icon: PieIcon },
 };
 

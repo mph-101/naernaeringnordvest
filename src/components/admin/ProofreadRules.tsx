@@ -136,12 +136,67 @@ export const ProofreadRules = ({ onRulesChange }: Props) => {
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Egendefinerte språkvask-regler</DialogTitle>
+          <DialogTitle>Språkvask-innstillinger</DialogTitle>
         </DialogHeader>
 
         <p className="text-sm text-muted-foreground">
-          Reglene anvendes automatisk i tillegg til AI-forslagene. Eksempel: "turnover" → "gjennomstrømming", "folka" → "folkene".
+          Tilpass språkprofil, fokusområder og dine egne erstatningsregler.
         </p>
+
+        {/* Språkprofil */}
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">Språkprofil</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {(Object.keys(PROFILE_LABELS) as LanguageProfile[]).map((p) => {
+              const active = settings.profile === p;
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => updateSettings({ ...settings, profile: p })}
+                  className={`text-left p-3 rounded-lg border transition-colors ${
+                    active ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                  }`}
+                >
+                  <div className="text-sm font-medium">{PROFILE_LABELS[p].label}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{PROFILE_LABELS[p].desc}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Fokusområder */}
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">Fokusområder</h4>
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(FOCUS_LABELS) as FocusArea[]).map((f) => {
+              const active = settings.focusAreas.includes(f);
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => toggleFocus(f)}
+                  className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-muted-foreground border-border hover:bg-muted/50"
+                  }`}
+                >
+                  {FOCUS_LABELS[f]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Egne regler */}
+        <div className="border-t border-border pt-4">
+          <h4 className="text-sm font-medium mb-1">Egne erstatningsregler</h4>
+          <p className="text-xs text-muted-foreground">
+            Anvendes alltid, uavhengig av språkprofil.
+          </p>
+        </div>
 
         <div className="space-y-2">
           {rules.length === 0 ? (

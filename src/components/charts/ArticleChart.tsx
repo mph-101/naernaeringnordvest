@@ -7,6 +7,9 @@ import {
   AreaChart,
   Pie,
   PieChart,
+  Scatter,
+  ScatterChart,
+  ZAxis,
   Cell,
   XAxis,
   YAxis,
@@ -17,7 +20,14 @@ import {
 } from "recharts";
 import logoImg from "@/assets/logo.png";
 
-export type ChartType = "bar" | "line" | "area" | "pie";
+export type ChartType =
+  | "bar"
+  | "line"
+  | "area"
+  | "pie"
+  | "scatter"
+  | "stackedBar"
+  | "horizontalBar";
 
 export interface ChartData {
   type: ChartType;

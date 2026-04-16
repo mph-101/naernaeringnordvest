@@ -92,6 +92,7 @@ export const RichTextEditor = ({
   onImageUpload,
   placeholder = "Start å skrive...",
   className = "",
+  highlights,
 }: RichTextEditorProps) => {
   const isInitial = useRef(true);
 
@@ -105,6 +106,7 @@ export const RichTextEditor = ({
       Underline,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder }),
+      HighlightExtension.configure({ highlights: highlights || [] }),
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -120,6 +122,17 @@ export const RichTextEditor = ({
       }
     }
   }, [editor, content]);
+
+  // Update highlights dynamically without recreating the editor
+  useEffect(() => {
+    if (!editor) return;
+    const ext = editor.extensionManager.extensions.find((e) => e.name === "proofreadHighlights");
+    if (ext) {
+      ext.options.highlights = highlights || [];
+      // Force decoration recompute
+      editor.view.dispatch(editor.state.tr.setMeta("proofreadHighlightsUpdate", true));
+    }
+  }, [editor, highlights]);
 
   const addLink = useCallback(() => {
     if (!editor) return;

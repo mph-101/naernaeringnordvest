@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
+import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Article from "./pages/Article";
 import Team from "./pages/Team";
@@ -26,31 +27,33 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/article/:id" element={<Article />} />
-            <Route path="/team" element={<Team />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/idrett" element={<Tall />} />
-            <Route path="/tall" element={<Tall />} />
-            <Route path="/idrett/klubb/:id" element={<KlubbProfil />} />
-            <Route path="/idrett/sammenlign" element={<Sammenlign />} />
-            <Route path="/grupper" element={<Groups />} />
-            <Route path="/grupper/:id" element={<GroupDetail />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/profil" element={<Profile />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/velkommen" element={<Onboarding />} />
-            <Route path="/hjernetrim" element={<Hjernetrim />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/article/:id" element={<Article />} />
+              <Route path="/team" element={<Team />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/idrett" element={<Tall />} />
+              <Route path="/tall" element={<Tall />} />
+              <Route path="/idrett/klubb/:id" element={<KlubbProfil />} />
+              <Route path="/idrett/sammenlign" element={<Sammenlign />} />
+              <Route path="/grupper" element={<Groups />} />
+              <Route path="/grupper/:id" element={<GroupDetail />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/profil" element={<Profile />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/velkommen" element={<Onboarding />} />
+              <Route path="/hjernetrim" element={<Hjernetrim />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

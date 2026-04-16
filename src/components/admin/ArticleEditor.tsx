@@ -614,6 +614,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 content={form.body}
                 onChange={(html) => updateForm({ body: html })}
                 onImageUpload={handleInsertImage}
+                onInsertChart={() => setChartDialogOpen(true)}
                 placeholder="Skriv artikkelens innhold her..."
                 highlights={proofSuggestions.map((s) => ({ text: s.original, category: s.category }))}
               />

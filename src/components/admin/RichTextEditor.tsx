@@ -8,7 +8,9 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { ChartFigureView } from "@/components/charts/ChartFigureView";
+import { FactBoxNodeView } from "@/components/factbox/FactBoxNodeView";
 import type { ChartData } from "@/components/charts/ArticleChart";
+import type { FactBoxData } from "@/components/factbox/FactBox";
 import {
   Bold,
   Italic,
@@ -26,6 +28,7 @@ import {
   AlignRight,
   ImageIcon,
   BarChart3,
+  BookOpen,
   Undo,
   Redo,
   Code,

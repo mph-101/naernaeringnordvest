@@ -134,6 +134,66 @@ export const ArticleChart = ({ data, className = "" }: ArticleChartProps) => {
       );
     }
 
+    const tooltip = (
+      <Tooltip
+        formatter={(v: any) => formatNumber(v)}
+        contentStyle={{
+          background: "hsl(var(--card))",
+          border: "1px solid hsl(var(--border))",
+          borderRadius: 8,
+          fontFamily: "'Source Sans 3', sans-serif",
+          fontSize: 13,
+        }}
+      />
+    );
+
+    const legend = seriesKeys.length > 1 && (
+      <Legend
+        wrapperStyle={{ fontFamily: "'Source Sans 3', sans-serif", fontSize: 12, paddingTop: 8 }}
+        iconType="circle"
+      />
+    );
+
+    // Horizontal bar — swap axes: numeric X, categorical Y
+    if (type === "horizontalBar") {
+      return (
+        <ResponsiveContainer width="100%" height={Math.max(240, chartData.length * 36 + 80)}>
+          <BarChart
+            data={chartData}
+            layout="vertical"
+            margin={{ top: 8, right: 24, bottom: xAxisLabel ? 24 : 8, left: 8 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+            <XAxis
+              type="number"
+              tick={axisStyle}
+              axisLine={{ stroke: "hsl(var(--border))" }}
+              tickLine={false}
+              tickFormatter={formatNumber}
+              label={
+                xAxisLabel
+                  ? { value: xAxisLabel, position: "insideBottom", offset: -5, style: axisStyle }
+                  : undefined
+              }
+            />
+            <YAxis
+              type="category"
+              dataKey={xKey}
+              tick={axisStyle}
+              axisLine={false}
+              tickLine={false}
+              width={100}
+            />
+            {tooltip}
+            {legend}
+            {seriesKeys.map((key, i) => (
+              <Bar key={key} dataKey={key} fill={CHART_COLORS[i % CHART_COLORS.length]} radius={[0, 4, 4, 0]} />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      );
+    }
+
     const commonAxes = (
       <>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
@@ -155,22 +215,8 @@ export const ArticleChart = ({ data, className = "" }: ArticleChartProps) => {
               : undefined
           }
         />
-        <Tooltip
-          formatter={(v: any) => formatNumber(v)}
-          contentStyle={{
-            background: "hsl(var(--card))",
-            border: "1px solid hsl(var(--border))",
-            borderRadius: 8,
-            fontFamily: "'Source Sans 3', sans-serif",
-            fontSize: 13,
-          }}
-        />
-        {seriesKeys.length > 1 && (
-          <Legend
-            wrapperStyle={{ fontFamily: "'Source Sans 3', sans-serif", fontSize: 12, paddingTop: 8 }}
-            iconType="circle"
-          />
-        )}
+        {tooltip}
+        {legend}
       </>
     );
 
@@ -216,13 +262,84 @@ export const ArticleChart = ({ data, className = "" }: ArticleChartProps) => {
       );
     }
 
-    // bar (default)
+    if (type === "scatter") {
+      // Scatter: first column = numeric X, each remaining column = a series.
+      return (
+        <ResponsiveContainer width="100%" height={320}>
+          <ScatterChart margin={{ top: 8, right: 16, bottom: yAxisLabel ? 24 : 8, left: yAxisLabel ? 8 : 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis
+              type="number"
+              dataKey="x"
+              name={xKey}
+              tick={axisStyle}
+              axisLine={{ stroke: "hsl(var(--border))" }}
+              tickLine={false}
+              tickFormatter={formatNumber}
+              label={
+                xAxisLabel
+                  ? { value: xAxisLabel, position: "insideBottom", offset: -5, style: axisStyle }
+                  : undefined
+              }
+            />
+            <YAxis
+              type="number"
+              dataKey="y"
+              tick={axisStyle}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={formatNumber}
+              label={
+                yAxisLabel
+                  ? { value: yAxisLabel, angle: -90, position: "insideLeft", style: { ...axisStyle, textAnchor: "middle" } }
+                  : undefined
+              }
+            />
+            <ZAxis range={[60, 60]} />
+            <Tooltip
+              cursor={{ strokeDasharray: "3 3" }}
+              formatter={(v: any) => formatNumber(v)}
+              contentStyle={{
+                background: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: 8,
+                fontFamily: "'Source Sans 3', sans-serif",
+                fontSize: 13,
+              }}
+            />
+            {legend}
+            {seriesKeys.map((key, i) => {
+              const points = chartData
+                .map((row) => ({ x: row[xKey], y: row[key] }))
+                .filter((p) => typeof p.x === "number" && typeof p.y === "number");
+              return (
+                <Scatter
+                  key={key}
+                  name={key}
+                  data={points}
+                  fill={CHART_COLORS[i % CHART_COLORS.length]}
+                />
+              );
+            })}
+          </ScatterChart>
+        </ResponsiveContainer>
+      );
+    }
+
+    // bar (default) and stackedBar share the BarChart layout
+    const isStacked = type === "stackedBar";
     return (
       <ResponsiveContainer width="100%" height={320}>
         <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: yAxisLabel ? 24 : 8, left: yAxisLabel ? 8 : 0 }}>
           {commonAxes}
           {seriesKeys.map((key, i) => (
-            <Bar key={key} dataKey={key} fill={CHART_COLORS[i % CHART_COLORS.length]} radius={[4, 4, 0, 0]} />
+            <Bar
+              key={key}
+              dataKey={key}
+              fill={CHART_COLORS[i % CHART_COLORS.length]}
+              radius={isStacked ? (i === seriesKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]) : [4, 4, 0, 0]}
+              stackId={isStacked ? "stack" : undefined}
+            />
           ))}
         </BarChart>
       </ResponsiveContainer>

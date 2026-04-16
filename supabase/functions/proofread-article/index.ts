@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { body, customRules } = await req.json();
+    const { body, customRules, profile, focusAreas } = await req.json();
 
     if (!body || body.length < 50) {
       return new Response(JSON.stringify({ error: "Brødteksten må være minst 50 tegn" }), {
@@ -29,20 +29,39 @@ Deno.serve(async (req) => {
           .join("\n")}\n`
       : "";
 
-    const prompt = `Du er en erfaren norsk språkvasker for en næringslivsavis. Analyser følgende tekst og finn konkrete forbedringsforslag.${rulesSection}
+    // Language profile guidance
+    const profileGuidance: Record<string, string> = {
+      konservativt: `Bruk KONSERVATIVT BOKMÅL (riksmålsnært). Foretrekk -en/-et-former (boken, huset, regjeringen). Unngå alle a-endelser i hunkjønnsord og verb i preteritum (skrev IKKE skreiv, kastet IKKE kasta). Bruk tradisjonelle ord som "frem", "etter", "nu/nå", "meget".`,
+      moderat: `Bruk MODERAT BOKMÅL (avisstandard). Foretrekk -en/-ene-former i de fleste tilfeller (boken, folkene), men aksepter etablerte a-former som "jenta", "hytta". Preteritum med -et (kastet, hoppet).`,
+      radikalt: `Bruk RADIKALT BOKMÅL (folkenært). Foretrekk -a-endelser i hunkjønn (boka, jenta, hytta) og preteritum (kasta, hoppa). Bruk "fram" fremfor "frem", "etter" fremfor "efter". Tillat folkelige former som "sjøl" der det passer.`,
+      nynorsk: `Bruk NYNORSK. Konverter bokmålsformer til nynorsk (ikke → ikkje, jeg → eg, hva → kva, noe → noko, fra → frå). Bruk a-infinitiv (å kasta, å hoppa) eller e-infinitiv konsekvent.`,
+    };
+    const selectedProfile = profileGuidance[profile] || profileGuidance.moderat;
+
+    // Focus area filtering
+    const allFocusAreas = {
+      anglisismer: `1. Anglisismer som bør erstattes med norske ord (f.eks. "turnover" → "gjennomstrømming", "feedback" → "tilbakemelding", "deadline" → "frist", "performance" → "ytelse")`,
+      stil: `2. Målform-standardisering iht. valgt språkprofil (se over)`,
+      grammatikk: `3. Grammatiske feil og skrivefeil`,
+      forenkling: `4. Unødvendig kompliserte formuleringer som kan forenkles`,
+      idiomatisk: `5. Uidiomatiske uttrykk`,
+    };
+    const enabledFocus = Array.isArray(focusAreas) && focusAreas.length > 0
+      ? focusAreas.filter((k: string) => k in allFocusAreas).map((k: string) => allFocusAreas[k as keyof typeof allFocusAreas])
+      : Object.values(allFocusAreas);
+
+    const prompt = `Du er en erfaren norsk språkvasker for en næringslivsavis. Analyser følgende tekst og finn konkrete forbedringsforslag.
+
+SPRÅKPROFIL: ${selectedProfile}${rulesSection}
 
 Fokuser på:
-1. Anglisismer som bør erstattes med norske ord (f.eks. "turnover" → "gjennomstrømming", "feedback" → "tilbakemelding", "deadline" → "frist", "performance" → "ytelse")
-2. Bokmål-standardisering: Bruk moderat bokmål (-en/-ene-former fremfor -a-former der det passer i en avissammenheng, f.eks. "folka" → "folkene", "boka" → "boken")
-3. Grammatiske feil og skrivefeil
-4. Unødvendig kompliserte formuleringer som kan forenkles
-5. Uidiomatiske uttrykk
+${enabledFocus.join("\n")}
 
 For hvert forslag, returner:
 - "original": den eksakte teksten som finnes i originalen (kopier nøyaktig)
 - "suggestion": foreslått erstatning
 - "reason": kort forklaring på norsk (maks 10 ord)
-- "category": en av "anglisisme", "dialekt", "grammatikk", "forenkling", "skrivefeil"
+- "category": en av "anglisisme", "dialekt", "grammatikk", "forenkling", "skrivefeil", "stil"
 
 Returner KUN en JSON-array med objekter. Ingen markdown, ingen forklaring utenfor JSON. Returner tom array [] hvis ingen forslag.
 

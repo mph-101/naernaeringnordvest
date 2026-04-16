@@ -16,6 +16,20 @@ export interface ProofreadRule {
 }
 
 const STORAGE_KEY = "proofread_custom_rules_v1";
+const SETTINGS_KEY = "proofread_settings_v1";
+
+export type LanguageProfile = "konservativt" | "moderat" | "radikalt" | "nynorsk";
+export type FocusArea = "anglisismer" | "stil" | "grammatikk" | "forenkling" | "idiomatisk";
+
+export interface ProofreadSettings {
+  profile: LanguageProfile;
+  focusAreas: FocusArea[];
+}
+
+const DEFAULT_SETTINGS: ProofreadSettings = {
+  profile: "moderat",
+  focusAreas: ["anglisismer", "stil", "grammatikk", "forenkling", "idiomatisk"],
+};
 
 export function loadProofreadRules(): ProofreadRule[] {
   try {
@@ -32,6 +46,36 @@ export function saveProofreadRules(rules: ProofreadRule[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(rules));
 }
 
+export function loadProofreadSettings(): ProofreadSettings {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return DEFAULT_SETTINGS;
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_SETTINGS, ...parsed };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
+
+export function saveProofreadSettings(s: ProofreadSettings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+}
+
+const PROFILE_LABELS: Record<LanguageProfile, { label: string; desc: string }> = {
+  konservativt: { label: "Konservativt bokmål", desc: "Riksmålsnært (boken, regjeringen, frem)" },
+  moderat: { label: "Moderat bokmål", desc: "Avisstandard (boken/jenta, kastet)" },
+  radikalt: { label: "Radikalt bokmål", desc: "Folkenært (boka, jenta, kasta, fram)" },
+  nynorsk: { label: "Nynorsk", desc: "Eg, ikkje, kva, frå" },
+};
+
+const FOCUS_LABELS: Record<FocusArea, string> = {
+  anglisismer: "Anglisismer",
+  stil: "Målform/stil",
+  grammatikk: "Grammatikk og skrivefeil",
+  forenkling: "Forenkling av tunge formuleringer",
+  idiomatisk: "Uidiomatiske uttrykk",
+};
+
 interface Props {
   onRulesChange?: (rules: ProofreadRule[]) => void;
 }
@@ -40,11 +84,24 @@ export const ProofreadRules = ({ onRulesChange }: Props) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [rules, setRules] = useState<ProofreadRule[]>([]);
+  const [settings, setSettings] = useState<ProofreadSettings>(DEFAULT_SETTINGS);
   const [draft, setDraft] = useState({ from: "", to: "", reason: "", category: "anglisisme" });
 
   useEffect(() => {
     setRules(loadProofreadRules());
+    setSettings(loadProofreadSettings());
   }, [open]);
+
+  const updateSettings = (next: ProofreadSettings) => {
+    setSettings(next);
+    saveProofreadSettings(next);
+  };
+
+  const toggleFocus = (area: FocusArea) => {
+    const has = settings.focusAreas.includes(area);
+    const nextAreas = has ? settings.focusAreas.filter((a) => a !== area) : [...settings.focusAreas, area];
+    updateSettings({ ...settings, focusAreas: nextAreas });
+  };
 
   const persist = (next: ProofreadRule[]) => {
     setRules(next);
@@ -79,12 +136,67 @@ export const ProofreadRules = ({ onRulesChange }: Props) => {
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Egendefinerte språkvask-regler</DialogTitle>
+          <DialogTitle>Språkvask-innstillinger</DialogTitle>
         </DialogHeader>
 
         <p className="text-sm text-muted-foreground">
-          Reglene anvendes automatisk i tillegg til AI-forslagene. Eksempel: "turnover" → "gjennomstrømming", "folka" → "folkene".
+          Tilpass språkprofil, fokusområder og dine egne erstatningsregler.
         </p>
+
+        {/* Språkprofil */}
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">Språkprofil</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {(Object.keys(PROFILE_LABELS) as LanguageProfile[]).map((p) => {
+              const active = settings.profile === p;
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => updateSettings({ ...settings, profile: p })}
+                  className={`text-left p-3 rounded-lg border transition-colors ${
+                    active ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                  }`}
+                >
+                  <div className="text-sm font-medium">{PROFILE_LABELS[p].label}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{PROFILE_LABELS[p].desc}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Fokusområder */}
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">Fokusområder</h4>
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(FOCUS_LABELS) as FocusArea[]).map((f) => {
+              const active = settings.focusAreas.includes(f);
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => toggleFocus(f)}
+                  className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-muted-foreground border-border hover:bg-muted/50"
+                  }`}
+                >
+                  {FOCUS_LABELS[f]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Egne regler */}
+        <div className="border-t border-border pt-4">
+          <h4 className="text-sm font-medium mb-1">Egne erstatningsregler</h4>
+          <p className="text-xs text-muted-foreground">
+            Anvendes alltid, uavhengig av språkprofil.
+          </p>
+        </div>
 
         <div className="space-y-2">
           {rules.length === 0 ? (

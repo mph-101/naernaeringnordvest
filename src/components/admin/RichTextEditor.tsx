@@ -198,6 +198,20 @@ export const RichTextEditor = ({
     }
   }, [editor, highlights]);
 
+  // Listen for chart-edit requests dispatched from the ChartFigureView node-view
+  useEffect(() => {
+    if (!editor || !onEditChart) return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { chart: ChartData; pos: number | null };
+      if (detail?.chart && typeof detail.pos === "number") {
+        onEditChart(detail.chart, detail.pos);
+      }
+    };
+    const el = editor.view.dom;
+    el.addEventListener("nn-chart-edit", handler as EventListener);
+    return () => el.removeEventListener("nn-chart-edit", handler as EventListener);
+  }, [editor, onEditChart]);
+
   const addLink = useCallback(() => {
     if (!editor) return;
     const url = window.prompt("URL:");

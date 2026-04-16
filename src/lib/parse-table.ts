@@ -50,17 +50,46 @@ const splitLine = (line: string, delim: string): string[] => {
 
 const coerceCell = (raw: string): string | number => {
   if (raw === "" || raw == null) return "";
-  // Try Norwegian numeric: "1 234,56" or "1.234,56" -> 1234.56
-  const cleaned = raw.replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
-  if (/^-?\d+(\.\d+)?%?$/.test(cleaned)) {
-    const isPct = cleaned.endsWith("%");
-    const n = Number(isPct ? cleaned.slice(0, -1) : cleaned);
-    if (!isNaN(n)) return n;
+  const trimmed = raw.trim();
+  const isPct = trimmed.endsWith("%");
+  const core = (isPct ? trimmed.slice(0, -1) : trimmed).trim();
+
+  // Strip spaces and non-breaking spaces used as thousands separators
+  const noSpaces = core.replace(/[\s\u00A0]/g, "");
+
+  // Determine decimal separator. If both "," and "." appear, the LAST one wins
+  // (e.g. "1.234,56" -> ",", "1,234.56" -> "."). If only one appears, decide:
+  //   - "," is decimal (Norwegian default)
+  //   - "." is decimal IF it has 1-2 occurrences with non-3-digit groupings,
+  //     otherwise treat as thousands separator (e.g. "1.234" = 1234).
+  let normalised = noSpaces;
+  const hasComma = noSpaces.includes(",");
+  const hasDot = noSpaces.includes(".");
+
+  if (hasComma && hasDot) {
+    const lastComma = noSpaces.lastIndexOf(",");
+    const lastDot = noSpaces.lastIndexOf(".");
+    if (lastComma > lastDot) {
+      // "," is decimal, "." is thousands
+      normalised = noSpaces.replace(/\./g, "").replace(",", ".");
+    } else {
+      // "." is decimal, "," is thousands
+      normalised = noSpaces.replace(/,/g, "");
+    }
+  } else if (hasComma) {
+    // Treat "," as decimal separator
+    normalised = noSpaces.replace(/,/g, ".");
+  } else if (hasDot) {
+    // Single dot — keep as-is (English decimal). Multiple dots = thousands.
+    const dotCount = (noSpaces.match(/\./g) || []).length;
+    if (dotCount > 1) {
+      normalised = noSpaces.replace(/\./g, "");
+    }
   }
-  // Plain English numeric: "1234.5"
-  if (/^-?\d+(\.\d+)?$/.test(raw)) {
-    const n = Number(raw);
-    if (!isNaN(n)) return n;
+
+  if (/^-?\d+(\.\d+)?$/.test(normalised)) {
+    const n = Number(normalised);
+    if (!isNaN(n)) return isPct ? n : n;
   }
   return raw;
 };

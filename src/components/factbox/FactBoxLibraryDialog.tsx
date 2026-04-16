@@ -82,7 +82,7 @@ export const FactBoxLibraryDialog = ({
     if (error) {
       toast({ title: "Kunne ikke hente faktabokser", description: error.message, variant: "destructive" });
     } else {
-      setBoxes((data || []) as FactBoxRow[]);
+      setBoxes((data || []) as unknown as FactBoxRow[]);
     }
     setLoading(false);
   };

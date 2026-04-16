@@ -12,7 +12,7 @@ import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
 import { CategorySelect } from "./CategorySelect";
 import { AudioTranscriber } from "./AudioTranscriber";
-import { ProofreadRules, loadProofreadRules, type ProofreadRule } from "./ProofreadRules";
+import { ProofreadRules, loadProofreadRules, loadProofreadSettings, type ProofreadRule } from "./ProofreadRules";
 
 interface ArticleEditorProps {
   articleId: string | null;
@@ -273,13 +273,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     setProofSuggestions([]);
     try {
       const customRules = loadProofreadRules();
+      const settings = loadProofreadSettings();
 
       // Apply local rule matches first (deterministic, fast)
       const localSuggestions: { original: string; suggestion: string; reason: string; category: string }[] = [];
       const plainText = form.body.replace(/<[^>]*>/g, " ");
       for (const r of customRules) {
         if (!r.from) continue;
-        // Word-boundary, case-insensitive search
         const escaped = r.from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const re = new RegExp(`\\b${escaped}\\b`, "i");
         const match = plainText.match(re);
@@ -294,7 +294,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       }
 
       const { data, error } = await supabase.functions.invoke("proofread-article", {
-        body: { body: form.body, customRules },
+        body: { body: form.body, customRules, profile: settings.profile, focusAreas: settings.focusAreas },
       });
       if (error) throw error;
       const aiSuggestions = data?.suggestions || [];

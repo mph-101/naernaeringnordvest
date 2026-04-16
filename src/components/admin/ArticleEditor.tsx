@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
 import { CategorySelect } from "./CategorySelect";
-import { AudioTranscriber } from "./AudioTranscriber";
+import { AudioTranscriber, type AudioTranscriberHandle } from "./AudioTranscriber";
 import { ProofreadRules, loadProofreadRules, loadProofreadSettings, type ProofreadRule } from "./ProofreadRules";
 
 interface ArticleEditorProps {
@@ -58,6 +58,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formRef = useRef<any>(null);
+  const audioRef = useRef<AudioTranscriberHandle>(null);
+  const [isDraggingAudio, setIsDraggingAudio] = useState(false);
+  const dragCounterRef = useRef(0);
 
   const [form, setForm] = useState({
     title: "",
@@ -503,7 +506,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 {generatingTitleExcerpt ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                 {generatingTitleExcerpt ? "Genererer..." : "Generer tittel/ingress"}
               </Button>
-              <AudioTranscriber onTranscript={handleAudioTranscript} />
+              <AudioTranscriber ref={audioRef} onTranscript={handleAudioTranscript} />
             </div>
           </div>
 
@@ -528,8 +531,53 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 </Button>
               </div>
             </div>
-            <div className="mt-1.5">
+            <div
+              className={`mt-1.5 relative rounded-lg transition-all ${
+                isDraggingAudio ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
+              }`}
+              onDragEnter={(e) => {
+                if (!Array.from(e.dataTransfer.types).includes("Files")) return;
+                e.preventDefault();
+                dragCounterRef.current += 1;
+                setIsDraggingAudio(true);
+              }}
+              onDragOver={(e) => {
+                if (Array.from(e.dataTransfer.types).includes("Files")) {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "copy";
+                }
+              }}
+              onDragLeave={(e) => {
+                if (!Array.from(e.dataTransfer.types).includes("Files")) return;
+                e.preventDefault();
+                dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
+                if (dragCounterRef.current === 0) setIsDraggingAudio(false);
+              }}
+              onDrop={(e) => {
+                if (!Array.from(e.dataTransfer.types).includes("Files")) return;
+                e.preventDefault();
+                dragCounterRef.current = 0;
+                setIsDraggingAudio(false);
+                const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith("audio/"));
+                if (!file) {
+                  toast({ title: "Ikke en lydfil", description: "Slipp en lydfil (mp3, wav, m4a osv.)", variant: "destructive" });
+                  return;
+                }
+                if (audioRef.current?.isProcessing()) {
+                  toast({ title: "Vent litt", description: "En lydfil behandles allerede", variant: "destructive" });
+                  return;
+                }
+                audioRef.current?.uploadFile(file);
+              }}
+            >
               <RichTextEditor content={form.body} onChange={(html) => updateForm({ body: html })} onImageUpload={handleInsertImage} placeholder="Skriv artikkelens innhold her..." />
+              {isDraggingAudio && (
+                <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center pointer-events-none z-10">
+                  <div className="bg-card px-4 py-2 rounded-lg shadow-soft text-sm font-medium text-foreground">
+                    Slipp lydfilen for å transkribere
+                  </div>
+                </div>
+              )}
             </div>
 
             {proofSuggestions.length > 0 && (

@@ -33,7 +33,8 @@ const decodeChart = (encoded: string): ChartData | null => {
 export const ArticleBody = ({ html, className = "" }: ArticleBodyProps) => {
   const segments = useMemo<Segment[]>(() => {
     if (!html) return [];
-    const regex = /<figure\b[^>]*data-nn-chart="true"[^>]*data-chart="([^"]+)"[^>]*>[\s\S]*?<\/figure>/gi;
+    // Match a Nær Næring chart figure regardless of attribute order
+    const regex = /<figure\b(?=[^>]*\bdata-nn-chart="true")(?=[^>]*\bdata-chart="([^"]+)")[^>]*>[\s\S]*?<\/figure>/gi;
     const result: Segment[] = [];
     let lastIndex = 0;
     let m: RegExpExecArray | null;

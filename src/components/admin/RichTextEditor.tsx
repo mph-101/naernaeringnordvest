@@ -23,6 +23,7 @@ import {
   AlignCenter,
   AlignRight,
   ImageIcon,
+  BarChart3,
   Undo,
   Redo,
   Code,
@@ -300,6 +301,11 @@ export const RichTextEditor = ({
         {onImageUpload && (
           <ToolButton onClick={onImageUpload} title="Sett inn bilde">
             <ImageIcon className="w-4 h-4" />
+          </ToolButton>
+        )}
+        {onInsertChart && (
+          <ToolButton onClick={onInsertChart} title="Sett inn graf">
+            <BarChart3 className="w-4 h-4" />
           </ToolButton>
         )}
       </div>

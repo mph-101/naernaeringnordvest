@@ -887,6 +887,20 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </Button>
         </div>
       </form>
+
+      <Dialog open={chartDialogOpen} onOpenChange={setChartDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Sett inn graf</DialogTitle>
+          </DialogHeader>
+          <ChartGenerator
+            articleTitle={form.title}
+            articleExcerpt={form.excerpt}
+            onInsert={handleInsertChart}
+            onClose={() => setChartDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

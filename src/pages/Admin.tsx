@@ -13,18 +13,24 @@ const Admin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener first
+    let isMounted = true;
+
+    const checkRole = async (userId: string) => {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      if (!isMounted) return;
+      setHasRole(!!roles && roles.length > 0);
+    };
+
+    // Set up auth state listener first — keep callback synchronous to avoid Supabase deadlock
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (_event, session) => {
         setSession(session);
         if (session?.user) {
-          // Check if user has admin/editor/journalist role
-          const { data: roles } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", session.user.id);
-          
-          setHasRole(roles && roles.length > 0);
+          // Defer Supabase call to avoid deadlock inside the auth callback
+          setTimeout(() => checkRole(session.user.id), 0);
         } else {
           setHasRole(false);
         }
@@ -33,20 +39,19 @@ const Admin = () => {
     );
 
     // Then get current session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
       setSession(session);
       if (session?.user) {
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id);
-        
-        setHasRole(roles && roles.length > 0);
+        checkRole(session.user.id);
       }
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {

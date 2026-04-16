@@ -51,6 +51,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [generatingTitleExcerpt, setGeneratingTitleExcerpt] = useState(false);
   const [proofreading, setProofreading] = useState(false);
   const [proofSuggestions, setProofSuggestions] = useState<{ original: string; suggestion: string; reason: string; category: string }[]>([]);
+  const [chartDialogOpen, setChartDialogOpen] = useState(false);
   const { toast } = useToast();
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   const [companySearch, setCompanySearch] = useState("");
@@ -470,8 +471,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     };
     input.click();
   };
-
-  const [chartDialogOpen, setChartDialogOpen] = useState(false);
 
   const handleInsertChart = (chart: ChartData) => {
     // Encode chart data as base64 JSON inside a figure block so it survives

@@ -1,10 +1,12 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, Extension } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import {
   Bold,
   Italic,
@@ -27,13 +29,62 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef } from "react";
 
+export interface ProofreadHighlight {
+  text: string;
+  category?: string;
+}
+
 interface RichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
   onImageUpload?: () => void;
   placeholder?: string;
   className?: string;
+  highlights?: ProofreadHighlight[];
 }
+
+const highlightPluginKey = new PluginKey("proofread-highlights");
+
+const HighlightExtension = Extension.create<{ highlights: ProofreadHighlight[] }>({
+  name: "proofreadHighlights",
+  addOptions() {
+    return { highlights: [] };
+  },
+  addProseMirrorPlugins() {
+    const ext = this;
+    return [
+      new Plugin({
+        key: highlightPluginKey,
+        props: {
+          decorations: (state) => {
+            const items: ProofreadHighlight[] = ext.options.highlights || [];
+            if (!items.length) return DecorationSet.empty;
+            const decorations: Decoration[] = [];
+            state.doc.descendants((node, pos) => {
+              if (!node.isText || !node.text) return;
+              const text = node.text;
+              for (const h of items) {
+                if (!h.text) continue;
+                let idx = 0;
+                while ((idx = text.indexOf(h.text, idx)) !== -1) {
+                  const from = pos + idx;
+                  const to = from + h.text.length;
+                  decorations.push(
+                    Decoration.inline(from, to, {
+                      class: `proofread-highlight proofread-${h.category || "stil"}`,
+                    }),
+                  );
+                  idx += h.text.length;
+                }
+              }
+            });
+            return DecorationSet.create(state.doc, decorations);
+          },
+        },
+      }),
+    ];
+  },
+});
 
 export const RichTextEditor = ({
   content,

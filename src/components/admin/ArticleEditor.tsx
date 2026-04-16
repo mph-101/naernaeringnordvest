@@ -480,9 +480,44 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     // component on the public article page.
     const json = JSON.stringify(chart);
     const encoded = btoa(unescape(encodeURIComponent(json)));
-    const figure = `<figure data-nn-chart="true" data-chart="${encoded}"><p><strong>${chart.title}</strong> — ${chart.source}</p></figure><p></p>`;
-    updateForm({ body: form.body + figure });
+    const figureHtml = `<figure data-nn-chart="true" data-chart="${encoded}"><p><strong>${chart.title}</strong> — ${chart.source}</p></figure>`;
+
+    const editor = editorInstanceRef.current;
+    if (editingChart && editor) {
+      // Replace the existing chart node at its known position
+      const node = editor.state.doc.nodeAt(editingChart.pos);
+      if (node && node.type.name === "chartFigure") {
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(
+            { from: editingChart.pos, to: editingChart.pos + node.nodeSize },
+            figureHtml,
+          )
+          .run();
+        toast({ title: "Graf oppdatert", description: chart.title });
+        setEditingChart(null);
+        return;
+      }
+    }
+
+    // Insert at the current cursor position if we have an editor, otherwise append
+    if (editor) {
+      editor.chain().focus().insertContent(figureHtml + "<p></p>").run();
+    } else {
+      updateForm({ body: form.body + figureHtml + "<p></p>" });
+    }
     toast({ title: "Graf satt inn", description: chart.title });
+  };
+
+  const handleEditChart = (chart: ChartData, pos: number) => {
+    setEditingChart({ chart, pos });
+    setChartDialogOpen(true);
+  };
+
+  const handleCloseChartDialog = () => {
+    setChartDialogOpen(false);
+    setEditingChart(null);
   };
 
   if (loading) {

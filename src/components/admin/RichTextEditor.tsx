@@ -210,7 +210,9 @@ export const RichTextEditor = ({
   onChange,
   onImageUpload,
   onInsertChart,
+  onInsertFactBox,
   onEditChart,
+  onEditFactBox,
   editorRef,
   placeholder = "Start å skrive...",
   className = "",
@@ -230,6 +232,7 @@ export const RichTextEditor = ({
       Placeholder.configure({ placeholder }),
       HighlightExtension.configure({ highlights: highlights || [] }),
       ChartFigureNode,
+      FactBoxNode,
     ],
     content,
     onUpdate: ({ editor }) => {

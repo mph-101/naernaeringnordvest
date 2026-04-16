@@ -465,6 +465,11 @@ export const RichTextEditor = ({
             <BarChart3 className="w-4 h-4" />
           </ToolButton>
         )}
+        {onInsertFactBox && (
+          <ToolButton onClick={onInsertFactBox} title="Sett inn faktaboks">
+            <BookOpen className="w-4 h-4" />
+          </ToolButton>
+        )}
       </div>
 
       {/* Editor */}

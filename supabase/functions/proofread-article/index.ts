@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { body } = await req.json();
+    const { body, customRules } = await req.json();
 
     if (!body || body.length < 50) {
       return new Response(JSON.stringify({ error: "Brødteksten må være minst 50 tegn" }), {
@@ -22,7 +22,14 @@ Deno.serve(async (req) => {
 
     const plainText = body.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 
-    const prompt = `Du er en erfaren norsk språkvasker for en næringslivsavis. Analyser følgende tekst og finn konkrete forbedringsforslag.
+    const rulesSection = Array.isArray(customRules) && customRules.length > 0
+      ? `\n\nVIKTIG - Redaksjonens egne regler (HØYESTE PRIORITET, anvend alltid når mønsteret finnes):\n${customRules
+          .slice(0, 100)
+          .map((r: any) => `- "${r.from}" → "${r.to}"${r.reason ? ` (${r.reason})` : ""} [kategori: ${r.category || "stil"}]`)
+          .join("\n")}\n`
+      : "";
+
+    const prompt = `Du er en erfaren norsk språkvasker for en næringslivsavis. Analyser følgende tekst og finn konkrete forbedringsforslag.${rulesSection}
 
 Fokuser på:
 1. Anglisismer som bør erstattes med norske ord (f.eks. "turnover" → "gjennomstrømming", "feedback" → "tilbakemelding", "deadline" → "frist", "performance" → "ytelse")

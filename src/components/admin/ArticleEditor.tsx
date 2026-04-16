@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
 import { CategorySelect } from "./CategorySelect";
-import { AudioTranscriber } from "./AudioTranscriber";
+import { AudioTranscriber, type AudioTranscriberHandle } from "./AudioTranscriber";
 import { ProofreadRules, loadProofreadRules, loadProofreadSettings, type ProofreadRule } from "./ProofreadRules";
 
 interface ArticleEditorProps {
@@ -58,6 +58,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formRef = useRef<any>(null);
+  const audioRef = useRef<AudioTranscriberHandle>(null);
+  const [isDraggingAudio, setIsDraggingAudio] = useState(false);
+  const dragCounterRef = useRef(0);
 
   const [form, setForm] = useState({
     title: "",

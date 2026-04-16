@@ -26,6 +26,24 @@ const decodeChart = (encoded: string): ChartData | null => {
 export const ChartFigureView = ({ node, getPos, editor, deleteNode }: NodeViewProps) => {
   const encoded = (node.attrs as Record<string, string>)["data-chart"] || "";
   const chart = decodeChart(encoded);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [animating, setAnimating] = useState(false);
+
+  // After a move, the node is re-rendered. We tag the encoded payload in
+  // sessionStorage so the freshly mounted view knows to play the animation.
+  useEffect(() => {
+    if (!encoded) return;
+    const key = `nn-chart-just-moved:${encoded.slice(0, 32)}`;
+    if (sessionStorage.getItem(key)) {
+      sessionStorage.removeItem(key);
+      setAnimating(true);
+      requestAnimationFrame(() => {
+        wrapperRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      const t = window.setTimeout(() => setAnimating(false), 550);
+      return () => window.clearTimeout(t);
+    }
+  }, [encoded]);
 
   const requestEdit = () => {
     if (!chart) return;
@@ -43,7 +61,6 @@ export const ChartFigureView = ({ node, getPos, editor, deleteNode }: NodeViewPr
     const { state } = editor;
     const { doc, tr } = state;
     const $pos = doc.resolve(pos);
-    // Find this node's index inside its parent (the document)
     const parent = $pos.parent;
     const indexInParent = $pos.index();
     const targetIndex = indexInParent + direction;
@@ -52,24 +69,21 @@ export const ChartFigureView = ({ node, getPos, editor, deleteNode }: NodeViewPr
     const chartNode = node;
     const siblingNode = parent.child(targetIndex);
 
-    // Compute absolute positions of both nodes (top-level: parent start = 0)
     let chartStart = 0;
     let siblingStart = 0;
-    let acc = 0;
-    parent.forEach((child, offset, i) => {
+    parent.forEach((_child, offset, i) => {
       if (i === indexInParent) chartStart = offset;
       if (i === targetIndex) siblingStart = offset;
-      acc = offset;
     });
-    void acc;
+
+    // Tag this chart so the re-mounted view plays the animation
+    sessionStorage.setItem(`nn-chart-just-moved:${encoded.slice(0, 32)}`, "1");
 
     if (direction === -1) {
-      // Move chart up: replace [siblingStart, chartStart + chartNode.nodeSize] with [chart, sibling]
       const from = siblingStart;
       const to = chartStart + chartNode.nodeSize;
       tr.replaceWith(from, to, [chartNode, siblingNode]);
     } else {
-      // Move chart down: replace [chartStart, siblingStart + siblingNode.nodeSize] with [sibling, chart]
       const from = chartStart;
       const to = siblingStart + siblingNode.nodeSize;
       tr.replaceWith(from, to, [siblingNode, chartNode]);
@@ -82,10 +96,11 @@ export const ChartFigureView = ({ node, getPos, editor, deleteNode }: NodeViewPr
   return (
     <NodeViewWrapper
       as="div"
+      ref={wrapperRef}
       data-nn-chart-wrapper="true"
       data-drag-handle
       draggable="true"
-      className="relative my-6 group"
+      className={`relative my-6 group rounded-xl ${animating ? "animate-chart-move" : ""}`}
       contentEditable={false}
     >
       {chart ? (

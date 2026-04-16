@@ -927,16 +927,21 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         </div>
       </form>
 
-      <Dialog open={chartDialogOpen} onOpenChange={setChartDialogOpen}>
+      <Dialog
+        open={chartDialogOpen}
+        onOpenChange={(open) => (open ? setChartDialogOpen(true) : handleCloseChartDialog())}
+      >
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Sett inn graf</DialogTitle>
+            <DialogTitle>{editingChart ? "Rediger graf" : "Sett inn graf"}</DialogTitle>
           </DialogHeader>
           <ChartGenerator
+            key={editingChart ? `edit-${editingChart.pos}` : "new"}
             articleTitle={form.title}
             articleExcerpt={form.excerpt}
+            initialChart={editingChart?.chart || null}
             onInsert={handleInsertChart}
-            onClose={() => setChartDialogOpen(false)}
+            onClose={handleCloseChartDialog}
           />
         </DialogContent>
       </Dialog>

@@ -13,6 +13,9 @@ import { ImageUpload } from "./ImageUpload";
 import { CategorySelect } from "./CategorySelect";
 import { AudioTranscriber, type AudioTranscriberHandle } from "./AudioTranscriber";
 import { ProofreadRules, loadProofreadRules, loadProofreadSettings, type ProofreadRule } from "./ProofreadRules";
+import { ChartGenerator } from "@/components/charts/ChartGenerator";
+import type { ChartData } from "@/components/charts/ArticleChart";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ArticleEditorProps {
   articleId: string | null;
@@ -466,6 +469,19 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       updateForm({ body: form.body + `<img src="${publicUrl}" alt="" />` });
     };
     input.click();
+  };
+
+  const [chartDialogOpen, setChartDialogOpen] = useState(false);
+
+  const handleInsertChart = (chart: ChartData) => {
+    // Encode chart data as base64 JSON inside a figure block so it survives
+    // round-trips through the rich text editor and is rendered as a React
+    // component on the public article page.
+    const json = JSON.stringify(chart);
+    const encoded = btoa(unescape(encodeURIComponent(json)));
+    const figure = `<figure data-nn-chart="true" data-chart="${encoded}"><p><strong>${chart.title}</strong> — ${chart.source}</p></figure><p></p>`;
+    updateForm({ body: form.body + figure });
+    toast({ title: "Graf satt inn", description: chart.title });
   };
 
   if (loading) {

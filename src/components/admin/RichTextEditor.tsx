@@ -161,6 +161,7 @@ export const RichTextEditor = ({
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder }),
       HighlightExtension.configure({ highlights: highlights || [] }),
+      ChartFigureNode,
     ],
     content,
     onUpdate: ({ editor }) => {

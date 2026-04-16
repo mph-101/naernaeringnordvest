@@ -52,6 +52,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [proofreading, setProofreading] = useState(false);
   const [proofSuggestions, setProofSuggestions] = useState<{ original: string; suggestion: string; reason: string; category: string }[]>([]);
   const [chartDialogOpen, setChartDialogOpen] = useState(false);
+  const [editingChart, setEditingChart] = useState<{ chart: ChartData; pos: number } | null>(null);
+  const editorInstanceRef = useRef<any>(null);
   const { toast } = useToast();
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   const [companySearch, setCompanySearch] = useState("");

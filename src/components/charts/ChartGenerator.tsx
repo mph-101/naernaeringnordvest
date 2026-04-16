@@ -23,7 +23,9 @@ interface ChartGeneratorProps {
   /** Optional context to help AI suggest a relevant title/source */
   articleTitle?: string;
   articleExcerpt?: string;
-  /** Called when admin clicks "Sett inn graf" */
+  /** Pre-populate the editor with an existing chart (for inline editing). */
+  initialChart?: ChartData | null;
+  /** Called when admin clicks "Sett inn graf" / "Oppdater graf" */
   onInsert: (chart: ChartData) => void;
   onClose: () => void;
 }
@@ -45,11 +47,29 @@ const PLACEHOLDER = `År\tOmsetning\tResultat
 2023\t18,9\t2,7
 2024\t21,4\t3,4`;
 
-export const ChartGenerator = ({ articleTitle, articleExcerpt, onInsert, onClose }: ChartGeneratorProps) => {
-  const [raw, setRaw] = useState("");
-  const [parsed, setParsed] = useState<ReturnType<typeof parseTable> | null>(null);
+/** Serialize an existing chart's table back to TSV so it can be edited again. */
+const chartToTsv = (chart: ChartData): string => {
+  const fmt = (v: string | number) =>
+    typeof v === "number" ? String(v).replace(".", ",") : String(v ?? "");
+  const lines = [chart.headers.join("\t"), ...chart.rows.map((r) => r.map(fmt).join("\t"))];
+  return lines.join("\n");
+};
+
+export const ChartGenerator = ({
+  articleTitle,
+  articleExcerpt,
+  initialChart,
+  onInsert,
+  onClose,
+}: ChartGeneratorProps) => {
+  const isEditing = !!initialChart;
+  const initialRaw = initialChart ? chartToTsv(initialChart) : "";
+  const [raw, setRaw] = useState(initialRaw);
+  const [parsed, setParsed] = useState<ReturnType<typeof parseTable> | null>(
+    initialRaw ? parseTable(initialRaw) : null,
+  );
   const [loading, setLoading] = useState(false);
-  const [chart, setChart] = useState<ChartData | null>(null);
+  const [chart, setChart] = useState<ChartData | null>(initialChart || null);
   const { toast } = useToast();
 
   const handleParse = (value: string) => {

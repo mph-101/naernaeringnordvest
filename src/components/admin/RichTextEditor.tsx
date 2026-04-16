@@ -1,4 +1,4 @@
-import { useEditor, EditorContent, Extension, Node, mergeAttributes } from "@tiptap/react";
+import { useEditor, EditorContent, Extension, Node, mergeAttributes, ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -7,6 +7,8 @@ import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { ChartFigureView } from "@/components/charts/ChartFigureView";
+import type { ChartData } from "@/components/charts/ArticleChart";
 import {
   Bold,
   Italic,
@@ -40,6 +42,12 @@ interface RichTextEditorProps {
   onChange: (html: string) => void;
   onImageUpload?: () => void;
   onInsertChart?: () => void;
+  /** Called when the user clicks an existing chart in the editor.
+   *  `pos` is the ProseMirror position of the figure node, used to replace it. */
+  onEditChart?: (chart: ChartData, pos: number) => void;
+  /** Called once with the underlying TipTap editor instance, so the parent
+   *  can imperatively replace nodes (e.g. swap an existing chart for an updated one). */
+  editorRef?: (editor: ReturnType<typeof useEditor> | null) => void;
   placeholder?: string;
   className?: string;
   highlights?: ProofreadHighlight[];
@@ -137,6 +145,9 @@ const ChartFigureNode = Node.create({
       ["p", {}, ["strong", {}, title || "Graf"], ` — ${source || ""}`],
     ];
   },
+  addNodeView() {
+    return ReactNodeViewRenderer(ChartFigureView);
+  },
 });
 
 export const RichTextEditor = ({
@@ -144,6 +155,8 @@ export const RichTextEditor = ({
   onChange,
   onImageUpload,
   onInsertChart,
+  onEditChart,
+  editorRef,
   placeholder = "Start å skrive...",
   className = "",
   highlights,
@@ -188,6 +201,26 @@ export const RichTextEditor = ({
       editor.view.dispatch(editor.state.tr.setMeta("proofreadHighlightsUpdate", true));
     }
   }, [editor, highlights]);
+
+  // Listen for chart-edit requests dispatched from the ChartFigureView node-view
+  useEffect(() => {
+    if (!editor || !onEditChart) return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { chart: ChartData; pos: number | null };
+      if (detail?.chart && typeof detail.pos === "number") {
+        onEditChart(detail.chart, detail.pos);
+      }
+    };
+    const el = editor.view.dom;
+    el.addEventListener("nn-chart-edit", handler as EventListener);
+    return () => el.removeEventListener("nn-chart-edit", handler as EventListener);
+  }, [editor, onEditChart]);
+
+  // Expose the editor to the parent for imperative operations
+  useEffect(() => {
+    editorRef?.(editor || null);
+    return () => editorRef?.(null);
+  }, [editor, editorRef]);
 
   const addLink = useCallback(() => {
     if (!editor) return;

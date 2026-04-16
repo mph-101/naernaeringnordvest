@@ -52,6 +52,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [proofreading, setProofreading] = useState(false);
   const [proofSuggestions, setProofSuggestions] = useState<{ original: string; suggestion: string; reason: string; category: string }[]>([]);
   const [chartDialogOpen, setChartDialogOpen] = useState(false);
+  const [editingChart, setEditingChart] = useState<{ chart: ChartData; pos: number } | null>(null);
+  const editorInstanceRef = useRef<any>(null);
   const { toast } = useToast();
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   const [companySearch, setCompanySearch] = useState("");
@@ -478,9 +480,44 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     // component on the public article page.
     const json = JSON.stringify(chart);
     const encoded = btoa(unescape(encodeURIComponent(json)));
-    const figure = `<figure data-nn-chart="true" data-chart="${encoded}"><p><strong>${chart.title}</strong> — ${chart.source}</p></figure><p></p>`;
-    updateForm({ body: form.body + figure });
+    const figureHtml = `<figure data-nn-chart="true" data-chart="${encoded}"><p><strong>${chart.title}</strong> — ${chart.source}</p></figure>`;
+
+    const editor = editorInstanceRef.current;
+    if (editingChart && editor) {
+      // Replace the existing chart node at its known position
+      const node = editor.state.doc.nodeAt(editingChart.pos);
+      if (node && node.type.name === "chartFigure") {
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(
+            { from: editingChart.pos, to: editingChart.pos + node.nodeSize },
+            figureHtml,
+          )
+          .run();
+        toast({ title: "Graf oppdatert", description: chart.title });
+        setEditingChart(null);
+        return;
+      }
+    }
+
+    // Insert at the current cursor position if we have an editor, otherwise append
+    if (editor) {
+      editor.chain().focus().insertContent(figureHtml + "<p></p>").run();
+    } else {
+      updateForm({ body: form.body + figureHtml + "<p></p>" });
+    }
     toast({ title: "Graf satt inn", description: chart.title });
+  };
+
+  const handleEditChart = (chart: ChartData, pos: number) => {
+    setEditingChart({ chart, pos });
+    setChartDialogOpen(true);
+  };
+
+  const handleCloseChartDialog = () => {
+    setChartDialogOpen(false);
+    setEditingChart(null);
   };
 
   if (loading) {
@@ -614,7 +651,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 content={form.body}
                 onChange={(html) => updateForm({ body: html })}
                 onImageUpload={handleInsertImage}
-                onInsertChart={() => setChartDialogOpen(true)}
+                onInsertChart={() => { setEditingChart(null); setChartDialogOpen(true); }}
+                onEditChart={handleEditChart}
+                editorRef={(ed) => { editorInstanceRef.current = ed; }}
                 placeholder="Skriv artikkelens innhold her..."
                 highlights={proofSuggestions.map((s) => ({ text: s.original, category: s.category }))}
               />
@@ -888,16 +927,21 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         </div>
       </form>
 
-      <Dialog open={chartDialogOpen} onOpenChange={setChartDialogOpen}>
+      <Dialog
+        open={chartDialogOpen}
+        onOpenChange={(open) => (open ? setChartDialogOpen(true) : handleCloseChartDialog())}
+      >
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Sett inn graf</DialogTitle>
+            <DialogTitle>{editingChart ? "Rediger graf" : "Sett inn graf"}</DialogTitle>
           </DialogHeader>
           <ChartGenerator
+            key={editingChart ? `edit-${editingChart.pos}` : "new"}
             articleTitle={form.title}
             articleExcerpt={form.excerpt}
+            initialChart={editingChart?.chart || null}
             onInsert={handleInsertChart}
-            onClose={() => setChartDialogOpen(false)}
+            onClose={handleCloseChartDialog}
           />
         </DialogContent>
       </Dialog>

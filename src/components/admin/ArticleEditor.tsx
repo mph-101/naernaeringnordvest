@@ -331,6 +331,31 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     toast({ title: "Endret", description: `"${s.original}" → "${s.suggestion}"` });
   };
 
+  const applyAllProofSuggestions = () => {
+    if (proofSuggestions.length === 0) return;
+    let newBody = form.body;
+    let applied = 0;
+    const skipped: typeof proofSuggestions = [];
+    for (const s of proofSuggestions) {
+      if (newBody.includes(s.original)) {
+        newBody = newBody.replace(s.original, s.suggestion);
+        applied++;
+      } else {
+        skipped.push(s);
+      }
+    }
+    updateForm({ body: newBody });
+    setProofSuggestions(skipped);
+    if (applied > 0) {
+      toast({
+        title: "Alle forslag godtatt",
+        description: `${applied} endring${applied === 1 ? "" : "er"} brukt${skipped.length ? `, ${skipped.length} hoppet over` : ""}`,
+      });
+    } else {
+      toast({ title: "Ingen endringer", description: "Fant ingen treff å bruke", variant: "destructive" });
+    }
+  };
+
   const dismissProofSuggestion = (index: number) => {
     setProofSuggestions(prev => prev.filter((_, i) => i !== index));
   };

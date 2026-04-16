@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { Pencil, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { ArticleChart, type ChartData } from "./ArticleChart";

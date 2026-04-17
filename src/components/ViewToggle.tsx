@@ -1,4 +1,4 @@
-import { MessageSquare, Newspaper, BarChart2, Star } from "lucide-react";
+import { MessageSquare, Newspaper, BarChart2, Star, Sparkles } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -14,6 +14,8 @@ interface ViewToggleProps {
   onViewChange: (view: "search" | "feed") => void;
 }
 
+type TabId = "search" | "feed" | "tall" | "hjernevelvet";
+
 export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   const { language, defaultView, setDefaultView, hiddenElements } = useTheme();
   const t = translations[language];
@@ -21,27 +23,31 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   const navigate = useNavigate();
   const isIdrett = location.pathname.startsWith("/idrett");
   const isTall = location.pathname.startsWith("/tall");
+  const isHjernevelvet = location.pathname.startsWith("/hjernevelvet");
 
-  const allTabs = [
-    { id: "search" as const, label: t.ask, icon: MessageSquare },
-    { id: "feed" as const, label: t.browse, icon: Newspaper },
-    { id: "tall" as const, label: "Tall", icon: BarChart2 },
+  const allTabs: { id: TabId; label: string; icon: typeof MessageSquare; to?: string }[] = [
+    { id: "search", label: t.ask, icon: MessageSquare },
+    { id: "feed", label: t.browse, icon: Newspaper },
+    { id: "tall", label: "Tall", icon: BarChart2, to: "/tall" },
+    { id: "hjernevelvet", label: "Hjernevelvet", icon: Sparkles, to: "/hjernevelvet" },
   ];
 
-  const tabs = allTabs.filter(tab => !hiddenElements.includes(tab.id));
+  const tabs = allTabs.filter((tab) => !hiddenElements.includes(tab.id));
 
-  const handleClick = (tabId: "search" | "feed" | "tall") => {
-    if (tabId === "tall") {
-      if (!isTall) navigate("/tall");
-    } else {
-      if (isTall || isIdrett) navigate(`/?view=${tabId}`);
-      onViewChange(tabId);
+  const handleClick = (tabId: TabId) => {
+    if (tabId === "tall" || tabId === "hjernevelvet") {
+      const target = tabId === "tall" ? "/tall" : "/hjernevelvet";
+      if (location.pathname !== target) navigate(target);
+      return;
     }
+    if (isTall || isIdrett || isHjernevelvet) navigate(`/?view=${tabId}`);
+    onViewChange(tabId);
   };
 
-  const isActive = (tabId: string) => {
+  const isActive = (tabId: TabId) => {
     if (tabId === "tall") return isTall;
-    if (isTall) return false;
+    if (tabId === "hjernevelvet") return isHjernevelvet;
+    if (isTall || isHjernevelvet) return false;
     return !isIdrett && view === tabId;
   };
 
@@ -51,18 +57,15 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = isActive(tab.id);
+          const className = `relative flex items-center gap-2 px-5 py-2.5 rounded-full font-body text-sm font-medium transition-all duration-200 ${
+            active
+              ? "bg-card text-foreground shadow-soft"
+              : "text-muted-foreground hover:text-foreground"
+          }`;
 
-          if (tab.id === "tall") {
+          if (tab.to) {
             return (
-              <Link
-                key={tab.id}
-                to="/tall"
-                className={`relative flex items-center gap-2 px-5 py-2.5 rounded-full font-body text-sm font-medium transition-all duration-200 ${
-                  active
-                    ? "bg-card text-foreground shadow-soft"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
+              <Link key={tab.id} to={tab.to} className={className}>
                 <Icon className="w-4 h-4" />
                 {tab.label}
                 {defaultView === tab.id && (
@@ -76,11 +79,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
             <button
               key={tab.id}
               onClick={() => handleClick(tab.id)}
-              className={`relative flex items-center gap-2 px-5 py-2.5 rounded-full font-body text-sm font-medium transition-all duration-200 ${
-                active
-                  ? "bg-card text-foreground shadow-soft"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={className}
             >
               <Icon className="w-4 h-4" />
               {tab.label}

@@ -21,6 +21,10 @@ import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 import Hjernetrim from "./pages/Hjernetrim";
+import Hjernevelvet from "./pages/Hjernevelvet";
+import HjernevelvPanel from "./pages/HjernevelvPanel";
+import HjernevelvWriter from "./pages/HjernevelvWriter";
+import HjernevelvEssay from "./pages/HjernevelvEssay";
 import Tag from "./pages/Tag";
 
 const queryClient = new QueryClient();
@@ -49,6 +53,10 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/velkommen" element={<Onboarding />} />
               <Route path="/hjernetrim" element={<Hjernetrim />} />
+              <Route path="/hjernevelvet" element={<Hjernevelvet />} />
+              <Route path="/hjernevelvet/panel/:id" element={<HjernevelvPanel />} />
+              <Route path="/hjernevelvet/skribent/:slug" element={<HjernevelvWriter />} />
+              <Route path="/hjernevelvet/essay/:id" element={<HjernevelvEssay />} />
               <Route path="/tag/:slug" element={<Tag />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

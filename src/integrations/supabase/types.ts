@@ -694,6 +694,326 @@ export type Database = {
         }
         Relationships: []
       }
+      hjernevelv_articles: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          excerpt: string
+          id: string
+          image_url: string | null
+          published: boolean
+          published_at: string | null
+          read_time: string | null
+          region_slug: string | null
+          title: string
+          topic: string | null
+          updated_at: string
+          writer_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          excerpt: string
+          id?: string
+          image_url?: string | null
+          published?: boolean
+          published_at?: string | null
+          read_time?: string | null
+          region_slug?: string | null
+          title: string
+          topic?: string | null
+          updated_at?: string
+          writer_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string
+          id?: string
+          image_url?: string | null
+          published?: boolean
+          published_at?: string | null
+          read_time?: string | null
+          region_slug?: string | null
+          title?: string
+          topic?: string | null
+          updated_at?: string
+          writer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hjernevelv_articles_region_slug_fkey"
+            columns: ["region_slug"]
+            isOneToOne: false
+            referencedRelation: "editorial_regions"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "hjernevelv_articles_writer_id_fkey"
+            columns: ["writer_id"]
+            isOneToOne: false
+            referencedRelation: "hjernevelv_writers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hjernevelv_panel_questions: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          is_anonymous: boolean
+          moderator_note: string | null
+          panel_id: string
+          question: string
+          status: string
+          updated_at: string
+          upvotes: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_anonymous?: boolean
+          moderator_note?: string | null
+          panel_id: string
+          question: string
+          status?: string
+          updated_at?: string
+          upvotes?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_anonymous?: boolean
+          moderator_note?: string | null
+          panel_id?: string
+          question?: string
+          status?: string
+          updated_at?: string
+          upvotes?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hjernevelv_panel_questions_panel_id_fkey"
+            columns: ["panel_id"]
+            isOneToOne: false
+            referencedRelation: "hjernevelv_panels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hjernevelv_panel_registrations: {
+        Row: {
+          attended: boolean | null
+          comment: string | null
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          panel_id: string
+          user_id: string
+        }
+        Insert: {
+          attended?: boolean | null
+          comment?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          panel_id: string
+          user_id: string
+        }
+        Update: {
+          attended?: boolean | null
+          comment?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          panel_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hjernevelv_panel_registrations_panel_id_fkey"
+            columns: ["panel_id"]
+            isOneToOne: false
+            referencedRelation: "hjernevelv_panels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hjernevelv_panelists: {
+        Row: {
+          created_at: string
+          id: string
+          panel_id: string
+          role: string
+          writer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          panel_id: string
+          role?: string
+          writer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          panel_id?: string
+          role?: string
+          writer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hjernevelv_panelists_panel_id_fkey"
+            columns: ["panel_id"]
+            isOneToOne: false
+            referencedRelation: "hjernevelv_panels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hjernevelv_panelists_writer_id_fkey"
+            columns: ["writer_id"]
+            isOneToOne: false
+            referencedRelation: "hjernevelv_writers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hjernevelv_panels: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_minutes: number
+          format: string
+          id: string
+          location: string | null
+          max_attendees: number | null
+          meeting_url: string | null
+          region_slug: string | null
+          scheduled_at: string
+          status: string
+          title: string
+          topic: string | null
+          updated_at: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number
+          format?: string
+          id?: string
+          location?: string | null
+          max_attendees?: number | null
+          meeting_url?: string | null
+          region_slug?: string | null
+          scheduled_at: string
+          status?: string
+          title: string
+          topic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number
+          format?: string
+          id?: string
+          location?: string | null
+          max_attendees?: number | null
+          meeting_url?: string | null
+          region_slug?: string | null
+          scheduled_at?: string
+          status?: string
+          title?: string
+          topic?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hjernevelv_panels_region_slug_fkey"
+            columns: ["region_slug"]
+            isOneToOne: false
+            referencedRelation: "editorial_regions"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      hjernevelv_writers: {
+        Row: {
+          active: boolean
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          expertise: string[]
+          id: string
+          linkedin_url: string | null
+          name: string
+          region_slug: string | null
+          slug: string
+          twitter_url: string | null
+          updated_at: string
+          user_id: string | null
+          website_url: string | null
+        }
+        Insert: {
+          active?: boolean
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          expertise?: string[]
+          id?: string
+          linkedin_url?: string | null
+          name: string
+          region_slug?: string | null
+          slug: string
+          twitter_url?: string | null
+          updated_at?: string
+          user_id?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          active?: boolean
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          expertise?: string[]
+          id?: string
+          linkedin_url?: string | null
+          name?: string
+          region_slug?: string | null
+          slug?: string
+          twitter_url?: string | null
+          updated_at?: string
+          user_id?: string | null
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hjernevelv_writers_region_slug_fkey"
+            columns: ["region_slug"]
+            isOneToOne: false
+            referencedRelation: "editorial_regions"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       job_changes: {
         Row: {
           change_type: string
@@ -1029,6 +1349,13 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      hjernevelv_panel_counts: {
+        Args: { _panel_id: string }
+        Returns: {
+          approved_question_count: number
+          registration_count: number
+        }[]
       }
       is_group_admin: {
         Args: { _group_id: string; _user_id: string }

@@ -169,7 +169,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           status: currentForm.status,
           published: currentForm.status === "published",
           published_at: currentForm.status === "published" ? new Date().toISOString() : null,
-        }).eq("id", articleId);
+          region_slug: currentForm.region_slug || null,
+        } as any).eq("id", articleId);
         if (!error) setAutoSaveStatus("saved");
         else setAutoSaveStatus("unsaved");
       } catch {
@@ -256,6 +257,19 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         status: form.status,
         published: form.status === "published",
         published_at: form.status === "published" ? new Date().toISOString() : null,
+        region_slug: form.region_slug || null,
+      } as any;
+
+      const syncSharedRegions = async (id: string) => {
+        await supabase.from("article_shared_regions" as any).delete().eq("article_id", id);
+        // Filter out the article's own region (that's implicit)
+        const targets = sharedRegions.filter((s) => s && s !== form.region_slug);
+        if (targets.length > 0) {
+          const { data: { user } } = await supabase.auth.getUser();
+          await supabase.from("article_shared_regions" as any).insert(
+            targets.map((region_slug) => ({ article_id: id, region_slug, shared_by: user?.id })),
+          );
+        }
       };
 
       if (articleId) {
@@ -274,10 +288,16 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             articleTags.map((t) => ({ article_id: articleId, tag_id: t.id, created_by: user?.id }))
           );
         }
+        await syncSharedRegions(articleId);
         toast({ title: "Lagret", description: "Artikkelen er oppdatert" });
       } else {
-        const { error } = await supabase.from("articles").insert(articleData);
+        const { data: inserted, error } = await supabase
+          .from("articles")
+          .insert(articleData)
+          .select("id")
+          .single();
         if (error) throw error;
+        if (inserted?.id) await syncSharedRegions(inserted.id);
         toast({ title: "Opprettet", description: "Artikkelen er opprettet" });
         onBack();
       }
@@ -285,6 +305,70 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       toast({ title: "Feil", description: error.message, variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const forkArticle = async () => {
+    if (!articleId) return;
+    setForking(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      // Determine the user's primary editorial region for the new fork
+      let targetRegion: string | null = null;
+      if (user) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("editorial_region")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        targetRegion = ((prof as any)?.editorial_region as string | null) ?? null;
+      }
+      const forkData = {
+        title: `${form.title} (regional versjon)`,
+        title_en: form.title_en || null,
+        excerpt: form.excerpt,
+        excerpt_en: form.excerpt_en || null,
+        body: form.body,
+        body_en: form.body_en || null,
+        category: form.category,
+        author: form.author,
+        type: form.type,
+        premium: form.premium,
+        read_time: form.read_time || null,
+        image_url: form.image_url || null,
+        key_points: form.key_points,
+        key_points_en: form.key_points_en,
+        status: "draft" as ArticleStatus,
+        published: false,
+        published_at: null,
+        region_slug: targetRegion,
+        forked_from_article_id: articleId,
+        created_by: user?.id ?? null,
+      } as any;
+      const { data: inserted, error } = await supabase
+        .from("articles")
+        .insert(forkData)
+        .select("id")
+        .single();
+      if (error) throw error;
+      // Copy company tags
+      if (companyTags.length > 0 && inserted?.id) {
+        await supabase.from("article_company_tags").insert(
+          companyTags.map((t) => ({ article_id: inserted.id, orgnr: t.orgnr, company_name: t.company_name })),
+        );
+      }
+      // Copy article tags
+      if (articleTags.length > 0 && inserted?.id) {
+        await supabase.from("article_tags").insert(
+          articleTags.map((t) => ({ article_id: inserted.id, tag_id: t.id, created_by: user?.id })),
+        );
+      }
+      toast({ title: "Forket", description: "En ny regional versjon er opprettet som kladd" });
+      onBack();
+    } catch (err: any) {
+      toast({ title: "Feil", description: err.message, variant: "destructive" });
+    } finally {
+      setForking(false);
     }
   };
 

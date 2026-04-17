@@ -32,7 +32,6 @@ const decodeChart = (encoded: string): ChartData | null => {
  * and renders the chart blocks as live React components while leaving
  * the surrounding HTML untouched.
  */
-export const ArticleBody = ({ html, className = "" }: ArticleBodyProps) => {
 export const ArticleBody = ({ html, className = "", category }: ArticleBodyProps) => {
   const segments = useMemo<Segment[]>(() => {
     if (!html) return [];

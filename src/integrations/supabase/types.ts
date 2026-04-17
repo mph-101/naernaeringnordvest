@@ -1077,6 +1077,202 @@ export type Database = {
         }
         Relationships: []
       }
+      job_listings: {
+        Row: {
+          application_deadline: string | null
+          application_url: string | null
+          company_logo_url: string | null
+          company_name: string
+          company_orgnr: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          description_html: string
+          employment_type: string
+          expires_at: string | null
+          id: string
+          industry: string | null
+          location: string
+          published_at: string | null
+          region_slug: string | null
+          rejection_reason: string | null
+          reviewed_by: string | null
+          salary_range: string | null
+          status: string
+          submitted_by: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          application_deadline?: string | null
+          application_url?: string | null
+          company_logo_url?: string | null
+          company_name: string
+          company_orgnr?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description_html: string
+          employment_type?: string
+          expires_at?: string | null
+          id?: string
+          industry?: string | null
+          location: string
+          published_at?: string | null
+          region_slug?: string | null
+          rejection_reason?: string | null
+          reviewed_by?: string | null
+          salary_range?: string | null
+          status?: string
+          submitted_by?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          application_deadline?: string | null
+          application_url?: string | null
+          company_logo_url?: string | null
+          company_name?: string
+          company_orgnr?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description_html?: string
+          employment_type?: string
+          expires_at?: string | null
+          id?: string
+          industry?: string | null
+          location?: string
+          published_at?: string | null
+          region_slug?: string | null
+          rejection_reason?: string | null
+          reviewed_by?: string | null
+          salary_range?: string | null
+          status?: string
+          submitted_by?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_listings_region_slug_fkey"
+            columns: ["region_slug"]
+            isOneToOne: false
+            referencedRelation: "editorial_regions"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      newsletter_issues: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          html_content: string
+          id: string
+          preview_text: string | null
+          recipient_count: number | null
+          region_slug: string | null
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          triggered_by: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          html_content: string
+          id?: string
+          preview_text?: string | null
+          recipient_count?: number | null
+          region_slug?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+          triggered_by?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          html_content?: string
+          id?: string
+          preview_text?: string | null
+          recipient_count?: number | null
+          region_slug?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          triggered_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_issues_region_slug_fkey"
+            columns: ["region_slug"]
+            isOneToOne: false
+            referencedRelation: "editorial_regions"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      newsletter_subscriptions: {
+        Row: {
+          confirmation_token: string
+          confirmed: boolean
+          confirmed_at: string | null
+          created_at: string
+          email: string
+          frequency: string
+          id: string
+          last_sent_at: string | null
+          region_slugs: string[]
+          topics: string[]
+          unsubscribe_token: string
+          unsubscribed_at: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          confirmation_token?: string
+          confirmed?: boolean
+          confirmed_at?: string | null
+          created_at?: string
+          email: string
+          frequency?: string
+          id?: string
+          last_sent_at?: string | null
+          region_slugs?: string[]
+          topics?: string[]
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          confirmation_token?: string
+          confirmed?: boolean
+          confirmed_at?: string | null
+          created_at?: string
+          email?: string
+          frequency?: string
+          id?: string
+          last_sent_at?: string | null
+          region_slugs?: string[]
+          topics?: string[]
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

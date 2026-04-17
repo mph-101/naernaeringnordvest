@@ -1285,6 +1285,70 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         onInsert={handleInsertFactBox}
         initial={editingFactBox?.data || null}
       />
+
+      <ImproveDialog open={!!improveResult} onOpenChange={(open) => !open && setImproveResult(null)}>
+        <ImproveDialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <ImproveDialogHeader>
+            <ImproveDialogTitle className="flex items-center gap-2">
+              <Wand2 className="w-5 h-5 text-accent" />
+              AI-forbedret brødtekst
+            </ImproveDialogTitle>
+          </ImproveDialogHeader>
+          {improveResult && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
+                <p className="text-sm font-body text-foreground">{improveResult.summary}</p>
+                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                  <span>Ord før: <strong className="text-foreground">{improveResult.word_count_before}</strong></span>
+                  <span>→</span>
+                  <span>Ord etter: <strong className="text-foreground">{improveResult.word_count_after}</strong></span>
+                </div>
+              </div>
+
+              {improveResult.issues_found.length > 0 && (
+                <div>
+                  <Label className="flex items-center gap-1.5 mb-2">
+                    <FileCheck className="w-3.5 h-3.5" />
+                    Endringer ({improveResult.issues_found.length})
+                  </Label>
+                  <ul className="space-y-1.5">
+                    {improveResult.issues_found.map((issue, i) => (
+                      <li key={i} className="text-sm font-body text-foreground/80 flex items-start gap-2">
+                        <Check className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
+                        <span>{issue}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Original</Label>
+                  <div
+                    className="prose prose-sm max-w-none dark:prose-invert font-body p-3 rounded-lg border border-border bg-muted/30 max-h-[40vh] overflow-y-auto mt-1.5"
+                    dangerouslySetInnerHTML={{ __html: form.body }}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-accent">Forbedret</Label>
+                  <div
+                    className="prose prose-sm max-w-none dark:prose-invert font-body p-3 rounded-lg border border-accent/30 bg-accent/5 max-h-[40vh] overflow-y-auto mt-1.5"
+                    dangerouslySetInnerHTML={{ __html: improveResult.improved_body }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          <ImproveDialogFooter>
+            <Button variant="outline" onClick={() => setImproveResult(null)}>Avbryt</Button>
+            <Button onClick={applyImprovedBody} className="gap-2">
+              <Check className="w-4 h-4" />
+              Bruk forbedret versjon
+            </Button>
+          </ImproveDialogFooter>
+        </ImproveDialogContent>
+      </ImproveDialog>
     </div>
   );
 };

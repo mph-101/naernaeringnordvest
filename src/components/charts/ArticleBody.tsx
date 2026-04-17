@@ -1,9 +1,11 @@
 import { Fragment, useMemo } from "react";
 import { ArticleChart, type ChartData } from "./ArticleChart";
+import { pickDropcapVariant, dropcapClassName } from "@/lib/dropcap";
 
 interface ArticleBodyProps {
   html: string;
   className?: string;
+  category?: string | null;
 }
 
 interface Segment {

@@ -996,7 +996,12 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           <p className="text-xs text-muted-foreground -mt-2">
             Nøkkelord vises som klikkbare chips nederst i artikkelen og knytter sammen relatert innhold.
           </p>
-          <ArticleTagInput value={articleTags} onChange={setArticleTags} />
+          <ArticleTagInput
+            value={articleTags}
+            onChange={setArticleTags}
+            articleTitle={form.title}
+            articleBody={form.body}
+          />
         </div>
 
         <div className="flex items-center justify-end gap-4">

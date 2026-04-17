@@ -196,12 +196,12 @@ const Article = () => {
           style={{ background: heroImage, backgroundSize: 'cover', backgroundPosition: heroPosition, transform: `translateY(${parallaxOffset}px) scale(1.15)` }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
-        <div className="relative flex items-end h-full max-w-2xl mx-auto w-full px-6 pb-8">
+        <div className="relative flex items-end h-full max-w-xl mx-auto w-full px-6 pb-8">
           <span className="inline-block px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white text-sm font-subhead font-medium rounded-full border border-white/20">{article.category}</span>
         </div>
       </div>
 
-      <article className="max-w-2xl mx-auto px-6 pt-10 pb-14">
+      <article className="max-w-xl mx-auto px-6 pt-10 pb-14">
         <BackButton />
         <h1 className="font-headline text-3xl md:text-4xl lg:text-[2.75rem] font-bold text-headline leading-[1.15] mb-6 animate-fade-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>{title}</h1>
         <div className="animate-fade-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}><ArticleMeta /></div>
@@ -229,7 +229,7 @@ const Article = () => {
             (() => {
               const dropClass = dropcapClassName(pickDropcapVariant(article.category, body));
               return body.split('\n\n').map((paragraph, index) => (
-                <p key={index} className={`text-foreground font-body leading-[1.6] mb-[2.5em] ${index === 0 ? `text-lg md:text-xl font-medium text-headline ${dropClass}` : "text-base md:text-lg"}`}>
+                <p key={index} className={`text-foreground font-body leading-[1.6] mb-[5em] ${index === 0 ? `text-lg md:text-xl font-medium text-headline ${dropClass}` : "text-base md:text-lg"}`}>
                   {paragraph}
                 </p>
               ));

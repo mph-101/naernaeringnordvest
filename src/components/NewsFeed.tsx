@@ -7,6 +7,7 @@ import { getArticleImage } from "@/lib/articles";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tag } from "@/lib/tag-utils";
 import { fetchRegions, type EditorialRegion } from "@/lib/regions";
+import { cropToObjectPosition, parseCrop, parseFocal } from "@/lib/image-crop";
 
 interface TagWithCount extends Tag {
   count: number;
@@ -25,6 +26,8 @@ interface DbArticle {
   premium: boolean;
   read_time: string | null;
   image_url: string | null;
+  image_crop: any;
+  image_focal: any;
   published_at: string | null;
   key_points: any;
   region_slug: string | null;
@@ -95,7 +98,7 @@ export function NewsFeed() {
     const fetchArticles = async () => {
       const { data } = await supabase
         .from("articles")
-        .select("id, title, title_en, excerpt, excerpt_en, body, category, author, type, premium, read_time, image_url, published_at, key_points, region_slug")
+        .select("id, title, title_en, excerpt, excerpt_en, body, category, author, type, premium, read_time, image_url, image_crop, image_focal, published_at, key_points, region_slug")
         .eq("published", true)
         .order("published_at", { ascending: false })
         .limit(40);
@@ -185,6 +188,8 @@ export function NewsFeed() {
     type: a.type as "article" | "video" | "podcast",
     premium: a.premium,
     image_url: a.image_url,
+    image_crop: parseCrop(a.image_crop),
+    image_focal: parseFocal(a.image_focal),
     region_slug: a.region_slug,
     featured: index === 0,
   }));
@@ -229,6 +234,9 @@ export function NewsFeed() {
     if (item.image_url) return `url(${item.image_url})`;
     return getArticleImage(item.id, item.category);
   };
+
+  const getBackgroundPosition = (item: typeof articles[0]) =>
+    item.image_url ? cropToObjectPosition(item.image_crop, item.image_focal) : "center";
 
   const featuredItem = filteredNews.find((item) => item.featured);
   const regularItems = filteredNews.filter((item) => !item.featured);
@@ -397,7 +405,7 @@ export function NewsFeed() {
             <div className="md:flex">
               <div
                 className="h-56 md:h-auto md:w-2/5 flex-shrink-0 flex items-center justify-center relative overflow-hidden"
-                style={{ background: getBackground(featuredItem), backgroundSize: 'cover', backgroundPosition: 'center' }}
+                style={{ background: getBackground(featuredItem), backgroundSize: 'cover', backgroundPosition: getBackgroundPosition(featuredItem) }}
               >
                 <div className="absolute inset-0 bg-black/10" />
                 {!featuredItem.image_url && (
@@ -453,7 +461,7 @@ export function NewsFeed() {
             >
               <div
                 className="h-36 w-full flex items-center justify-center relative overflow-hidden"
-                style={{ background: getBackground(item), backgroundSize: 'cover', backgroundPosition: 'center' }}
+                style={{ background: getBackground(item), backgroundSize: 'cover', backgroundPosition: getBackgroundPosition(item) }}
               >
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
                 {!item.image_url && (

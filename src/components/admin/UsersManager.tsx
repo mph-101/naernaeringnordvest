@@ -149,16 +149,18 @@ export const UsersManager = () => {
       ) : (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           <div className="hidden md:grid grid-cols-12 px-4 py-2.5 bg-muted/30 text-xs uppercase tracking-wider text-muted-foreground font-body">
-            <div className="col-span-4">Bruker</div>
+            <div className="col-span-3">Bruker</div>
             <div className="col-span-2">Registrert</div>
-            <div className="col-span-6">Roller</div>
+            <div className="col-span-2">Sist aktiv</div>
+            <div className="col-span-1 text-right pr-2">Lest</div>
+            <div className="col-span-4">Roller</div>
           </div>
           <div className="divide-y divide-border">
             {users.map((u) => {
               const isMe = u.user_id === meId;
               return (
                 <div key={u.user_id} className="grid grid-cols-1 md:grid-cols-12 gap-3 px-4 py-3 items-center">
-                  <div className="col-span-1 md:col-span-4 min-w-0 flex items-center gap-2">
+                  <div className="col-span-1 md:col-span-3 min-w-0 flex items-center gap-2">
                     <UserCircle2 className="w-8 h-8 text-muted-foreground shrink-0" />
                     <div className="min-w-0">
                       <div className="font-body text-sm text-foreground truncate flex items-center gap-2">
@@ -177,7 +179,26 @@ export const UsersManager = () => {
                       day: "numeric", month: "short", year: "numeric",
                     })}
                   </div>
-                  <div className="col-span-1 md:col-span-6 flex flex-wrap gap-1.5">
+                  <div
+                    className="col-span-1 md:col-span-2 text-xs font-body flex items-center gap-1.5"
+                    title={u.last_seen_at ? new Date(u.last_seen_at).toLocaleString("nb-NO") : "Ingen lesing registrert"}
+                  >
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className={u.last_seen_at ? "text-foreground" : "text-muted-foreground italic"}>
+                      {formatRelative(u.last_seen_at)}
+                    </span>
+                  </div>
+                  <div
+                    className="col-span-1 md:col-span-1 text-xs font-body flex items-center gap-1 md:justify-end md:pr-2"
+                    title={`${u.articles_read} unike artikler lest`}
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-muted-foreground md:hidden" />
+                    <span className={u.articles_read > 0 ? "text-foreground font-medium" : "text-muted-foreground"}>
+                      {u.articles_read}
+                    </span>
+                    <span className="md:hidden text-muted-foreground">artikler lest</span>
+                  </div>
+                  <div className="col-span-1 md:col-span-4 flex flex-wrap gap-1.5">
                     {ALL_ROLES.map((r) => {
                       const has = u.roles.includes(r.id);
                       const key = `${u.user_id}:${r.id}`;

@@ -5,6 +5,7 @@ import {
   FileText, 
   MessageSquare, 
   Users, 
+  BookOpen,
   LogOut,
   ArrowLeft,
   Menu,
@@ -14,13 +15,14 @@ import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
 import { TipsList } from "./TipsList";
 import { JobChangeReview } from "./JobChangeReview";
+import { FactBoxesManager } from "./FactBoxesManager";
 
 interface AdminDashboardProps {
   session: any;
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const [view, setView] = useState<View>("dashboard");
@@ -40,6 +42,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const navItems = [
     { id: "dashboard" as View, label: "Dashboard", icon: LayoutDashboard },
     { id: "articles" as View, label: "Artikler", icon: FileText },
+    { id: "fact-boxes" as View, label: "Faktabokser", icon: BookOpen },
     { id: "tips" as View, label: "Tips", icon: MessageSquare },
     { id: "job-changes" as View, label: "Jobbytter", icon: Users },
   ];
@@ -129,16 +132,22 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 onClick={() => setView("articles")}
               />
               <DashboardCard
+                title="Faktabokser"
+                description="Gjenbrukbart faktaboks-bibliotek"
+                icon={BookOpen}
+                onClick={() => setView("fact-boxes")}
+              />
+              <DashboardCard
                 title="Tips"
                 description="Se innkomne tips fra lesere"
                 icon={MessageSquare}
                 onClick={() => setView("tips")}
               />
               <DashboardCard
-                title="Brukere"
-                description="Kommer snart"
+                title="Jobbytter"
+                description="Gjennomgå og publisér jobbytter"
                 icon={Users}
-                disabled
+                onClick={() => setView("job-changes")}
               />
             </div>
           </div>
@@ -161,6 +170,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "job-changes" && (
           <JobChangeReview />
+        )}
+
+        {view === "fact-boxes" && (
+          <FactBoxesManager />
         )}
       </main>
     </div>

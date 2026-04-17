@@ -3,9 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 type Theme = "light" | "dark";
 type Language = "no" | "en";
-type DefaultView = "search" | "feed" | "tall";
+type DefaultView = "search" | "feed" | "tall" | "hjernevelvet";
 
-export type HideableElement = "search" | "feed" | "tall" | "job_changes";
+export type HideableElement = "search" | "feed" | "tall" | "hjernevelvet" | "job_changes";
 
 interface ThemeContextType {
   theme: Theme;

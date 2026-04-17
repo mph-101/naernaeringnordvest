@@ -838,11 +838,23 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <Label>Brødtekst *</Label>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-wrap">
                 <ProofreadRules />
                 <Button type="button" variant="outline" size="sm" onClick={proofreadBody} disabled={proofreading || !form.body || form.body.length < 50} className="gap-2">
                   {proofreading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SpellCheck className="w-3.5 h-3.5" />}
                   {proofreading ? "Analyserer..." : "Språkvask"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={improveBody}
+                  disabled={improving || !form.body || form.body.length < 50}
+                  className="gap-2"
+                  title="Sjekk mot retningslinjer: sitatformat, kildelenker, ordtelling og struktur"
+                >
+                  {improving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                  {improving ? "Forbedrer..." : "Forbedre brødtekst"}
                 </Button>
               </div>
             </div>

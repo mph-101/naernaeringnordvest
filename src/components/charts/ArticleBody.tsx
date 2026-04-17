@@ -61,18 +61,18 @@ export const ArticleBody = ({ html, className = "" }: ArticleBodyProps) => {
     <div
       className={[
         "prose prose-lg dark:prose-invert max-w-none font-body",
-        // More breathing room: looser line-height, generous paragraph spacing
-        "prose-p:leading-[1.95] prose-p:text-foreground prose-p:my-7 md:prose-p:my-8",
+        // More breathing room: looser line-height, very generous paragraph spacing
+        "prose-p:leading-[2.05] prose-p:text-foreground prose-p:my-10 md:prose-p:my-12",
         "prose-p:text-base md:prose-p:text-lg",
         // Subheadings: clear separation, editorial weight
         "prose-h2:font-headline prose-h2:text-headline prose-h2:font-bold",
         "prose-h2:text-2xl md:prose-h2:text-[1.7rem] prose-h2:leading-tight",
-        "prose-h2:mt-14 md:prose-h2:mt-16 prose-h2:mb-5",
+        "prose-h2:mt-16 md:prose-h2:mt-20 prose-h2:mb-6",
         "prose-h3:font-headline prose-h3:text-headline prose-h3:font-semibold",
-        "prose-h3:text-xl md:prose-h3:text-2xl prose-h3:mt-10 prose-h3:mb-4",
+        "prose-h3:text-xl md:prose-h3:text-2xl prose-h3:mt-12 prose-h3:mb-5",
         // Lists, quotes, links
-        "prose-li:my-2 prose-li:leading-[1.85]",
-        "prose-blockquote:border-l-accent prose-blockquote:text-headline prose-blockquote:font-medium prose-blockquote:my-8",
+        "prose-li:my-3 prose-li:leading-[1.9]",
+        "prose-blockquote:border-l-accent prose-blockquote:text-headline prose-blockquote:font-medium prose-blockquote:my-10",
         "prose-a:text-accent prose-a:underline-offset-4 hover:prose-a:opacity-80",
         "prose-strong:text-headline prose-strong:font-semibold",
         className,

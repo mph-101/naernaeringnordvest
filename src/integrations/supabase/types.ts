@@ -1086,6 +1086,7 @@ export type Database = {
           email: string | null
           hidden_elements: string[] | null
           id: string
+          proofread_settings: Json | null
           region: string | null
           updated_at: string
           user_id: string
@@ -1098,6 +1099,7 @@ export type Database = {
           email?: string | null
           hidden_elements?: string[] | null
           id?: string
+          proofread_settings?: Json | null
           region?: string | null
           updated_at?: string
           user_id: string
@@ -1110,6 +1112,7 @@ export type Database = {
           email?: string | null
           hidden_elements?: string[] | null
           id?: string
+          proofread_settings?: Json | null
           region?: string | null
           updated_at?: string
           user_id?: string

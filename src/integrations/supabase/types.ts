@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_keys: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          request_count: number
+          revoked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name: string
+          request_count?: number
+          revoked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          request_count?: number
+          revoked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       article_company_tags: {
         Row: {
           article_id: string
@@ -971,6 +1010,19 @@ export type Database = {
           new_signups: number
         }[]
       }
+      create_api_key: {
+        Args: {
+          _expires_at?: string
+          _key_hash: string
+          _key_prefix: string
+          _name: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          key_prefix: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -989,6 +1041,14 @@ export type Database = {
       merge_tags: {
         Args: { _source_id: string; _target_id: string }
         Returns: undefined
+      }
+      revoke_api_key: { Args: { _id: string }; Returns: undefined }
+      validate_api_key: {
+        Args: { _key_hash: string }
+        Returns: {
+          key_id: string
+          user_id: string
+        }[]
       }
     }
     Enums: {

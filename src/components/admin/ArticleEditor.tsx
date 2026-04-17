@@ -122,6 +122,12 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     fetchRegions().then(setAllRegions).catch(() => {});
   }, []);
 
+  // Hydrate proofread settings from the user's profile so their last-chosen
+  // focus areas + language profile are restored across sessions and devices.
+  useEffect(() => {
+    loadProofreadSettingsFromDb().catch(() => {});
+  }, []);
+
   // For new articles: default region to the journalist's primary editorial region
   useEffect(() => {
     if (articleId) return;

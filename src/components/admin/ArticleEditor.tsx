@@ -1188,24 +1188,47 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               )}
             </div>
 
-            {proofSuggestions.length > 0 && (
+            {(proofSuggestions.length > 0 || proofUndoStack.length > 0) && (
               <div className="mt-3 flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-border bg-muted/40">
                 <span className="text-sm text-foreground">
-                  <span className="font-medium">{proofSuggestions.length}</span>{" "}
-                  forslag vises inline i brødteksten — klikk{" "}
-                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold align-middle">✓</span>{" "}
-                  for å godta eller{" "}
-                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold align-middle">✕</span>{" "}
-                  for å avvise
+                  {proofSuggestions.length > 0 ? (
+                    <>
+                      <span className="font-medium">{proofSuggestions.length}</span>{" "}
+                      forslag vises inline i brødteksten — klikk{" "}
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold align-middle">✓</span>{" "}
+                      for å godta eller{" "}
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold align-middle">✕</span>{" "}
+                      for å avvise
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">Alle forslag behandlet — du kan fortsatt angre siste endring</span>
+                  )}
                 </span>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Button type="button" variant="outline" size="sm" onClick={applyAllProofSuggestions} className="h-7 gap-1.5 text-xs">
-                    <Check className="w-3.5 h-3.5" />
-                    Godta alle
-                  </Button>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="h-7 text-xs">
-                    Avvis alle
-                  </Button>
+                  {proofUndoStack.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={undoLastProofChange}
+                      className="h-7 gap-1.5 text-xs"
+                      title={`Angre siste endring (${proofUndoStack.length} kan angres)`}
+                    >
+                      <Undo2 className="w-3.5 h-3.5" />
+                      Angre siste
+                    </Button>
+                  )}
+                  {proofSuggestions.length > 0 && (
+                    <>
+                      <Button type="button" variant="outline" size="sm" onClick={applyAllProofSuggestions} className="h-7 gap-1.5 text-xs">
+                        <Check className="w-3.5 h-3.5" />
+                        Godta alle
+                      </Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="h-7 text-xs">
+                        Avvis alle
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             )}

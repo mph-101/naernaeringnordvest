@@ -1,9 +1,11 @@
 import { Fragment, useMemo } from "react";
 import { ArticleChart, type ChartData } from "./ArticleChart";
+import { pickDropcapVariant, dropcapClassName } from "@/lib/dropcap";
 
 interface ArticleBodyProps {
   html: string;
   className?: string;
+  category?: string | null;
 }
 
 interface Segment {
@@ -30,7 +32,7 @@ const decodeChart = (encoded: string): ChartData | null => {
  * and renders the chart blocks as live React components while leaving
  * the surrounding HTML untouched.
  */
-export const ArticleBody = ({ html, className = "" }: ArticleBodyProps) => {
+export const ArticleBody = ({ html, className = "", category }: ArticleBodyProps) => {
   const segments = useMemo<Segment[]>(() => {
     if (!html) return [];
     // Match a Nær Næring chart figure regardless of attribute order
@@ -46,7 +48,6 @@ export const ArticleBody = ({ html, className = "" }: ArticleBodyProps) => {
       if (chart) {
         result.push({ type: "chart", content: m[0], chart });
       } else {
-        // Fall back to original HTML if decoding failed
         result.push({ type: "html", content: m[0] });
       }
       lastIndex = m.index + m[0].length;
@@ -54,36 +55,38 @@ export const ArticleBody = ({ html, className = "" }: ArticleBodyProps) => {
     if (lastIndex < html.length) {
       result.push({ type: "html", content: html.slice(lastIndex) });
     }
-    // Tag the first <p> in the first HTML segment with `article-dropcap` so
-    // CSS ::first-letter can render a magazine-style drop cap. We only touch
-    // the very first paragraph of the article — never headings or later
-    // paragraphs after a chart/figure.
-    const firstHtmlIdx = result.findIndex(
-      (s) => s.type === "html" && /<p\b/i.test(s.content),
-    );
-    if (firstHtmlIdx !== -1) {
-      const seg = result[firstHtmlIdx];
-      let injected = false;
-      const updated = seg.content.replace(
-        /<p\b([^>]*)>/i,
-        (_match, attrs: string) => {
-          if (injected) return _match;
-          injected = true;
-          const classMatch = attrs.match(/\bclass="([^"]*)"/i);
-          if (classMatch) {
-            const newAttrs = attrs.replace(
-              /\bclass="([^"]*)"/i,
-              `class="$1 article-dropcap"`,
-            );
-            return `<p${newAttrs}>`;
-          }
-          return `<p${attrs} class="article-dropcap">`;
-        },
+    // Tag the first <p> in the first HTML segment with the appropriate
+    // dropcap class — variant depends on category + body length.
+    const variant = pickDropcapVariant(category, html);
+    const dropClass = dropcapClassName(variant);
+    if (dropClass) {
+      const firstHtmlIdx = result.findIndex(
+        (s) => s.type === "html" && /<p\b/i.test(s.content),
       );
-      result[firstHtmlIdx] = { ...seg, content: updated };
+      if (firstHtmlIdx !== -1) {
+        const seg = result[firstHtmlIdx];
+        let injected = false;
+        const updated = seg.content.replace(
+          /<p\b([^>]*)>/i,
+          (_match, attrs: string) => {
+            if (injected) return _match;
+            injected = true;
+            const classMatch = attrs.match(/\bclass="([^"]*)"/i);
+            if (classMatch) {
+              const newAttrs = attrs.replace(
+                /\bclass="([^"]*)"/i,
+                `class="$1 ${dropClass}"`,
+              );
+              return `<p${newAttrs}>`;
+            }
+            return `<p${attrs} class="${dropClass}">`;
+          },
+        );
+        result[firstHtmlIdx] = { ...seg, content: updated };
+      }
     }
     return result;
-  }, [html]);
+  }, [html, category]);
 
   return (
     <div

@@ -8,6 +8,7 @@ import { ArticleNotes } from "@/components/ArticleNotes";
 import { RelatedByTags } from "@/components/RelatedByTags";
 import { CompanyMiniProfile } from "@/components/CompanyMiniProfile";
 import { ArticleBody } from "@/components/charts/ArticleBody";
+import { pickDropcapVariant, dropcapClassName } from "@/lib/dropcap";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/articles";
@@ -217,13 +218,16 @@ const Article = () => {
 
         <div className="mb-16 animate-fade-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
           {isHtml ? (
-            <ArticleBody html={body} />
+            <ArticleBody html={body} category={article.category} />
           ) : (
-            body.split('\n\n').map((paragraph, index) => (
-              <p key={index} className={`text-foreground font-body leading-[2.05] mb-[2.4em] md:mb-[2.8em] ${index === 0 ? "text-lg md:text-xl font-medium text-headline article-dropcap" : "text-base md:text-lg"}`}>
-                {paragraph}
-              </p>
-            ))
+            (() => {
+              const dropClass = dropcapClassName(pickDropcapVariant(article.category, body));
+              return body.split('\n\n').map((paragraph, index) => (
+                <p key={index} className={`text-foreground font-body leading-[2.05] mb-[2.4em] md:mb-[2.8em] ${index === 0 ? `text-lg md:text-xl font-medium text-headline ${dropClass}` : "text-base md:text-lg"}`}>
+                  {paragraph}
+                </p>
+              ));
+            })()
           )}
         </div>
 

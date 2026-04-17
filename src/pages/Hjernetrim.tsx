@@ -3,10 +3,11 @@ import { Header } from "@/components/Header";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, Grid3X3, Search, Puzzle } from "lucide-react";
+import { Brain, Grid3X3, Search, Puzzle, Worm } from "lucide-react";
 import { SudokuGame } from "@/components/games/SudokuGame";
 import { WordSearchGame } from "@/components/games/WordSearchGame";
 import { WordAssemblyGame } from "@/components/games/WordAssemblyGame";
+import { SnakeGame } from "@/components/games/SnakeGame";
 
 const Hjernetrim = () => {
   const { language } = useTheme();
@@ -29,7 +30,7 @@ const Hjernetrim = () => {
         </div>
 
         <Tabs defaultValue="sudoku" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="sudoku" className="gap-1.5">
               <Grid3X3 className="h-4 w-4" />
               <span className="hidden sm:inline">Sudoku</span>
@@ -42,6 +43,10 @@ const Hjernetrim = () => {
               <Puzzle className="h-4 w-4" />
               <span className="hidden sm:inline">{isNo ? "Sett sammen" : "Word Build"}</span>
             </TabsTrigger>
+            <TabsTrigger value="snake" className="gap-1.5">
+              <Worm className="h-4 w-4" />
+              <span className="hidden sm:inline">Snake</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="sudoku">
@@ -52,6 +57,9 @@ const Hjernetrim = () => {
           </TabsContent>
           <TabsContent value="wordassembly">
             <WordAssemblyGame language={language} />
+          </TabsContent>
+          <TabsContent value="snake">
+            <SnakeGame language={language} />
           </TabsContent>
         </Tabs>
       </main>

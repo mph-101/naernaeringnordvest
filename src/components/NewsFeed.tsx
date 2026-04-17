@@ -289,6 +289,55 @@ export function NewsFeed() {
           </div>
         )}
 
+        {/* Region filter */}
+        {editorialRegions.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <MapPin className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
+              <span className="text-xs font-subhead uppercase tracking-wider text-muted-foreground">
+                {language === "no" ? "Redaksjon" : "Editorial"}
+              </span>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6">
+              <button
+                onClick={() => setSelectedRegionSlug("all")}
+                className={`px-3 py-1.5 rounded-full text-xs font-subhead whitespace-nowrap transition-all border ${
+                  selectedRegionSlug === "all"
+                    ? "bg-primary text-primary-foreground border-primary shadow-soft"
+                    : "bg-card border-border text-foreground/80 hover:bg-secondary hover:border-primary/30"
+                }`}
+              >
+                {language === "no" ? "Alle redaksjoner" : "All editorials"}
+              </button>
+              {userEditorialRegion && (
+                <button
+                  onClick={() => setSelectedRegionSlug(userEditorialRegion)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-subhead whitespace-nowrap transition-all border ${
+                    selectedRegionSlug === userEditorialRegion
+                      ? "bg-accent text-accent-foreground border-accent shadow-soft"
+                      : "bg-card border-border text-foreground/80 hover:bg-secondary hover:border-accent/30"
+                  }`}
+                >
+                  {language === "no" ? "Min redaksjon" : "My editorial"}
+                </button>
+              )}
+              {editorialRegions.map((r) => (
+                <button
+                  key={r.slug}
+                  onClick={() => setSelectedRegionSlug(r.slug)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-subhead whitespace-nowrap transition-all border ${
+                    selectedRegionSlug === r.slug
+                      ? "bg-primary text-primary-foreground border-primary shadow-soft"
+                      : "bg-card border-border text-foreground/80 hover:bg-secondary hover:border-primary/30"
+                  }`}
+                >
+                  {r.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Tag filter */}
         {topTags.length > 0 && (
           <div className="mb-10">

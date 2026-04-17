@@ -376,6 +376,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         premium: form.premium,
         read_time: form.read_time || null,
         image_url: form.image_url || null,
+        image_crop: form.image_crop ?? null,
+        image_focal: form.image_focal ?? null,
         key_points: form.key_points,
         key_points_en: form.key_points_en,
         status: "draft" as ArticleStatus,
@@ -1036,7 +1038,97 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         {/* Featured Image */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-4">
           <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">Hovedbilde</h3>
-          <ImageUpload currentUrl={form.image_url} onUpload={(url) => updateForm({ image_url: url })} />
+          <ImageUpload
+            currentUrl={form.image_url}
+            onUpload={(url) =>
+              // Reset crop/focal when a new image is uploaded — they don't apply to the new image
+              updateForm({ image_url: url, image_crop: null, image_focal: null })
+            }
+          />
+          {form.image_url && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {form.image_crop || form.image_focal ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-accent" />
+                      <span>
+                        {form.image_crop && form.image_focal
+                          ? "Utsnitt + fokuspunkt satt"
+                          : form.image_crop
+                          ? "Utsnitt satt"
+                          : "Fokuspunkt satt"}
+                      </span>
+                    </>
+                  ) : (
+                    <span>Bruker hele bildet (sentrert)</span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {(form.image_crop || form.image_focal) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => updateForm({ image_crop: null, image_focal: null })}
+                    >
+                      Tilbakestill
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCropDialogOpen(true)}
+                  >
+                    <CropIcon className="w-3.5 h-3.5 mr-1.5" />
+                    Velg utsnitt
+                  </Button>
+                </div>
+              </div>
+              {/* Live preview in both formats */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <div className="text-[11px] text-muted-foreground mb-1">Hero (16:9)</div>
+                  <div
+                    className="relative w-full rounded-md overflow-hidden border border-border bg-muted"
+                    style={{ aspectRatio: "16 / 9" }}
+                  >
+                    <img
+                      src={form.image_url}
+                      alt="Hero forhåndsvisning"
+                      className="w-full h-full object-cover"
+                      style={{ objectPosition: cropToObjectPosition(form.image_crop, form.image_focal) }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] text-muted-foreground mb-1">Kort (4:3)</div>
+                  <div
+                    className="relative w-full rounded-md overflow-hidden border border-border bg-muted"
+                    style={{ aspectRatio: "4 / 3" }}
+                  >
+                    <img
+                      src={form.image_url}
+                      alt="Kort forhåndsvisning"
+                      className="w-full h-full object-cover"
+                      style={{ objectPosition: cropToObjectPosition(form.image_crop, form.image_focal) }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {form.image_url && (
+            <ImageCropDialog
+              open={cropDialogOpen}
+              onOpenChange={setCropDialogOpen}
+              imageUrl={form.image_url}
+              initialCrop={form.image_crop}
+              initialFocal={form.image_focal}
+              onSave={(crop, focal) => updateForm({ image_crop: crop, image_focal: focal })}
+            />
+          )}
         </div>
 
         {/* Norwegian content */}

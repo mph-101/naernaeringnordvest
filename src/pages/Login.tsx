@@ -130,6 +130,7 @@ const Login = () => {
           },
         });
         if (error) throw error;
+        trackEvent("signup", { method: "email" });
         toast.success(t.signupSuccess);
         setIsSignUp(false);
       } else {

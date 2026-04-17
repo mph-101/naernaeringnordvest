@@ -94,7 +94,34 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     key_points: [] as string[],
     key_points_en: [] as string[],
     status: "draft" as ArticleStatus,
+    region_slug: null as string | null,
   });
+  const [sharedRegions, setSharedRegions] = useState<string[]>([]);
+  const [forkedFromArticleId, setForkedFromArticleId] = useState<string | null>(null);
+  const [forkedFromTitle, setForkedFromTitle] = useState<string | null>(null);
+  const [allRegions, setAllRegions] = useState<EditorialRegion[]>([]);
+  const [forking, setForking] = useState(false);
+
+  // Load regions list once
+  useEffect(() => {
+    fetchRegions().then(setAllRegions).catch(() => {});
+  }, []);
+
+  // For new articles: default region to the journalist's primary editorial region
+  useEffect(() => {
+    if (articleId) return;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("editorial_region")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const slug = (data as any)?.editorial_region as string | null | undefined;
+      if (slug) setForm((prev) => (prev.region_slug ? prev : { ...prev, region_slug: slug }));
+    })();
+  }, [articleId]);
 
   useEffect(() => {
     formRef.current = form;

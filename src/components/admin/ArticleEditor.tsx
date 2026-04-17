@@ -476,14 +476,22 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       });
       if (error) throw error;
       const aiSuggestions = data?.suggestions || [];
-      // Merge, dedupe by original+suggestion
+      // Merge, dedupe by original+suggestion, assign stable ids
       const seen = new Set<string>();
-      const merged = [...localSuggestions, ...aiSuggestions].filter((s: any) => {
-        const key = `${s.original}→${s.suggestion}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
+      const merged = [...localSuggestions, ...aiSuggestions]
+        .filter((s: any) => {
+          const key = `${s.original}→${s.suggestion}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return Boolean(s.original) && Boolean(s.suggestion);
+        })
+        .map((s: any, i: number) => ({
+          id: `ps-${Date.now()}-${i}`,
+          original: s.original,
+          suggestion: s.suggestion,
+          reason: s.reason || "",
+          category: s.category || "stil",
+        }));
       if (merged.length) {
         setProofSuggestions(merged);
         toast({ title: "Språkvask fullført", description: `${merged.length} forslag funnet` });

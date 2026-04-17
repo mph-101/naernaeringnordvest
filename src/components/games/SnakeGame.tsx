@@ -9,9 +9,15 @@ interface SnakeGameProps {
 
 type Dir = "UP" | "DOWN" | "LEFT" | "RIGHT";
 type Cell = { x: number; y: number };
+type Speed = "slow" | "normal" | "fast";
 
 const GRID = 17;
-const TICK_MS = 130;
+const SPEED_MS: Record<Speed, number> = { slow: 200, normal: 130, fast: 80 };
+const BEST_KEY: Record<Speed, string> = {
+  slow: "snake_best_slow",
+  normal: "snake_best",
+  fast: "snake_best_fast",
+};
 
 const DIRS: Record<Dir, Cell> = {
   UP: { x: 0, y: -1 },

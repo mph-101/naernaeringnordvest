@@ -69,7 +69,8 @@ ${rules}
 YTTERLIGERE FORMATKRAV:
 - Returner brødteksten som HTML med <p>-tagger for avsnitt.
 - Minst ${minP} avsnitt, maks ${maxW} ord totalt.
-- Ikke inkluder tittel, ingress eller h1/h2 — kun selve brødteksten.
+- Ikke inkluder tittel, ingress eller h1 — kun selve brødteksten.
+- SETT INN KORTE MELLOMTITLER med <h2>-tagger hvert 2.-3. avsnitt for å gi luft og struktur. Mellomtitlene skal være KORTE og BESKRIVENDE (2-4 ord, helst 2-3), substantiviske og konkrete (f.eks. "Sterk vekst", "Nye planer", "Reaksjoner"). Ingen punktum eller anførselstegn i mellomtitlene. Ikke sett mellomtittel før første avsnitt.
 - Lenker skal være standard <a href="...">...</a>.
 - IKKE finn på fakta som ikke står i kildene. Hvis informasjon mangler, utelat den.
 - Hvis flere kilder motsier hverandre, velg den mest pålitelige eller nevn uenigheten.

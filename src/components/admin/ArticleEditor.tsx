@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2, Undo2, ExternalLink } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2, Undo2, ExternalLink, Crop as CropIcon } from "lucide-react";
 import { Dialog as ImproveDialog, DialogContent as ImproveDialogContent, DialogHeader as ImproveDialogHeader, DialogTitle as ImproveDialogTitle, DialogFooter as ImproveDialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { InlineDiff } from "./InlineDiff";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
+import { ImageCropDialog } from "./ImageCropDialog";
+import type { ImageCrop, ImageFocal } from "@/lib/image-crop";
+import { cropToObjectPosition, parseCrop, parseFocal } from "@/lib/image-crop";
 import { CategorySelect } from "./CategorySelect";
 import { AudioTranscriber, type AudioTranscriberHandle } from "./AudioTranscriber";
 import { ProofreadRules, loadProofreadRules, loadProofreadSettings, loadProofreadSettingsFromDb, type ProofreadRule } from "./ProofreadRules";
@@ -113,11 +116,14 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     premium: false,
     read_time: "",
     image_url: "",
+    image_crop: null as ImageCrop | null,
+    image_focal: null as ImageFocal | null,
     key_points: [] as string[],
     key_points_en: [] as string[],
     status: "draft" as ArticleStatus,
     region_slug: null as string | null,
   });
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [sharedRegions, setSharedRegions] = useState<string[]>([]);
   const [forkedFromArticleId, setForkedFromArticleId] = useState<string | null>(null);
   const [forkedFromTitle, setForkedFromTitle] = useState<string | null>(null);
@@ -192,6 +198,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           premium: currentForm.premium,
           read_time: currentForm.read_time || null,
           image_url: currentForm.image_url || null,
+          image_crop: currentForm.image_crop ?? null,
+          image_focal: currentForm.image_focal ?? null,
           key_points: currentForm.key_points,
           key_points_en: currentForm.key_points_en,
           status: currentForm.status,
@@ -231,6 +239,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         premium: data.premium || false,
         read_time: data.read_time || "",
         image_url: data.image_url || "",
+        image_crop: parseCrop((data as any).image_crop),
+        image_focal: parseFocal((data as any).image_focal),
         key_points: (data.key_points as string[]) || [],
         key_points_en: (data.key_points_en as string[]) || [],
         status: ((data as any).status as ArticleStatus) || (data.published ? "published" : "draft"),
@@ -280,6 +290,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         premium: form.premium,
         read_time: form.read_time || null,
         image_url: form.image_url || null,
+        image_crop: form.image_crop ?? null,
+        image_focal: form.image_focal ?? null,
         key_points: form.key_points,
         key_points_en: form.key_points_en,
         status: form.status,
@@ -364,6 +376,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         premium: form.premium,
         read_time: form.read_time || null,
         image_url: form.image_url || null,
+        image_crop: form.image_crop ?? null,
+        image_focal: form.image_focal ?? null,
         key_points: form.key_points,
         key_points_en: form.key_points_en,
         status: "draft" as ArticleStatus,
@@ -1024,7 +1038,97 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         {/* Featured Image */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-4">
           <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">Hovedbilde</h3>
-          <ImageUpload currentUrl={form.image_url} onUpload={(url) => updateForm({ image_url: url })} />
+          <ImageUpload
+            currentUrl={form.image_url}
+            onUpload={(url) =>
+              // Reset crop/focal when a new image is uploaded — they don't apply to the new image
+              updateForm({ image_url: url, image_crop: null, image_focal: null })
+            }
+          />
+          {form.image_url && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {form.image_crop || form.image_focal ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-accent" />
+                      <span>
+                        {form.image_crop && form.image_focal
+                          ? "Utsnitt + fokuspunkt satt"
+                          : form.image_crop
+                          ? "Utsnitt satt"
+                          : "Fokuspunkt satt"}
+                      </span>
+                    </>
+                  ) : (
+                    <span>Bruker hele bildet (sentrert)</span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {(form.image_crop || form.image_focal) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => updateForm({ image_crop: null, image_focal: null })}
+                    >
+                      Tilbakestill
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCropDialogOpen(true)}
+                  >
+                    <CropIcon className="w-3.5 h-3.5 mr-1.5" />
+                    Velg utsnitt
+                  </Button>
+                </div>
+              </div>
+              {/* Live preview in both formats */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <div className="text-[11px] text-muted-foreground mb-1">Hero (16:9)</div>
+                  <div
+                    className="relative w-full rounded-md overflow-hidden border border-border bg-muted"
+                    style={{ aspectRatio: "16 / 9" }}
+                  >
+                    <img
+                      src={form.image_url}
+                      alt="Hero forhåndsvisning"
+                      className="w-full h-full object-cover"
+                      style={{ objectPosition: cropToObjectPosition(form.image_crop, form.image_focal) }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] text-muted-foreground mb-1">Kort (4:3)</div>
+                  <div
+                    className="relative w-full rounded-md overflow-hidden border border-border bg-muted"
+                    style={{ aspectRatio: "4 / 3" }}
+                  >
+                    <img
+                      src={form.image_url}
+                      alt="Kort forhåndsvisning"
+                      className="w-full h-full object-cover"
+                      style={{ objectPosition: cropToObjectPosition(form.image_crop, form.image_focal) }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {form.image_url && (
+            <ImageCropDialog
+              open={cropDialogOpen}
+              onOpenChange={setCropDialogOpen}
+              imageUrl={form.image_url}
+              initialCrop={form.image_crop}
+              initialFocal={form.image_focal}
+              onSave={(crop, focal) => updateForm({ image_crop: crop, image_focal: focal })}
+            />
+          )}
         </div>
 
         {/* Norwegian content */}

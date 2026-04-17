@@ -318,3 +318,28 @@
 .dark .proofread-chip-accept {
   color: hsl(142 71% 65%);
 }
+
+/* Magazine-style drop cap on the very first paragraph of an article.
+   Only applied to body paragraphs that aren't the lead/excerpt. */
+.article-dropcap::first-letter {
+  float: left;
+  font-family: var(--font-headline, Lora, Georgia, serif);
+  font-weight: 700;
+  font-size: 4.4em;
+  line-height: 0.88;
+  margin: 0.08em 0.12em 0 0;
+  padding: 0.05em 0.05em 0 0;
+  color: hsl(var(--accent));
+  /* Subtle text shadow keeps the letter grounded against the page */
+  text-shadow: 0 1px 0 hsl(var(--background));
+  /* Drop the first letter from the leading so it visually aligns to the
+     baseline of the second line of the paragraph. */
+  -webkit-initial-letter: 3;
+  initial-letter: 3;
+}
+@media (min-width: 768px) {
+  .article-dropcap::first-letter {
+    font-size: 5em;
+    margin-right: 0.14em;
+  }
+}

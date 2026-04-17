@@ -365,12 +365,40 @@
   }
 }
 
-/* Tydelig avstand mellom avsnitt i artikler — overstyrer Tailwind Typography */
-.article-body p {
+/* Tydelig avstand mellom avsnitt og elementer i artikler — overstyrer Tailwind Typography */
+.article-body p,
+.article-body figure,
+.article-body img,
+.article-body blockquote,
+.article-body ul,
+.article-body ol,
+.article-body pre,
+.article-body table,
+.article-body hr,
+.article-body iframe,
+.article-body video,
+.article-body aside,
+.article-body [data-nn-chart],
+.article-body [data-nn-factbox] {
   margin-top: 0 !important;
-  margin-bottom: 2em !important;
+  margin-bottom: 1.4em !important;
+}
+.article-body p {
   line-height: 1.6 !important;
 }
-.article-body p:last-child {
+.article-body > *:last-child {
   margin-bottom: 0 !important;
+}
+/* Mellomtitler i brødtekst i fet skrift */
+.article-body h2,
+.article-body h3,
+.article-body h4 {
+  font-weight: 700 !important;
+  margin-top: 1.6em !important;
+  margin-bottom: 0.6em !important;
+}
+.article-body h2:first-child,
+.article-body h3:first-child,
+.article-body h4:first-child {
+  margin-top: 0 !important;
 }

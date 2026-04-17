@@ -563,10 +563,64 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     setComposedBody("");
   };
 
+  // Replace a plain-text occurrence inside HTML body without touching tags.
+  // We walk only text nodes so HTML structure stays intact and we always
+  // find the term even when it sits inside <p>, <strong> etc.
+  const replaceInHtmlBody = (html: string, original: string, suggestion: string): { html: string; replaced: boolean } => {
+    if (!original) return { html, replaced: false };
+    let replaced = false;
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(`<div id="__nn_root">${html}</div>`, "text/html");
+      const root = doc.getElementById("__nn_root");
+      if (!root) return { html, replaced: false };
+      const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes: Text[] = [];
+      let n: Node | null = walker.nextNode();
+      while (n) {
+        nodes.push(n as Text);
+        n = walker.nextNode();
+      }
+      for (const textNode of nodes) {
+        const value = textNode.nodeValue || "";
+        const idx = value.indexOf(original);
+        if (idx >= 0) {
+          textNode.nodeValue = value.slice(0, idx) + suggestion + value.slice(idx + original.length);
+          replaced = true;
+          break;
+        }
+      }
+      if (!replaced) {
+        // Fallback: case-insensitive search across the whole text
+        for (const textNode of nodes) {
+          const value = textNode.nodeValue || "";
+          const lower = value.toLowerCase();
+          const idx = lower.indexOf(original.toLowerCase());
+          if (idx >= 0) {
+            textNode.nodeValue = value.slice(0, idx) + suggestion + value.slice(idx + original.length);
+            replaced = true;
+            break;
+          }
+        }
+      }
+      return { html: replaced ? root.innerHTML : html, replaced };
+    } catch {
+      // Last-resort fallback: naive string replace
+      if (html.includes(original)) {
+        return { html: html.replace(original, suggestion), replaced: true };
+      }
+      return { html, replaced: false };
+    }
+  };
+
   const applyProofSuggestion = (index: number) => {
     const s = proofSuggestions[index];
     if (!s) return;
-    const newBody = form.body.replace(s.original, s.suggestion);
+    const { html: newBody, replaced } = replaceInHtmlBody(form.body, s.original, s.suggestion);
+    if (!replaced) {
+      toast({ title: "Fant ikke teksten", description: `Kunne ikke finne "${s.original}" i brødteksten`, variant: "destructive" });
+      return;
+    }
     updateForm({ body: newBody });
     setProofSuggestions(prev => prev.filter((_, i) => i !== index));
     toast({ title: "Endret", description: `"${s.original}" → "${s.suggestion}"` });
@@ -578,14 +632,17 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     let applied = 0;
     const skipped: typeof proofSuggestions = [];
     for (const s of proofSuggestions) {
-      if (newBody.includes(s.original)) {
-        newBody = newBody.replace(s.original, s.suggestion);
+      const { html, replaced } = replaceInHtmlBody(newBody, s.original, s.suggestion);
+      if (replaced) {
+        newBody = html;
         applied++;
       } else {
         skipped.push(s);
       }
     }
-    updateForm({ body: newBody });
+    if (applied > 0) {
+      updateForm({ body: newBody });
+    }
     setProofSuggestions(skipped);
     if (applied > 0) {
       toast({

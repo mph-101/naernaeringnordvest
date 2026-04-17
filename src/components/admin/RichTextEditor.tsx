@@ -240,13 +240,21 @@ export const RichTextEditor = ({
     },
   });
 
+  // Sync external content changes (e.g. proofreading fixes, AI improvements,
+  // translation) into the editor. Skip while the editor is focused so we
+  // don't yank the user's caret while they're typing.
   useEffect(() => {
-    if (editor && content && isInitial.current) {
+    if (!editor) return;
+    if (isInitial.current) {
       isInitial.current = false;
-      if (editor.getHTML() !== content) {
-        editor.commands.setContent(content);
+      if (content && editor.getHTML() !== content) {
+        editor.commands.setContent(content, { emitUpdate: false });
       }
+      return;
     }
+    if (editor.getHTML() === content) return;
+    if (editor.isFocused) return;
+    editor.commands.setContent(content || "", { emitUpdate: false });
   }, [editor, content]);
 
   // Update highlights dynamically without recreating the editor

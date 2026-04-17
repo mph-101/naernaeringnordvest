@@ -646,18 +646,24 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
   };
 
-  const applyProofSuggestion = (index: number) => {
-    const s = proofSuggestions[index];
-    if (!s) return;
-    const { html: newBody, replaced } = replaceInHtmlBody(form.body, s.original, s.suggestion);
-    if (!replaced) {
-      toast({ title: "Fant ikke teksten", description: `Kunne ikke finne "${s.original}" i brødteksten`, variant: "destructive" });
-      return;
-    }
-    updateForm({ body: newBody });
-    setProofSuggestions(prev => prev.filter((_, i) => i !== index));
-    toast({ title: "Endret", description: `"${s.original}" → "${s.suggestion}"` });
-  };
+  const applyProofSuggestionById = useCallback((id: string) => {
+    setProofSuggestions(prev => {
+      const s = prev.find(p => p.id === id);
+      if (!s) return prev;
+      const { html: newBody, replaced } = replaceInHtmlBody(form.body, s.original, s.suggestion);
+      if (!replaced) {
+        toast({ title: "Fant ikke teksten", description: `Kunne ikke finne "${s.original}" i brødteksten`, variant: "destructive" });
+        return prev;
+      }
+      updateForm({ body: newBody });
+      toast({ title: "Endret", description: `"${s.original}" → "${s.suggestion}"` });
+      return prev.filter(p => p.id !== id);
+    });
+  }, [form.body, toast, updateForm]);
+
+  const dismissProofSuggestionById = useCallback((id: string) => {
+    setProofSuggestions(prev => prev.filter(p => p.id !== id));
+  }, []);
 
   const applyAllProofSuggestions = () => {
     if (proofSuggestions.length === 0) return;
@@ -687,9 +693,25 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
   };
 
-  const dismissProofSuggestion = (index: number) => {
-    setProofSuggestions(prev => prev.filter((_, i) => i !== index));
-  };
+  // Bridge inline accept/reject buttons rendered as ProseMirror widget
+  // decorations back into React state. The buttons dispatch DOM CustomEvents
+  // because they live outside the React tree.
+  useEffect(() => {
+    const onAccept = (e: Event) => {
+      const id = (e as CustomEvent<{ id: string }>).detail?.id;
+      if (id) applyProofSuggestionById(id);
+    };
+    const onReject = (e: Event) => {
+      const id = (e as CustomEvent<{ id: string }>).detail?.id;
+      if (id) dismissProofSuggestionById(id);
+    };
+    window.addEventListener("nn:proofread-accept", onAccept);
+    window.addEventListener("nn:proofread-reject", onReject);
+    return () => {
+      window.removeEventListener("nn:proofread-accept", onAccept);
+      window.removeEventListener("nn:proofread-reject", onReject);
+    };
+  }, [applyProofSuggestionById, dismissProofSuggestionById]);
 
   const translateToEnglish = async () => {
     if (!form.body || form.body.length < 20) {

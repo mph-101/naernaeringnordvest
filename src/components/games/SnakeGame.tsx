@@ -84,7 +84,6 @@ export const SnakeGame = ({ language }: SnakeGameProps) => {
   });
   const [leaderboard, setLeaderboard] = useState<LeaderRow[]>([]);
   const [loadingBoard, setLoadingBoard] = useState(false);
-  const [userRank, setUserRank] = useState<number | null>(null);
   const submittedScoreRef = useRef<{ key: string; score: number } | null>(null);
 
   const dirQueue = useRef<Dir[]>([]);

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "./RichTextEditor";
@@ -20,6 +20,8 @@ import { encodeFactBox, type FactBoxData } from "@/components/factbox/FactBox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArticleTagInput } from "./ArticleTagInput";
 import { AIDraftFromSourcesButton } from "./AIDraftFromSourcesButton";
+import { RegionPicker } from "./RegionPicker";
+import { fetchRegions, type EditorialRegion } from "@/lib/regions";
 import type { Tag as ArticleTag } from "@/lib/tag-utils";
 
 interface ArticleEditorProps {
@@ -92,7 +94,34 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     key_points: [] as string[],
     key_points_en: [] as string[],
     status: "draft" as ArticleStatus,
+    region_slug: null as string | null,
   });
+  const [sharedRegions, setSharedRegions] = useState<string[]>([]);
+  const [forkedFromArticleId, setForkedFromArticleId] = useState<string | null>(null);
+  const [forkedFromTitle, setForkedFromTitle] = useState<string | null>(null);
+  const [allRegions, setAllRegions] = useState<EditorialRegion[]>([]);
+  const [forking, setForking] = useState(false);
+
+  // Load regions list once
+  useEffect(() => {
+    fetchRegions().then(setAllRegions).catch(() => {});
+  }, []);
+
+  // For new articles: default region to the journalist's primary editorial region
+  useEffect(() => {
+    if (articleId) return;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("editorial_region")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const slug = (data as any)?.editorial_region as string | null | undefined;
+      if (slug) setForm((prev) => (prev.region_slug ? prev : { ...prev, region_slug: slug }));
+    })();
+  }, [articleId]);
 
   useEffect(() => {
     formRef.current = form;
@@ -140,7 +169,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           status: currentForm.status,
           published: currentForm.status === "published",
           published_at: currentForm.status === "published" ? new Date().toISOString() : null,
-        }).eq("id", articleId);
+          region_slug: currentForm.region_slug || null,
+        } as any).eq("id", articleId);
         if (!error) setAutoSaveStatus("saved");
         else setAutoSaveStatus("unsaved");
       } catch {
@@ -176,7 +206,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         key_points: (data.key_points as string[]) || [],
         key_points_en: (data.key_points_en as string[]) || [],
         status: ((data as any).status as ArticleStatus) || (data.published ? "published" : "draft"),
+        region_slug: ((data as any).region_slug as string | null) ?? null,
       });
+      setForkedFromArticleId(((data as any).forked_from_article_id as string | null) ?? null);
       const { data: tags } = await supabase.from("article_company_tags").select("orgnr, company_name").eq("article_id", articleId);
       setCompanyTags(tags || []);
       const { data: tagLinks } = await supabase
@@ -184,6 +216,18 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         .select("tags(id, name, slug, description)")
         .eq("article_id", articleId);
       setArticleTags(((tagLinks || []).map((r: any) => r.tags).filter(Boolean)) as ArticleTag[]);
+      const { data: shared } = await supabase
+        .from("article_shared_regions" as any)
+        .select("region_slug")
+        .eq("article_id", articleId);
+      setSharedRegions(((shared || []) as any[]).map((r: any) => r.region_slug as string));
+      const forkParent = ((data as any).forked_from_article_id as string | null) ?? null;
+      if (forkParent) {
+        const { data: parent } = await supabase.from("articles").select("title").eq("id", forkParent).maybeSingle();
+        setForkedFromTitle(parent?.title ?? null);
+      } else {
+        setForkedFromTitle(null);
+      }
     } catch {
       toast({ title: "Feil", description: "Kunne ikke hente artikkelen", variant: "destructive" });
     } finally {
@@ -213,6 +257,19 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         status: form.status,
         published: form.status === "published",
         published_at: form.status === "published" ? new Date().toISOString() : null,
+        region_slug: form.region_slug || null,
+      } as any;
+
+      const syncSharedRegions = async (id: string) => {
+        await supabase.from("article_shared_regions" as any).delete().eq("article_id", id);
+        // Filter out the article's own region (that's implicit)
+        const targets = sharedRegions.filter((s) => s && s !== form.region_slug);
+        if (targets.length > 0) {
+          const { data: { user } } = await supabase.auth.getUser();
+          await supabase.from("article_shared_regions" as any).insert(
+            targets.map((region_slug) => ({ article_id: id, region_slug, shared_by: user?.id })),
+          );
+        }
       };
 
       if (articleId) {
@@ -231,10 +288,16 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             articleTags.map((t) => ({ article_id: articleId, tag_id: t.id, created_by: user?.id }))
           );
         }
+        await syncSharedRegions(articleId);
         toast({ title: "Lagret", description: "Artikkelen er oppdatert" });
       } else {
-        const { error } = await supabase.from("articles").insert(articleData);
+        const { data: inserted, error } = await supabase
+          .from("articles")
+          .insert(articleData)
+          .select("id")
+          .single();
         if (error) throw error;
+        if (inserted?.id) await syncSharedRegions(inserted.id);
         toast({ title: "Opprettet", description: "Artikkelen er opprettet" });
         onBack();
       }
@@ -242,6 +305,70 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       toast({ title: "Feil", description: error.message, variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const forkArticle = async () => {
+    if (!articleId) return;
+    setForking(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      // Determine the user's primary editorial region for the new fork
+      let targetRegion: string | null = null;
+      if (user) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("editorial_region")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        targetRegion = ((prof as any)?.editorial_region as string | null) ?? null;
+      }
+      const forkData = {
+        title: `${form.title} (regional versjon)`,
+        title_en: form.title_en || null,
+        excerpt: form.excerpt,
+        excerpt_en: form.excerpt_en || null,
+        body: form.body,
+        body_en: form.body_en || null,
+        category: form.category,
+        author: form.author,
+        type: form.type,
+        premium: form.premium,
+        read_time: form.read_time || null,
+        image_url: form.image_url || null,
+        key_points: form.key_points,
+        key_points_en: form.key_points_en,
+        status: "draft" as ArticleStatus,
+        published: false,
+        published_at: null,
+        region_slug: targetRegion,
+        forked_from_article_id: articleId,
+        created_by: user?.id ?? null,
+      } as any;
+      const { data: inserted, error } = await supabase
+        .from("articles")
+        .insert(forkData)
+        .select("id")
+        .single();
+      if (error) throw error;
+      // Copy company tags
+      if (companyTags.length > 0 && inserted?.id) {
+        await supabase.from("article_company_tags").insert(
+          companyTags.map((t) => ({ article_id: inserted.id, orgnr: t.orgnr, company_name: t.company_name })),
+        );
+      }
+      // Copy article tags
+      if (articleTags.length > 0 && inserted?.id) {
+        await supabase.from("article_tags").insert(
+          articleTags.map((t) => ({ article_id: inserted.id, tag_id: t.id, created_by: user?.id })),
+        );
+      }
+      toast({ title: "Forket", description: "En ny regional versjon er opprettet som kladd" });
+      onBack();
+    } catch (err: any) {
+      toast({ title: "Feil", description: err.message, variant: "destructive" });
+    } finally {
+      setForking(false);
     }
   };
 
@@ -841,6 +968,71 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               ))}
               <Button type="button" variant="outline" size="sm" onClick={() => addKeyPoint(true)}><Plus className="w-4 h-4 mr-1" /> Add point</Button>
             </div>
+          </div>
+        </div>
+
+        {/* Region & sharing */}
+        <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <h3 className="font-headline text-lg font-medium text-headline flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-accent" />
+              Redaksjon
+            </h3>
+            {articleId && form.title && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={forkArticle}
+                disabled={forking}
+                className="gap-2"
+                title="Lag en regional versjon (kladd) som du kan tilpasse"
+              >
+                {forking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <GitFork className="w-3.5 h-3.5" />}
+                {forking ? "Forker..." : "Fork som regional versjon"}
+              </Button>
+            )}
+          </div>
+
+          {forkedFromArticleId && (
+            <div className="px-3 py-2 rounded-lg bg-accent/10 border border-accent/20 text-xs text-foreground/80 flex items-center gap-2">
+              <GitFork className="w-3.5 h-3.5 text-accent" />
+              Basert på{" "}
+              <button
+                type="button"
+                onClick={() => window.open(`/article/${forkedFromArticleId}`, "_blank")}
+                className="underline hover:text-accent font-medium"
+              >
+                {forkedFromTitle || "originalartikkel"}
+              </button>
+            </div>
+          )}
+
+          <div>
+            <Label>Hovedredaksjon</Label>
+            <p className="text-xs text-muted-foreground mb-1.5">Region som eier artikkelen.</p>
+            <RegionPicker
+              mode="single"
+              value={form.region_slug}
+              onChange={(slug) => updateForm({ region_slug: slug })}
+              placeholder="Velg redaksjon"
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
+              <Label className="m-0">Del med andre redaksjoner</Label>
+            </div>
+            <p className="text-xs text-muted-foreground mb-2">
+              Velg redaksjoner som også skal kunne se og bruke denne artikkelen.
+            </p>
+            <RegionPicker
+              mode="multi"
+              value={sharedRegions}
+              onChange={setSharedRegions}
+              disabledSlug={form.region_slug}
+            />
           </div>
         </div>
 

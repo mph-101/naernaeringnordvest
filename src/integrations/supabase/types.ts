@@ -65,6 +65,45 @@ export type Database = {
         }
         Relationships: []
       }
+      article_shared_regions: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          region_slug: string
+          shared_by: string | null
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          region_slug: string
+          shared_by?: string | null
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          region_slug?: string
+          shared_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_shared_regions_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "article_shared_regions_region_slug_fkey"
+            columns: ["region_slug"]
+            isOneToOne: false
+            referencedRelation: "editorial_regions"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       article_sources: {
         Row: {
           content: string | null
@@ -149,6 +188,7 @@ export type Database = {
           created_by: string | null
           excerpt: string
           excerpt_en: string | null
+          forked_from_article_id: string | null
           id: string
           image_url: string | null
           key_points: Json | null
@@ -157,6 +197,7 @@ export type Database = {
           published: boolean
           published_at: string | null
           read_time: string | null
+          region_slug: string | null
           status: string
           title: string
           title_en: string | null
@@ -172,6 +213,7 @@ export type Database = {
           created_by?: string | null
           excerpt: string
           excerpt_en?: string | null
+          forked_from_article_id?: string | null
           id?: string
           image_url?: string | null
           key_points?: Json | null
@@ -180,6 +222,7 @@ export type Database = {
           published?: boolean
           published_at?: string | null
           read_time?: string | null
+          region_slug?: string | null
           status?: string
           title: string
           title_en?: string | null
@@ -195,6 +238,7 @@ export type Database = {
           created_by?: string | null
           excerpt?: string
           excerpt_en?: string | null
+          forked_from_article_id?: string | null
           id?: string
           image_url?: string | null
           key_points?: Json | null
@@ -203,13 +247,29 @@ export type Database = {
           published?: boolean
           published_at?: string | null
           read_time?: string | null
+          region_slug?: string | null
           status?: string
           title?: string
           title_en?: string | null
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "articles_forked_from_article_id_fkey"
+            columns: ["forked_from_article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "articles_region_slug_fkey"
+            columns: ["region_slug"]
+            isOneToOne: false
+            referencedRelation: "editorial_regions"
+            referencedColumns: ["slug"]
+          },
+        ]
       }
       categories: {
         Row: {
@@ -329,6 +389,36 @@ export type Database = {
           max_words?: number
           min_paragraphs?: number
           rules?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      editorial_regions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
@@ -588,6 +678,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          editorial_region: string | null
           email: string | null
           hidden_elements: string[] | null
           id: string
@@ -599,6 +690,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          editorial_region?: string | null
           email?: string | null
           hidden_elements?: string[] | null
           id?: string
@@ -610,6 +702,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          editorial_region?: string | null
           email?: string | null
           hidden_elements?: string[] | null
           id?: string
@@ -617,7 +710,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_editorial_region_fkey"
+            columns: ["editorial_region"]
+            isOneToOne: false
+            referencedRelation: "editorial_regions"
+            referencedColumns: ["slug"]
+          },
+        ]
       }
       tags: {
         Row: {

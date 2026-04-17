@@ -1,18 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X } from "lucide-react";
+import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X, MapPin } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/articles";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tag } from "@/lib/tag-utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { fetchRegions, type EditorialRegion } from "@/lib/regions";
 
 interface TagWithCount extends Tag {
   count: number;
@@ -33,6 +27,7 @@ interface DbArticle {
   image_url: string | null;
   published_at: string | null;
   key_points: any;
+  region_slug: string | null;
 }
 
 const regionToSportLabel: Record<string, { no: string; en: string }> = {
@@ -71,27 +66,66 @@ export function NewsFeed() {
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [topTags, setTopTags] = useState<TagWithCount[]>([]);
   const [articleTagMap, setArticleTagMap] = useState<Map<string, string[]>>(new Map());
-  const [selectedSport, setSelectedSport] = useState<string>(() => {
-    if (region && regionToSportLabel[region]) {
-      return regionToSportLabel[region][language];
-    }
-    return "all";
-  });
+  const [editorialRegions, setEditorialRegions] = useState<EditorialRegion[]>([]);
+  const [selectedRegionSlug, setSelectedRegionSlug] = useState<string | "all">("all");
+  const [userEditorialRegion, setUserEditorialRegion] = useState<string | null>(null);
+  const [articleSharedRegions, setArticleSharedRegions] = useState<Map<string, string[]>>(new Map());
   const navigate = useNavigate();
+
+  // Load region list + the signed-in user's primary region (used as default filter)
+  useEffect(() => {
+    fetchRegions().then(setEditorialRegions).catch(() => {});
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("editorial_region")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const slug = (data as any)?.editorial_region as string | null | undefined;
+      if (slug) {
+        setUserEditorialRegion(slug);
+        setSelectedRegionSlug(slug);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     const fetchArticles = async () => {
       const { data } = await supabase
         .from("articles")
-        .select("id, title, title_en, excerpt, excerpt_en, body, category, author, type, premium, read_time, image_url, published_at, key_points")
+        .select("id, title, title_en, excerpt, excerpt_en, body, category, author, type, premium, read_time, image_url, published_at, key_points, region_slug")
         .eq("published", true)
         .order("published_at", { ascending: false })
-        .limit(20);
-      setDbArticles(data || []);
+        .limit(40);
+      setDbArticles((data || []) as unknown as DbArticle[]);
       setLoading(false);
     };
     fetchArticles();
   }, []);
+
+  // Fetch shared regions for loaded articles
+  useEffect(() => {
+    if (dbArticles.length === 0) {
+      setArticleSharedRegions(new Map());
+      return;
+    }
+    const ids = dbArticles.map((a) => a.id);
+    (async () => {
+      const { data } = await supabase
+        .from("article_shared_regions" as any)
+        .select("article_id, region_slug")
+        .in("article_id", ids);
+      const map = new Map<string, string[]>();
+      ((data || []) as any[]).forEach((row: any) => {
+        const list = map.get(row.article_id) || [];
+        list.push(row.region_slug);
+        map.set(row.article_id, list);
+      });
+      setArticleSharedRegions(map);
+    })();
+  }, [dbArticles]);
 
   // Fetch tag links for the loaded articles + compute top tags
   useEffect(() => {
@@ -151,11 +185,9 @@ export function NewsFeed() {
     type: a.type as "article" | "video" | "podcast",
     premium: a.premium,
     image_url: a.image_url,
+    region_slug: a.region_slug,
     featured: index === 0,
   }));
-
-  const sports = t.sports;
-  const allSport = sports[0];
 
   let filteredNews = selectedTopic === allTopic
     ? articles
@@ -163,6 +195,14 @@ export function NewsFeed() {
 
   if (selectedTagId) {
     filteredNews = filteredNews.filter((item) => articleTagMap.get(item.id)?.includes(selectedTagId));
+  }
+
+  if (selectedRegionSlug !== "all") {
+    filteredNews = filteredNews.filter((item) => {
+      if (item.region_slug === selectedRegionSlug) return true;
+      const shared = articleSharedRegions.get(item.id) || [];
+      return shared.includes(selectedRegionSlug);
+    });
   }
 
   // Featured flag is index-based on the original list — recompute after filter
@@ -246,6 +286,55 @@ export function NewsFeed() {
                 {topic}
               </button>
             ))}
+          </div>
+        )}
+
+        {/* Region filter */}
+        {editorialRegions.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <MapPin className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
+              <span className="text-xs font-subhead uppercase tracking-wider text-muted-foreground">
+                {language === "no" ? "Redaksjon" : "Editorial"}
+              </span>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6">
+              <button
+                onClick={() => setSelectedRegionSlug("all")}
+                className={`px-3 py-1.5 rounded-full text-xs font-subhead whitespace-nowrap transition-all border ${
+                  selectedRegionSlug === "all"
+                    ? "bg-primary text-primary-foreground border-primary shadow-soft"
+                    : "bg-card border-border text-foreground/80 hover:bg-secondary hover:border-primary/30"
+                }`}
+              >
+                {language === "no" ? "Alle redaksjoner" : "All editorials"}
+              </button>
+              {userEditorialRegion && (
+                <button
+                  onClick={() => setSelectedRegionSlug(userEditorialRegion)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-subhead whitespace-nowrap transition-all border ${
+                    selectedRegionSlug === userEditorialRegion
+                      ? "bg-accent text-accent-foreground border-accent shadow-soft"
+                      : "bg-card border-border text-foreground/80 hover:bg-secondary hover:border-accent/30"
+                  }`}
+                >
+                  {language === "no" ? "Min redaksjon" : "My editorial"}
+                </button>
+              )}
+              {editorialRegions.map((r) => (
+                <button
+                  key={r.slug}
+                  onClick={() => setSelectedRegionSlug(r.slug)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-subhead whitespace-nowrap transition-all border ${
+                    selectedRegionSlug === r.slug
+                      ? "bg-primary text-primary-foreground border-primary shadow-soft"
+                      : "bg-card border-border text-foreground/80 hover:bg-secondary hover:border-primary/30"
+                  }`}
+                >
+                  {r.name}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

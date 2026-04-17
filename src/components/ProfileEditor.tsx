@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
-import { Camera, Pencil, X, Check, Loader2, User, MapPin } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Camera, Pencil, X, Check, Loader2, User, MapPin, Building } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
+import { fetchRegions, type EditorialRegion } from "@/lib/regions";
 
-const regions = [
+const legacyRegions = [
   { id: "more_og_romsdal", labelNo: "Møre og Romsdal", labelEn: "Møre og Romsdal" },
   { id: "vestlandet", labelNo: "Vestlandet", labelEn: "Western Norway" },
   { id: "nord_norge", labelNo: "Nord-Norge", labelEn: "Northern Norway" },
@@ -29,12 +30,27 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState(userRegion || "");
+  const [editorialRegion, setEditorialRegion] = useState<string>("");
+  const [editorialRegions, setEditorialRegions] = useState<EditorialRegion[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const isNo = language === "no";
 
   const t = isNo
-    ? { edit: "Rediger", save: "Lagre", cancel: "Avbryt", saved: "Lagret!", uploadError: "Feil ved opplasting", namePlaceholder: "Visningsnavn", changePhoto: "Endre bilde", region: "Region" }
-    : { edit: "Edit", save: "Save", cancel: "Cancel", saved: "Saved!", uploadError: "Upload error", namePlaceholder: "Display name", changePhoto: "Change photo", region: "Region" };
+    ? { edit: "Rediger", save: "Lagre", cancel: "Avbryt", saved: "Lagret!", uploadError: "Feil ved opplasting", namePlaceholder: "Visningsnavn", changePhoto: "Endre bilde", region: "Region (lesefilter)", editorial: "Min redaksjon" }
+    : { edit: "Edit", save: "Save", cancel: "Cancel", saved: "Saved!", uploadError: "Upload error", namePlaceholder: "Display name", changePhoto: "Change photo", region: "Region (read filter)", editorial: "My editorial" };
+
+  useEffect(() => {
+    fetchRegions().then(setEditorialRegions).catch(() => {});
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("editorial_region")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const slug = (data as any)?.editorial_region as string | null | undefined;
+      if (slug) setEditorialRegion(slug);
+    })();
+  }, [userId]);
 
   const handleSaveName = async () => {
     setSaving(true);
@@ -61,6 +77,16 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
     toast.success(t.saved);
   };
 
+  const handleEditorialChange = async (slug: string) => {
+    setEditorialRegion(slug);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ editorial_region: slug || null } as any)
+      .eq("user_id", userId);
+    if (error) { toast.error(error.message); return; }
+    toast.success(t.saved);
+  };
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -81,8 +107,6 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
     onUpdate({ avatarUrl: url });
     toast.success(t.saved);
   };
-
-  const currentRegionLabel = regions.find(r => r.id === selectedRegion);
 
   return (
     <div className="mb-8">
@@ -126,8 +150,8 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
         </div>
       </div>
 
-      {/* Region selector */}
-      <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl">
+      {/* Region selector (lesefilter) */}
+      <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl mb-2">
         <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
         <span className="text-sm font-subhead font-medium text-muted-foreground">{t.region}:</span>
         <select
@@ -136,11 +160,29 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
           className="flex-1 bg-transparent text-sm font-body text-foreground focus:outline-none cursor-pointer"
         >
           <option value="">{isNo ? "Velg region" : "Select region"}</option>
-          {regions.map(r => (
+          {legacyRegions.map(r => (
             <option key={r.id} value={r.id}>{isNo ? r.labelNo : r.labelEn}</option>
           ))}
         </select>
       </div>
+
+      {/* Editorial region (for journalists) */}
+      {editorialRegions.length > 0 && (
+        <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl">
+          <Building className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+          <span className="text-sm font-subhead font-medium text-muted-foreground">{t.editorial}:</span>
+          <select
+            value={editorialRegion}
+            onChange={(e) => handleEditorialChange(e.target.value)}
+            className="flex-1 bg-transparent text-sm font-body text-foreground focus:outline-none cursor-pointer"
+          >
+            <option value="">{isNo ? "Ingen redaksjon" : "No editorial"}</option>
+            {editorialRegions.map(r => (
+              <option key={r.slug} value={r.slug}>{r.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 }

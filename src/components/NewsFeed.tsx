@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X, MapPin } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
@@ -513,4 +513,5 @@ export const NewsFeed = forwardRef<HTMLDivElement>((_props, _ref) => {
       </div>
     </section>
   );
-}
+});
+NewsFeed.displayName = "NewsFeed";

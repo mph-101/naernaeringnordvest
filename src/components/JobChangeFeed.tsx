@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import { Briefcase, ArrowRight, ExternalLink, User, Building2, BadgeCheck, Linkedin, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
@@ -32,7 +32,7 @@ const parseNotice = (notice: string | null): StructuredNotice | null => {
   return null;
 };
 
-export const JobChangeFeed = () => {
+export const JobChangeFeed = forwardRef<HTMLDivElement>((_props, _ref) => {
   const { language } = useTheme();
   const isNo = language === "no";
   const [items, setItems] = useState<JobChange[]>([]);

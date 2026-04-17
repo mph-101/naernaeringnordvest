@@ -62,6 +62,44 @@ export function saveProofreadSettings(s: ProofreadSettings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
 }
 
+/** Load settings from the user's profile (DB) with localStorage fallback. */
+export async function loadProofreadSettingsFromDb(): Promise<ProofreadSettings> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return loadProofreadSettings();
+    const { data } = await supabase
+      .from("profiles")
+      .select("proofread_settings")
+      .eq("user_id", session.user.id)
+      .maybeSingle();
+    const dbVal = (data as any)?.proofread_settings;
+    if (dbVal && typeof dbVal === "object") {
+      const merged: ProofreadSettings = { ...DEFAULT_SETTINGS, ...dbVal };
+      // Mirror to localStorage so synchronous calls (e.g. from edge invoke) get fresh values too.
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(merged));
+      return merged;
+    }
+  } catch {
+    // ignore — fall back to local
+  }
+  return loadProofreadSettings();
+}
+
+/** Persist settings to both localStorage and the user's profile (best-effort). */
+export async function saveProofreadSettingsToDb(s: ProofreadSettings): Promise<void> {
+  saveProofreadSettings(s);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    await supabase
+      .from("profiles")
+      .update({ proofread_settings: s } as any)
+      .eq("user_id", session.user.id);
+  } catch {
+    // best-effort sync; localStorage is the source of truth on failure
+  }
+}
+
 const PROFILE_LABELS: Record<LanguageProfile, { label: string; desc: string }> = {
   konservativt: { label: "Konservativt bokmål", desc: "Riksmålsnært (boken, regjeringen, frem)" },
   moderat: { label: "Moderat bokmål", desc: "Avisstandard (boken/jenta, kastet)" },

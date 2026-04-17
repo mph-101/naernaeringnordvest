@@ -289,7 +289,8 @@ export const JobChangeFeed = forwardRef<HTMLDivElement>((_props, _ref) => {
       )}
     </section>
   );
-};
+});
+JobChangeFeed.displayName = "JobChangeFeed";
 
 // Lazy import to avoid loading form for read-only users
 import { JobChangeForm } from "./JobChangeForm";

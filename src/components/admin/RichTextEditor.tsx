@@ -341,15 +341,13 @@ export const RichTextEditor = ({
     editor.commands.setContent(content || "", { emitUpdate: false });
   }, [editor, content]);
 
-  // Update highlights dynamically without recreating the editor
+  // Update highlights dynamically without recreating the editor.
+  // Push the new array through the plugin state via a transaction meta so
+  // ProseMirror recomputes decorations.
   useEffect(() => {
     if (!editor) return;
-    const ext = editor.extensionManager.extensions.find((e) => e.name === "proofreadHighlights");
-    if (ext) {
-      ext.options.highlights = highlights || [];
-      // Force decoration recompute
-      editor.view.dispatch(editor.state.tr.setMeta("proofreadHighlightsUpdate", true));
-    }
+    const tr = editor.state.tr.setMeta(highlightPluginKey, highlights || []);
+    editor.view.dispatch(tr);
   }, [editor, highlights]);
 
   // Listen for chart-edit requests dispatched from the ChartFigureView node-view

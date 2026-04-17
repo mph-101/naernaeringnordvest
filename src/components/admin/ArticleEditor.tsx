@@ -979,6 +979,17 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </div>
         </div>
 
+        {/* Tags */}
+        <div className="bg-card rounded-xl p-6 shadow-soft space-y-4">
+          <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">
+            Tags
+          </h3>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Nøkkelord vises som klikkbare chips nederst i artikkelen og knytter sammen relatert innhold.
+          </p>
+          <ArticleTagInput value={articleTags} onChange={setArticleTags} />
+        </div>
+
         <div className="flex items-center justify-end gap-4">
           <Button type="button" variant="outline" onClick={onBack}>Avbryt</Button>
           <Button type="submit" disabled={saving}>

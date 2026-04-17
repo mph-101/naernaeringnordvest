@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { Loader2, Search, Shield, UserCircle2, Check, X, BookOpen, Clock } from "lucide-react";
+import { Loader2, Search, Shield, UserCircle2, Check, X, BookOpen, Clock, Key } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type AppRole } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,8 @@ interface AdminUser {
   roles: AppRole[];
   last_seen_at: string | null;
   articles_read: number;
+  api_key_count: number;
+  api_last_used_at: string | null;
 }
 
 function formatRelative(iso: string | null): string {

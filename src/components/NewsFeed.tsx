@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, Play, Headphones, FileText, Lock, TrendingUp } from "lucide-react";
+import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/articles";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tag } from "@/lib/tag-utils";
 import {
   Select,
   SelectContent,
@@ -12,6 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+interface TagWithCount extends Tag {
+  count: number;
+}
 
 interface DbArticle {
   id: string;

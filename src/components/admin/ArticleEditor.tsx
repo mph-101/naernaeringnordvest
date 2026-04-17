@@ -16,7 +16,7 @@ import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
 import { CategorySelect } from "./CategorySelect";
 import { AudioTranscriber, type AudioTranscriberHandle } from "./AudioTranscriber";
-import { ProofreadRules, loadProofreadRules, loadProofreadSettings, type ProofreadRule } from "./ProofreadRules";
+import { ProofreadRules, loadProofreadRules, loadProofreadSettings, loadProofreadSettingsFromDb, type ProofreadRule } from "./ProofreadRules";
 import { ChartGenerator } from "@/components/charts/ChartGenerator";
 import type { ChartData } from "@/components/charts/ArticleChart";
 import { FactBoxLibraryDialog } from "@/components/factbox/FactBoxLibraryDialog";

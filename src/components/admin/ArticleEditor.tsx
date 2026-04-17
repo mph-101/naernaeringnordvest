@@ -18,6 +18,8 @@ import type { ChartData } from "@/components/charts/ArticleChart";
 import { FactBoxLibraryDialog } from "@/components/factbox/FactBoxLibraryDialog";
 import { encodeFactBox, type FactBoxData } from "@/components/factbox/FactBox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArticleTagInput } from "./ArticleTagInput";
+import type { Tag as ArticleTag } from "@/lib/tag-utils";
 
 interface ArticleEditorProps {
   articleId: string | null;
@@ -60,6 +62,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const editorInstanceRef = useRef<any>(null);
   const { toast } = useToast();
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
+  const [articleTags, setArticleTags] = useState<ArticleTag[]>([]);
   const [companySearch, setCompanySearch] = useState("");
   const [searchResults, setSearchResults] = useState<{ orgnr: string; navn: string }[]>([]);
   const [searchingCompanies, setSearchingCompanies] = useState(false);
@@ -175,6 +178,11 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       });
       const { data: tags } = await supabase.from("article_company_tags").select("orgnr, company_name").eq("article_id", articleId);
       setCompanyTags(tags || []);
+      const { data: tagLinks } = await supabase
+        .from("article_tags")
+        .select("tags(id, name, slug, description)")
+        .eq("article_id", articleId);
+      setArticleTags(((tagLinks || []).map((r: any) => r.tags).filter(Boolean)) as ArticleTag[]);
     } catch {
       toast({ title: "Feil", description: "Kunne ikke hente artikkelen", variant: "destructive" });
     } finally {
@@ -213,6 +221,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         if (companyTags.length > 0) {
           await supabase.from("article_company_tags").insert(
             companyTags.map((t) => ({ article_id: articleId, orgnr: t.orgnr, company_name: t.company_name }))
+          );
+        }
+        await supabase.from("article_tags").delete().eq("article_id", articleId);
+        if (articleTags.length > 0) {
+          const { data: { user } } = await supabase.auth.getUser();
+          await supabase.from("article_tags").insert(
+            articleTags.map((t) => ({ article_id: articleId, tag_id: t.id, created_by: user?.id }))
           );
         }
         toast({ title: "Lagret", description: "Artikkelen er oppdatert" });

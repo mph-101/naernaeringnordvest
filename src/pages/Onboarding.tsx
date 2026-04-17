@@ -3,6 +3,7 @@ import { MessageSquare, Newspaper, BarChart2, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics";
 
 const regions = [
   { id: "more_og_romsdal", labelNo: "Møre og Romsdal", labelEn: "Møre og Romsdal" },
@@ -66,6 +67,7 @@ export default function Onboarding() {
   const handleViewSelect = (view: typeof views[number]) => {
     setDefaultView(view.id);
     completeOnboarding();
+    trackEvent("onboarding_completed", { region: selectedRegion, default_view: view.id });
     navigate(view.route, { replace: true });
   };
 

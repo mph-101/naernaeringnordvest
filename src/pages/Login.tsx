@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { useTheme } from "@/hooks/useTheme";
 import { Mail, Lock, ArrowLeft, User, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analytics";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -129,6 +130,7 @@ const Login = () => {
           },
         });
         if (error) throw error;
+        trackEvent("signup", { method: "email" });
         toast.success(t.signupSuccess);
         setIsSignUp(false);
       } else {

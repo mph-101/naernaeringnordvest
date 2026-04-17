@@ -11,7 +11,8 @@ import {
   LogOut,
   ArrowLeft,
   Menu,
-  X
+  X,
+  BarChart3
 } from "lucide-react";
 import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
@@ -20,13 +21,14 @@ import { JobChangeReview } from "./JobChangeReview";
 import { FactBoxesManager } from "./FactBoxesManager";
 import { TagsManager } from "./TagsManager";
 import { SourcesManager } from "./SourcesManager";
+import { AnalyticsDashboard } from "./AnalyticsDashboard";
 
 interface AdminDashboardProps {
   session: any;
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources" | "analytics";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const [view, setView] = useState<View>("dashboard");
@@ -45,6 +47,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
   const navItems = [
     { id: "dashboard" as View, label: "Dashboard", icon: LayoutDashboard },
+    { id: "analytics" as View, label: "Analyse", icon: BarChart3 },
     { id: "articles" as View, label: "Artikler", icon: FileText },
     { id: "sources" as View, label: "Kilder & AI", icon: Sparkles },
     { id: "fact-boxes" as View, label: "Faktabokser", icon: BookOpen },
@@ -132,6 +135,12 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <DashboardCard
+                title="Lesere & brukere"
+                description="Sidevisninger, lesetid, trafikkilder og konvertering"
+                icon={BarChart3}
+                onClick={() => setView("analytics")}
+              />
+              <DashboardCard
                 title="Artikler"
                 description="Administrer artikler og innhold"
                 icon={FileText}
@@ -169,6 +178,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
               />
             </div>
           </div>
+        )}
+
+        {view === "analytics" && (
+          <AnalyticsDashboard />
         )}
 
         {view === "articles" && (

@@ -178,6 +178,51 @@ export type Database = {
           },
         ]
       }
+      article_views: {
+        Row: {
+          article_id: string
+          completed: boolean
+          country: string | null
+          device_type: string | null
+          id: string
+          read_seconds: number
+          referrer_host: string | null
+          region_slug: string | null
+          scroll_depth: number
+          session_id: string
+          user_id: string | null
+          viewed_at: string
+        }
+        Insert: {
+          article_id: string
+          completed?: boolean
+          country?: string | null
+          device_type?: string | null
+          id?: string
+          read_seconds?: number
+          referrer_host?: string | null
+          region_slug?: string | null
+          scroll_depth?: number
+          session_id: string
+          user_id?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          article_id?: string
+          completed?: boolean
+          country?: string | null
+          device_type?: string | null
+          id?: string
+          read_seconds?: number
+          referrer_host?: string | null
+          region_slug?: string | null
+          scroll_depth?: number
+          session_id?: string
+          user_id?: string | null
+          viewed_at?: string
+        }
+        Relationships: []
+      }
       articles: {
         Row: {
           author: string
@@ -798,6 +843,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_events: {
+        Row: {
+          event_data: Json
+          event_type: string
+          id: string
+          occurred_at: string
+          referrer_host: string | null
+          region_slug: string | null
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          event_data?: Json
+          event_type: string
+          id?: string
+          occurred_at?: string
+          referrer_host?: string | null
+          region_slug?: string | null
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          event_data?: Json
+          event_type?: string
+          id?: string
+          occurred_at?: string
+          referrer_host?: string | null
+          region_slug?: string | null
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -824,6 +902,51 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      analytics_breakdown: {
+        Args: { _dimension: string; _from: string; _to: string }
+        Returns: {
+          bucket: string
+          unique_sessions: number
+          views: number
+        }[]
+      }
+      analytics_conversion_funnel: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          step: string
+          step_order: number
+          user_count: number
+        }[]
+      }
+      analytics_daily_traffic: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          day: string
+          unique_sessions: number
+          unique_users: number
+          views: number
+        }[]
+      }
+      analytics_top_articles: {
+        Args: { _from: string; _limit?: number; _to: string }
+        Returns: {
+          article_id: string
+          avg_read_seconds: number
+          completion_rate: number
+          region_slug: string
+          title: string
+          unique_sessions: number
+          views: number
+        }[]
+      }
+      analytics_user_growth: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          daily_active_users: number
+          day: string
+          new_signups: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

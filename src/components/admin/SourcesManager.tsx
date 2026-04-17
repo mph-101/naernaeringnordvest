@@ -21,6 +21,7 @@ interface Source {
   used_in_article: string | null;
   used_in_article_title?: string | null;
   created_at: string;
+  metadata?: { status?: string; error?: string; [k: string]: unknown } | null;
 }
 
 interface Guideline {

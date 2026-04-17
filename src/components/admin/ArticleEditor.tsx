@@ -205,7 +205,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         key_points: (data.key_points as string[]) || [],
         key_points_en: (data.key_points_en as string[]) || [],
         status: ((data as any).status as ArticleStatus) || (data.published ? "published" : "draft"),
+        region_slug: ((data as any).region_slug as string | null) ?? null,
       });
+      setForkedFromArticleId(((data as any).forked_from_article_id as string | null) ?? null);
       const { data: tags } = await supabase.from("article_company_tags").select("orgnr, company_name").eq("article_id", articleId);
       setCompanyTags(tags || []);
       const { data: tagLinks } = await supabase
@@ -213,6 +215,18 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         .select("tags(id, name, slug, description)")
         .eq("article_id", articleId);
       setArticleTags(((tagLinks || []).map((r: any) => r.tags).filter(Boolean)) as ArticleTag[]);
+      const { data: shared } = await supabase
+        .from("article_shared_regions" as any)
+        .select("region_slug")
+        .eq("article_id", articleId);
+      setSharedRegions(((shared || []) as any[]).map((r: any) => r.region_slug as string));
+      const forkParent = ((data as any).forked_from_article_id as string | null) ?? null;
+      if (forkParent) {
+        const { data: parent } = await supabase.from("articles").select("title").eq("id", forkParent).maybeSingle();
+        setForkedFromTitle(parent?.title ?? null);
+      } else {
+        setForkedFromTitle(null);
+      }
     } catch {
       toast({ title: "Feil", description: "Kunne ikke hente artikkelen", variant: "destructive" });
     } finally {

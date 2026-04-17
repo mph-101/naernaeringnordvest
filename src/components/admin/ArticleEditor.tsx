@@ -1327,21 +1327,65 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             </div>
 
             {(proofSuggestions.length > 0 || proofUndoStack.length > 0) && (
-              <div className="mt-3 flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-border bg-muted/40">
-                <span className="text-sm text-foreground">
-                  {proofSuggestions.length > 0 ? (
-                    <>
-                      <span className="font-medium">{proofSuggestions.length}</span>{" "}
-                      forslag vises inline i brødteksten — klikk{" "}
-                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold align-middle">✓</span>{" "}
-                      for å godta eller{" "}
-                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold align-middle">✕</span>{" "}
-                      for å avvise
-                    </>
-                  ) : (
-                    <span className="text-muted-foreground">Alle forslag behandlet — du kan fortsatt angre siste endring</span>
-                  )}
-                </span>
+              <div className="mt-3 flex flex-col gap-2 px-3 py-2 rounded-lg border border-border bg-muted/40 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-sm text-foreground">
+                    {proofSuggestions.length > 0 ? (
+                      <>
+                        <span className="font-medium">{proofSuggestions.length}</span>{" "}
+                        forslag vises inline i brødteksten — klikk{" "}
+                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold align-middle">✓</span>{" "}
+                        for å godta eller{" "}
+                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold align-middle">✕</span>{" "}
+                        for å avvise
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">Alle forslag behandlet — du kan fortsatt angre siste endring</span>
+                    )}
+                  </span>
+                  {proofSuggestions.length > 0 && (() => {
+                    const counts = proofSuggestions.reduce<Record<string, number>>((acc, s) => {
+                      const cat = s.category || "stil";
+                      acc[cat] = (acc[cat] || 0) + 1;
+                      return acc;
+                    }, {});
+                    const labels: Record<string, string> = {
+                      anglisisme: "Anglisismer",
+                      grammatikk: "Grammatikk",
+                      skrivefeil: "Skrivefeil",
+                      dialekt: "Dialekt",
+                      stil: "Stil",
+                      forenkling: "Forenkling",
+                    };
+                    // Color classes per category, themed via semantic tokens.
+                    const styles: Record<string, string> = {
+                      anglisisme: "bg-destructive/15 text-destructive border-destructive/30",
+                      grammatikk: "bg-destructive/20 text-destructive border-destructive/40",
+                      skrivefeil: "bg-destructive/20 text-destructive border-destructive/40",
+                      dialekt: "bg-accent text-accent-foreground border-accent-foreground/20",
+                      stil: "bg-accent text-accent-foreground border-accent-foreground/20",
+                      forenkling: "bg-muted-foreground/15 text-muted-foreground border-muted-foreground/30",
+                    };
+                    const order = ["anglisisme", "grammatikk", "skrivefeil", "dialekt", "stil", "forenkling"];
+                    const entries = Object.entries(counts).sort(
+                      ([a], [b]) => (order.indexOf(a) === -1 ? 99 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 99 : order.indexOf(b)),
+                    );
+                    return (
+                      <div className="flex flex-wrap items-center gap-1">
+                        {entries.map(([cat, count]) => (
+                          <span
+                            key={cat}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-medium ${styles[cat] || styles.stil}`}
+                            title={`${count} ${labels[cat] || cat}`}
+                          >
+                            <span className="font-bold tabular-nums">{count}</span>
+                            <span>{labels[cat] || cat}</span>
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
                 <div className="flex items-center gap-1 shrink-0">
                   {proofUndoStack.length > 0 && (
                     <Button

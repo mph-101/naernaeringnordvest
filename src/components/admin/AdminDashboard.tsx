@@ -6,6 +6,7 @@ import {
   MessageSquare, 
   Users, 
   BookOpen,
+  Tag as TagIcon,
   LogOut,
   ArrowLeft,
   Menu,
@@ -16,13 +17,14 @@ import { ArticleEditor } from "./ArticleEditor";
 import { TipsList } from "./TipsList";
 import { JobChangeReview } from "./JobChangeReview";
 import { FactBoxesManager } from "./FactBoxesManager";
+import { TagsManager } from "./TagsManager";
 
 interface AdminDashboardProps {
   session: any;
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const [view, setView] = useState<View>("dashboard");

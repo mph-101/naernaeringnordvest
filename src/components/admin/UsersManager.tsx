@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { Loader2, Search, Shield, UserCircle2, Check, X } from "lucide-react";
+import { Loader2, Search, Shield, UserCircle2, Check, X, BookOpen, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type AppRole } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +10,21 @@ interface AdminUser {
   display_name: string | null;
   created_at: string;
   roles: AppRole[];
+  last_seen_at: string | null;
+  articles_read: number;
+}
+
+function formatRelative(iso: string | null): string {
+  if (!iso) return "aldri";
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "nå";
+  if (min < 60) return `${min} min siden`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr} t siden`;
+  const d = Math.floor(hr / 24);
+  if (d < 30) return `${d} d siden`;
+  return new Date(iso).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" });
 }
 
 const ALL_ROLES: { id: AppRole; label: string; description: string; tone: string }[] = [

@@ -92,8 +92,8 @@ export const ArticleBody = ({ html, className = "", category }: ArticleBodyProps
     <div
       className={[
         "prose prose-lg dark:prose-invert max-w-none font-body",
-        // Full empty line between paragraphs for clear editorial breathing room
-        "prose-p:leading-[2.05] prose-p:text-foreground prose-p:mt-0 prose-p:mb-[2.4em] md:prose-p:mb-[2.8em]",
+        // Double line break between paragraphs — one full empty line of breathing room
+        "prose-p:leading-[1.8] prose-p:text-foreground prose-p:mt-0 prose-p:mb-[3.6em] md:prose-p:mb-[4em]",
         "prose-p:text-base md:prose-p:text-lg",
         // Subheadings: clear separation, editorial weight
         "prose-h2:font-headline prose-h2:text-headline prose-h2:font-bold",

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, User, Calendar, Lock, BookOpen } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ArticleDiscussion } from "@/components/ArticleDiscussion";
+import { TagChips } from "@/components/TagChips";
 import { ArticleNotes } from "@/components/ArticleNotes";
 import { CompanyMiniProfile } from "@/components/CompanyMiniProfile";
 import { ArticleBody } from "@/components/charts/ArticleBody";
@@ -239,6 +240,8 @@ const Article = () => {
             </div>
           </div>
         )}
+
+        <TagChips articleId={id!} className="mb-10" />
 
         <ArticleDiscussion authorName={article.author} />
       </article>

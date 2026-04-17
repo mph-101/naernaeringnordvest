@@ -7,6 +7,7 @@ import {
   Users, 
   BookOpen,
   Tag as TagIcon,
+  Sparkles,
   LogOut,
   ArrowLeft,
   Menu,
@@ -18,13 +19,14 @@ import { TipsList } from "./TipsList";
 import { JobChangeReview } from "./JobChangeReview";
 import { FactBoxesManager } from "./FactBoxesManager";
 import { TagsManager } from "./TagsManager";
+import { SourcesManager } from "./SourcesManager";
 
 interface AdminDashboardProps {
   session: any;
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const [view, setView] = useState<View>("dashboard");
@@ -44,6 +46,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const navItems = [
     { id: "dashboard" as View, label: "Dashboard", icon: LayoutDashboard },
     { id: "articles" as View, label: "Artikler", icon: FileText },
+    { id: "sources" as View, label: "Kilder & AI", icon: Sparkles },
     { id: "fact-boxes" as View, label: "Faktabokser", icon: BookOpen },
     { id: "tags" as View, label: "Tags", icon: TagIcon },
     { id: "tips" as View, label: "Tips", icon: MessageSquare },
@@ -135,6 +138,12 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 onClick={() => setView("articles")}
               />
               <DashboardCard
+                title="Kilder & AI"
+                description="Last opp kilder og generer artikkelutkast"
+                icon={Sparkles}
+                onClick={() => setView("sources")}
+              />
+              <DashboardCard
                 title="Faktabokser"
                 description="Gjenbrukbart faktaboks-bibliotek"
                 icon={BookOpen}
@@ -187,6 +196,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "tags" && (
           <TagsManager />
+        )}
+
+        {view === "sources" && (
+          <SourcesManager />
         )}
       </main>
     </div>

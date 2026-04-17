@@ -248,13 +248,13 @@ export const RichTextEditor = ({
     if (isInitial.current) {
       isInitial.current = false;
       if (content && editor.getHTML() !== content) {
-        editor.commands.setContent(content, false);
+        editor.commands.setContent(content, { emitUpdate: false });
       }
       return;
     }
     if (editor.getHTML() === content) return;
     if (editor.isFocused) return;
-    editor.commands.setContent(content || "", false);
+    editor.commands.setContent(content || "", { emitUpdate: false });
   }, [editor, content]);
 
   // Update highlights dynamically without recreating the editor

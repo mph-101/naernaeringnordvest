@@ -9,6 +9,8 @@ import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages
 import { Dialog as ImproveDialog, DialogContent as ImproveDialogContent, DialogHeader as ImproveDialogHeader, DialogTitle as ImproveDialogTitle, DialogFooter as ImproveDialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { InlineDiff } from "./InlineDiff";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
@@ -61,6 +63,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [proofreading, setProofreading] = useState(false);
   const [proofSuggestions, setProofSuggestions] = useState<{ original: string; suggestion: string; reason: string; category: string }[]>([]);
   const [improving, setImproving] = useState(false);
+  const [improveFocus, setImproveFocus] = useState<string[]>(["sitater", "lenker", "lengde", "struktur", "stil"]);
+  const [improvePopoverOpen, setImprovePopoverOpen] = useState(false);
   const [improveResult, setImproveResult] = useState<{
     improved_body: string;
     summary: string;
@@ -490,6 +494,11 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       toast({ title: "For kort", description: "Brødteksten må være minst 50 tegn", variant: "destructive" });
       return;
     }
+    if (improveFocus.length === 0) {
+      toast({ title: "Velg minst ett fokusområde", variant: "destructive" });
+      return;
+    }
+    setImprovePopoverOpen(false);
     setImproving(true);
     setImproveResult(null);
     try {
@@ -499,7 +508,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         .eq("article_type", form.type)
         .maybeSingle();
       const { data, error } = await supabase.functions.invoke("improve-article-body", {
-        body: { body: form.body, guideline: gls ?? null, articleType: form.type },
+        body: { body: form.body, guideline: gls ?? null, articleType: form.type, focusAreas: improveFocus },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -845,18 +854,81 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                   {proofreading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SpellCheck className="w-3.5 h-3.5" />}
                   {proofreading ? "Analyserer..." : "Språkvask"}
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={improveBody}
-                  disabled={improving || !form.body || form.body.length < 50}
-                  className="gap-2"
-                  title="Sjekk mot retningslinjer: sitatformat, kildelenker, ordtelling og struktur"
-                >
-                  {improving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
-                  {improving ? "Forbedrer..." : "Forbedre brødtekst"}
-                </Button>
+                <Popover open={improvePopoverOpen} onOpenChange={setImprovePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={improving || !form.body || form.body.length < 50}
+                      className="gap-2"
+                      title="Sjekk mot retningslinjer: velg fokusområder"
+                    >
+                      {improving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                      {improving ? "Forbedrer..." : "Forbedre brødtekst"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72" align="end">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="font-heading text-sm font-medium">Fokusområder</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Velg hva AI skal sjekke og endre.</p>
+                      </div>
+                      <div className="space-y-2">
+                        {[
+                          { id: "sitater", label: "Sitatformat", desc: "« » og blockquote" },
+                          { id: "lenker", label: "Kildelenker", desc: "Behold/normaliser <a>" },
+                          { id: "lengde", label: "Ordtelling", desc: "Stram inn mot maks ord" },
+                          { id: "struktur", label: "Struktur", desc: "Avsnitt og mellomtitler" },
+                          { id: "stil", label: "Stil", desc: "Klarhet og tone" },
+                        ].map((f) => {
+                          const checked = improveFocus.includes(f.id);
+                          return (
+                            <label
+                              key={f.id}
+                              className="flex items-start gap-2 p-2 rounded-md hover:bg-muted/50 cursor-pointer"
+                            >
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={(v) => {
+                                  setImproveFocus((prev) =>
+                                    v ? [...new Set([...prev, f.id])] : prev.filter((x) => x !== f.id),
+                                  );
+                                }}
+                                className="mt-0.5"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-body text-foreground">{f.label}</div>
+                                <div className="text-xs text-muted-foreground">{f.desc}</div>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-border">
+                        <button
+                          type="button"
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                          onClick={() =>
+                            setImproveFocus(["sitater", "lenker", "lengde", "struktur", "stil"])
+                          }
+                        >
+                          Velg alle
+                        </button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={improveBody}
+                          disabled={improving || improveFocus.length === 0}
+                          className="gap-1.5"
+                        >
+                          <Wand2 className="w-3.5 h-3.5" />
+                          Start
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
             <div

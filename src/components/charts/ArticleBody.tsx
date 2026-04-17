@@ -114,7 +114,7 @@ export const ArticleBody = ({ html, className = "", category }: ArticleBodyProps
           <ArticleChart key={i} data={seg.chart} />
         ) : (
           <Fragment key={i}>
-            <div dangerouslySetInnerHTML={{ __html: seg.content }} />
+            <div className="my-0 pb-[5px]" dangerouslySetInnerHTML={{ __html: seg.content }} />
           </Fragment>
         ),
       )}

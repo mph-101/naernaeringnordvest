@@ -61,6 +61,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [suggestingCompanies, setSuggestingCompanies] = useState(false);
   const [generatingTitleExcerpt, setGeneratingTitleExcerpt] = useState(false);
   const [proofreading, setProofreading] = useState(false);
+  const [generatingSubheadings, setGeneratingSubheadings] = useState(false);
   const [proofSuggestions, setProofSuggestions] = useState<{ original: string; suggestion: string; reason: string; category: string }[]>([]);
   const [improving, setImproving] = useState(false);
   const [improveFocus, setImproveFocus] = useState<string[]>(["sitater", "lenker", "lengde", "struktur", "stil"]);
@@ -492,7 +493,29 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     } catch (err: any) {
       toast({ title: "Feil", description: err.message, variant: "destructive" });
     } finally {
-      setProofreading(false);
+  };
+
+  const generateSubheadings = async () => {
+    if (!form.body || form.body.length < 100) {
+      toast({ title: "For kort", description: "Brødteksten må være minst 100 tegn", variant: "destructive" });
+      return;
+    }
+    setGeneratingSubheadings(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-subheadings", {
+        body: { body: form.body },
+      });
+      if (error) throw error;
+      if (data?.body && data.inserted > 0) {
+        updateForm({ body: data.body });
+        toast({ title: "Mellomtitler lagt til", description: `${data.inserted} mellomtitler generert` });
+      } else {
+        toast({ title: "Ingen mellomtitler", description: "Teksten er for kort eller har for få avsnitt" });
+      }
+    } catch (err: any) {
+      toast({ title: "Feil", description: err.message, variant: "destructive" });
+    } finally {
+      setGeneratingSubheadings(false);
     }
   };
 
@@ -945,6 +968,18 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 <Button type="button" variant="outline" size="sm" onClick={proofreadBody} disabled={proofreading || !form.body || form.body.length < 50} className="gap-2">
                   {proofreading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SpellCheck className="w-3.5 h-3.5" />}
                   {proofreading ? "Analyserer..." : "Språkvask"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={generateSubheadings}
+                  disabled={generatingSubheadings || !form.body || form.body.length < 100}
+                  className="gap-2"
+                  title="Generer korte mellomtitler hvert 2.-3. avsnitt"
+                >
+                  {generatingSubheadings ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Heading2 className="w-3.5 h-3.5" />}
+                  {generatingSubheadings ? "Genererer..." : "Mellomtitler"}
                 </Button>
                 <Popover open={improvePopoverOpen} onOpenChange={setImprovePopoverOpen}>
                   <PopoverTrigger asChild>

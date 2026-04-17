@@ -155,7 +155,8 @@ export const UsersManager = () => {
             <div className="col-span-2">Registrert</div>
             <div className="col-span-2">Sist aktiv</div>
             <div className="col-span-1 text-right pr-2">Lest</div>
-            <div className="col-span-4">Roller</div>
+            <div className="col-span-1 text-right pr-2">API</div>
+            <div className="col-span-3">Roller</div>
           </div>
           <div className="divide-y divide-border">
             {users.map((u) => {
@@ -200,7 +201,32 @@ export const UsersManager = () => {
                     </span>
                     <span className="md:hidden text-muted-foreground">artikler lest</span>
                   </div>
-                  <div className="col-span-1 md:col-span-4 flex flex-wrap gap-1.5">
+                  <div
+                    className="col-span-1 md:col-span-1 text-xs font-body flex items-center gap-1 md:justify-end md:pr-2"
+                    title={
+                      u.api_key_count === 0
+                        ? "Ingen aktive API-nøkler"
+                        : `${u.api_key_count} aktive nøkler · sist brukt ${
+                            u.api_last_used_at
+                              ? new Date(u.api_last_used_at).toLocaleString("nb-NO")
+                              : "aldri"
+                          }`
+                    }
+                  >
+                    <Key className={`w-3.5 h-3.5 ${u.api_key_count > 0 ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className={u.api_key_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}>
+                      {u.api_key_count}
+                    </span>
+                    {u.api_last_used_at && (
+                      <span className="hidden lg:inline text-[10px] text-muted-foreground ml-1">
+                        · {formatRelative(u.api_last_used_at)}
+                      </span>
+                    )}
+                    <span className="md:hidden text-muted-foreground">
+                      API-nøkler{u.api_last_used_at ? ` · sist ${formatRelative(u.api_last_used_at)}` : ""}
+                    </span>
+                  </div>
+                  <div className="col-span-1 md:col-span-3 flex flex-wrap gap-1.5">
                     {ALL_ROLES.map((r) => {
                       const has = u.roles.includes(r.id);
                       const key = `${u.user_id}:${r.id}`;

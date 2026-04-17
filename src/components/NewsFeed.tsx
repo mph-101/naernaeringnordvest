@@ -1,18 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X } from "lucide-react";
+import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X, MapPin } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/articles";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tag } from "@/lib/tag-utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { fetchRegions, type EditorialRegion } from "@/lib/regions";
 
 interface TagWithCount extends Tag {
   count: number;
@@ -33,6 +27,7 @@ interface DbArticle {
   image_url: string | null;
   published_at: string | null;
   key_points: any;
+  region_slug: string | null;
 }
 
 const regionToSportLabel: Record<string, { no: string; en: string }> = {

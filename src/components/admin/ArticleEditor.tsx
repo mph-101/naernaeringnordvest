@@ -745,6 +745,27 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     };
   }, [applyProofSuggestionById, dismissProofSuggestionById]);
 
+  // Cmd/Ctrl+Z hurtigtast for å angre siste språkvask-endring. Aktiv kun
+  // når undo-stacken har innhold, slik at TipTap sin egen undo fortsatt
+  // fungerer ellers. Vi bruker capture-fasen for å rekke å overstyre
+  // editorens egen handler før den ser eventet.
+  useEffect(() => {
+    if (proofUndoStack.length === 0) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      const isUndo =
+        (e.metaKey || e.ctrlKey) &&
+        !e.shiftKey &&
+        !e.altKey &&
+        (e.key === "z" || e.key === "Z");
+      if (!isUndo) return;
+      e.preventDefault();
+      e.stopPropagation();
+      undoLastProofChange();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [proofUndoStack.length, undoLastProofChange]);
+
   const translateToEnglish = async () => {
     if (!form.body || form.body.length < 20) {
       toast({ title: "For kort", description: "Skriv norsk innhold først", variant: "destructive" });
@@ -1212,7 +1233,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                       size="sm"
                       onClick={undoLastProofChange}
                       className="h-7 gap-1.5 text-xs"
-                      title={`Angre siste endring (${proofUndoStack.length} kan angres)`}
+                      title={`Angre siste endring (⌘/Ctrl+Z) — ${proofUndoStack.length} kan angres`}
                     >
                       <Undo2 className="w-3.5 h-3.5" />
                       Angre siste

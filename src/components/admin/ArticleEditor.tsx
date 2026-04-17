@@ -484,6 +484,40 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
   };
 
+  const improveBody = async () => {
+    if (!form.body || form.body.length < 50) {
+      toast({ title: "For kort", description: "Brødteksten må være minst 50 tegn", variant: "destructive" });
+      return;
+    }
+    setImproving(true);
+    setImproveResult(null);
+    try {
+      const { data: gls } = await supabase
+        .from("editorial_guidelines")
+        .select("article_type, display_name, rules, min_paragraphs, max_words")
+        .eq("article_type", form.type)
+        .maybeSingle();
+      const { data, error } = await supabase.functions.invoke("improve-article-body", {
+        body: { body: form.body, guideline: gls ?? null, articleType: form.type },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (!data?.result?.improved_body) throw new Error("Ingen forbedring returnert");
+      setImproveResult(data.result);
+    } catch (err: any) {
+      toast({ title: "Feil", description: err.message, variant: "destructive" });
+    } finally {
+      setImproving(false);
+    }
+  };
+
+  const applyImprovedBody = () => {
+    if (!improveResult) return;
+    updateForm({ body: improveResult.improved_body });
+    toast({ title: "Brødtekst oppdatert", description: improveResult.summary });
+    setImproveResult(null);
+  };
+
   const applyProofSuggestion = (index: number) => {
     const s = proofSuggestions[index];
     if (!s) return;

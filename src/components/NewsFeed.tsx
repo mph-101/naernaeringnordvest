@@ -68,6 +68,9 @@ export function NewsFeed() {
   const [dbArticles, setDbArticles] = useState<DbArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTopic, setSelectedTopic] = useState("Alle");
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [topTags, setTopTags] = useState<TagWithCount[]>([]);
+  const [articleTagMap, setArticleTagMap] = useState<Map<string, string[]>>(new Map());
   const [selectedSport, setSelectedSport] = useState<string>(() => {
     if (region && regionToSportLabel[region]) {
       return regionToSportLabel[region][language];
@@ -89,6 +92,40 @@ export function NewsFeed() {
     };
     fetchArticles();
   }, []);
+
+  // Fetch tag links for the loaded articles + compute top tags
+  useEffect(() => {
+    if (dbArticles.length === 0) {
+      setTopTags([]);
+      setArticleTagMap(new Map());
+      return;
+    }
+    const ids = dbArticles.map((a) => a.id);
+    (async () => {
+      const { data } = await supabase
+        .from("article_tags")
+        .select("article_id, tags(id, name, slug, description)")
+        .in("article_id", ids);
+      const map = new Map<string, string[]>();
+      const counts = new Map<string, { tag: Tag; count: number }>();
+      (data || []).forEach((row: any) => {
+        if (!row.tags) return;
+        const tag = row.tags as Tag;
+        const list = map.get(row.article_id) || [];
+        list.push(tag.id);
+        map.set(row.article_id, list);
+        const cur = counts.get(tag.id);
+        if (cur) cur.count += 1;
+        else counts.set(tag.id, { tag, count: 1 });
+      });
+      setArticleTagMap(map);
+      const sorted = Array.from(counts.values())
+        .sort((a, b) => b.count - a.count || a.tag.name.localeCompare(b.tag.name, "nb"))
+        .slice(0, 12)
+        .map((c) => ({ ...c.tag, count: c.count }));
+      setTopTags(sorted);
+    })();
+  }, [dbArticles]);
 
   // Fetch categories for topic filtering
   const [categories, setCategories] = useState<{name: string; name_en: string | null}[]>([]);

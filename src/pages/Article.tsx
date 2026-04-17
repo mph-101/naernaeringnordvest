@@ -12,6 +12,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/articles";
 import { supabase } from "@/integrations/supabase/client";
+import { useArticleTracking } from "@/hooks/useArticleTracking";
 
 interface ArticleData {
   id: string;
@@ -74,6 +75,9 @@ const Article = () => {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
+
+  // Track view, read time, scroll depth + funnel events
+  useArticleTracking(article?.id, !!article?.premium);
 
   if (loading) {
     return (

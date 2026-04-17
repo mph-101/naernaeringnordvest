@@ -65,6 +65,38 @@ export type Database = {
         }
         Relationships: []
       }
+      article_tags: {
+        Row: {
+          article_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           author: string
@@ -512,6 +544,36 @@ export type Database = {
         }
         Relationships: []
       }
+      tags: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tip_rate_limits: {
         Row: {
           ip_hash: string
@@ -600,6 +662,10 @@ export type Database = {
       is_group_member: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
+      }
+      merge_tags: {
+        Args: { _source_id: string; _target_id: string }
+        Returns: undefined
       }
     }
     Enums: {

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { Loader2, Search, Shield, UserCircle2, Check, X, BookOpen, Clock, Key } from "lucide-react";
+import { Loader2, Search, Shield, UserCircle2, Check, X, BookOpen, Clock, Key, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type AppRole } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { CreateUserDialog } from "./CreateUserDialog";
 
 interface AdminUser {
   user_id: string;
@@ -45,6 +46,7 @@ export const UsersManager = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const load = useCallback(async (term: string) => {
     setLoading(true);
@@ -129,8 +131,22 @@ export const UsersManager = () => {
               <strong className="text-foreground">{counts[r.id] ?? 0}</strong> {r.label.toLowerCase()}
             </span>
           ))}
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="ml-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-subhead hover:bg-primary/90 transition-colors"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            Ny bruker
+          </button>
         </div>
       </div>
+
+      <CreateUserDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={() => load(search.trim())}
+      />
 
       <div className="relative mb-4">
         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />

@@ -118,7 +118,7 @@ const HjernevelvEssay = () => {
         )}
 
         <div
-          className="prose prose-lg max-w-none font-body text-foreground/90 prose-headings:font-headline prose-headings:text-headline prose-a:text-accent"
+          className="prose prose-lg max-w-none font-body text-foreground/90 prose-headings:font-headline prose-headings:text-headline prose-a:text-accent prose-p:leading-[1.6] prose-p:mt-0 prose-p:mb-[2.5em]"
           dangerouslySetInnerHTML={{ __html: article.body }}
         />
       </article>

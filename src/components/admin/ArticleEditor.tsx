@@ -1233,7 +1233,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                       size="sm"
                       onClick={undoLastProofChange}
                       className="h-7 gap-1.5 text-xs"
-                      title={`Angre siste endring (${proofUndoStack.length} kan angres)`}
+                      title={`Angre siste endring (⌘/Ctrl+Z) — ${proofUndoStack.length} kan angres`}
                     >
                       <Undo2 className="w-3.5 h-3.5" />
                       Angre siste

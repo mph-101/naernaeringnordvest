@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, Play, Headphones, FileText, Lock, TrendingUp } from "lucide-react";
+import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/articles";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tag } from "@/lib/tag-utils";
 import {
   Select,
   SelectContent,
@@ -12,6 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+interface TagWithCount extends Tag {
+  count: number;
+}
 
 interface DbArticle {
   id: string;
@@ -63,6 +68,9 @@ export function NewsFeed() {
   const [dbArticles, setDbArticles] = useState<DbArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTopic, setSelectedTopic] = useState("Alle");
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [topTags, setTopTags] = useState<TagWithCount[]>([]);
+  const [articleTagMap, setArticleTagMap] = useState<Map<string, string[]>>(new Map());
   const [selectedSport, setSelectedSport] = useState<string>(() => {
     if (region && regionToSportLabel[region]) {
       return regionToSportLabel[region][language];
@@ -84,6 +92,40 @@ export function NewsFeed() {
     };
     fetchArticles();
   }, []);
+
+  // Fetch tag links for the loaded articles + compute top tags
+  useEffect(() => {
+    if (dbArticles.length === 0) {
+      setTopTags([]);
+      setArticleTagMap(new Map());
+      return;
+    }
+    const ids = dbArticles.map((a) => a.id);
+    (async () => {
+      const { data } = await supabase
+        .from("article_tags")
+        .select("article_id, tags(id, name, slug, description)")
+        .in("article_id", ids);
+      const map = new Map<string, string[]>();
+      const counts = new Map<string, { tag: Tag; count: number }>();
+      (data || []).forEach((row: any) => {
+        if (!row.tags) return;
+        const tag = row.tags as Tag;
+        const list = map.get(row.article_id) || [];
+        list.push(tag.id);
+        map.set(row.article_id, list);
+        const cur = counts.get(tag.id);
+        if (cur) cur.count += 1;
+        else counts.set(tag.id, { tag, count: 1 });
+      });
+      setArticleTagMap(map);
+      const sorted = Array.from(counts.values())
+        .sort((a, b) => b.count - a.count || a.tag.name.localeCompare(b.tag.name, "nb"))
+        .slice(0, 12)
+        .map((c) => ({ ...c.tag, count: c.count }));
+      setTopTags(sorted);
+    })();
+  }, [dbArticles]);
 
   // Fetch categories for topic filtering
   const [categories, setCategories] = useState<{name: string; name_en: string | null}[]>([]);
@@ -118,6 +160,18 @@ export function NewsFeed() {
   let filteredNews = selectedTopic === allTopic
     ? articles
     : articles.filter((item) => item.category === selectedTopic);
+
+  if (selectedTagId) {
+    filteredNews = filteredNews.filter((item) => articleTagMap.get(item.id)?.includes(selectedTagId));
+  }
+
+  // Featured flag is index-based on the original list — recompute after filter
+  filteredNews = filteredNews.map((item, idx) => ({ ...item, featured: idx === 0 }));
+
+  const selectedTagName = useMemo(
+    () => topTags.find((t) => t.id === selectedTagId)?.name || null,
+    [topTags, selectedTagId],
+  );
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -178,7 +232,7 @@ export function NewsFeed() {
 
         {/* Filters */}
         {topics.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 mb-10">
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 mb-4">
             {topics.map((topic) => (
               <button
                 key={topic}
@@ -192,6 +246,56 @@ export function NewsFeed() {
                 {topic}
               </button>
             ))}
+          </div>
+        )}
+
+        {/* Tag filter */}
+        {topTags.length > 0 && (
+          <div className="mb-10">
+            <div className="flex items-center gap-2 mb-2">
+              <TagIcon className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
+              <span className="text-xs font-subhead uppercase tracking-wider text-muted-foreground">
+                {language === "no" ? "Bla etter emne" : "Browse by topic"}
+              </span>
+              {selectedTagId && (
+                <button
+                  onClick={() => setSelectedTagId(null)}
+                  className="ml-auto text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                  {language === "no" ? "Nullstill" : "Clear"}
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6">
+              {topTags.map((tag) => {
+                const active = selectedTagId === tag.id;
+                return (
+                  <button
+                    key={tag.id}
+                    onClick={() => setSelectedTagId(active ? null : tag.id)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-subhead whitespace-nowrap transition-all duration-200 border ${
+                      active
+                        ? "bg-primary text-primary-foreground border-primary shadow-soft"
+                        : "bg-card border-border text-foreground/80 hover:bg-secondary hover:border-primary/30"
+                    }`}
+                  >
+                    {tag.name}
+                    <span className={`text-[10px] ${active ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                      {tag.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {selectedTagName && filteredNews.length === 0 && (
+          <div className="mb-10 p-6 rounded-2xl border border-border bg-card text-center text-sm text-muted-foreground font-body">
+            {language === "no"
+              ? `Ingen artikler matcher emnet «${selectedTagName}» med valgt kategori.`
+              : `No articles match the topic "${selectedTagName}" with the selected category.`}
           </div>
         )}
 

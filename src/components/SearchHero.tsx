@@ -1,16 +1,51 @@
-import { useState } from "react";
-import { Search, ArrowRight, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Search, ArrowRight, Sparkles, Tag as TagIcon } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tag } from "@/lib/tag-utils";
 
 interface SearchHeroProps {
   onSearch: (query: string) => void;
+}
+
+interface TagWithCount extends Tag {
+  count: number;
 }
 
 export function SearchHero({ onSearch }: SearchHeroProps) {
   const [query, setQuery] = useState("");
   const { language } = useTheme();
   const t = translations[language];
+  const [topTags, setTopTags] = useState<TagWithCount[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      // Fetch all tag links (capped at 1000 by Supabase) and aggregate.
+      const { data } = await supabase
+        .from("article_tags")
+        .select("tag_id, tags(id, name, slug, description)");
+      if (cancelled) return;
+      const counts = new Map<string, { tag: Tag; count: number }>();
+      (data || []).forEach((row: any) => {
+        if (!row.tags) return;
+        const tag = row.tags as Tag;
+        const cur = counts.get(tag.id);
+        if (cur) cur.count += 1;
+        else counts.set(tag.id, { tag, count: 1 });
+      });
+      const sorted = Array.from(counts.values())
+        .sort((a, b) => b.count - a.count || a.tag.name.localeCompare(b.tag.name, "nb"))
+        .slice(0, 8)
+        .map((c) => ({ ...c.tag, count: c.count }));
+      setTopTags(sorted);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +128,28 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
           ))}
         </div>
       </div>
+
+      {/* Browse by topic */}
+      {topTags.length > 0 && (
+        <div className="w-full max-w-xl mt-10 animate-fade-up" style={{ animationDelay: '700ms', animationFillMode: 'both' }}>
+          <p className="font-subhead text-xs text-muted-foreground mb-3 text-center uppercase tracking-widest flex items-center justify-center gap-1.5">
+            <TagIcon className="w-3 h-3" />
+            {language === "no" ? "Bla etter emne" : "Browse by topic"}
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {topTags.map((tag) => (
+              <Link
+                key={tag.id}
+                to={`/tag/${tag.slug}`}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-card hover:bg-primary/10 border border-border hover:border-primary/40 rounded-full text-sm font-body text-foreground/80 hover:text-foreground transition-all duration-200 hover:shadow-soft"
+              >
+                {tag.name}
+                <span className="text-[10px] text-muted-foreground">{tag.count}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

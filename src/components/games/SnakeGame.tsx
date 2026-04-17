@@ -203,10 +203,30 @@ export const SnakeGame = ({ language }: SnakeGameProps) => {
     setLoadingBoard(false);
   }, []);
 
+  // Load user's rank (position) on the leaderboard
+  const [userRank, setUserRank] = useState<number | null>(null);
+  const loadUserRank = useCallback(async (s: Speed) => {
+    if (!user) {
+      setUserRank(null);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("snake_scores")
+      .select("id, user_id")
+      .eq("speed", s)
+      .order("score", { ascending: false })
+      .order("created_at", { ascending: true });
+    if (!error && data) {
+      const index = data.findIndex((row) => row.user_id === user.id);
+      setUserRank(index >= 0 ? index + 1 : null);
+    }
+  }, [user]);
+
   useEffect(() => {
     loadLeaderboard(speed);
+    loadUserRank(speed);
     submittedScoreRef.current = null;
-  }, [speed, loadLeaderboard]);
+  }, [speed, loadLeaderboard, loadUserRank]);
 
   // Submit score on game over
   useEffect(() => {

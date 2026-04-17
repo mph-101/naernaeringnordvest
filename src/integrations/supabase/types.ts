@@ -1470,9 +1470,11 @@ export type Database = {
       admin_list_users: {
         Args: { _limit?: number; _search?: string }
         Returns: {
+          articles_read: number
           created_at: string
           display_name: string
           email: string
+          last_seen_at: string
           roles: Database["public"]["Enums"]["app_role"][]
           user_id: string
         }[]

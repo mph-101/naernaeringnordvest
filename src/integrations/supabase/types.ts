@@ -65,6 +65,48 @@ export type Database = {
         }
         Relationships: []
       }
+      article_sources: {
+        Row: {
+          content: string | null
+          created_at: string
+          file_url: string | null
+          id: string
+          metadata: Json
+          source_type: string
+          source_url: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string
+          used_in_article: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          metadata?: Json
+          source_type: string
+          source_url?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by: string
+          used_in_article?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          metadata?: Json
+          source_type?: string
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string
+          used_in_article?: string | null
+        }
+        Relationships: []
+      }
       article_tags: {
         Row: {
           article_id: string
@@ -255,6 +297,39 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      editorial_guidelines: {
+        Row: {
+          article_type: string
+          created_at: string
+          display_name: string
+          id: string
+          max_words: number
+          min_paragraphs: number
+          rules: string
+          updated_at: string
+        }
+        Insert: {
+          article_type: string
+          created_at?: string
+          display_name: string
+          id?: string
+          max_words?: number
+          min_paragraphs?: number
+          rules?: string
+          updated_at?: string
+        }
+        Update: {
+          article_type?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          max_words?: number
+          min_paragraphs?: number
+          rules?: string
+          updated_at?: string
         }
         Relationships: []
       }

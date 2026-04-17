@@ -9,6 +9,7 @@ import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages
 import { Dialog as ImproveDialog, DialogContent as ImproveDialogContent, DialogHeader as ImproveDialogHeader, DialogTitle as ImproveDialogTitle, DialogFooter as ImproveDialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { InlineDiff } from "./InlineDiff";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
 import { CategorySelect } from "./CategorySelect";
@@ -1322,20 +1323,22 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Original</Label>
-                  <div
-                    className="prose prose-sm max-w-none dark:prose-invert font-body p-3 rounded-lg border border-border bg-muted/30 max-h-[40vh] overflow-y-auto mt-1.5"
-                    dangerouslySetInnerHTML={{ __html: form.body }}
-                  />
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Visuell diff</Label>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block w-3 h-3 rounded-sm bg-accent/25" />
+                      Lagt til
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block w-3 h-3 rounded-sm bg-destructive/20" />
+                      Fjernet
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-xs uppercase tracking-wider text-accent">Forbedret</Label>
-                  <div
-                    className="prose prose-sm max-w-none dark:prose-invert font-body p-3 rounded-lg border border-accent/30 bg-accent/5 max-h-[40vh] overflow-y-auto mt-1.5"
-                    dangerouslySetInnerHTML={{ __html: improveResult.improved_body }}
-                  />
+                <div className="max-h-[50vh] overflow-y-auto">
+                  <InlineDiff original={form.body} improved={improveResult.improved_body} />
                 </div>
               </div>
             </div>

@@ -36,7 +36,14 @@ import {
 import { useCallback, useEffect, useRef } from "react";
 
 export interface ProofreadHighlight {
+  /** Unique id used to dispatch accept/reject events back to the parent. */
+  id: string;
+  /** The exact original text to mark in the editor. */
   text: string;
+  /** Suggested replacement text shown inline next to the original. */
+  suggestion?: string;
+  /** Short rationale shown as a tooltip on the inline chip. */
+  reason?: string;
   category?: string;
 }
 

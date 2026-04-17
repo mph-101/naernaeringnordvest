@@ -66,7 +66,7 @@ interface RichTextEditorProps {
   highlights?: ProofreadHighlight[];
 }
 
-const highlightPluginKey = new PluginKey("proofread-highlights");
+const highlightPluginKey = new PluginKey<ProofreadHighlight[]>("proofread-highlights");
 
 const HighlightExtension = Extension.create<{ highlights: ProofreadHighlight[] }>({
   name: "proofreadHighlights",
@@ -76,11 +76,19 @@ const HighlightExtension = Extension.create<{ highlights: ProofreadHighlight[] }
   addProseMirrorPlugins() {
     const ext = this;
     return [
-      new Plugin({
+      new Plugin<ProofreadHighlight[]>({
         key: highlightPluginKey,
+        state: {
+          init: () => (ext.options.highlights || []) as ProofreadHighlight[],
+          apply: (tr, value) => {
+            const next = tr.getMeta(highlightPluginKey);
+            if (next !== undefined) return next as ProofreadHighlight[];
+            return value;
+          },
+        },
         props: {
           decorations: (state) => {
-            const items: ProofreadHighlight[] = ext.options.highlights || [];
+            const items: ProofreadHighlight[] = highlightPluginKey.getState(state) || [];
             if (!items.length) return DecorationSet.empty;
             const decorations: Decoration[] = [];
             // Track first match per highlight id so we only show the inline
@@ -333,15 +341,13 @@ export const RichTextEditor = ({
     editor.commands.setContent(content || "", { emitUpdate: false });
   }, [editor, content]);
 
-  // Update highlights dynamically without recreating the editor
+  // Update highlights dynamically without recreating the editor.
+  // Push the new array through the plugin state via a transaction meta so
+  // ProseMirror recomputes decorations.
   useEffect(() => {
     if (!editor) return;
-    const ext = editor.extensionManager.extensions.find((e) => e.name === "proofreadHighlights");
-    if (ext) {
-      ext.options.highlights = highlights || [];
-      // Force decoration recompute
-      editor.view.dispatch(editor.state.tr.setMeta("proofreadHighlightsUpdate", true));
-    }
+    const tr = editor.state.tr.setMeta(highlightPluginKey, highlights || []);
+    editor.view.dispatch(tr);
   }, [editor, highlights]);
 
   // Listen for chart-edit requests dispatched from the ChartFigureView node-view

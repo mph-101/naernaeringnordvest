@@ -493,6 +493,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     } catch (err: any) {
       toast({ title: "Feil", description: err.message, variant: "destructive" });
     } finally {
+      setProofreading(false);
+    }
   };
 
   const generateSubheadings = async () => {

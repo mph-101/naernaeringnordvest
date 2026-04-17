@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { ArticleDiscussion } from "@/components/ArticleDiscussion";
 import { TagChips } from "@/components/TagChips";
 import { ArticleNotes } from "@/components/ArticleNotes";
+import { RelatedByTags } from "@/components/RelatedByTags";
 import { CompanyMiniProfile } from "@/components/CompanyMiniProfile";
 import { ArticleBody } from "@/components/charts/ArticleBody";
 import { useTheme } from "@/hooks/useTheme";
@@ -241,7 +242,9 @@ const Article = () => {
           </div>
         )}
 
-        <TagChips articleId={id!} className="mb-10" />
+        <TagChips articleId={id!} className="mb-6" />
+
+        <RelatedByTags articleId={id!} />
 
         <ArticleDiscussion authorName={article.author} />
       </article>

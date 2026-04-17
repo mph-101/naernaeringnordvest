@@ -19,6 +19,7 @@ interface Source {
   source_url: string | null;
   file_url: string | null;
   used_in_article: string | null;
+  used_in_article_title?: string | null;
   created_at: string;
 }
 
@@ -66,7 +67,24 @@ export const SourcesManager = () => {
       supabase.from("article_sources").select("*").order("created_at", { ascending: false }),
       supabase.from("editorial_guidelines").select("*").order("display_name"),
     ]);
-    setSources((srcs ?? []) as Source[]);
+    const baseSources = (srcs ?? []) as Source[];
+    const articleIds = Array.from(
+      new Set(baseSources.map((s) => s.used_in_article).filter((v): v is string => Boolean(v))),
+    );
+    let titleMap = new Map<string, string>();
+    if (articleIds.length > 0) {
+      const { data: arts } = await supabase
+        .from("articles")
+        .select("id, title")
+        .in("id", articleIds);
+      titleMap = new Map(((arts ?? []) as { id: string; title: string }[]).map((a) => [a.id, a.title]));
+    }
+    setSources(
+      baseSources.map((s) => ({
+        ...s,
+        used_in_article_title: s.used_in_article ? titleMap.get(s.used_in_article) ?? null : null,
+      })),
+    );
     setGuidelines((gls ?? []) as Guideline[]);
     setLoading(false);
   };
@@ -245,7 +263,22 @@ export const SourcesManager = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-body font-medium text-foreground truncate">{s.title}</span>
                       <Badge variant="outline" className="text-xs">{TYPE_LABELS[s.source_type]}</Badge>
-                      {s.used_in_article && <Badge variant="secondary" className="text-xs">Brukt</Badge>}
+                      {s.used_in_article && (
+                        <a
+                          href={`/article/${s.used_in_article}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center"
+                          title={s.used_in_article_title ?? "Åpne artikkel"}
+                        >
+                          <Badge
+                            variant="secondary"
+                            className="text-xs hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer max-w-[200px] truncate"
+                          >
+                            Brukt i: {s.used_in_article_title ?? "artikkel"}
+                          </Badge>
+                        </a>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-2 mt-1 font-body">
                       {s.content?.slice(0, 200) ?? "(ingen ekstrahert tekst)"}

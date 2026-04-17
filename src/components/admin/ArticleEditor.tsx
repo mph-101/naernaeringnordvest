@@ -19,6 +19,7 @@ import { FactBoxLibraryDialog } from "@/components/factbox/FactBoxLibraryDialog"
 import { encodeFactBox, type FactBoxData } from "@/components/factbox/FactBox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArticleTagInput } from "./ArticleTagInput";
+import { AIDraftFromSourcesButton } from "./AIDraftFromSourcesButton";
 import type { Tag as ArticleTag } from "@/lib/tag-utils";
 
 interface ArticleEditorProps {
@@ -637,7 +638,15 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
           <div className="flex items-center justify-between border-b border-border pb-3">
             <h3 className="font-headline text-lg font-medium text-headline">Norsk innhold</h3>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <AIDraftFromSourcesButton
+                onApply={(draft) => updateForm({
+                  title: draft.title,
+                  excerpt: draft.excerpt,
+                  body: draft.body,
+                  key_points: draft.key_points,
+                })}
+              />
               <Button type="button" variant="outline" size="sm" onClick={generateTitleExcerpt} disabled={generatingTitleExcerpt || !form.body || form.body.length < 50} className="gap-2">
                 {generatingTitleExcerpt ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                 {generatingTitleExcerpt ? "Genererer..." : "Generer tittel/ingress"}

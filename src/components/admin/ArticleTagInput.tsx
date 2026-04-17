@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Tag as TagIcon, X, Loader2 } from "lucide-react";
+import { Tag as TagIcon, X, Loader2, Sparkles, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { slugifyTag, type Tag } from "@/lib/tag-utils";
 
@@ -11,6 +12,9 @@ interface ArticleTagInputProps {
   /** Currently selected tags on the article */
   value: Tag[];
   onChange: (tags: Tag[]) => void;
+  /** Article context used by the AI suggester */
+  articleTitle?: string;
+  articleBody?: string;
 }
 
 /**
@@ -20,12 +24,14 @@ interface ArticleTagInputProps {
  * The new tag is created in the database immediately on selection so we
  * always have a stable `id` to persist in `article_tags`.
  */
-export const ArticleTagInput = ({ value, onChange }: ArticleTagInputProps) => {
+export const ArticleTagInput = ({ value, onChange, articleTitle, articleBody }: ArticleTagInputProps) => {
   const { toast } = useToast();
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [query, setQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggested, setSuggested] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -42,6 +48,10 @@ export const ArticleTagInput = ({ value, onChange }: ArticleTagInputProps) => {
   };
 
   const selectedIds = useMemo(() => new Set(value.map((t) => t.id)), [value]);
+  const selectedNames = useMemo(
+    () => new Set(value.map((t) => t.name.toLowerCase())),
+    [value],
+  );
 
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -65,6 +75,28 @@ export const ArticleTagInput = ({ value, onChange }: ArticleTagInputProps) => {
     inputRef.current?.focus();
   };
 
+  const upsertAndAddByName = async (rawName: string) => {
+    const name = rawName.trim();
+    if (!name) return;
+    const lower = name.toLowerCase();
+    if (selectedNames.has(lower)) return;
+    const existing = allTags.find((t) => t.name.toLowerCase() === lower);
+    if (existing) {
+      handleAdd(existing);
+      return;
+    }
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from("tags")
+      .insert({ name, slug: slugifyTag(name), created_by: user?.id })
+      .select("id, name, slug, description")
+      .single();
+    if (error) throw error;
+    const newTag = data as Tag;
+    setAllTags((prev) => [...prev, newTag].sort((a, b) => a.name.localeCompare(b.name, "nb")));
+    onChange([...value, newTag]);
+  };
+
   const handleRemove = (id: string) => {
     onChange(value.filter((t) => t.id !== id));
   };
@@ -78,20 +110,68 @@ export const ArticleTagInput = ({ value, onChange }: ArticleTagInputProps) => {
     }
     setCreating(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data, error } = await supabase
-        .from("tags")
-        .insert({ name, slug: slugifyTag(name), created_by: user?.id })
-        .select("id, name, slug, description")
-        .single();
-      if (error) throw error;
-      const newTag = data as Tag;
-      setAllTags((prev) => [...prev, newTag].sort((a, b) => a.name.localeCompare(b.name, "nb")));
-      handleAdd(newTag);
+      await upsertAndAddByName(name);
+      setQuery("");
+      setShowResults(false);
+      inputRef.current?.focus();
     } catch (err: any) {
       toast({ title: "Kunne ikke opprette tag", description: err.message, variant: "destructive" });
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleSuggest = async () => {
+    const body = (articleBody || "").trim();
+    if (body.replace(/<[^>]*>/g, "").trim().length < 50) {
+      toast({
+        title: "For lite tekst",
+        description: "Skriv litt mer brødtekst før AI kan foreslå tags.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSuggesting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("suggest-tags", {
+        body: {
+          title: articleTitle || "",
+          body,
+          existingTags: value.map((t) => t.name),
+        },
+      });
+      if (error) throw error;
+      const tags: string[] = Array.isArray(data?.tags) ? data.tags : [];
+      const filtered = tags.filter((t) => !selectedNames.has(t.toLowerCase()));
+      if (filtered.length === 0) {
+        toast({ title: "Ingen nye forslag", description: "AI fant ingen nye tags som passer." });
+      }
+      setSuggested(filtered);
+    } catch (err: any) {
+      toast({ title: "Kunne ikke hente forslag", description: err.message, variant: "destructive" });
+    } finally {
+      setSuggesting(false);
+    }
+  };
+
+  const handleAcceptSuggestion = async (name: string) => {
+    setSuggested((prev) => prev.filter((s) => s !== name));
+    try {
+      await upsertAndAddByName(name);
+    } catch (err: any) {
+      toast({ title: "Kunne ikke legge til tag", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleAcceptAll = async () => {
+    const names = [...suggested];
+    setSuggested([]);
+    for (const name of names) {
+      try {
+        await upsertAndAddByName(name);
+      } catch (err: any) {
+        toast({ title: `Kunne ikke legge til «${name}»`, description: err.message, variant: "destructive" });
+      }
     }
   };
 
@@ -127,7 +207,24 @@ export const ArticleTagInput = ({ value, onChange }: ArticleTagInputProps) => {
       )}
 
       <div className="relative">
-        <Label htmlFor="tag_search">Legg til tag</Label>
+        <div className="flex items-end justify-between gap-2">
+          <Label htmlFor="tag_search">Legg til tag</Label>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={handleSuggest}
+            disabled={suggesting}
+            className="h-7 px-2 text-xs gap-1.5"
+          >
+            {suggesting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5" />
+            )}
+            Foreslå med AI
+          </Button>
+        </div>
         <Input
           ref={inputRef}
           id="tag_search"
@@ -174,6 +271,44 @@ export const ArticleTagInput = ({ value, onChange }: ArticleTagInputProps) => {
           </div>
         )}
       </div>
+
+      {suggested.length > 0 && (
+        <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-subhead text-muted-foreground flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              AI-forslag — klikk for å legge til
+            </p>
+            <div className="flex gap-1">
+              <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={handleAcceptAll}>
+                Legg til alle
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-xs"
+                onClick={() => setSuggested([])}
+              >
+                Avvis
+              </Button>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {suggested.map((name) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => handleAcceptSuggestion(name)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-dashed border-primary/40 text-xs font-subhead text-foreground/80 hover:bg-primary/10 hover:border-primary transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

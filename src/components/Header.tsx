@@ -101,6 +101,10 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
               </button>
             )}
 
+            <button onClick={() => navigate("/hjernetrim")} className="p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Hjernetrim" : "Brain games"}>
+              <Brain className="w-4 h-4 text-foreground/70" />
+            </button>
+
             <button onClick={() => navigate("/grupper")} className="p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Grupper" : "Groups"}>
               <Users className="w-4 h-4 text-foreground/70" />
             </button>

@@ -62,7 +62,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [generatingTitleExcerpt, setGeneratingTitleExcerpt] = useState(false);
   const [proofreading, setProofreading] = useState(false);
   const [generatingSubheadings, setGeneratingSubheadings] = useState(false);
-  const [proofSuggestions, setProofSuggestions] = useState<{ original: string; suggestion: string; reason: string; category: string }[]>([]);
+  const [proofSuggestions, setProofSuggestions] = useState<{ id: string; original: string; suggestion: string; reason: string; category: string }[]>([]);
   const [improving, setImproving] = useState(false);
   const [improveFocus, setImproveFocus] = useState<string[]>(["sitater", "lenker", "lengde", "struktur", "stil"]);
   const [improvePopoverOpen, setImprovePopoverOpen] = useState(false);
@@ -476,14 +476,22 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       });
       if (error) throw error;
       const aiSuggestions = data?.suggestions || [];
-      // Merge, dedupe by original+suggestion
+      // Merge, dedupe by original+suggestion, assign stable ids
       const seen = new Set<string>();
-      const merged = [...localSuggestions, ...aiSuggestions].filter((s: any) => {
-        const key = `${s.original}→${s.suggestion}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
+      const merged = [...localSuggestions, ...aiSuggestions]
+        .filter((s: any) => {
+          const key = `${s.original}→${s.suggestion}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return Boolean(s.original) && Boolean(s.suggestion);
+        })
+        .map((s: any, i: number) => ({
+          id: `ps-${Date.now()}-${i}`,
+          original: s.original,
+          suggestion: s.suggestion,
+          reason: s.reason || "",
+          category: s.category || "stil",
+        }));
       if (merged.length) {
         setProofSuggestions(merged);
         toast({ title: "Språkvask fullført", description: `${merged.length} forslag funnet` });
@@ -638,18 +646,24 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
   };
 
-  const applyProofSuggestion = (index: number) => {
-    const s = proofSuggestions[index];
-    if (!s) return;
-    const { html: newBody, replaced } = replaceInHtmlBody(form.body, s.original, s.suggestion);
-    if (!replaced) {
-      toast({ title: "Fant ikke teksten", description: `Kunne ikke finne "${s.original}" i brødteksten`, variant: "destructive" });
-      return;
-    }
-    updateForm({ body: newBody });
-    setProofSuggestions(prev => prev.filter((_, i) => i !== index));
-    toast({ title: "Endret", description: `"${s.original}" → "${s.suggestion}"` });
-  };
+  const applyProofSuggestionById = useCallback((id: string) => {
+    setProofSuggestions(prev => {
+      const s = prev.find(p => p.id === id);
+      if (!s) return prev;
+      const { html: newBody, replaced } = replaceInHtmlBody(form.body, s.original, s.suggestion);
+      if (!replaced) {
+        toast({ title: "Fant ikke teksten", description: `Kunne ikke finne "${s.original}" i brødteksten`, variant: "destructive" });
+        return prev;
+      }
+      updateForm({ body: newBody });
+      toast({ title: "Endret", description: `"${s.original}" → "${s.suggestion}"` });
+      return prev.filter(p => p.id !== id);
+    });
+  }, [form.body, toast, updateForm]);
+
+  const dismissProofSuggestionById = useCallback((id: string) => {
+    setProofSuggestions(prev => prev.filter(p => p.id !== id));
+  }, []);
 
   const applyAllProofSuggestions = () => {
     if (proofSuggestions.length === 0) return;
@@ -679,9 +693,25 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
   };
 
-  const dismissProofSuggestion = (index: number) => {
-    setProofSuggestions(prev => prev.filter((_, i) => i !== index));
-  };
+  // Bridge inline accept/reject buttons rendered as ProseMirror widget
+  // decorations back into React state. The buttons dispatch DOM CustomEvents
+  // because they live outside the React tree.
+  useEffect(() => {
+    const onAccept = (e: Event) => {
+      const id = (e as CustomEvent<{ id: string }>).detail?.id;
+      if (id) applyProofSuggestionById(id);
+    };
+    const onReject = (e: Event) => {
+      const id = (e as CustomEvent<{ id: string }>).detail?.id;
+      if (id) dismissProofSuggestionById(id);
+    };
+    window.addEventListener("nn:proofread-accept", onAccept);
+    window.addEventListener("nn:proofread-reject", onReject);
+    return () => {
+      window.removeEventListener("nn:proofread-accept", onAccept);
+      window.removeEventListener("nn:proofread-reject", onReject);
+    };
+  }, [applyProofSuggestionById, dismissProofSuggestionById]);
 
   const translateToEnglish = async () => {
     if (!form.body || form.body.length < 20) {
@@ -1109,7 +1139,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 onEditFactBox={handleEditFactBox}
                 editorRef={(ed) => { editorInstanceRef.current = ed; }}
                 placeholder="Skriv artikkelens innhold her..."
-                highlights={proofSuggestions.map((s) => ({ text: s.original, category: s.category }))}
+                highlights={proofSuggestions.map((s) => ({
+                  id: s.id,
+                  text: s.original,
+                  suggestion: s.suggestion,
+                  reason: s.reason,
+                  category: s.category,
+                }))}
               />
               {isDraggingAudio && (
                 <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center pointer-events-none z-10">
@@ -1121,41 +1157,23 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             </div>
 
             {proofSuggestions.length > 0 && (
-              <div className="mt-3 border border-border rounded-lg overflow-hidden">
-                <div className="bg-muted/50 px-4 py-2 flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-foreground">{proofSuggestions.length} forslag til forbedring</span>
-                  <div className="flex items-center gap-1">
-                    <Button type="button" variant="outline" size="sm" onClick={applyAllProofSuggestions} className="h-7 gap-1.5 text-xs">
-                      <Check className="w-3.5 h-3.5" />
-                      Godta alle
-                    </Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="text-xs">Lukk alle</Button>
-                  </div>
-                </div>
-                <div className="divide-y divide-border max-h-80 overflow-y-auto">
-                  {proofSuggestions.map((s, i) => (
-                    <div key={i} className="px-4 py-3 flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline" className="text-[10px] capitalize">{s.category}</Badge>
-                          <span className="text-xs text-muted-foreground">{s.reason}</span>
-                        </div>
-                        <div className="text-sm">
-                          <span className="line-through text-destructive/70">{s.original}</span>
-                          <span className="mx-1.5 text-muted-foreground">→</span>
-                          <span className="font-medium text-foreground">{s.suggestion}</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-1 shrink-0">
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950" onClick={() => applyProofSuggestion(i)}>
-                          <Check className="w-4 h-4" />
-                        </Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => dismissProofSuggestion(i)}>
-                          <XCircle className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+              <div className="mt-3 flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-border bg-muted/40">
+                <span className="text-sm text-foreground">
+                  <span className="font-medium">{proofSuggestions.length}</span>{" "}
+                  forslag vises inline i brødteksten — klikk{" "}
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold align-middle">✓</span>{" "}
+                  for å godta eller{" "}
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold align-middle">✕</span>{" "}
+                  for å avvise
+                </span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button type="button" variant="outline" size="sm" onClick={applyAllProofSuggestions} className="h-7 gap-1.5 text-xs">
+                    <Check className="w-3.5 h-3.5" />
+                    Godta alle
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="h-7 text-xs">
+                    Avvis alle
+                  </Button>
                 </div>
               </div>
             )}

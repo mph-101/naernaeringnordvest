@@ -256,3 +256,65 @@
   background-color: hsl(var(--muted-foreground) / 0.18);
   border-bottom-color: hsl(var(--muted-foreground) / 0.5);
 }
+
+/* Inline before/after diff chip rendered as a ProseMirror widget right
+   after each highlighted original word. Lets the journalist see the
+   suggestion in context and accept/reject without leaving the editor. */
+.proofread-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0 0.15rem 0 0.2rem;
+  padding: 0.05rem 0.4rem 0.05rem 0.3rem;
+  border-radius: 9999px;
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  font-size: 0.78em;
+  line-height: 1.2;
+  vertical-align: baseline;
+  white-space: nowrap;
+  user-select: none;
+  box-shadow: 0 1px 2px hsl(0 0% 0% / 0.04);
+}
+.proofread-chip-arrow {
+  color: hsl(var(--muted-foreground));
+  font-weight: 600;
+}
+.proofread-chip-suggestion {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  font-style: normal;
+}
+.proofread-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  font-size: 0.7em;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.proofread-chip-accept {
+  background-color: hsl(142 71% 45% / 0.15);
+  color: hsl(142 71% 32%);
+}
+.proofread-chip-accept:hover {
+  background-color: hsl(142 71% 45% / 0.28);
+  border-color: hsl(142 71% 45% / 0.5);
+}
+.proofread-chip-reject {
+  background-color: hsl(var(--destructive) / 0.15);
+  color: hsl(var(--destructive));
+}
+.proofread-chip-reject:hover {
+  background-color: hsl(var(--destructive) / 0.28);
+  border-color: hsl(var(--destructive) / 0.5);
+}
+.dark .proofread-chip-accept {
+  color: hsl(142 71% 65%);
+}

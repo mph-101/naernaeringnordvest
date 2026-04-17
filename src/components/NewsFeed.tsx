@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, forwardRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X, MapPin } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
@@ -60,7 +60,7 @@ function estimateReadTime(body: string, type: string, lang: "no" | "en"): string
   return `${mins} ${suffix}`;
 }
 
-export const NewsFeed = forwardRef<HTMLDivElement>((_props, _ref) => {
+export const NewsFeed = () => {
   const { language, region } = useTheme();
   const t = translations[language];
   const [dbArticles, setDbArticles] = useState<DbArticle[]>([]);
@@ -513,5 +513,4 @@ export const NewsFeed = forwardRef<HTMLDivElement>((_props, _ref) => {
       </div>
     </section>
   );
-});
-NewsFeed.displayName = "NewsFeed";
+};

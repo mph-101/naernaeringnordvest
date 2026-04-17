@@ -656,12 +656,14 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     setProofSuggestions(prev => {
       const s = prev.find(p => p.id === id);
       if (!s) return prev;
-      const { html: newBody, replaced } = replaceInHtmlBody(form.body, s.original, s.suggestion);
+      const previousBody = form.body;
+      const { html: newBody, replaced } = replaceInHtmlBody(previousBody, s.original, s.suggestion);
       if (!replaced) {
         toast({ title: "Fant ikke teksten", description: `Kunne ikke finne "${s.original}" i brødteksten`, variant: "destructive" });
         return prev;
       }
       updateForm({ body: newBody });
+      setProofUndoStack(stack => [...stack, { previousBody, restored: [s] }]);
       toast({ title: "Endret", description: `"${s.original}" → "${s.suggestion}"` });
       return prev.filter(p => p.id !== id);
     });
@@ -673,31 +675,54 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
   const applyAllProofSuggestions = () => {
     if (proofSuggestions.length === 0) return;
-    let newBody = form.body;
-    let applied = 0;
+    const previousBody = form.body;
+    let newBody = previousBody;
+    const appliedSuggestions: typeof proofSuggestions = [];
     const skipped: typeof proofSuggestions = [];
     for (const s of proofSuggestions) {
       const { html, replaced } = replaceInHtmlBody(newBody, s.original, s.suggestion);
       if (replaced) {
         newBody = html;
-        applied++;
+        appliedSuggestions.push(s);
       } else {
         skipped.push(s);
       }
     }
-    if (applied > 0) {
+    if (appliedSuggestions.length > 0) {
       updateForm({ body: newBody });
+      setProofUndoStack(stack => [...stack, { previousBody, restored: appliedSuggestions }]);
     }
     setProofSuggestions(skipped);
-    if (applied > 0) {
+    if (appliedSuggestions.length > 0) {
       toast({
         title: "Alle forslag godtatt",
-        description: `${applied} endring${applied === 1 ? "" : "er"} brukt${skipped.length ? `, ${skipped.length} hoppet over` : ""}`,
+        description: `${appliedSuggestions.length} endring${appliedSuggestions.length === 1 ? "" : "er"} brukt${skipped.length ? `, ${skipped.length} hoppet over` : ""}`,
       });
     } else {
       toast({ title: "Ingen endringer", description: "Fant ingen treff å bruke", variant: "destructive" });
     }
   };
+
+  const undoLastProofChange = useCallback(() => {
+    setProofUndoStack(stack => {
+      if (stack.length === 0) return stack;
+      const last = stack[stack.length - 1];
+      updateForm({ body: last.previousBody });
+      // Re-add the rolled-back suggestions to the panel so the journalist
+      // can choose to apply them again (or dismiss them).
+      setProofSuggestions(prev => {
+        const existingIds = new Set(prev.map(p => p.id));
+        const restored = last.restored.filter(r => !existingIds.has(r.id));
+        return [...restored, ...prev];
+      });
+      const count = last.restored.length;
+      toast({
+        title: "Angret",
+        description: `${count} endring${count === 1 ? "" : "er"} rullet tilbake`,
+      });
+      return stack.slice(0, -1);
+    });
+  }, [toast, updateForm]);
 
   // Bridge inline accept/reject buttons rendered as ProseMirror widget
   // decorations back into React state. The buttons dispatch DOM CustomEvents

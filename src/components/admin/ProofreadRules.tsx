@@ -128,12 +128,13 @@ export const ProofreadRules = ({ onRulesChange }: Props) => {
 
   useEffect(() => {
     setRules(loadProofreadRules());
-    setSettings(loadProofreadSettings());
+    // Hydrate settings from DB (with localStorage fallback) when dialog opens.
+    loadProofreadSettingsFromDb().then(setSettings).catch(() => setSettings(loadProofreadSettings()));
   }, [open]);
 
   const updateSettings = (next: ProofreadSettings) => {
     setSettings(next);
-    saveProofreadSettings(next);
+    saveProofreadSettingsToDb(next);
   };
 
   const toggleFocus = (area: FocusArea) => {

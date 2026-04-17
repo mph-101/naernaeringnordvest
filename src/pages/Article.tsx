@@ -159,7 +159,7 @@ const Article = () => {
           <div className="mb-5">
             <span className="px-3 py-1.5 bg-accent/10 text-accent text-sm font-subhead font-medium rounded-full border border-accent/20">{article.category}</span>
           </div>
-          <h1 className="font-headline text-3xl md:text-4xl lg:text-[2.75rem] font-bold text-headline leading-[1.15] mb-6">{title}</h1>
+          <h1 className="font-headline text-2xl md:text-3xl lg:text-4xl font-bold text-headline leading-[1.15] mb-6">{title}</h1>
           <ArticleMeta showBorder />
           <div className="relative mb-10">
             <p className="text-foreground font-body text-lg leading-[1.8]">{excerpt}</p>

@@ -229,7 +229,7 @@ const Article = () => {
             (() => {
               const dropClass = dropcapClassName(pickDropcapVariant(article.category, body));
               return body.split('\n\n').map((paragraph, index) => (
-                <p key={index} className={`text-foreground font-body leading-[1.6] mb-[5em] ${index === 0 ? `text-lg md:text-xl font-medium text-headline ${dropClass}` : "text-base md:text-lg"}`}>
+                <p key={index} className={`text-foreground font-body leading-[1.6] mb-[7em] ${index === 0 ? `text-lg md:text-xl font-medium text-headline ${dropClass}` : "text-base md:text-lg"}`}>
                   {paragraph}
                 </p>
               ));

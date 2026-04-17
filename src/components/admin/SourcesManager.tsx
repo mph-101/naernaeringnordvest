@@ -21,6 +21,7 @@ interface Source {
   used_in_article: string | null;
   used_in_article_title?: string | null;
   created_at: string;
+  metadata?: { status?: string; error?: string; [k: string]: unknown } | null;
 }
 
 interface Guideline {
@@ -90,6 +91,32 @@ export const SourcesManager = () => {
   };
 
   useEffect(() => { fetchAll(); }, []);
+
+  // Poll while any source is still processing
+  useEffect(() => {
+    const hasProcessing = sources.some((s) => s.metadata?.status === "processing");
+    if (!hasProcessing) return;
+    const interval = setInterval(async () => {
+      const processingIds = sources
+        .filter((s) => s.metadata?.status === "processing")
+        .map((s) => s.id);
+      if (processingIds.length === 0) return;
+      const { data } = await supabase
+        .from("article_sources")
+        .select("id, content, metadata")
+        .in("id", processingIds);
+      if (!data) return;
+      setSources((prev) =>
+        prev.map((s) => {
+          const updated = data.find((d) => d.id === s.id);
+          return updated
+            ? { ...s, content: updated.content, metadata: updated.metadata as Source["metadata"] }
+            : s;
+        }),
+      );
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [sources]);
 
   const toggle = (id: string) => {
     const next = new Set(selected);
@@ -255,14 +282,28 @@ export const SourcesManager = () => {
             {sources.map(s => {
               const Icon = TYPE_ICONS[s.source_type] ?? FileText;
               const isSelected = selected.has(s.id);
+              const status = s.metadata?.status;
+              const isProcessing = status === "processing";
+              const failed = status === "failed";
               return (
                 <li key={s.id} className="p-4 flex items-start gap-3 hover:bg-muted/50">
-                  <Checkbox checked={isSelected} onCheckedChange={() => toggle(s.id)} className="mt-1" />
+                  <Checkbox checked={isSelected} onCheckedChange={() => toggle(s.id)} className="mt-1" disabled={isProcessing || failed} />
                   <Icon className="w-5 h-5 text-muted-foreground mt-1 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-body font-medium text-foreground truncate">{s.title}</span>
                       <Badge variant="outline" className="text-xs">{TYPE_LABELS[s.source_type]}</Badge>
+                      {isProcessing && (
+                        <Badge variant="secondary" className="text-xs gap-1">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Henter tekst…
+                        </Badge>
+                      )}
+                      {failed && (
+                        <Badge variant="destructive" className="text-xs" title={s.metadata?.error}>
+                          Feilet
+                        </Badge>
+                      )}
                       {s.used_in_article && (
                         <a
                           href={`/article/${s.used_in_article}`}
@@ -281,7 +322,9 @@ export const SourcesManager = () => {
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-2 mt-1 font-body">
-                      {s.content?.slice(0, 200) ?? "(ingen ekstrahert tekst)"}
+                      {isProcessing
+                        ? "Henter tekst fra kilden i bakgrunnen…"
+                        : s.content?.slice(0, 200) ?? "(ingen ekstrahert tekst)"}
                     </p>
                     {s.source_url && (
                       <a href={s.source_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">

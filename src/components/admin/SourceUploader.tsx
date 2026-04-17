@@ -84,18 +84,18 @@ export const SourceUploader = ({ onUploaded }: SourceUploaderProps) => {
           setBusy(false);
           return;
         }
-        const { data, error } = await supabase.functions.invoke("extract-source", {
-          body: { sourceType: "url", url: url.trim() },
-        });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
+        // Create row immediately, extract in background
         const id = await insertSource({
           sourceType: "url",
-          title: title.trim() || data?.title || url.trim(),
-          content: data?.text ?? "",
+          title: title.trim() || url.trim(),
           source_url: url.trim(),
+          metadata: { status: "processing" },
         });
-        toast({ title: "URL hentet og lagret" });
+        // Fire async extraction (don't await — let UI poll)
+        supabase.functions.invoke("extract-source-async", { body: { sourceId: id } }).catch((e) => {
+          console.error("async extract dispatch failed", e);
+        });
+        toast({ title: "URL lagt til", description: "Henter innhold i bakgrunnen…" });
         onUploaded(id);
         reset();
       } else {
@@ -114,21 +114,18 @@ export const SourceUploader = ({ onUploaded }: SourceUploaderProps) => {
         });
         if (upErr) throw upErr;
 
-        toast({ title: "Henter tekst fra fil…", description: "Dette kan ta et øyeblikk" });
-        const { data, error } = await supabase.functions.invoke("extract-source", {
-          body: { sourceType: tab, storagePath: path, mimeType: file.type },
-        });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-
+        // Create row immediately with processing status
         const id = await insertSource({
           sourceType: tab,
           title: title.trim() || file.name,
-          content: data?.text ?? "",
           file_url: path,
-          metadata: { mime: file.type, size: file.size, original_name: file.name },
+          metadata: { mime: file.type, size: file.size, original_name: file.name, status: "processing" },
         });
-        toast({ title: "Kilde lagt til" });
+        // Fire async extraction
+        supabase.functions.invoke("extract-source-async", { body: { sourceId: id } }).catch((e) => {
+          console.error("async extract dispatch failed", e);
+        });
+        toast({ title: "Kilde lastet opp", description: "Henter tekst i bakgrunnen…" });
         onUploaded(id);
         reset();
       }

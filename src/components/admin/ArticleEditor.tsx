@@ -16,7 +16,7 @@ import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
 import { CategorySelect } from "./CategorySelect";
 import { AudioTranscriber, type AudioTranscriberHandle } from "./AudioTranscriber";
-import { ProofreadRules, loadProofreadRules, loadProofreadSettings, type ProofreadRule } from "./ProofreadRules";
+import { ProofreadRules, loadProofreadRules, loadProofreadSettings, loadProofreadSettingsFromDb, type ProofreadRule } from "./ProofreadRules";
 import { ChartGenerator } from "@/components/charts/ChartGenerator";
 import type { ChartData } from "@/components/charts/ArticleChart";
 import { FactBoxLibraryDialog } from "@/components/factbox/FactBoxLibraryDialog";
@@ -120,6 +120,12 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   // Load regions list once
   useEffect(() => {
     fetchRegions().then(setAllRegions).catch(() => {});
+  }, []);
+
+  // Hydrate proofread settings from the user's profile so their last-chosen
+  // focus areas + language profile are restored across sessions and devices.
+  useEffect(() => {
+    loadProofreadSettingsFromDb().catch(() => {});
   }, []);
 
   // For new articles: default region to the journalist's primary editorial region

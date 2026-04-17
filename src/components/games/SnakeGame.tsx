@@ -9,9 +9,15 @@ interface SnakeGameProps {
 
 type Dir = "UP" | "DOWN" | "LEFT" | "RIGHT";
 type Cell = { x: number; y: number };
+type Speed = "slow" | "normal" | "fast";
 
 const GRID = 17;
-const TICK_MS = 130;
+const SPEED_MS: Record<Speed, number> = { slow: 200, normal: 130, fast: 80 };
+const BEST_KEY: Record<Speed, string> = {
+  slow: "snake_best_slow",
+  normal: "snake_best",
+  fast: "snake_best_fast",
+};
 
 const DIRS: Record<Dir, Cell> = {
   UP: { x: 0, y: -1 },
@@ -48,9 +54,14 @@ export const SnakeGame = ({ language }: SnakeGameProps) => {
   const [running, setRunning] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
+  const [speed, setSpeedState] = useState<Speed>(() => {
+    if (typeof window === "undefined") return "normal";
+    const stored = localStorage.getItem("snake_speed") as Speed | null;
+    return stored && stored in SPEED_MS ? stored : "normal";
+  });
   const [best, setBest] = useState(() => {
     if (typeof window === "undefined") return 0;
-    return Number(localStorage.getItem("snake_best") || "0");
+    return Number(localStorage.getItem(BEST_KEY[speed]) || "0");
   });
 
   const dirQueue = useRef<Dir[]>([]);
@@ -136,7 +147,7 @@ export const SnakeGame = ({ language }: SnakeGameProps) => {
             const n = sc + 1;
             setBest((b) => {
               if (n > b) {
-                localStorage.setItem("snake_best", String(n));
+                localStorage.setItem(BEST_KEY[speed], String(n));
                 return n;
               }
               return b;
@@ -147,9 +158,15 @@ export const SnakeGame = ({ language }: SnakeGameProps) => {
         }
         return next;
       });
-    }, TICK_MS);
+    }, SPEED_MS[speed]);
     return () => clearInterval(id);
-  }, [running, gameOver, food]);
+  }, [running, gameOver, food, speed]);
+
+  const setSpeed = useCallback((s: Speed) => {
+    setSpeedState(s);
+    if (typeof window !== "undefined") localStorage.setItem("snake_speed", s);
+    setBest(Number(localStorage.getItem(BEST_KEY[s]) || "0"));
+  }, []);
 
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const onTouchStart = (e: React.TouchEvent) => {
@@ -167,9 +184,15 @@ export const SnakeGame = ({ language }: SnakeGameProps) => {
     touchStart.current = null;
   };
 
+  const speedOptions: { id: Speed; label: string }[] = [
+    { id: "slow", label: isNo ? "Langsom" : "Slow" },
+    { id: "normal", label: isNo ? "Normal" : "Normal" },
+    { id: "fast", label: isNo ? "Rask" : "Fast" },
+  ];
+
   return (
     <Card className="p-4 sm:p-6">
-      <div className="flex items-center justify-between mb-4 gap-3">
+      <div className="flex flex-wrap items-center justify-between mb-4 gap-3">
         <div className="flex gap-4 text-sm">
           <div>
             <div className="text-xs text-muted-foreground">{isNo ? "Poeng" : "Score"}</div>
@@ -179,6 +202,34 @@ export const SnakeGame = ({ language }: SnakeGameProps) => {
             <div className="text-xs text-muted-foreground">{isNo ? "Best" : "Best"}</div>
             <div className="font-bold text-lg text-primary">{best}</div>
           </div>
+        </div>
+
+        <div className="inline-flex items-center bg-secondary rounded-full p-1 text-xs">
+          {speedOptions.map((s) => {
+            const active = speed === s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => {
+                  setSpeed(s.id);
+                  reset();
+                }}
+                className={`px-3 py-1 rounded-full font-medium transition-all ${
+                  active
+                    ? "bg-card text-foreground shadow-soft"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                title={
+                  isNo
+                    ? "Endring nullstiller spillet og bytter rekord-sporing"
+                    : "Changing resets the game and switches best-score tracking"
+                }
+              >
+                {s.label}
+              </button>
+            );
+          })}
         </div>
         <div className="flex gap-2">
           <Button

@@ -971,6 +971,71 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </div>
         </div>
 
+        {/* Region & sharing */}
+        <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <h3 className="font-headline text-lg font-medium text-headline flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-accent" />
+              Redaksjon
+            </h3>
+            {articleId && form.title && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={forkArticle}
+                disabled={forking}
+                className="gap-2"
+                title="Lag en regional versjon (kladd) som du kan tilpasse"
+              >
+                {forking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <GitFork className="w-3.5 h-3.5" />}
+                {forking ? "Forker..." : "Fork som regional versjon"}
+              </Button>
+            )}
+          </div>
+
+          {forkedFromArticleId && (
+            <div className="px-3 py-2 rounded-lg bg-accent/10 border border-accent/20 text-xs text-foreground/80 flex items-center gap-2">
+              <GitFork className="w-3.5 h-3.5 text-accent" />
+              Basert på{" "}
+              <button
+                type="button"
+                onClick={() => window.open(`/article/${forkedFromArticleId}`, "_blank")}
+                className="underline hover:text-accent font-medium"
+              >
+                {forkedFromTitle || "originalartikkel"}
+              </button>
+            </div>
+          )}
+
+          <div>
+            <Label>Hovedredaksjon</Label>
+            <p className="text-xs text-muted-foreground mb-1.5">Region som eier artikkelen.</p>
+            <RegionPicker
+              mode="single"
+              value={form.region_slug}
+              onChange={(slug) => updateForm({ region_slug: slug })}
+              placeholder="Velg redaksjon"
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
+              <Label className="m-0">Del med andre redaksjoner</Label>
+            </div>
+            <p className="text-xs text-muted-foreground mb-2">
+              Velg redaksjoner som også skal kunne se og bruke denne artikkelen.
+            </p>
+            <RegionPicker
+              mode="multi"
+              value={sharedRegions}
+              onChange={setSharedRegions}
+              disabledSlug={form.region_slug}
+            />
+          </div>
+        </div>
+
         {/* Metadata */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
           <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">Metadata</h3>

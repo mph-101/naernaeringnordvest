@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2, Undo2 } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2, Undo2, ExternalLink } from "lucide-react";
 import { Dialog as ImproveDialog, DialogContent as ImproveDialogContent, DialogHeader as ImproveDialogHeader, DialogTitle as ImproveDialogTitle, DialogFooter as ImproveDialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -987,6 +987,19 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             {autoSaveStatus === "saving" && <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Lagrer...</>}
             {autoSaveStatus === "unsaved" && <><CloudOff className="w-3.5 h-3.5 text-amber-500" /> Ulagret</>}
           </div>
+        )}
+
+        {articleId && (
+          <a
+            href={`/article/${articleId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-subhead font-medium text-foreground bg-card hover:bg-muted border border-border rounded-full transition-colors"
+            title={form.status === "published" ? "Åpne publisert artikkel i ny fane" : "Åpne forhåndsvisning av kladd i ny fane"}
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            {form.status === "published" ? "Gå til artikkel" : "Forhåndsvis"}
+          </a>
         )}
 
         <div className="flex items-center gap-2">

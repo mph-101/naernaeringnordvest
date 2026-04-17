@@ -368,14 +368,10 @@
 /* Tydelig avstand mellom avsnitt i artikler — overstyrer Tailwind Typography */
 .article-body p {
   margin-top: 0 !important;
-  margin-bottom: 4em !important;
+  margin-bottom: 2em !important;
   line-height: 1.6 !important;
 }
 .article-body p:last-child {
   margin-bottom: 0 !important;
 }
-@media (min-width: 768px) {
-  .article-body p {
-    margin-bottom: 5em !important;
-  }
 }

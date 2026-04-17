@@ -62,7 +62,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [generatingTitleExcerpt, setGeneratingTitleExcerpt] = useState(false);
   const [proofreading, setProofreading] = useState(false);
   const [generatingSubheadings, setGeneratingSubheadings] = useState(false);
-  const [proofSuggestions, setProofSuggestions] = useState<{ original: string; suggestion: string; reason: string; category: string }[]>([]);
+  const [proofSuggestions, setProofSuggestions] = useState<{ id: string; original: string; suggestion: string; reason: string; category: string }[]>([]);
   const [improving, setImproving] = useState(false);
   const [improveFocus, setImproveFocus] = useState<string[]>(["sitater", "lenker", "lengde", "struktur", "stil"]);
   const [improvePopoverOpen, setImprovePopoverOpen] = useState(false);

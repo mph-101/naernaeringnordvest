@@ -66,7 +66,7 @@ interface RichTextEditorProps {
   highlights?: ProofreadHighlight[];
 }
 
-const highlightPluginKey = new PluginKey("proofread-highlights");
+const highlightPluginKey = new PluginKey<ProofreadHighlight[]>("proofread-highlights");
 
 const HighlightExtension = Extension.create<{ highlights: ProofreadHighlight[] }>({
   name: "proofreadHighlights",
@@ -76,11 +76,19 @@ const HighlightExtension = Extension.create<{ highlights: ProofreadHighlight[] }
   addProseMirrorPlugins() {
     const ext = this;
     return [
-      new Plugin({
+      new Plugin<ProofreadHighlight[]>({
         key: highlightPluginKey,
+        state: {
+          init: () => (ext.options.highlights || []) as ProofreadHighlight[],
+          apply: (tr, value) => {
+            const next = tr.getMeta(highlightPluginKey);
+            if (next !== undefined) return next as ProofreadHighlight[];
+            return value;
+          },
+        },
         props: {
           decorations: (state) => {
-            const items: ProofreadHighlight[] = ext.options.highlights || [];
+            const items: ProofreadHighlight[] = highlightPluginKey.getState(state) || [];
             if (!items.length) return DecorationSet.empty;
             const decorations: Decoration[] = [];
             // Track first match per highlight id so we only show the inline

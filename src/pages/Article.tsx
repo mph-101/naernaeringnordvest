@@ -220,7 +220,7 @@ const Article = () => {
             <ArticleBody html={body} />
           ) : (
             body.split('\n\n').map((paragraph, index) => (
-              <p key={index} className={`text-foreground font-body leading-[2.05] mb-12 ${index === 0 ? "text-lg md:text-xl font-medium text-headline article-dropcap" : "text-base md:text-lg"}`}>
+              <p key={index} className={`text-foreground font-body leading-[2.05] mb-[2.4em] md:mb-[2.8em] ${index === 0 ? "text-lg md:text-xl font-medium text-headline article-dropcap" : "text-base md:text-lg"}`}>
                 {paragraph}
               </p>
             ))

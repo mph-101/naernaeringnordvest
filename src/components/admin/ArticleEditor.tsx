@@ -72,6 +72,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     word_count_before: number;
     word_count_after: number;
   } | null>(null);
+  const [composedBody, setComposedBody] = useState<string>("");
   const [chartDialogOpen, setChartDialogOpen] = useState(false);
   const [editingChart, setEditingChart] = useState<{ chart: ChartData; pos: number } | null>(null);
   const [factBoxDialogOpen, setFactBoxDialogOpen] = useState(false);
@@ -523,9 +524,37 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
   const applyImprovedBody = () => {
     if (!improveResult) return;
-    updateForm({ body: improveResult.improved_body });
+    // If the composed text from accepted hunks matches the full improved
+    // version, use the AI's HTML directly to preserve markup. Otherwise
+    // rebuild HTML from the user's per-hunk decisions as paragraphs.
+    const stripHtml = (h: string) =>
+      h
+        .replace(/<\s*(p|h[1-6]|li|blockquote|br|div)[^>]*>/gi, "\n")
+        .replace(/<\/\s*(p|h[1-6]|li|blockquote|div)\s*>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/g, " ")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+    const fullImprovedPlain = stripHtml(improveResult.improved_body);
+    const fullOriginalPlain = stripHtml(form.body);
+    let nextBody: string;
+    if (composedBody.trim() === fullImprovedPlain.trim()) {
+      nextBody = improveResult.improved_body;
+    } else if (composedBody.trim() === fullOriginalPlain.trim()) {
+      nextBody = form.body;
+    } else {
+      const paragraphs = composedBody
+        .split(/\n{2,}/)
+        .map((p) => p.trim())
+        .filter(Boolean)
+        .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
+        .join("\n");
+      nextBody = paragraphs || improveResult.improved_body;
+    }
+    updateForm({ body: nextBody });
     toast({ title: "Brødtekst oppdatert", description: improveResult.summary });
     setImproveResult(null);
+    setComposedBody("");
   };
 
   const applyProofSuggestion = (index: number) => {
@@ -1410,7 +1439,11 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                   </div>
                 </div>
                 <div className="max-h-[50vh] overflow-y-auto">
-                  <InlineDiff original={form.body} improved={improveResult.improved_body} />
+                  <InlineDiff
+                    original={form.body}
+                    improved={improveResult.improved_body}
+                    onResultChange={setComposedBody}
+                  />
                 </div>
               </div>
             </div>

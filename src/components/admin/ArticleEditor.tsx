@@ -989,6 +989,19 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </div>
         )}
 
+        {articleId && (
+          <a
+            href={`/article/${articleId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-subhead font-medium text-foreground bg-card hover:bg-muted border border-border rounded-full transition-colors"
+            title={form.published ? "Åpne publisert artikkel i ny fane" : "Åpne forhåndsvisning av kladd i ny fane"}
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            {form.published ? "Gå til artikkel" : "Forhåndsvis"}
+          </a>
+        )}
+
         <div className="flex items-center gap-2">
           {(["draft", "review", "published"] as ArticleStatus[]).map((s) => (
             <button

@@ -60,7 +60,7 @@ function estimateReadTime(body: string, type: string, lang: "no" | "en"): string
   return `${mins} ${suffix}`;
 }
 
-export function NewsFeed() {
+export const NewsFeed = forwardRef<HTMLDivElement>((_props, _ref) => {
   const { language, region } = useTheme();
   const t = translations[language];
   const [dbArticles, setDbArticles] = useState<DbArticle[]>([]);

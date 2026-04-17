@@ -185,11 +185,9 @@ export function NewsFeed() {
     type: a.type as "article" | "video" | "podcast",
     premium: a.premium,
     image_url: a.image_url,
+    region_slug: a.region_slug,
     featured: index === 0,
   }));
-
-  const sports = t.sports;
-  const allSport = sports[0];
 
   let filteredNews = selectedTopic === allTopic
     ? articles
@@ -197,6 +195,14 @@ export function NewsFeed() {
 
   if (selectedTagId) {
     filteredNews = filteredNews.filter((item) => articleTagMap.get(item.id)?.includes(selectedTagId));
+  }
+
+  if (selectedRegionSlug !== "all") {
+    filteredNews = filteredNews.filter((item) => {
+      if (item.region_slug === selectedRegionSlug) return true;
+      const shared = articleSharedRegions.get(item.id) || [];
+      return shared.includes(selectedRegionSlug);
+    });
   }
 
   // Featured flag is index-based on the original list — recompute after filter

@@ -455,6 +455,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
     setProofreading(true);
     setProofSuggestions([]);
+    setProofUndoStack([]);
     try {
       const customRules = loadProofreadRules();
       const settings = loadProofreadSettings();

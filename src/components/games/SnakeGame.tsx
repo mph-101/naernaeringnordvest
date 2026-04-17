@@ -522,6 +522,28 @@ export const SnakeGame = ({ language }: SnakeGameProps) => {
           </ol>
         )}
 
+        {/* Show user's rank if not in top 10 */}
+        {userRank && userRank > 10 && (
+          <div className="mt-3 pt-3 border-t border-border">
+            <div className="flex items-center justify-between text-sm rounded-md px-2 py-1.5 bg-primary/10 text-foreground">
+              <span className="flex items-center gap-2">
+                <span className="text-xs w-5 text-center font-bold text-muted-foreground">
+                  {userRank}
+                </span>
+                <span className="truncate">
+                  {isNo ? "Din plassering" : "Your position"}
+                  <span className="text-xs text-muted-foreground ml-1">
+                    ({isNo ? "deg" : "you"})
+                  </span>
+                </span>
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {isNo ? "Utenfor topp 10" : "Outside top 10"}
+              </span>
+            </div>
+          </div>
+        )}
+
         <div className="mt-4 pt-3 border-t border-border">
           {user ? (
             <div className="flex items-start gap-3">

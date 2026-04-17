@@ -23,10 +23,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { body, guideline, articleType } = await req.json() as {
+    const { body, guideline, articleType, focusAreas } = await req.json() as {
       body: string;
       guideline?: Guideline | null;
       articleType?: string;
+      focusAreas?: string[];
     };
 
     if (!body || typeof body !== "string" || body.length < 50) {
@@ -50,6 +51,23 @@ REDAKSJONELLE REGLER:
 ${guideline.rules || "(ingen tilleggsregler)"}\n`
       : `\nARTIKKELTYPE: ${articleType || "ukjent"} (ingen retningslinjer funnet)
 NÅVÆRENDE LENGDE: ~${wordCount} ord, ~${paragraphCount} avsnitt\n`;
+
+    // Allowed focus areas. Empty / missing = "all" (alt).
+    const allFocus = ["sitater", "lenker", "lengde", "struktur", "stil"] as const;
+    const focus = (focusAreas && focusAreas.length > 0)
+      ? focusAreas.filter((f) => (allFocus as readonly string[]).includes(f))
+      : [...allFocus];
+
+    const focusLabels: Record<string, string> = {
+      sitater: "Sitatformat (typografiske «», blockquote for >40 ord, behold ordrett innhold)",
+      lenker: "Kildelenker (behold/normaliser <a href>, IKKE fabrikker URL-er)",
+      lengde: "Ordtelling (juster mot MAKS ORD uten å fjerne fakta)",
+      struktur: "Struktur (avsnittinndeling, mellomtitler <h2> ved >400 ord)",
+      stil: "Stil (norsk redaksjonell tone, klarhet)",
+    };
+
+    const focusSection = `\nFOKUSOMRÅDER (gjør KUN endringer som faller inn under disse — la alt annet stå urørt):
+${focus.map((f) => `- ${focusLabels[f]}`).join("\n")}\n`;
 
     const systemPrompt = `Du er en erfaren norsk redaktør for en næringslivsavis. Du forbedrer brødtekst i HTML-format slik at den følger redaksjonelle retningslinjer, har riktig sitatformat og kildelenker, og holder seg innenfor anbefalt lengde.
 
@@ -76,6 +94,8 @@ LENGDE & STRUKTUR:
 
 REGLER FRA REDAKSJONEN HAR HØYESTE PRIORITET. Følg dem nøye.
 
+VIKTIG: Begrens endringene til fokusområdene som er angitt i brukerprompten. Hvis et område ikke er listet, IKKE rør det. Eksempel: Hvis kun "sitater" er valgt, skal du IKKE endre lengde, struktur eller stil.
+
 Returner et JSON-objekt med:
 - "improved_body": HTML-strengen for forbedret brødtekst
 - "summary": kort norsk sammendrag (maks 25 ord) av hva du endret
@@ -83,8 +103,7 @@ Returner et JSON-objekt med:
 - "word_count_before": tall
 - "word_count_after": tall`;
 
-    const userPrompt = `${guidelineSection}
-
+    const userPrompt = `${guidelineSection}${focusSection}
 ORIGINAL BRØDTEKST (HTML):
 ${body.slice(0, 20000)}`;
 

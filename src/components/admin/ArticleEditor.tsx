@@ -61,6 +61,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [proofreading, setProofreading] = useState(false);
   const [proofSuggestions, setProofSuggestions] = useState<{ original: string; suggestion: string; reason: string; category: string }[]>([]);
   const [improving, setImproving] = useState(false);
+  const [improveFocus, setImproveFocus] = useState<string[]>(["sitater", "lenker", "lengde", "struktur", "stil"]);
+  const [improvePopoverOpen, setImprovePopoverOpen] = useState(false);
   const [improveResult, setImproveResult] = useState<{
     improved_body: string;
     summary: string;
@@ -490,6 +492,11 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       toast({ title: "For kort", description: "Brødteksten må være minst 50 tegn", variant: "destructive" });
       return;
     }
+    if (improveFocus.length === 0) {
+      toast({ title: "Velg minst ett fokusområde", variant: "destructive" });
+      return;
+    }
+    setImprovePopoverOpen(false);
     setImproving(true);
     setImproveResult(null);
     try {
@@ -499,7 +506,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         .eq("article_type", form.type)
         .maybeSingle();
       const { data, error } = await supabase.functions.invoke("improve-article-body", {
-        body: { body: form.body, guideline: gls ?? null, articleType: form.type },
+        body: { body: form.body, guideline: gls ?? null, articleType: form.type, focusAreas: improveFocus },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

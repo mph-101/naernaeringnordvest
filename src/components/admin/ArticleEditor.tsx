@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2 } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2, Undo2 } from "lucide-react";
 import { Dialog as ImproveDialog, DialogContent as ImproveDialogContent, DialogHeader as ImproveDialogHeader, DialogTitle as ImproveDialogTitle, DialogFooter as ImproveDialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +63,12 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [proofreading, setProofreading] = useState(false);
   const [generatingSubheadings, setGeneratingSubheadings] = useState(false);
   const [proofSuggestions, setProofSuggestions] = useState<{ id: string; original: string; suggestion: string; reason: string; category: string }[]>([]);
+  // Undo stack for accepted proofreading changes. Each entry captures the
+  // body BEFORE the change plus the suggestion(s) that were applied, so we
+  // can both restore the text and re-add the suggestion(s) to the panel.
+  const [proofUndoStack, setProofUndoStack] = useState<
+    { previousBody: string; restored: { id: string; original: string; suggestion: string; reason: string; category: string }[] }[]
+  >([]);
   const [improving, setImproving] = useState(false);
   const [improveFocus, setImproveFocus] = useState<string[]>(["sitater", "lenker", "lengde", "struktur", "stil"]);
   const [improvePopoverOpen, setImprovePopoverOpen] = useState(false);
@@ -449,6 +455,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
     setProofreading(true);
     setProofSuggestions([]);
+    setProofUndoStack([]);
     try {
       const customRules = loadProofreadRules();
       const settings = loadProofreadSettings();
@@ -650,12 +657,14 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     setProofSuggestions(prev => {
       const s = prev.find(p => p.id === id);
       if (!s) return prev;
-      const { html: newBody, replaced } = replaceInHtmlBody(form.body, s.original, s.suggestion);
+      const previousBody = form.body;
+      const { html: newBody, replaced } = replaceInHtmlBody(previousBody, s.original, s.suggestion);
       if (!replaced) {
         toast({ title: "Fant ikke teksten", description: `Kunne ikke finne "${s.original}" i brødteksten`, variant: "destructive" });
         return prev;
       }
       updateForm({ body: newBody });
+      setProofUndoStack(stack => [...stack, { previousBody, restored: [s] }]);
       toast({ title: "Endret", description: `"${s.original}" → "${s.suggestion}"` });
       return prev.filter(p => p.id !== id);
     });
@@ -667,31 +676,54 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
   const applyAllProofSuggestions = () => {
     if (proofSuggestions.length === 0) return;
-    let newBody = form.body;
-    let applied = 0;
+    const previousBody = form.body;
+    let newBody = previousBody;
+    const appliedSuggestions: typeof proofSuggestions = [];
     const skipped: typeof proofSuggestions = [];
     for (const s of proofSuggestions) {
       const { html, replaced } = replaceInHtmlBody(newBody, s.original, s.suggestion);
       if (replaced) {
         newBody = html;
-        applied++;
+        appliedSuggestions.push(s);
       } else {
         skipped.push(s);
       }
     }
-    if (applied > 0) {
+    if (appliedSuggestions.length > 0) {
       updateForm({ body: newBody });
+      setProofUndoStack(stack => [...stack, { previousBody, restored: appliedSuggestions }]);
     }
     setProofSuggestions(skipped);
-    if (applied > 0) {
+    if (appliedSuggestions.length > 0) {
       toast({
         title: "Alle forslag godtatt",
-        description: `${applied} endring${applied === 1 ? "" : "er"} brukt${skipped.length ? `, ${skipped.length} hoppet over` : ""}`,
+        description: `${appliedSuggestions.length} endring${appliedSuggestions.length === 1 ? "" : "er"} brukt${skipped.length ? `, ${skipped.length} hoppet over` : ""}`,
       });
     } else {
       toast({ title: "Ingen endringer", description: "Fant ingen treff å bruke", variant: "destructive" });
     }
   };
+
+  const undoLastProofChange = useCallback(() => {
+    setProofUndoStack(stack => {
+      if (stack.length === 0) return stack;
+      const last = stack[stack.length - 1];
+      updateForm({ body: last.previousBody });
+      // Re-add the rolled-back suggestions to the panel so the journalist
+      // can choose to apply them again (or dismiss them).
+      setProofSuggestions(prev => {
+        const existingIds = new Set(prev.map(p => p.id));
+        const restored = last.restored.filter(r => !existingIds.has(r.id));
+        return [...restored, ...prev];
+      });
+      const count = last.restored.length;
+      toast({
+        title: "Angret",
+        description: `${count} endring${count === 1 ? "" : "er"} rullet tilbake`,
+      });
+      return stack.slice(0, -1);
+    });
+  }, [toast, updateForm]);
 
   // Bridge inline accept/reject buttons rendered as ProseMirror widget
   // decorations back into React state. The buttons dispatch DOM CustomEvents
@@ -1156,24 +1188,47 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               )}
             </div>
 
-            {proofSuggestions.length > 0 && (
+            {(proofSuggestions.length > 0 || proofUndoStack.length > 0) && (
               <div className="mt-3 flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-border bg-muted/40">
                 <span className="text-sm text-foreground">
-                  <span className="font-medium">{proofSuggestions.length}</span>{" "}
-                  forslag vises inline i brødteksten — klikk{" "}
-                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold align-middle">✓</span>{" "}
-                  for å godta eller{" "}
-                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold align-middle">✕</span>{" "}
-                  for å avvise
+                  {proofSuggestions.length > 0 ? (
+                    <>
+                      <span className="font-medium">{proofSuggestions.length}</span>{" "}
+                      forslag vises inline i brødteksten — klikk{" "}
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold align-middle">✓</span>{" "}
+                      for å godta eller{" "}
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold align-middle">✕</span>{" "}
+                      for å avvise
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">Alle forslag behandlet — du kan fortsatt angre siste endring</span>
+                  )}
                 </span>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Button type="button" variant="outline" size="sm" onClick={applyAllProofSuggestions} className="h-7 gap-1.5 text-xs">
-                    <Check className="w-3.5 h-3.5" />
-                    Godta alle
-                  </Button>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="h-7 text-xs">
-                    Avvis alle
-                  </Button>
+                  {proofUndoStack.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={undoLastProofChange}
+                      className="h-7 gap-1.5 text-xs"
+                      title={`Angre siste endring (${proofUndoStack.length} kan angres)`}
+                    >
+                      <Undo2 className="w-3.5 h-3.5" />
+                      Angre siste
+                    </Button>
+                  )}
+                  {proofSuggestions.length > 0 && (
+                    <>
+                      <Button type="button" variant="outline" size="sm" onClick={applyAllProofSuggestions} className="h-7 gap-1.5 text-xs">
+                        <Check className="w-3.5 h-3.5" />
+                        Godta alle
+                      </Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="h-7 text-xs">
+                        Avvis alle
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             )}

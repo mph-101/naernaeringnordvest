@@ -1470,6 +1470,8 @@ export type Database = {
       admin_list_users: {
         Args: { _limit?: number; _search?: string }
         Returns: {
+          api_key_count: number
+          api_last_used_at: string
           articles_read: number
           created_at: string
           display_name: string

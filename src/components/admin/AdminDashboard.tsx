@@ -12,7 +12,8 @@ import {
   ArrowLeft,
   Menu,
   X,
-  BarChart3
+  BarChart3,
+  UserCog
 } from "lucide-react";
 import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
@@ -22,15 +23,19 @@ import { FactBoxesManager } from "./FactBoxesManager";
 import { TagsManager } from "./TagsManager";
 import { SourcesManager } from "./SourcesManager";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
+import { UsersManager } from "./UsersManager";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AdminDashboardProps {
   session: any;
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources" | "analytics";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources" | "analytics" | "users";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole("admin");
   const [view, setView] = useState<View>("dashboard");
   const [editingArticleId, setEditingArticleId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -54,6 +59,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "tags" as View, label: "Tags", icon: TagIcon },
     { id: "tips" as View, label: "Tips", icon: MessageSquare },
     { id: "job-changes" as View, label: "Jobbytter", icon: Users },
+    ...(isAdmin ? [{ id: "users" as View, label: "Brukere", icon: UserCog }] : []),
   ];
 
   return (
@@ -176,8 +182,20 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 icon={Users}
                 onClick={() => setView("job-changes")}
               />
+              {isAdmin && (
+                <DashboardCard
+                  title="Brukere"
+                  description="Administrer roller og tilganger"
+                  icon={UserCog}
+                  onClick={() => setView("users")}
+                />
+              )}
             </div>
           </div>
+        )}
+
+        {view === "users" && isAdmin && (
+          <UsersManager />
         )}
 
         {view === "analytics" && (

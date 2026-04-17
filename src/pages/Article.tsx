@@ -215,12 +215,12 @@ const Article = () => {
           </div>
         )}
 
-        <div className="mb-12 animate-fade-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
+        <div className="mb-16 animate-fade-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
           {isHtml ? (
             <ArticleBody html={body} />
           ) : (
             body.split('\n\n').map((paragraph, index) => (
-              <p key={index} className={`text-foreground font-body leading-[1.85] mb-7 ${index === 0 ? "text-lg md:text-xl font-medium text-headline" : "text-base md:text-lg"}`}>
+              <p key={index} className={`text-foreground font-body leading-[1.95] mb-8 ${index === 0 ? "text-lg md:text-xl font-medium text-headline" : "text-base md:text-lg"}`}>
                 {paragraph}
               </p>
             ))

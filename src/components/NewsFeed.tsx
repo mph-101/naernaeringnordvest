@@ -66,27 +66,66 @@ export function NewsFeed() {
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [topTags, setTopTags] = useState<TagWithCount[]>([]);
   const [articleTagMap, setArticleTagMap] = useState<Map<string, string[]>>(new Map());
-  const [selectedSport, setSelectedSport] = useState<string>(() => {
-    if (region && regionToSportLabel[region]) {
-      return regionToSportLabel[region][language];
-    }
-    return "all";
-  });
+  const [editorialRegions, setEditorialRegions] = useState<EditorialRegion[]>([]);
+  const [selectedRegionSlug, setSelectedRegionSlug] = useState<string | "all">("all");
+  const [userEditorialRegion, setUserEditorialRegion] = useState<string | null>(null);
+  const [articleSharedRegions, setArticleSharedRegions] = useState<Map<string, string[]>>(new Map());
   const navigate = useNavigate();
+
+  // Load region list + the signed-in user's primary region (used as default filter)
+  useEffect(() => {
+    fetchRegions().then(setEditorialRegions).catch(() => {});
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("editorial_region")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const slug = (data as any)?.editorial_region as string | null | undefined;
+      if (slug) {
+        setUserEditorialRegion(slug);
+        setSelectedRegionSlug(slug);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     const fetchArticles = async () => {
       const { data } = await supabase
         .from("articles")
-        .select("id, title, title_en, excerpt, excerpt_en, body, category, author, type, premium, read_time, image_url, published_at, key_points")
+        .select("id, title, title_en, excerpt, excerpt_en, body, category, author, type, premium, read_time, image_url, published_at, key_points, region_slug")
         .eq("published", true)
         .order("published_at", { ascending: false })
-        .limit(20);
-      setDbArticles(data || []);
+        .limit(40);
+      setDbArticles((data || []) as unknown as DbArticle[]);
       setLoading(false);
     };
     fetchArticles();
   }, []);
+
+  // Fetch shared regions for loaded articles
+  useEffect(() => {
+    if (dbArticles.length === 0) {
+      setArticleSharedRegions(new Map());
+      return;
+    }
+    const ids = dbArticles.map((a) => a.id);
+    (async () => {
+      const { data } = await supabase
+        .from("article_shared_regions" as any)
+        .select("article_id, region_slug")
+        .in("article_id", ids);
+      const map = new Map<string, string[]>();
+      ((data || []) as any[]).forEach((row: any) => {
+        const list = map.get(row.article_id) || [];
+        list.push(row.region_slug);
+        map.set(row.article_id, list);
+      });
+      setArticleSharedRegions(map);
+    })();
+  }, [dbArticles]);
 
   // Fetch tag links for the loaded articles + compute top tags
   useEffect(() => {

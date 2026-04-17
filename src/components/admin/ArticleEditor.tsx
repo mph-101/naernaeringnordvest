@@ -63,6 +63,12 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [proofreading, setProofreading] = useState(false);
   const [generatingSubheadings, setGeneratingSubheadings] = useState(false);
   const [proofSuggestions, setProofSuggestions] = useState<{ id: string; original: string; suggestion: string; reason: string; category: string }[]>([]);
+  // Undo stack for accepted proofreading changes. Each entry captures the
+  // body BEFORE the change plus the suggestion(s) that were applied, so we
+  // can both restore the text and re-add the suggestion(s) to the panel.
+  const [proofUndoStack, setProofUndoStack] = useState<
+    { previousBody: string; restored: { id: string; original: string; suggestion: string; reason: string; category: string }[] }[]
+  >([]);
   const [improving, setImproving] = useState(false);
   const [improveFocus, setImproveFocus] = useState<string[]>(["sitater", "lenker", "lengde", "struktur", "stil"]);
   const [improvePopoverOpen, setImprovePopoverOpen] = useState(false);

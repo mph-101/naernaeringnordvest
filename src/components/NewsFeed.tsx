@@ -161,6 +161,18 @@ export function NewsFeed() {
     ? articles
     : articles.filter((item) => item.category === selectedTopic);
 
+  if (selectedTagId) {
+    filteredNews = filteredNews.filter((item) => articleTagMap.get(item.id)?.includes(selectedTagId));
+  }
+
+  // Featured flag is index-based on the original list — recompute after filter
+  filteredNews = filteredNews.map((item, idx) => ({ ...item, featured: idx === 0 }));
+
+  const selectedTagName = useMemo(
+    () => topTags.find((t) => t.id === selectedTagId)?.name || null,
+    [topTags, selectedTagId],
+  );
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "video": return <Play className="w-3.5 h-3.5" />;

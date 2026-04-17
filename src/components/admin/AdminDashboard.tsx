@@ -45,6 +45,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "dashboard" as View, label: "Dashboard", icon: LayoutDashboard },
     { id: "articles" as View, label: "Artikler", icon: FileText },
     { id: "fact-boxes" as View, label: "Faktabokser", icon: BookOpen },
+    { id: "tags" as View, label: "Tags", icon: TagIcon },
     { id: "tips" as View, label: "Tips", icon: MessageSquare },
     { id: "job-changes" as View, label: "Jobbytter", icon: Users },
   ];
@@ -140,6 +141,12 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 onClick={() => setView("fact-boxes")}
               />
               <DashboardCard
+                title="Tags"
+                description="Nøkkelord, redigering og sammenslåing"
+                icon={TagIcon}
+                onClick={() => setView("tags")}
+              />
+              <DashboardCard
                 title="Tips"
                 description="Se innkomne tips fra lesere"
                 icon={MessageSquare}
@@ -176,6 +183,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "fact-boxes" && (
           <FactBoxesManager />
+        )}
+
+        {view === "tags" && (
+          <TagsManager />
         )}
       </main>
     </div>

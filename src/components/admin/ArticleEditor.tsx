@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "./RichTextEditor";
@@ -20,6 +20,8 @@ import { encodeFactBox, type FactBoxData } from "@/components/factbox/FactBox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArticleTagInput } from "./ArticleTagInput";
 import { AIDraftFromSourcesButton } from "./AIDraftFromSourcesButton";
+import { RegionPicker } from "./RegionPicker";
+import { fetchRegions, type EditorialRegion } from "@/lib/regions";
 import type { Tag as ArticleTag } from "@/lib/tag-utils";
 
 interface ArticleEditorProps {

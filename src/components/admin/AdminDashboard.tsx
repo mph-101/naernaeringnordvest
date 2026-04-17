@@ -6,6 +6,7 @@ import {
   MessageSquare, 
   Users, 
   BookOpen,
+  Tag as TagIcon,
   LogOut,
   ArrowLeft,
   Menu,
@@ -16,13 +17,14 @@ import { ArticleEditor } from "./ArticleEditor";
 import { TipsList } from "./TipsList";
 import { JobChangeReview } from "./JobChangeReview";
 import { FactBoxesManager } from "./FactBoxesManager";
+import { TagsManager } from "./TagsManager";
 
 interface AdminDashboardProps {
   session: any;
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const [view, setView] = useState<View>("dashboard");
@@ -43,6 +45,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "dashboard" as View, label: "Dashboard", icon: LayoutDashboard },
     { id: "articles" as View, label: "Artikler", icon: FileText },
     { id: "fact-boxes" as View, label: "Faktabokser", icon: BookOpen },
+    { id: "tags" as View, label: "Tags", icon: TagIcon },
     { id: "tips" as View, label: "Tips", icon: MessageSquare },
     { id: "job-changes" as View, label: "Jobbytter", icon: Users },
   ];
@@ -138,6 +141,12 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 onClick={() => setView("fact-boxes")}
               />
               <DashboardCard
+                title="Tags"
+                description="Nøkkelord, redigering og sammenslåing"
+                icon={TagIcon}
+                onClick={() => setView("tags")}
+              />
+              <DashboardCard
                 title="Tips"
                 description="Se innkomne tips fra lesere"
                 icon={MessageSquare}
@@ -174,6 +183,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "fact-boxes" && (
           <FactBoxesManager />
+        )}
+
+        {view === "tags" && (
+          <TagsManager />
         )}
       </main>
     </div>

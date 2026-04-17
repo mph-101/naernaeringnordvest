@@ -21,6 +21,7 @@ import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 import Hjernetrim from "./pages/Hjernetrim";
+import Tag from "./pages/Tag";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/velkommen" element={<Onboarding />} />
               <Route path="/hjernetrim" element={<Hjernetrim />} />
+              <Route path="/tag/:slug" element={<Tag />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

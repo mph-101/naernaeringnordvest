@@ -203,7 +203,7 @@ const Article = () => {
 
       <article className="max-w-xl mx-auto px-6 pt-10 pb-14">
         <BackButton />
-        <h1 className="font-headline text-3xl md:text-4xl lg:text-[2.75rem] font-bold text-headline leading-[1.15] mb-6 animate-fade-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>{title}</h1>
+        <h1 className="font-headline text-2xl md:text-3xl lg:text-4xl font-bold text-headline leading-[1.15] mb-6 animate-fade-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>{title}</h1>
         <div className="animate-fade-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}><ArticleMeta /></div>
 
         {keyPoints.length > 0 && (

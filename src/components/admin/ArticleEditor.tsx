@@ -1139,7 +1139,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 onEditFactBox={handleEditFactBox}
                 editorRef={(ed) => { editorInstanceRef.current = ed; }}
                 placeholder="Skriv artikkelens innhold her..."
-                highlights={proofSuggestions.map((s) => ({ text: s.original, category: s.category }))}
+                highlights={proofSuggestions.map((s) => ({
+                  id: s.id,
+                  text: s.original,
+                  suggestion: s.suggestion,
+                  reason: s.reason,
+                  category: s.category,
+                }))}
               />
               {isDraggingAudio && (
                 <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center pointer-events-none z-10">
@@ -1151,41 +1157,23 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             </div>
 
             {proofSuggestions.length > 0 && (
-              <div className="mt-3 border border-border rounded-lg overflow-hidden">
-                <div className="bg-muted/50 px-4 py-2 flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-foreground">{proofSuggestions.length} forslag til forbedring</span>
-                  <div className="flex items-center gap-1">
-                    <Button type="button" variant="outline" size="sm" onClick={applyAllProofSuggestions} className="h-7 gap-1.5 text-xs">
-                      <Check className="w-3.5 h-3.5" />
-                      Godta alle
-                    </Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="text-xs">Lukk alle</Button>
-                  </div>
-                </div>
-                <div className="divide-y divide-border max-h-80 overflow-y-auto">
-                  {proofSuggestions.map((s, i) => (
-                    <div key={i} className="px-4 py-3 flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline" className="text-[10px] capitalize">{s.category}</Badge>
-                          <span className="text-xs text-muted-foreground">{s.reason}</span>
-                        </div>
-                        <div className="text-sm">
-                          <span className="line-through text-destructive/70">{s.original}</span>
-                          <span className="mx-1.5 text-muted-foreground">→</span>
-                          <span className="font-medium text-foreground">{s.suggestion}</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-1 shrink-0">
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950" onClick={() => applyProofSuggestion(i)}>
-                          <Check className="w-4 h-4" />
-                        </Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => dismissProofSuggestion(i)}>
-                          <XCircle className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+              <div className="mt-3 flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-border bg-muted/40">
+                <span className="text-sm text-foreground">
+                  <span className="font-medium">{proofSuggestions.length}</span>{" "}
+                  forslag vises inline i brødteksten — klikk{" "}
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold align-middle">✓</span>{" "}
+                  for å godta eller{" "}
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold align-middle">✕</span>{" "}
+                  for å avvise
+                </span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button type="button" variant="outline" size="sm" onClick={applyAllProofSuggestions} className="h-7 gap-1.5 text-xs">
+                    <Check className="w-3.5 h-3.5" />
+                    Godta alle
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="h-7 text-xs">
+                    Avvis alle
+                  </Button>
                 </div>
               </div>
             )}

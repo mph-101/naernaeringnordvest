@@ -83,6 +83,10 @@ const HighlightExtension = Extension.create<{ highlights: ProofreadHighlight[] }
             const items: ProofreadHighlight[] = ext.options.highlights || [];
             if (!items.length) return DecorationSet.empty;
             const decorations: Decoration[] = [];
+            // Track first match per highlight id so we only show the inline
+            // accept/reject chip once even when the same word appears multiple
+            // times in the body.
+            const chipPlaced = new Set<string>();
             state.doc.descendants((node, pos) => {
               if (!node.isText || !node.text) return;
               const text = node.text;
@@ -97,6 +101,16 @@ const HighlightExtension = Extension.create<{ highlights: ProofreadHighlight[] }
                       class: `proofread-highlight proofread-${h.category || "stil"}`,
                     }),
                   );
+                  if (h.suggestion && !chipPlaced.has(h.id)) {
+                    chipPlaced.add(h.id);
+                    decorations.push(
+                      Decoration.widget(to, () => buildSuggestionChip(h), {
+                        side: 1,
+                        ignoreSelection: true,
+                        key: `proofread-chip-${h.id}`,
+                      }),
+                    );
+                  }
                   idx += h.text.length;
                 }
               }
@@ -108,6 +122,61 @@ const HighlightExtension = Extension.create<{ highlights: ProofreadHighlight[] }
     ];
   },
 });
+
+/**
+ * Build a non-editable inline chip rendered right after the highlighted
+ * original text. Shows the suggested replacement plus accept / reject
+ * buttons that dispatch DOM CustomEvents handled by ArticleEditor.
+ */
+function buildSuggestionChip(h: ProofreadHighlight): HTMLElement {
+  const wrapper = document.createElement("span");
+  wrapper.className = "proofread-chip";
+  wrapper.contentEditable = "false";
+  wrapper.setAttribute("data-proofread-id", h.id);
+  if (h.reason) wrapper.title = h.reason;
+
+  const arrow = document.createElement("span");
+  arrow.className = "proofread-chip-arrow";
+  arrow.textContent = "→";
+  wrapper.appendChild(arrow);
+
+  const suggestionEl = document.createElement("span");
+  suggestionEl.className = "proofread-chip-suggestion";
+  suggestionEl.textContent = h.suggestion || "";
+  wrapper.appendChild(suggestionEl);
+
+  const accept = document.createElement("button");
+  accept.type = "button";
+  accept.className = "proofread-chip-btn proofread-chip-accept";
+  accept.setAttribute("aria-label", "Godta forslag");
+  accept.title = "Godta forslag";
+  accept.textContent = "✓";
+  accept.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.dispatchEvent(
+      new CustomEvent("nn:proofread-accept", { detail: { id: h.id } }),
+    );
+  });
+  wrapper.appendChild(accept);
+
+  const reject = document.createElement("button");
+  reject.type = "button";
+  reject.className = "proofread-chip-btn proofread-chip-reject";
+  reject.setAttribute("aria-label", "Avvis forslag");
+  reject.title = "Avvis forslag";
+  reject.textContent = "✕";
+  reject.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.dispatchEvent(
+      new CustomEvent("nn:proofread-reject", { detail: { id: h.id } }),
+    );
+  });
+  wrapper.appendChild(reject);
+
+  return wrapper;
+}
 
 /**
  * Atom-block node that preserves Nær Næring chart figures verbatim

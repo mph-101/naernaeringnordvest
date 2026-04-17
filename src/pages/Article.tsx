@@ -9,6 +9,7 @@ import { RelatedByTags } from "@/components/RelatedByTags";
 import { CompanyMiniProfile } from "@/components/CompanyMiniProfile";
 import { ArticleBody } from "@/components/charts/ArticleBody";
 import { pickDropcapVariant, dropcapClassName } from "@/lib/dropcap";
+import { cropToObjectPosition, parseCrop, parseFocal } from "@/lib/image-crop";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/articles";
@@ -26,6 +27,8 @@ interface ArticleData {
   premium: boolean;
   read_time: string | null;
   image_url: string | null;
+  image_crop: any;
+  image_focal: any;
   published_at: string | null;
   key_points: any;
   title_en: string | null;
@@ -121,6 +124,9 @@ const Article = () => {
   const publishedAt = article.published_at ? timeAgo(article.published_at, language) : "";
   const readTime = article.read_time || "";
   const heroImage = article.image_url ? `url(${article.image_url})` : getArticleImage(article.id, article.category);
+  const heroPosition = article.image_url
+    ? cropToObjectPosition(parseCrop(article.image_crop), parseFocal(article.image_focal))
+    : "center";
 
   const BackButton = () => (
     <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-10 font-body text-sm group">
@@ -187,7 +193,7 @@ const Article = () => {
       <div className="relative w-full h-48 md:h-64 lg:h-72 overflow-hidden">
         <div
           className="absolute inset-0 will-change-transform"
-          style={{ background: heroImage, backgroundSize: 'cover', backgroundPosition: 'center', transform: `translateY(${parallaxOffset}px) scale(1.15)` }}
+          style={{ background: heroImage, backgroundSize: 'cover', backgroundPosition: heroPosition, transform: `translateY(${parallaxOffset}px) scale(1.15)` }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
         <div className="relative flex items-end h-full max-w-2xl mx-auto w-full px-6 pb-8">

@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2 } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck } from "lucide-react";
+import { Dialog as ImproveDialog, DialogContent as ImproveDialogContent, DialogHeader as ImproveDialogHeader, DialogTitle as ImproveDialogTitle, DialogFooter as ImproveDialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "./RichTextEditor";
@@ -58,6 +59,14 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [generatingTitleExcerpt, setGeneratingTitleExcerpt] = useState(false);
   const [proofreading, setProofreading] = useState(false);
   const [proofSuggestions, setProofSuggestions] = useState<{ original: string; suggestion: string; reason: string; category: string }[]>([]);
+  const [improving, setImproving] = useState(false);
+  const [improveResult, setImproveResult] = useState<{
+    improved_body: string;
+    summary: string;
+    issues_found: string[];
+    word_count_before: number;
+    word_count_after: number;
+  } | null>(null);
   const [chartDialogOpen, setChartDialogOpen] = useState(false);
   const [editingChart, setEditingChart] = useState<{ chart: ChartData; pos: number } | null>(null);
   const [factBoxDialogOpen, setFactBoxDialogOpen] = useState(false);
@@ -475,6 +484,40 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
   };
 
+  const improveBody = async () => {
+    if (!form.body || form.body.length < 50) {
+      toast({ title: "For kort", description: "Brødteksten må være minst 50 tegn", variant: "destructive" });
+      return;
+    }
+    setImproving(true);
+    setImproveResult(null);
+    try {
+      const { data: gls } = await supabase
+        .from("editorial_guidelines")
+        .select("article_type, display_name, rules, min_paragraphs, max_words")
+        .eq("article_type", form.type)
+        .maybeSingle();
+      const { data, error } = await supabase.functions.invoke("improve-article-body", {
+        body: { body: form.body, guideline: gls ?? null, articleType: form.type },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (!data?.result?.improved_body) throw new Error("Ingen forbedring returnert");
+      setImproveResult(data.result);
+    } catch (err: any) {
+      toast({ title: "Feil", description: err.message, variant: "destructive" });
+    } finally {
+      setImproving(false);
+    }
+  };
+
+  const applyImprovedBody = () => {
+    if (!improveResult) return;
+    updateForm({ body: improveResult.improved_body });
+    toast({ title: "Brødtekst oppdatert", description: improveResult.summary });
+    setImproveResult(null);
+  };
+
   const applyProofSuggestion = (index: number) => {
     const s = proofSuggestions[index];
     if (!s) return;
@@ -795,11 +838,23 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <Label>Brødtekst *</Label>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-wrap">
                 <ProofreadRules />
                 <Button type="button" variant="outline" size="sm" onClick={proofreadBody} disabled={proofreading || !form.body || form.body.length < 50} className="gap-2">
                   {proofreading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SpellCheck className="w-3.5 h-3.5" />}
                   {proofreading ? "Analyserer..." : "Språkvask"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={improveBody}
+                  disabled={improving || !form.body || form.body.length < 50}
+                  className="gap-2"
+                  title="Sjekk mot retningslinjer: sitatformat, kildelenker, ordtelling og struktur"
+                >
+                  {improving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                  {improving ? "Forbedrer..." : "Forbedre brødtekst"}
                 </Button>
               </div>
             </div>
@@ -1230,6 +1285,70 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         onInsert={handleInsertFactBox}
         initial={editingFactBox?.data || null}
       />
+
+      <ImproveDialog open={!!improveResult} onOpenChange={(open) => !open && setImproveResult(null)}>
+        <ImproveDialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <ImproveDialogHeader>
+            <ImproveDialogTitle className="flex items-center gap-2">
+              <Wand2 className="w-5 h-5 text-accent" />
+              AI-forbedret brødtekst
+            </ImproveDialogTitle>
+          </ImproveDialogHeader>
+          {improveResult && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
+                <p className="text-sm font-body text-foreground">{improveResult.summary}</p>
+                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                  <span>Ord før: <strong className="text-foreground">{improveResult.word_count_before}</strong></span>
+                  <span>→</span>
+                  <span>Ord etter: <strong className="text-foreground">{improveResult.word_count_after}</strong></span>
+                </div>
+              </div>
+
+              {improveResult.issues_found.length > 0 && (
+                <div>
+                  <Label className="flex items-center gap-1.5 mb-2">
+                    <FileCheck className="w-3.5 h-3.5" />
+                    Endringer ({improveResult.issues_found.length})
+                  </Label>
+                  <ul className="space-y-1.5">
+                    {improveResult.issues_found.map((issue, i) => (
+                      <li key={i} className="text-sm font-body text-foreground/80 flex items-start gap-2">
+                        <Check className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
+                        <span>{issue}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Original</Label>
+                  <div
+                    className="prose prose-sm max-w-none dark:prose-invert font-body p-3 rounded-lg border border-border bg-muted/30 max-h-[40vh] overflow-y-auto mt-1.5"
+                    dangerouslySetInnerHTML={{ __html: form.body }}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-accent">Forbedret</Label>
+                  <div
+                    className="prose prose-sm max-w-none dark:prose-invert font-body p-3 rounded-lg border border-accent/30 bg-accent/5 max-h-[40vh] overflow-y-auto mt-1.5"
+                    dangerouslySetInnerHTML={{ __html: improveResult.improved_body }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          <ImproveDialogFooter>
+            <Button variant="outline" onClick={() => setImproveResult(null)}>Avbryt</Button>
+            <Button onClick={applyImprovedBody} className="gap-2">
+              <Check className="w-4 h-4" />
+              Bruk forbedret versjon
+            </Button>
+          </ImproveDialogFooter>
+        </ImproveDialogContent>
+      </ImproveDialog>
     </div>
   );
 };

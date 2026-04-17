@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { User, StickyNote, Users, LogOut, Loader2, Trash2, Globe, Lock, Settings, Eye, EyeOff, Download, FileText, FileDown } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ProfileEditor } from "@/components/ProfileEditor";
+import { ApiKeysSection } from "@/components/ApiKeysSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme, HideableElement } from "@/hooks/useTheme";
 import { toast } from "sonner";
@@ -465,6 +466,8 @@ const Profile = () => {
                 })}
               </div>
             </div>
+
+            <ApiKeysSection isNo={isNo} />
 
             <button
               onClick={() => { resetAllSettings(); toast.success(isNo ? "Innstillinger tilbakestilt" : "Settings reset"); }}

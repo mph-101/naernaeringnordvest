@@ -1605,16 +1605,32 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             <div>
               <p className="text-xs text-muted-foreground mb-2">AI-forslag (klikk for å legge til):</p>
               <div className="flex flex-wrap gap-2">
-                {suggestedCompanyNames.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => lookupAndAddCompany(name)}
-                    className="px-3 py-1 text-xs rounded-full bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
-                  >
-                    + {name}
-                  </button>
-                ))}
+                {suggestedCompanyNames.map((name) => {
+                  const added = companyTags.some(
+                    (t) => t.company_name?.toLowerCase().trim() === name.toLowerCase().trim()
+                  );
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => !added && lookupAndAddCompany(name)}
+                      disabled={added}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full transition-colors ${
+                        added
+                          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 cursor-default"
+                          : "bg-accent/10 text-accent hover:bg-accent/20"
+                      }`}
+                      title={added ? "Allerede lagt til" : "Legg til som tag"}
+                    >
+                      <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full ${
+                        added ? "bg-emerald-500/20" : "bg-accent/20"
+                      }`}>
+                        {added ? <Check className="w-2.5 h-2.5" /> : <Plus className="w-2.5 h-2.5" />}
+                      </span>
+                      {name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

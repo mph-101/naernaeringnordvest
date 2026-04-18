@@ -1655,7 +1655,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 })}
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {companyTags.length > 0 && (
             <div className="flex flex-wrap gap-2">

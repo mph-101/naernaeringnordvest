@@ -23,20 +23,43 @@ Deno.serve(async (req) => {
 
       // If query looks like an org number (9 digits), search by organisasjonsnummer
       const isOrgnr = /^\d{9}$/.test(query.trim());
+      const buildUrl = (navnParam: string) => {
+        let u = `${BRREG_BASE}/enhetsregisteret/api/enheter?navn=${encodeURIComponent(navnParam)}&organisasjonsform=AS,ASA&page=${page}&size=${size}&sort=navn,asc`;
+        if (kommune) u += `&kommunenummer=${kommune}`;
+        if (naeringskode) u += `&naeringskode=${naeringskode}`;
+        return u;
+      };
+
       let apiUrl: string;
       if (isOrgnr) {
         apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsnummer=${query.trim()}&page=${page}&size=${size}`;
       } else {
-        apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?navn=${encodeURIComponent(query)}&organisasjonsform=AS,ASA&page=${page}&size=${size}&sort=navn,asc`;
+        // Use quoted query for exact match — Brreg's `navn=` is prefix-search by default
+        // which can return alphabetically-first unrelated results when no match exists.
+        const cleaned = query.trim().replace(/"/g, "");
+        apiUrl = buildUrl(`"${cleaned}"`);
       }
-      if (kommune) apiUrl += `&kommunenummer=${kommune}`;
-      if (naeringskode) apiUrl += `&naeringskode=${naeringskode}`;
 
-      const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
-      const data = await res.json();
+      let res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
+      let data = await res.json();
+      let enheter = data?._embedded?.enheter || [];
 
-      const enheter = data?._embedded?.enheter || [];
-      const totalElements = data?.page?.totalElements || 0;
+      // Fallback: if exact-match yields nothing and it's a name search, try prefix
+      if (!isOrgnr && enheter.length === 0) {
+        const cleaned = query.trim().replace(/"/g, "");
+        // Drop common suffixes that often prevent prefix matching
+        const stripped = cleaned.replace(/\s+(AS|ASA|SA|ANS|DA|BA)$/i, "").trim();
+        if (stripped.length >= 2) {
+          res = await fetch(buildUrl(stripped), { headers: { Accept: "application/json" } });
+          data = await res.json();
+          enheter = data?._embedded?.enheter || [];
+          // Filter to entries whose name actually contains the search term (case-insensitive)
+          const needle = stripped.toLowerCase();
+          enheter = enheter.filter((e: any) => (e.navn || "").toLowerCase().includes(needle));
+        }
+      }
+
+      const totalElements = enheter.length > 0 ? (data?.page?.totalElements || enheter.length) : 0;
       const totalPages = data?.page?.totalPages || 0;
 
       const companies = enheter.map((e: any) => ({

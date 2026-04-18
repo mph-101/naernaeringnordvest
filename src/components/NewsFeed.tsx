@@ -303,7 +303,7 @@ export const NewsFeed = () => {
             <div className="flex items-center gap-2 mb-2">
               <MapPin className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
               <span className="text-xs font-subhead uppercase tracking-wider text-muted-foreground">
-                {language === "no" ? "Redaksjon" : "Editorial"}
+                {language === "no" ? "Region" : "Region"}
               </span>
             </div>
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6">

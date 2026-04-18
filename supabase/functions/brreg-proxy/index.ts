@@ -23,49 +23,58 @@ Deno.serve(async (req) => {
 
       // If query looks like an org number (9 digits), search by organisasjonsnummer
       const isOrgnr = /^\d{9}$/.test(query.trim());
-      let apiUrl: string;
+      const pageNum = parseInt(page, 10) || 0;
+      const pageSize = parseInt(size, 10) || 20;
+
+      let enheter: any[] = [];
+      let totalElements = 0;
+      let totalPages = 0;
+
       if (isOrgnr) {
-        apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsnummer=${query.trim()}&page=${page}&size=${size}`;
+        let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsnummer=${query.trim()}&page=${page}&size=${size}`;
+        if (kommune) apiUrl += `&kommunenummer=${kommune}`;
+        const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
+        const data = await res.json();
+        enheter = data?._embedded?.enheter || [];
+        totalElements = data?.page?.totalElements || 0;
+        totalPages = data?.page?.totalPages || 0;
       } else {
-        apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?navn=${encodeURIComponent(query)}&organisasjonsform=AS,ASA&page=${page}&size=${size}&sort=navn,asc`;
-      }
-      if (kommune) apiUrl += `&kommunenummer=${kommune}`;
-      if (naeringskode) apiUrl += `&naeringskode=${naeringskode}`;
+        // Brreg's `navn=` is a multi-word AND-search and returns alphabetically.
+        // Fetch a larger candidate pool so the actual best match (e.g. "EQUINOR ASA")
+        // is included even when many subsidiaries share the prefix, then rank.
+        const candidateSize = 100;
+        let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?navn=${encodeURIComponent(query)}&organisasjonsform=AS,ASA&size=${candidateSize}&sort=navn,asc`;
+        if (kommune) apiUrl += `&kommunenummer=${kommune}`;
+        if (naeringskode) apiUrl += `&naeringskode=${naeringskode}`;
 
-      const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
-      const data = await res.json();
+        const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
+        const data = await res.json();
+        const candidates: any[] = data?._embedded?.enheter || [];
 
-      let enheter = data?._embedded?.enheter || [];
-      let totalElements = data?.page?.totalElements || 0;
-      const totalPages = data?.page?.totalPages || 0;
-
-      // Brreg's `navn=` is a multi-word AND-search (each word must appear somewhere),
-      // so a non-existent name like "Tullefirma AS" can return hundreds of thousands of
-      // unrelated rows. Rank/filter results client-side by how well they match the query.
-      if (!isOrgnr && enheter.length > 0) {
         const cleaned = query.trim().toLowerCase();
         const stripped = cleaned.replace(/\s+(as|asa|sa|ans|da|ba)$/i, "").trim();
         const score = (navn: string): number => {
           const n = (navn || "").toLowerCase();
           if (n === cleaned) return 100;
           if (n === `${stripped} as` || n === `${stripped} asa`) return 95;
-          if (n.startsWith(cleaned)) return 80;
-          if (n.startsWith(stripped)) return 70;
-          if (n.includes(cleaned)) return 50;
-          if (n.includes(stripped)) return 40;
+          if (n.startsWith(`${cleaned} `)) return 85;
+          if (n.startsWith(`${stripped} `)) return 75;
+          if (n.startsWith(cleaned)) return 70;
+          if (n.startsWith(stripped)) return 60;
+          if (n.includes(` ${stripped} `) || n.endsWith(` ${stripped}`)) return 50;
+          if (n.includes(stripped)) return 30;
           return 0;
         };
-        const ranked = enheter
-          .map((e: any) => ({ e, s: score(e.navn) }))
-          .filter((x: any) => x.s > 0)
-          .sort((a: any, b: any) => b.s - a.s);
-        if (ranked.length > 0) {
-          enheter = ranked.map((x: any) => x.e);
-          totalElements = ranked.length;
-        } else {
-          enheter = [];
-          totalElements = 0;
-        }
+
+        const ranked = candidates
+          .map((e) => ({ e, s: score(e.navn) }))
+          .filter((x) => x.s > 0)
+          .sort((a, b) => b.s - a.s)
+          .map((x) => x.e);
+
+        totalElements = ranked.length;
+        totalPages = Math.ceil(totalElements / pageSize);
+        enheter = ranked.slice(pageNum * pageSize, (pageNum + 1) * pageSize);
       }
 
       const companies = enheter.map((e: any) => ({

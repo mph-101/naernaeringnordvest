@@ -835,14 +835,18 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       });
       const d = await res.json();
       const c = d.companies?.[0];
-      if (c) {
-        const orgnr = c.organisasjonsnummer;
+      if (c?.orgnr) {
+        const orgnr = c.orgnr;
         if (!companyTags.some(t => t.orgnr === orgnr)) {
           setCompanyTags(prev => [...prev, { orgnr, company_name: c.navn }]);
         }
+        setSuggestedCompanyNames(prev => prev.filter(n => n !== name));
+      } else {
+        toast({ title: "Ikke funnet", description: `Fant ikke «${name}» i Brønnøysundregisteret`, variant: "destructive" });
       }
-      setSuggestedCompanyNames(prev => prev.filter(n => n !== name));
-    } catch {}
+    } catch (err: any) {
+      toast({ title: "Feil", description: err?.message || "Kunne ikke søke", variant: "destructive" });
+    }
   };
 
   const handleKeyPointChange = (index: number, value: string, isEnglish = false) => {

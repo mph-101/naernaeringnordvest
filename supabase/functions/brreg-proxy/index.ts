@@ -235,20 +235,35 @@ Deno.serve(async (req) => {
       const kommune = url.searchParams.get("kommune") || "";
       const fraDate = url.searchParams.get("fra") || "";
       const tilDate = url.searchParams.get("til") || "";
-      let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsform=AS,ASA&konkurs=true&size=50&sort=registreringsdatoEnhetsregisteret,desc`;
+      // Brreg supports neither date-range filter nor sort on konkursdato.
+      // Fetch a larger pool sorted by registration date, then filter client-side on konkursdato.
+      let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsform=AS,ASA&konkurs=true&size=200&sort=registreringsdatoEnhetsregisteret,desc`;
       if (kommune) apiUrl += `&kommunenummer=${kommune}`;
-      if (fraDate) apiUrl += `&fraRegistreringsdato=${fraDate}`;
-      if (tilDate) apiUrl += `&tilRegistreringsdato=${tilDate}`;
 
       const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
       const data = await res.json();
-      const enheter = data?._embedded?.enheter || [];
-      const total = data?.page?.totalElements || 0;
+      let enheter = data?._embedded?.enheter || [];
 
-      const companies = enheter.map((e: any) => ({
+      // Filter on konkursdato if a range is provided
+      if (fraDate || tilDate) {
+        enheter = enheter.filter((e: any) => {
+          const k = e.konkursdato || "";
+          if (!k) return false;
+          if (fraDate && k < fraDate) return false;
+          if (tilDate && k > tilDate) return false;
+          return true;
+        });
+      }
+
+      // Sort by konkursdato desc
+      enheter.sort((a: any, b: any) => (b.konkursdato || "").localeCompare(a.konkursdato || ""));
+
+      const total = enheter.length;
+      const companies = enheter.slice(0, 50).map((e: any) => ({
         orgnr: e.organisasjonsnummer,
         navn: e.navn,
         stiftelsesdato: e.stiftelsesdato,
+        registreringsdato: e.konkursdato || e.registreringsdatoEnhetsregisteret,
         kommune: e.forretningsadresse?.kommune || "",
         naeringsbeskriv: e.naeringskode1?.beskrivelse || "",
         antallAnsatte: e.antallAnsatte || 0,

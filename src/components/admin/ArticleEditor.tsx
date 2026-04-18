@@ -830,11 +830,23 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const lookupAndAddCompany = async (name: string) => {
     try {
       const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
-      const res = await fetch(`${baseUrl}?action=search&q=${encodeURIComponent(name)}&size=1`, {
-        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-      });
-      const d = await res.json();
-      const c = d.companies?.[0];
+      // Strip legal suffix so Brreg's AND-search returns a broader candidate pool.
+      // The proxy ranks results and prefers exact "X AS"/"X ASA" matches.
+      const stripped = name.trim().replace(/\s+(AS|ASA|SA|ANS|DA|BA)$/i, "").trim();
+      const queries = stripped && stripped.toLowerCase() !== name.trim().toLowerCase()
+        ? [stripped, name]
+        : [name];
+
+      let c: any = null;
+      for (const q of queries) {
+        const res = await fetch(`${baseUrl}?action=search&q=${encodeURIComponent(q)}&size=8`, {
+          headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+        });
+        const d = await res.json();
+        c = d.companies?.[0];
+        if (c?.orgnr) break;
+      }
+
       if (c?.orgnr) {
         const orgnr = c.orgnr;
         if (!companyTags.some(t => t.orgnr === orgnr)) {

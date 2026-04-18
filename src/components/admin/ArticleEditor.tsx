@@ -1601,9 +1601,31 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </div>
 
           {/* AI Suggestions */}
-          {suggestedCompanyNames.length > 0 && (
+          {suggestedCompanyNames.length > 0 && (() => {
+            const remaining = suggestedCompanyNames.filter(
+              (name) => !companyTags.some((t) => t.company_name?.toLowerCase().trim() === name.toLowerCase().trim())
+            );
+            return (
             <div>
-              <p className="text-xs text-muted-foreground mb-2">AI-forslag (klikk for å legge til):</p>
+              <div className="flex items-center justify-between mb-2 gap-2">
+                <p className="text-xs text-muted-foreground">AI-forslag (klikk for å legge til):</p>
+                {remaining.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs gap-1"
+                    onClick={async () => {
+                      for (const name of remaining) {
+                        await lookupAndAddCompany(name);
+                      }
+                    }}
+                  >
+                    <Plus className="w-3 h-3" />
+                    Legg til alle ({remaining.length})
+                  </Button>
+                )}
+              </div>
               <div className="flex flex-wrap gap-2">
                 {suggestedCompanyNames.map((name) => {
                   const added = companyTags.some(

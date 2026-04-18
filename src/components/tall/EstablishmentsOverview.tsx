@@ -87,7 +87,7 @@ export function EstablishmentsOverview({ selectedFylker, selectedKommuner, onFyl
       let newUrl = `${baseUrl}?action=new_establishments&fra=${fraDate}&til=${tilDate}`;
       if (kommuneParam) newUrl += `&kommune=${kommuneParam}`;
 
-      let bankUrl = `${baseUrl}?action=bankruptcies`;
+      let bankUrl = `${baseUrl}?action=bankruptcies&fra=${fraDate}&til=${tilDate}`;
       if (kommuneParam) bankUrl += `&kommune=${kommuneParam}`;
 
       const [newData, bankData] = await Promise.all([

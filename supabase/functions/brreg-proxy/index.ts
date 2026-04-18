@@ -237,8 +237,8 @@ Deno.serve(async (req) => {
       const tilDate = url.searchParams.get("til") || "";
       let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsform=AS,ASA&konkurs=true&size=50&sort=registreringsdatoEnhetsregisteret,desc`;
       if (kommune) apiUrl += `&kommunenummer=${kommune}`;
-      if (fraDate) apiUrl += `&fraRegistreringsdatoEnhetsregisteret=${fraDate}`;
-      if (tilDate) apiUrl += `&tilRegistreringsdatoEnhetsregisteret=${tilDate}`;
+      if (fraDate) apiUrl += `&fraRegistreringsdato=${fraDate}`;
+      if (tilDate) apiUrl += `&tilRegistreringsdato=${tilDate}`;
 
       const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
       const data = await res.json();

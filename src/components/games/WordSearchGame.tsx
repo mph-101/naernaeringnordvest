@@ -141,7 +141,22 @@ export function WordSearchGame({ language }: Props) {
       next.add(match.word);
       setFound(next);
       if (next.size === placed.length) {
-        toast.success(isNo ? "🎉 Du fant alle ordene!" : "🎉 You found all words!");
+        if (!recordedRef.current) {
+          recordedRef.current = true;
+          const seconds = (Date.now() - startRef.current) / 1000;
+          setElapsed(seconds);
+          const { stats: updated, newBest } = recordRun("wordsearch", seconds, true);
+          setStats(updated);
+          toast.success(
+            newBest
+              ? isNo
+                ? `🏆 Ny rekord: ${formatSeconds(seconds)}!`
+                : `🏆 New record: ${formatSeconds(seconds)}!`
+              : isNo
+                ? `🎉 Ferdig på ${formatSeconds(seconds)}!`
+                : `🎉 Done in ${formatSeconds(seconds)}!`,
+          );
+        }
       }
     }
     setSelecting([]);
@@ -151,6 +166,9 @@ export function WordSearchGame({ language }: Props) {
     setPuzzle(newPuzzle());
     setFound(new Set());
     setSelecting([]);
+    startRef.current = Date.now();
+    setElapsed(0);
+    recordedRef.current = false;
   };
 
   return (

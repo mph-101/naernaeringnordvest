@@ -36,6 +36,17 @@ interface ImageUploadProps {
   /** Optional: receive full metadata + media_assets row id */
   onUploadWithMeta?: (meta: UploadedImageMeta) => void;
   bucket?: string;
+  /** Show "Velg fra arkiv"-knapp som lar bruker plukke fra media_assets. Default true. */
+  enableArchivePicker?: boolean;
+}
+
+interface ArchiveAsset {
+  id: string;
+  public_url: string;
+  alt_text: string;
+  caption: string;
+  photographer: string;
+  source: string | null;
 }
 
 const MAX_BYTES = 5 * 1024 * 1024;

@@ -305,6 +305,8 @@ export type Database = {
           category: string
           created_at: string
           created_by: string | null
+          embedding: string | null
+          embedding_updated_at: string | null
           excerpt: string
           excerpt_en: string | null
           forked_from_article_id: string | null
@@ -332,6 +334,8 @@ export type Database = {
           category: string
           created_at?: string
           created_by?: string | null
+          embedding?: string | null
+          embedding_updated_at?: string | null
           excerpt: string
           excerpt_en?: string | null
           forked_from_article_id?: string | null
@@ -359,6 +363,8 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string | null
+          embedding?: string | null
+          embedding_updated_at?: string | null
           excerpt?: string
           excerpt_en?: string | null
           forked_from_article_id?: string | null
@@ -1695,6 +1701,24 @@ export type Database = {
       is_group_member: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
+      }
+      match_articles: {
+        Args: {
+          match_count?: number
+          min_similarity?: number
+          query_embedding: string
+        }
+        Returns: {
+          author: string
+          body: string
+          category: string
+          excerpt: string
+          id: string
+          published_at: string
+          region_slug: string
+          similarity: number
+          title: string
+        }[]
       }
       merge_tags: {
         Args: { _source_id: string; _target_id: string }

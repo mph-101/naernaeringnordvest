@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Delete } from "lucide-react";
+import { RefreshCw, Delete, Trophy, Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { getStats, recordRun, type GameStats } from "@/lib/game-stats";
 
 interface Props {
   language: "no" | "en";

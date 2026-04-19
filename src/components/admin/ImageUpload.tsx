@@ -5,8 +5,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+const fileToBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const comma = result.indexOf(",");
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 
 export interface UploadedImageMeta {
   url: string;
@@ -30,8 +42,10 @@ const MAX_BYTES = 5 * 1024 * 1024;
 
 export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "article-images" }: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
   const [preview, setPreview] = useState(currentUrl || "");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string>("");
   const [metaOpen, setMetaOpen] = useState(false);
   const [altText, setAltText] = useState("");
   const [caption, setCaption] = useState("");
@@ -52,11 +66,33 @@ export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "
       return;
     }
     setPendingFile(file);
+    setPendingPreviewUrl(URL.createObjectURL(file));
     setAltText("");
     setCaption("");
     setPhotographer("");
     setSource("");
     setMetaOpen(true);
+  };
+
+  const handleSuggest = async () => {
+    if (!pendingFile) return;
+    setSuggesting(true);
+    try {
+      const imageBase64 = await fileToBase64(pendingFile);
+      const { data, error } = await supabase.functions.invoke("suggest-image-meta", {
+        body: { imageBase64, mimeType: pendingFile.type, hint: caption || altText || "" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.alt_text && !altText.trim()) setAltText(data.alt_text);
+      if (data?.caption && !caption.trim()) setCaption(data.caption);
+      if (data?.photographer && !photographer.trim()) setPhotographer(data.photographer);
+      toast({ title: "AI-forslag klart", description: "Du kan redigere før lagring." });
+    } catch (err: any) {
+      toast({ title: "AI-forslag feilet", description: err.message || "Ukjent feil", variant: "destructive" });
+    } finally {
+      setSuggesting(false);
+    }
   };
 
   const handleConfirmUpload = async () => {
@@ -122,6 +158,8 @@ export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "
       toast({ title: "Lastet opp", description: "Bildet er lagret i mediearkivet" });
       setMetaOpen(false);
       setPendingFile(null);
+      if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+      setPendingPreviewUrl("");
       if (inputRef.current) inputRef.current.value = "";
     } catch (err: any) {
       toast({ title: "Feil", description: err.message, variant: "destructive" });
@@ -133,6 +171,8 @@ export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "
   const handleCancel = () => {
     setMetaOpen(false);
     setPendingFile(null);
+    if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+    setPendingPreviewUrl("");
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -176,8 +216,36 @@ export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "
           </DialogHeader>
           <div className="space-y-4">
             {pendingFile && (
-              <div className="text-xs text-muted-foreground">
-                {pendingFile.name} · {(pendingFile.size / 1024).toFixed(0)} KB
+              <div className="flex gap-3 items-start">
+                {pendingPreviewUrl && (
+                  <img
+                    src={pendingPreviewUrl}
+                    alt="Forhåndsvisning"
+                    className="w-24 h-24 object-cover rounded border border-border flex-shrink-0"
+                  />
+                )}
+                <div className="flex-1 space-y-2 min-w-0">
+                  <div className="text-xs text-muted-foreground truncate">
+                    {pendingFile.name} · {(pendingFile.size / 1024).toFixed(0)} KB
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleSuggest}
+                    disabled={suggesting || uploading}
+                    className="w-full"
+                  >
+                    {suggesting ? (
+                      <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />Analyserer…</>
+                    ) : (
+                      <><Sparkles className="w-3.5 h-3.5 mr-2" />Foreslå med AI</>
+                    )}
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground">
+                    AI fyller inn alt-tekst og bildetekst basert på bildet. Du kan redigere før lagring.
+                  </p>
+                </div>
               </div>
             )}
             <div>

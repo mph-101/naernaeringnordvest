@@ -1075,7 +1075,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </h2>
         </div>
 
-        {articleId && (
+        {(articleId || currentArticleId) && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {autoSaveStatus === "saved" && <><Cloud className="w-3.5 h-3.5 text-green-500" /> Lagret</>}
             {autoSaveStatus === "saving" && <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Lagrer...</>}
@@ -1083,9 +1083,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </div>
         )}
 
-        {articleId && (
+        {(articleId || currentArticleId) && (
           <a
-            href={`/article/${articleId}`}
+            href={`/article/${articleId || currentArticleId}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-subhead font-medium text-foreground bg-card hover:bg-muted border border-border rounded-full transition-colors"

@@ -90,7 +90,7 @@ serve(async (req) => {
       excerpt: string;
       author: string;
       published_at: string | null;
-      similarity: number;
+      rank: number;
     }> = [];
     let contextBlock = "";
 
@@ -111,7 +111,7 @@ serve(async (req) => {
           excerpt: m.excerpt,
           author: m.author,
           published_at: m.published_at,
-          similarity: m.similarity,
+          rank: m.rank,
         }));
 
         contextBlock = (matches || [])

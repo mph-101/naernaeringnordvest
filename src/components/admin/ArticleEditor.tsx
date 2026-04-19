@@ -60,6 +60,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
+  // Local mirror of articleId so we can flip a freshly-created draft into
+  // "edit mode" without remounting the editor.
+  const [currentArticleId, setCurrentArticleId] = useState<string | null>(articleId);
+  // Re-sync if the parent passes a different id (e.g. opening another article).
+  useEffect(() => {
+    setCurrentArticleId(articleId);
+  }, [articleId]);
   const [generatingPoints, setGeneratingPoints] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [suggestingCompanies, setSuggestingCompanies] = useState(false);
@@ -171,55 +178,176 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     if (form.body && form.body.length > 20) {
       const calculated = calcReadTime(form.body, form.type);
       if (calculated !== form.read_time) {
-        setForm(prev => ({ ...prev, read_time: calculated }));
+        // Use updateForm so the new read_time is included in auto-save
+        updateForm({ read_time: calculated });
       }
     }
   }, [form.body, form.type]);
 
-  // Auto-save (debounced, only for existing articles)
+  // Auto-save (debounced). For new articles, the first auto-save creates
+  // the row so subsequent edits update in place.
   const triggerAutoSave = useCallback(() => {
-    if (!articleId) return;
     setAutoSaveStatus("unsaved");
     if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
-    autoSaveRef.current = setTimeout(async () => {
-      const currentForm = formRef.current;
-      if (!currentForm || !currentForm.title) return;
-      setAutoSaveStatus("saving");
-      try {
-        const { error } = await supabase.from("articles").update({
-          title: currentForm.title,
-          title_en: currentForm.title_en || null,
-          excerpt: currentForm.excerpt,
-          excerpt_en: currentForm.excerpt_en || null,
-          body: currentForm.body,
-          body_en: currentForm.body_en || null,
-          category: currentForm.category,
-          author: currentForm.author,
-          type: currentForm.type,
-          premium: currentForm.premium,
-          read_time: currentForm.read_time || null,
-          image_url: currentForm.image_url || null,
-          image_crop: currentForm.image_crop ?? null,
-          image_focal: currentForm.image_focal ?? null,
-          key_points: currentForm.key_points,
-          key_points_en: currentForm.key_points_en,
-          status: currentForm.status,
-          published: currentForm.status === "published",
-          published_at: currentForm.status === "published" ? new Date().toISOString() : null,
-          region_slug: currentForm.region_slug || null,
-        } as any).eq("id", articleId);
-        if (!error) setAutoSaveStatus("saved");
-        else setAutoSaveStatus("unsaved");
-      } catch {
-        setAutoSaveStatus("unsaved");
+    autoSaveRef.current = setTimeout(() => {
+      void runAutoSave();
+    }, 1200);
+  }, []);
+
+  // Performs the actual save. Extracted so we can also call it
+  // synchronously from beforeunload / onBack to flush pending edits.
+  const runAutoSave = useCallback(async () => {
+    const currentForm = formRef.current;
+    if (!currentForm) return;
+    // Need at least a title before we'll create a draft row
+    if (!currentForm.title || !currentForm.title.trim()) return;
+    setAutoSaveStatus("saving");
+    const payload = {
+      title: currentForm.title,
+      title_en: currentForm.title_en || null,
+      excerpt: currentForm.excerpt,
+      excerpt_en: currentForm.excerpt_en || null,
+      body: currentForm.body,
+      body_en: currentForm.body_en || null,
+      category: currentForm.category,
+      author: currentForm.author,
+      type: currentForm.type,
+      premium: currentForm.premium,
+      read_time: currentForm.read_time || null,
+      image_url: currentForm.image_url || null,
+      image_crop: currentForm.image_crop ?? null,
+      image_focal: currentForm.image_focal ?? null,
+      key_points: currentForm.key_points,
+      key_points_en: currentForm.key_points_en,
+      status: currentForm.status,
+      published: currentForm.status === "published",
+      published_at: currentForm.status === "published" ? new Date().toISOString() : null,
+      region_slug: currentForm.region_slug || null,
+    } as any;
+    try {
+      if (currentArticleId) {
+        const { error } = await supabase
+          .from("articles")
+          .update(payload)
+          .eq("id", currentArticleId);
+        if (error) throw error;
+      } else {
+        // First auto-save: create the row so future edits can update in place.
+        // Insert a minimal record (excerpt/category/author may still be empty,
+        // so fall back to safe defaults that satisfy NOT NULL constraints).
+        const insertPayload = {
+          ...payload,
+          excerpt: payload.excerpt || "",
+          category: payload.category || "Annet",
+          author: payload.author || "",
+        };
+        const { data: inserted, error } = await supabase
+          .from("articles")
+          .insert(insertPayload)
+          .select("id")
+          .single();
+        if (error) throw error;
+        if (inserted?.id) setCurrentArticleId(inserted.id);
       }
-    }, 3000);
-  }, [articleId]);
+      setAutoSaveStatus("saved");
+    } catch {
+      setAutoSaveStatus("unsaved");
+    }
+  }, [currentArticleId]);
+
+  // Flush pending edits when the user closes the tab or navigates away.
+  useEffect(() => {
+    const flush = () => {
+      if (autoSaveRef.current) {
+        clearTimeout(autoSaveRef.current);
+        autoSaveRef.current = null;
+        void runAutoSave();
+      }
+    };
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (autoSaveStatus === "unsaved") {
+        // Try a synchronous flush so we don't lose data
+        flush();
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      flush();
+    };
+  }, [autoSaveStatus, runAutoSave]);
 
   const updateForm = (updates: Partial<typeof form>) => {
     setForm((prev) => ({ ...prev, ...updates }));
     triggerAutoSave();
   };
+
+  // Track first render so we don't auto-sync relations right after fetchArticle
+  // populates them (which would just re-write the same data).
+  const relationsHydratedRef = useRef(false);
+  useEffect(() => {
+    // Reset whenever the loaded article changes
+    relationsHydratedRef.current = false;
+  }, [articleId]);
+
+  // Debounced auto-save of company tags, article tags and shared regions.
+  // Only runs once we have a persisted article id.
+  useEffect(() => {
+    if (!currentArticleId) return;
+    if (!relationsHydratedRef.current) {
+      // Skip the very first run after hydration
+      relationsHydratedRef.current = true;
+      return;
+    }
+    setAutoSaveStatus("unsaved");
+    const t = setTimeout(async () => {
+      setAutoSaveStatus("saving");
+      try {
+        // Company tags
+        await supabase.from("article_company_tags").delete().eq("article_id", currentArticleId);
+        if (companyTags.length > 0) {
+          await supabase.from("article_company_tags").insert(
+            companyTags.map((t) => ({
+              article_id: currentArticleId,
+              orgnr: t.orgnr,
+              company_name: t.company_name,
+            })),
+          );
+        }
+        // Article tags
+        await supabase.from("article_tags").delete().eq("article_id", currentArticleId);
+        if (articleTags.length > 0) {
+          const { data: { user } } = await supabase.auth.getUser();
+          await supabase.from("article_tags").insert(
+            articleTags.map((tag) => ({
+              article_id: currentArticleId,
+              tag_id: tag.id,
+              created_by: user?.id,
+            })),
+          );
+        }
+        // Shared regions
+        await supabase.from("article_shared_regions" as any).delete().eq("article_id", currentArticleId);
+        const targets = sharedRegions.filter((s) => s && s !== formRef.current?.region_slug);
+        if (targets.length > 0) {
+          const { data: { user } } = await supabase.auth.getUser();
+          await supabase.from("article_shared_regions" as any).insert(
+            targets.map((region_slug) => ({
+              article_id: currentArticleId,
+              region_slug,
+              shared_by: user?.id,
+            })),
+          );
+        }
+        setAutoSaveStatus("saved");
+      } catch {
+        setAutoSaveStatus("unsaved");
+      }
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [currentArticleId, companyTags, articleTags, sharedRegions]);
 
   const fetchArticle = async () => {
     if (!articleId) return;
@@ -313,23 +441,24 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         }
       };
 
-      if (articleId) {
-        const { error } = await supabase.from("articles").update(articleData).eq("id", articleId);
+      const idForUpdate = currentArticleId;
+      if (idForUpdate) {
+        const { error } = await supabase.from("articles").update(articleData).eq("id", idForUpdate);
         if (error) throw error;
-        await supabase.from("article_company_tags").delete().eq("article_id", articleId);
+        await supabase.from("article_company_tags").delete().eq("article_id", idForUpdate);
         if (companyTags.length > 0) {
           await supabase.from("article_company_tags").insert(
-            companyTags.map((t) => ({ article_id: articleId, orgnr: t.orgnr, company_name: t.company_name }))
+            companyTags.map((t) => ({ article_id: idForUpdate, orgnr: t.orgnr, company_name: t.company_name }))
           );
         }
-        await supabase.from("article_tags").delete().eq("article_id", articleId);
+        await supabase.from("article_tags").delete().eq("article_id", idForUpdate);
         if (articleTags.length > 0) {
           const { data: { user } } = await supabase.auth.getUser();
           await supabase.from("article_tags").insert(
-            articleTags.map((t) => ({ article_id: articleId, tag_id: t.id, created_by: user?.id }))
+            articleTags.map((t) => ({ article_id: idForUpdate, tag_id: t.id, created_by: user?.id }))
           );
         }
-        await syncSharedRegions(articleId);
+        await syncSharedRegions(idForUpdate);
         toast({ title: "Lagret", description: "Artikkelen er oppdatert" });
       } else {
         const { data: inserted, error } = await supabase
@@ -338,7 +467,10 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           .select("id")
           .single();
         if (error) throw error;
-        if (inserted?.id) await syncSharedRegions(inserted.id);
+        if (inserted?.id) {
+          setCurrentArticleId(inserted.id);
+          await syncSharedRegions(inserted.id);
+        }
         toast({ title: "Opprettet", description: "Artikkelen er opprettet" });
         onBack();
       }
@@ -1012,7 +1144,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </h2>
         </div>
 
-        {articleId && (
+        {(articleId || currentArticleId) && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {autoSaveStatus === "saved" && <><Cloud className="w-3.5 h-3.5 text-green-500" /> Lagret</>}
             {autoSaveStatus === "saving" && <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Lagrer...</>}
@@ -1020,9 +1152,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </div>
         )}
 
-        {articleId && (
+        {(articleId || currentArticleId) && (
           <a
-            href={`/article/${articleId}`}
+            href={`/article/${articleId || currentArticleId}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-subhead font-medium text-foreground bg-card hover:bg-muted border border-border rounded-full transition-colors"

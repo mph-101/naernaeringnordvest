@@ -254,22 +254,36 @@ export const ImageUpload = ({
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          className="w-full h-48 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-muted/30 transition-colors"
-        >
-          {uploading ? (
-            <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
-          ) : (
-            <>
-              <Upload className="w-8 h-8 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Klikk for å laste opp bilde</span>
-              <span className="text-xs text-muted-foreground">Maks 5 MB · krever bildetekst, fotograf og alt-tekst</span>
-            </>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="w-full h-48 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-muted/30 transition-colors"
+          >
+            {uploading ? (
+              <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+            ) : (
+              <>
+                <Upload className="w-8 h-8 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Klikk for å laste opp bilde</span>
+                <span className="text-xs text-muted-foreground">Maks 5 MB · krever bildetekst, fotograf og alt-tekst</span>
+              </>
+            )}
+          </button>
+          {enableArchivePicker && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={openArchive}
+              disabled={uploading}
+            >
+              <Library className="w-4 h-4 mr-2" /> Velg fra mediearkiv
+            </Button>
           )}
-        </button>
+        </div>
       )}
       <input ref={inputRef} type="file" accept="image/*" onChange={handleFilePicked} className="hidden" />
 

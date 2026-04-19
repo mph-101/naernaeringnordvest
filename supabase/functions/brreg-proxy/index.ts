@@ -39,30 +39,52 @@ Deno.serve(async (req) => {
         totalElements = data?.page?.totalElements || 0;
         totalPages = data?.page?.totalPages || 0;
       } else {
-        // Brreg's `navn=` is a multi-word AND-search and returns alphabetically.
-        // Fetch a larger candidate pool so the actual best match (e.g. "EQUINOR ASA")
-        // is included even when many subsidiaries share the prefix, then rank.
-        const candidateSize = 100;
-        let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?navn=${encodeURIComponent(query)}&organisasjonsform=AS,ASA&size=${candidateSize}&sort=navn,asc`;
-        if (kommune) apiUrl += `&kommunenummer=${kommune}`;
-        if (naeringskode) apiUrl += `&naeringskode=${naeringskode}`;
-
-        const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
-        const data = await res.json();
-        const candidates: any[] = data?._embedded?.enheter || [];
-
+        // Brreg's `navn=` works best as a single-token prefix search. Multi-word
+        // queries like "Veøy AS" become fulltext-AND that returns 400k+ rows in
+        // alphabetical order and pushes the actual match past the candidate window.
+        // Strategy:
+        //   1. Strip the legal suffix and use the most distinctive token as the query.
+        //   2. Fetch candidates without an organisasjonsform filter so foreign
+        //      entities (UTLA/NUF) like SCHENKER AB are not excluded.
+        //   3. Rank against the original query so "Veøy AS" still beats "Veøy Buss AS".
         const cleaned = query.trim().toLowerCase();
         const stripped = cleaned.replace(/\s+(as|asa|sa|ans|da|ba)$/i, "").trim();
+        // Use the longest token as the primary Brreg query — most distinctive,
+        // narrows candidate pool dramatically (e.g. "veøy" → 6 hits, not 423k).
+        const tokens = stripped.split(/\s+/).filter(Boolean);
+        const primaryToken = tokens.sort((a, b) => b.length - a.length)[0] || stripped;
+
+        const candidateSize = 100;
+        const tryFetch = async (q: string, withOrgFormFilter: boolean): Promise<any[]> => {
+          let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?navn=${encodeURIComponent(q)}&size=${candidateSize}&sort=navn,asc`;
+          if (withOrgFormFilter) apiUrl += `&organisasjonsform=AS,ASA`;
+          if (kommune) apiUrl += `&kommunenummer=${kommune}`;
+          if (naeringskode) apiUrl += `&naeringskode=${naeringskode}`;
+          const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
+          const data = await res.json();
+          return data?._embedded?.enheter || [];
+        };
+
+        // 1) Primary token, no orgform filter (catches UTLA/NUF foreign entities).
+        let candidates = await tryFetch(primaryToken, false);
+        // 2) Fallback: full stripped query if primary returned nothing useful.
+        if (candidates.length === 0 && stripped !== primaryToken) {
+          candidates = await tryFetch(stripped, false);
+        }
+
         const score = (navn: string): number => {
           const n = (navn || "").toLowerCase();
           if (n === cleaned) return 100;
           if (n === `${stripped} as` || n === `${stripped} asa`) return 95;
+          if (n === stripped) return 92;
           if (n.startsWith(`${cleaned} `)) return 85;
           if (n.startsWith(`${stripped} `)) return 75;
           if (n.startsWith(cleaned)) return 70;
           if (n.startsWith(stripped)) return 60;
           if (n.includes(` ${stripped} `) || n.endsWith(` ${stripped}`)) return 50;
           if (n.includes(stripped)) return 30;
+          // Multi-word queries: also accept names containing the primary token.
+          if (tokens.length > 1 && n.includes(primaryToken)) return 20;
           return 0;
         };
 

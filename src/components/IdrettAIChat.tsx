@@ -2,24 +2,13 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MessageCircle, X, Send, Bot, User, Loader2, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-
-interface ArticleSource {
-  n: number;
-  id: string;
-  title: string;
-  excerpt: string;
-  author: string;
-  published_at: string | null;
-  rank: number;
-}
+import { streamArticlesChat, type ArticleSource } from "@/lib/articles-chat";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
   sources?: ArticleSource[];
 }
-
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/articles-chat`;
 
 export function IdrettAIChat() {
   const [open, setOpen] = useState(false);
@@ -65,65 +54,13 @@ export function IdrettAIChat() {
     };
 
     try {
-      const resp = await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ messages: [...messages, userMsg].map(({ role, content }) => ({ role, content })) }),
+      await streamArticlesChat({
+        messages: [...messages, userMsg].map(({ role, content }) => ({ role, content })),
+        onContent: (content) => upsertAssistant(content),
+        onSources: (sources) => upsertAssistant("", sources),
       });
-
-      if (!resp.ok || !resp.body) {
-        const err = await resp.json().catch(() => ({ error: "Ukjent feil" }));
-        upsertAssistant(err.error || "Noe gikk galt, prøv igjen.");
-        setIsLoading(false);
-        return;
-      }
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-      let streamDone = false;
-      let currentEvent = "message";
-
-      while (!streamDone) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") {
-            if (line.trim() === "") currentEvent = "message";
-            continue;
-          }
-          if (line.startsWith("event: ")) {
-            currentEvent = line.slice(7).trim();
-            continue;
-          }
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") { streamDone = true; break; }
-          try {
-            const parsed = JSON.parse(jsonStr);
-            if (currentEvent === "sources" && Array.isArray(parsed.sources)) {
-              upsertAssistant("", parsed.sources as ArticleSource[]);
-            } else {
-              const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-              if (content) upsertAssistant(content);
-            }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
-        }
-      }
-    } catch {
-      upsertAssistant("Beklager, noe gikk galt. Prøv igjen.");
+    } catch (error) {
+      upsertAssistant(error instanceof Error ? error.message : "Beklager, noe gikk galt. Prøv igjen.");
     } finally {
       setIsLoading(false);
     }

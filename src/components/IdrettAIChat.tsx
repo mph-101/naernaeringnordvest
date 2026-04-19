@@ -1,20 +1,33 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { MessageCircle, X, Send, Bot, User, Loader2, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+
+interface ArticleSource {
+  n: number;
+  id: string;
+  title: string;
+  excerpt: string;
+  author: string;
+  published_at: string | null;
+  similarity: number;
+}
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  sources?: ArticleSource[];
 }
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/idrett-chat`;
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/articles-chat`;
 
 export function IdrettAIChat() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hei! Jeg er din Eliteserien-økonom 🏆\n\nSpør meg om klubbøkonomi, finansielle trender, sammenligning av klubber og mye mer. Hva lurer du på?",
+      content:
+        "Hei! Jeg er **Spør** — din redaksjonsassistent.\n\nStill et spørsmål så finner jeg svar i artiklene våre og siterer kildene direkte i svaret.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -33,15 +46,21 @@ export function IdrettAIChat() {
     setIsLoading(true);
 
     let assistantSoFar = "";
+    let pendingSources: ArticleSource[] | null = null;
 
-    const upsertAssistant = (chunk: string) => {
-      assistantSoFar += chunk;
+    const upsertAssistant = (chunk: string, sources?: ArticleSource[]) => {
+      if (chunk) assistantSoFar += chunk;
+      if (sources) pendingSources = sources;
       setMessages((prev) => {
         const last = prev[prev.length - 1];
         if (last?.role === "assistant") {
-          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
+          return prev.map((m, i) =>
+            i === prev.length - 1
+              ? { ...m, content: assistantSoFar, sources: pendingSources ?? m.sources }
+              : m,
+          );
         }
-        return [...prev, { role: "assistant", content: assistantSoFar }];
+        return [...prev, { role: "assistant", content: assistantSoFar, sources: pendingSources ?? undefined }];
       });
     };
 
@@ -66,6 +85,7 @@ export function IdrettAIChat() {
       const decoder = new TextDecoder();
       let textBuffer = "";
       let streamDone = false;
+      let currentEvent = "message";
 
       while (!streamDone) {
         const { done, value } = await reader.read();
@@ -77,14 +97,25 @@ export function IdrettAIChat() {
           let line = textBuffer.slice(0, newlineIndex);
           textBuffer = textBuffer.slice(newlineIndex + 1);
           if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
+          if (line.startsWith(":") || line.trim() === "") {
+            if (line.trim() === "") currentEvent = "message";
+            continue;
+          }
+          if (line.startsWith("event: ")) {
+            currentEvent = line.slice(7).trim();
+            continue;
+          }
           if (!line.startsWith("data: ")) continue;
           const jsonStr = line.slice(6).trim();
           if (jsonStr === "[DONE]") { streamDone = true; break; }
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) upsertAssistant(content);
+            if (currentEvent === "sources" && Array.isArray(parsed.sources)) {
+              upsertAssistant("", parsed.sources as ArticleSource[]);
+            } else {
+              const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+              if (content) upsertAssistant(content);
+            }
           } catch {
             textBuffer = line + "\n" + textBuffer;
             break;
@@ -118,8 +149,8 @@ export function IdrettAIChat() {
               <Bot className="w-4 h-4 text-accent-foreground" />
             </div>
             <div className="flex-1">
-              <p className="font-subhead font-semibold text-accent-foreground text-sm">Eliteserien AI</p>
-              <p className="font-body text-xs text-accent-foreground/70">Spør om klubbøkonomi</p>
+              <p className="font-subhead font-semibold text-accent-foreground text-sm">Spør Nær Næring</p>
+              <p className="font-body text-xs text-accent-foreground/70">Svar fra artikkelarkivet</p>
             </div>
             <button onClick={() => setOpen(false)} className="p-1.5 rounded-full hover:bg-accent-foreground/20 transition-colors">
               <X className="w-4 h-4 text-accent-foreground" />

@@ -216,8 +216,36 @@ export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "
           </DialogHeader>
           <div className="space-y-4">
             {pendingFile && (
-              <div className="text-xs text-muted-foreground">
-                {pendingFile.name} · {(pendingFile.size / 1024).toFixed(0)} KB
+              <div className="flex gap-3 items-start">
+                {pendingPreviewUrl && (
+                  <img
+                    src={pendingPreviewUrl}
+                    alt="Forhåndsvisning"
+                    className="w-24 h-24 object-cover rounded border border-border flex-shrink-0"
+                  />
+                )}
+                <div className="flex-1 space-y-2 min-w-0">
+                  <div className="text-xs text-muted-foreground truncate">
+                    {pendingFile.name} · {(pendingFile.size / 1024).toFixed(0)} KB
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleSuggest}
+                    disabled={suggesting || uploading}
+                    className="w-full"
+                  >
+                    {suggesting ? (
+                      <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />Analyserer…</>
+                    ) : (
+                      <><Sparkles className="w-3.5 h-3.5 mr-2" />Foreslå med AI</>
+                    )}
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground">
+                    AI fyller inn alt-tekst og bildetekst basert på bildet. Du kan redigere før lagring.
+                  </p>
+                </div>
               </div>
             )}
             <div>

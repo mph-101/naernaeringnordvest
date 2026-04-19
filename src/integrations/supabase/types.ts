@@ -77,6 +77,41 @@ export type Database = {
         }
         Relationships: []
       }
+      article_gallery_items: {
+        Row: {
+          article_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          media_id: string
+          sort_order: number
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          media_id: string
+          sort_order?: number
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          media_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_gallery_items_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       article_notes: {
         Row: {
           article_id: string
@@ -1171,6 +1206,66 @@ export type Database = {
             referencedColumns: ["slug"]
           },
         ]
+      }
+      media_assets: {
+        Row: {
+          alt_text: string
+          bucket: string
+          caption: string
+          created_at: string
+          file_size: number | null
+          height: number | null
+          id: string
+          license: string | null
+          mime_type: string | null
+          photographer: string
+          public_url: string
+          source: string | null
+          storage_path: string
+          tags: string[]
+          updated_at: string
+          uploaded_by: string
+          width: number | null
+        }
+        Insert: {
+          alt_text: string
+          bucket?: string
+          caption: string
+          created_at?: string
+          file_size?: number | null
+          height?: number | null
+          id?: string
+          license?: string | null
+          mime_type?: string | null
+          photographer: string
+          public_url: string
+          source?: string | null
+          storage_path: string
+          tags?: string[]
+          updated_at?: string
+          uploaded_by: string
+          width?: number | null
+        }
+        Update: {
+          alt_text?: string
+          bucket?: string
+          caption?: string
+          created_at?: string
+          file_size?: number | null
+          height?: number | null
+          id?: string
+          license?: string | null
+          mime_type?: string | null
+          photographer?: string
+          public_url?: string
+          source?: string | null
+          storage_path?: string
+          tags?: string[]
+          updated_at?: string
+          uploaded_by?: string
+          width?: number | null
+        }
+        Relationships: []
       }
       newsletter_issues: {
         Row: {

@@ -1,13 +1,16 @@
-import { useState } from "react";
-import { Search, ArrowRight, ArrowLeft, User, ExternalLink, BarChart3 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { Search, ArrowRight, ArrowLeft, User, Bot, FileText } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
+import { streamArticlesChat, type ArticleSource } from "@/lib/articles-chat";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
-  sources?: { title: string; url: string; publication: string }[];
+  sources?: ArticleSource[];
 }
 
 interface ConversationViewProps {
@@ -19,50 +22,66 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
   const { language } = useTheme();
   const t = translations[language];
 
-  const getInitialResponse = () => {
-    if (language === "no") {
-      return `Her er vår analyse av «${initialQuery}»:\n\n**Norsk fotball i tall:**\nEliteserien-klubbene omsatte for totalt 2,1 milliarder kroner i 2023 — en vekst på over 20 % fra 2022. Bodø/Glimt alene sto for nesten 380 MNOK, godt hjulpet av Europa-deltakelse og rekordstore spillersalg.\n\n**Viktige trender:**\n• Spillersalg er nå den viktigste enkeltinntektskilden for de beste klubbene\n• TV-avtalens verdi diskuteres — ny runde med Viaplay starter 2025\n• Privat kapital begynner å vise interesse for norske klubber\n\n**Hva driver dette:**\nNorske talenter etterspørres i Europa. Kombinasjonen av lave lønninger, god akademimodell og UEFA-rankingpoeng gjør Eliteserien-klubber til attraktive selgere.`;
-    }
-    return `Here's our analysis of "${initialQuery}":\n\n**Norwegian Football in Numbers:**\nEliteserien clubs generated a combined NOK 2.1 billion in revenue in 2023 — growth of over 20% from 2022. Bodø/Glimt alone accounted for nearly 380 MNOK, boosted by European competition and record player sales.\n\n**Key Trends:**\n• Player sales are now the single most important revenue stream for top clubs\n• The value of the TV deal is under discussion — new negotiations with Viaplay start in 2025\n• Private capital is beginning to show interest in Norwegian clubs\n\n**What's Driving This:**\nNorwegian talent is in demand across Europe. The combination of low wages, strong academy models and UEFA ranking points make Eliteserien clubs attractive sellers.`;
-  };
-
-  const [messages, setMessages] = useState<Message[]>([
-    { id: "1", role: "user", content: initialQuery },
-    {
-      id: "2",
-      role: "assistant",
-      content: getInitialResponse(),
-      sources: [
-        { title: language === "no" ? "Eliteserien Årsrapport 2023" : "Eliteserien Annual Report 2023", url: "#", publication: "NFF" },
-        { title: language === "no" ? "Spillersalg og akademiinntekter" : "Player Sales and Academy Revenue", url: "#", publication: "Transfermarkt" },
-        { title: language === "no" ? "Norsk Toppfotball Økonomianalyse" : "Norwegian Top Football Economic Analysis", url: "#", publication: "Deloitte Sports" },
-      ],
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const hasStarted = useRef(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const sendMessage = async (rawInput: string, history: Message[]) => {
+    const trimmed = rawInput.trim();
+    if (!trimmed || isLoading) return;
 
-    setMessages((prev) => [...prev, { id: Date.now().toString(), role: "user", content: input }]);
+    const userMessage: Message = { id: crypto.randomUUID(), role: "user", content: trimmed };
+    const nextMessages = [...history, userMessage];
+    const assistantId = crypto.randomUUID();
+    let assistantContent = "";
+    let assistantSources: ArticleSource[] | undefined;
+
+    setMessages(nextMessages);
     setInput("");
     setIsLoading(true);
 
-    setTimeout(() => {
-      const response = language === "no"
-        ? `Mer om «${input}»:\n\n**Analyse:**\nVårt datateam har sett nærmere på dette. Tallene fra norsk toppfotball viser at det er store strukturelle forskjeller mellom klubbene — særlig mellom de som har investert i akademiutvikling og de som er avhengige av kortsiktige løsninger.\n\n**Nøkkelpunkter:**\n• Klubber med sterke akademier omsetter talenter til 3–5× kostpris\n• Europa-inntekter kan doble en middels norsk klubbs totalomsetning\n• Egenkapitalgraden varierer fra under 10 % til over 60 % i Eliteserien`
-        : `Additional context on "${input}":\n\n**Analysis:**\nOur data team has examined this closely. Figures from Norwegian top football reveal large structural differences between clubs — especially between those who have invested in academy development and those relying on short-term fixes.\n\n**Key Takeaways:**\n• Clubs with strong academies sell talent at 3–5× cost price\n• European revenue can double a mid-sized Norwegian club's total turnover\n• Equity ratios vary from below 10% to over 60% across Eliteserien`;
+    const upsertAssistant = (chunk: string, sources?: ArticleSource[]) => {
+      if (chunk) assistantContent += chunk;
+      if (sources) assistantSources = sources;
 
-      setMessages((prev) => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: response,
-        sources: [{ title: language === "no" ? "Eliteserien Økonomirapport" : "Eliteserien Financial Report", url: "#", publication: "NFF / Deloitte" }],
-      }]);
+      setMessages((prev) => {
+        const assistantMessage: Message = {
+          id: assistantId,
+          role: "assistant",
+          content: assistantContent,
+          sources: assistantSources,
+        };
+        const existingIndex = prev.findIndex((message) => message.id === assistantId);
+        if (existingIndex >= 0) {
+          return prev.map((message, index) => index === existingIndex ? assistantMessage : message);
+        }
+        return [...prev, assistantMessage];
+      });
+    };
+
+    try {
+      await streamArticlesChat({
+        messages: nextMessages.map(({ role, content }) => ({ role, content })),
+        onContent: (chunk) => upsertAssistant(chunk),
+        onSources: (sources) => upsertAssistant("", sources),
+      });
+    } catch (error) {
+      upsertAssistant(error instanceof Error ? error.message : "Noe gikk galt, prøv igjen.");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
+  };
+
+  useEffect(() => {
+    if (hasStarted.current) return;
+    hasStarted.current = true;
+    void sendMessage(initialQuery, []);
+  }, [initialQuery]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void sendMessage(input, messages);
   };
 
   return (
@@ -82,26 +101,44 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
             <div key={message.id} className="animate-fade-up" style={{ animationDelay: `${index * 100}ms` }}>
               <div className="flex gap-4">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${message.role === "user" ? "bg-secondary" : "bg-accent/10"}`}>
-                  {message.role === "user" ? <User className="w-5 h-5 text-foreground/70" /> : <BarChart3 className="w-5 h-5 text-accent" />}
+                  {message.role === "user" ? <User className="w-5 h-5 text-foreground/70" /> : <Bot className="w-5 h-5 text-accent" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-subhead text-sm text-muted-foreground mb-2">
                     {message.role === "user" ? t.you : `${t.brandName} ${t.brandSub}`}
                   </p>
-                  <div className="text-foreground font-body leading-relaxed whitespace-pre-line">{message.content}</div>
+                  {message.role === "user" ? (
+                    <div className="text-foreground font-body leading-relaxed whitespace-pre-line">{message.content}</div>
+                  ) : (
+                    <div className="prose prose-sm dark:prose-invert max-w-none font-body [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                      <ReactMarkdown
+                        components={{
+                          p: ({ children }) => <p className="mb-3 leading-[1.7] text-base">{children}</p>,
+                          ul: ({ children }) => <ul className="mb-3 space-y-1 pl-5 list-disc marker:text-primary/60">{children}</ul>,
+                          ol: ({ children }) => <ol className="mb-3 space-y-1 pl-5 list-decimal marker:text-primary/60">{children}</ol>,
+                          li: ({ children }) => <li className="leading-[1.6]">{children}</li>,
+                          strong: ({ children }) => <strong className="font-semibold text-headline">{children}</strong>,
+                          a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{children}</a>,
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  )}
                   {message.sources && (
                     <div className="mt-4 pt-4 border-t border-border">
-                      <p className="font-subhead text-sm text-muted-foreground mb-3">{t.sources}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {message.sources.map((source, idx) => (
-                          <a key={idx} href={source.url} className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-body hover:border-accent/30 hover:shadow-soft transition-all">
-                            <span className="text-accent font-medium">{source.publication}</span>
-                            <span className="text-muted-foreground">·</span>
-                            <span className="text-foreground/80">{source.title}</span>
-                            <ExternalLink className="w-3 h-3 text-muted-foreground" />
-                          </a>
+                      <p className="font-subhead text-sm text-muted-foreground mb-3 flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" />{t.sources}</p>
+                      <ol className="space-y-2">
+                        {message.sources.map((source) => (
+                          <li key={source.id} className="text-sm leading-relaxed">
+                            <span className="text-muted-foreground font-mono mr-2">[{source.n}]</span>
+                            <Link to={`/article/${source.id}`} className="text-primary hover:underline">
+                              {source.title}
+                            </Link>
+                            {source.author && <span className="text-muted-foreground"> — {source.author}</span>}
+                          </li>
                         ))}
-                      </div>
+                      </ol>
                     </div>
                   )}
                 </div>
@@ -110,7 +147,7 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
           ))}
           {isLoading && (
             <div className="flex gap-4 animate-fade-in">
-              <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center"><BarChart3 className="w-5 h-5 text-accent" /></div>
+              <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center"><Bot className="w-5 h-5 text-accent" /></div>
               <div className="flex gap-1.5 pt-4">
                 <span className="w-2 h-2 bg-accent/50 rounded-full animate-bounce" />
                 <span className="w-2 h-2 bg-accent/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />

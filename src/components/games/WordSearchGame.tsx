@@ -1,9 +1,10 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Check } from "lucide-react";
+import { RefreshCw, Trophy, Timer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { getStats, recordRun, formatSeconds, type GameStats } from "@/lib/game-stats";
 
 interface Props {
   language: "no" | "en";
@@ -78,6 +79,19 @@ export function WordSearchGame({ language }: Props) {
   const [found, setFound] = useState<Set<string>>(new Set());
   const [selecting, setSelecting] = useState<[number, number][]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [stats, setStats] = useState<GameStats>(() => getStats("wordsearch"));
+  const [elapsed, setElapsed] = useState(0);
+  const startRef = useRef<number>(Date.now());
+  const recordedRef = useRef(false);
+
+  // Tick the timer each second while puzzle is active
+  useEffect(() => {
+    if (found.size === placed.length && placed.length > 0) return;
+    const id = window.setInterval(() => {
+      setElapsed((Date.now() - startRef.current) / 1000);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [found, placed]);
 
   const foundCells = useMemo(() => {
     const set = new Set<string>();
@@ -127,7 +141,22 @@ export function WordSearchGame({ language }: Props) {
       next.add(match.word);
       setFound(next);
       if (next.size === placed.length) {
-        toast.success(isNo ? "🎉 Du fant alle ordene!" : "🎉 You found all words!");
+        if (!recordedRef.current) {
+          recordedRef.current = true;
+          const seconds = (Date.now() - startRef.current) / 1000;
+          setElapsed(seconds);
+          const { stats: updated, newBest } = recordRun("wordsearch", seconds, true);
+          setStats(updated);
+          toast.success(
+            newBest
+              ? isNo
+                ? `🏆 Ny rekord: ${formatSeconds(seconds)}!`
+                : `🏆 New record: ${formatSeconds(seconds)}!`
+              : isNo
+                ? `🎉 Ferdig på ${formatSeconds(seconds)}!`
+                : `🎉 Done in ${formatSeconds(seconds)}!`,
+          );
+        }
       }
     }
     setSelecting([]);
@@ -137,6 +166,9 @@ export function WordSearchGame({ language }: Props) {
     setPuzzle(newPuzzle());
     setFound(new Set());
     setSelecting([]);
+    startRef.current = Date.now();
+    setElapsed(0);
+    recordedRef.current = false;
   };
 
   return (
@@ -151,6 +183,24 @@ export function WordSearchGame({ language }: Props) {
         </div>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
+        {/* Timer + stats row */}
+        <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1 font-mono text-sm text-foreground tabular-nums">
+            <Timer className="h-3.5 w-3.5" />
+            {formatSeconds(elapsed)}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Trophy className="h-3.5 w-3.5 text-primary" />
+            {isNo ? "Best" : "Best"}: <span className="font-mono tabular-nums">{formatSeconds(stats.best)}</span>
+          </span>
+          <span>
+            {isNo ? "Snitt" : "Avg"}: <span className="font-mono tabular-nums">{formatSeconds(stats.avg)}</span>
+          </span>
+          <span>
+            {stats.plays} {isNo ? "spill" : "plays"}
+          </span>
+        </div>
+
         {/* Word list */}
         <div className="flex flex-wrap gap-1.5 justify-center">
           {words.map((w) => (

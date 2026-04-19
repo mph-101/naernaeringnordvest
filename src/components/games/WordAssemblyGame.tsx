@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Delete } from "lucide-react";
+import { RefreshCw, Delete, Trophy, Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { getStats, recordRun, type GameStats } from "@/lib/game-stats";
 
 interface Props {
   language: "no" | "en";
@@ -35,6 +36,9 @@ export function WordAssemblyGame({ language }: Props) {
   const [found, setFound] = useState<Set<string>>(new Set());
   const [current, setCurrent] = useState<{ letter: string; idx: number }[]>([]);
   const [usedIndices, setUsedIndices] = useState<Set<number>>(new Set());
+  const [attempts, setAttempts] = useState(0);
+  const [stats, setStats] = useState<GameStats>(() => getStats("wordassembly"));
+  const recordedRef = useRef(false);
 
   const shuffled = useMemo(() => {
     return puzzle.letters.split("").map((l, i) => ({ letter: l, idx: i })).sort(() => Math.random() - 0.5);
@@ -63,6 +67,7 @@ export function WordAssemblyGame({ language }: Props) {
       toast.error(isNo ? "Minimum 3 bokstaver" : "Minimum 3 letters");
       return;
     }
+    setAttempts((a) => a + 1);
     if (found.has(word)) {
       toast.info(isNo ? "Allerede funnet!" : "Already found!");
       clearCurrent();
@@ -73,7 +78,22 @@ export function WordAssemblyGame({ language }: Props) {
       setFound(next);
       toast.success(`✓ ${word}`);
       if (next.size === puzzle.words.length) {
-        toast.success(isNo ? "🎉 Du fant alle ordene!" : "🎉 You found all words!");
+        if (!recordedRef.current) {
+          recordedRef.current = true;
+          // attempts state hasn't flushed yet — compute the final value
+          const finalAttempts = attempts + 1;
+          const { stats: updated, newBest } = recordRun("wordassembly", finalAttempts, true);
+          setStats(updated);
+          toast.success(
+            newBest
+              ? isNo
+                ? `🏆 Ny rekord: ${finalAttempts} forsøk!`
+                : `🏆 New record: ${finalAttempts} attempts!`
+              : isNo
+                ? `🎉 Ferdig på ${finalAttempts} forsøk!`
+                : `🎉 Done in ${finalAttempts} attempts!`,
+          );
+        }
       }
     } else {
       toast.error(isNo ? `"${word}" er ikke i listen` : `"${word}" is not in the list`);
@@ -90,6 +110,8 @@ export function WordAssemblyGame({ language }: Props) {
     setPuzzleIdx((prev) => (prev + 1) % puzzles.length);
     setFound(new Set());
     clearCurrent();
+    setAttempts(0);
+    recordedRef.current = false;
   };
 
   return (
@@ -104,6 +126,27 @@ export function WordAssemblyGame({ language }: Props) {
         </div>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-5">
+        {/* Stats row */}
+        <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1 font-mono text-sm text-foreground tabular-nums">
+            <Target className="h-3.5 w-3.5" />
+            {attempts} {isNo ? "forsøk" : "attempts"}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Trophy className="h-3.5 w-3.5 text-primary" />
+            {isNo ? "Best" : "Best"}: <span className="font-mono tabular-nums">{stats.best ?? "–"}</span>
+          </span>
+          <span>
+            {isNo ? "Snitt" : "Avg"}:{" "}
+            <span className="font-mono tabular-nums">
+              {stats.avg != null ? stats.avg.toFixed(1) : "–"}
+            </span>
+          </span>
+          <span>
+            {stats.plays} {isNo ? "spill" : "plays"}
+          </span>
+        </div>
+
         {/* Found words */}
         <div className="flex flex-wrap gap-1.5 justify-center min-h-[28px]">
           {puzzle.words.map((w) => (

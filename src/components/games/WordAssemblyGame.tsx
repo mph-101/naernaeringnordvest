@@ -36,6 +36,9 @@ export function WordAssemblyGame({ language }: Props) {
   const [found, setFound] = useState<Set<string>>(new Set());
   const [current, setCurrent] = useState<{ letter: string; idx: number }[]>([]);
   const [usedIndices, setUsedIndices] = useState<Set<number>>(new Set());
+  const [attempts, setAttempts] = useState(0);
+  const [stats, setStats] = useState<GameStats>(() => getStats("wordassembly"));
+  const recordedRef = useRef(false);
 
   const shuffled = useMemo(() => {
     return puzzle.letters.split("").map((l, i) => ({ letter: l, idx: i })).sort(() => Math.random() - 0.5);

@@ -75,16 +75,18 @@ export const ArticleTagInput = ({ value, onChange, articleTitle, articleBody }: 
     inputRef.current?.focus();
   };
 
-  const upsertAndAddByName = async (rawName: string) => {
+  /**
+   * Resolve a tag name to a Tag object — reuse if it already exists,
+   * otherwise create it. Does NOT mutate the selected list; the caller
+   * is responsible for adding to `value`. This avoids stale-closure bugs
+   * when adding several tags in a loop.
+   */
+  const resolveTagByName = async (rawName: string): Promise<Tag | null> => {
     const name = rawName.trim();
-    if (!name) return;
+    if (!name) return null;
     const lower = name.toLowerCase();
-    if (selectedNames.has(lower)) return;
     const existing = allTags.find((t) => t.name.toLowerCase() === lower);
-    if (existing) {
-      handleAdd(existing);
-      return;
-    }
+    if (existing) return existing;
     const { data: { user } } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("tags")
@@ -94,7 +96,14 @@ export const ArticleTagInput = ({ value, onChange, articleTitle, articleBody }: 
     if (error) throw error;
     const newTag = data as Tag;
     setAllTags((prev) => [...prev, newTag].sort((a, b) => a.name.localeCompare(b.name, "nb")));
-    onChange([...value, newTag]);
+    return newTag;
+  };
+
+  const upsertAndAddByName = async (rawName: string) => {
+    const tag = await resolveTagByName(rawName);
+    if (!tag) return;
+    if (selectedIds.has(tag.id)) return;
+    onChange([...value, tag]);
   };
 
   const handleRemove = (id: string) => {
@@ -166,12 +175,25 @@ export const ArticleTagInput = ({ value, onChange, articleTitle, articleBody }: 
   const handleAcceptAll = async () => {
     const names = [...suggested];
     setSuggested([]);
-    for (const name of names) {
-      try {
-        await upsertAndAddByName(name);
-      } catch (err: any) {
-        toast({ title: `Kunne ikke legge til «${name}»`, description: err.message, variant: "destructive" });
+    // Resolve all names in parallel, then commit a single onChange so React
+    // sees every new tag (avoids stale `value` snapshot in a loop).
+    const results = await Promise.allSettled(names.map((n) => resolveTagByName(n)));
+    const newTags: Tag[] = [];
+    const seen = new Set(value.map((t) => t.id));
+    results.forEach((r, i) => {
+      if (r.status === "fulfilled" && r.value && !seen.has(r.value.id)) {
+        seen.add(r.value.id);
+        newTags.push(r.value);
+      } else if (r.status === "rejected") {
+        toast({
+          title: `Kunne ikke legge til «${names[i]}»`,
+          description: (r.reason as Error)?.message,
+          variant: "destructive",
+        });
       }
+    });
+    if (newTags.length > 0) {
+      onChange([...value, ...newTags]);
     }
   };
 

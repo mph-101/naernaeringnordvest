@@ -57,6 +57,15 @@ export const FactBoxesManager = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [previewing, setPreviewing] = useState<FactBoxData | null>(null);
 
+  // AI generation from sources
+  const [genOpen, setGenOpen] = useState(false);
+  const [sources, setSources] = useState<SourceLite[]>([]);
+  const [sourcesLoading, setSourcesLoading] = useState(false);
+  const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
+  const [genHint, setGenHint] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [sourceSearch, setSourceSearch] = useState("");
+
   const loadBoxes = async () => {
     setLoading(true);
     const { data, error } = await supabase

@@ -183,6 +183,24 @@ export function WordSearchGame({ language }: Props) {
         </div>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
+        {/* Timer + stats row */}
+        <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1 font-mono text-sm text-foreground tabular-nums">
+            <Timer className="h-3.5 w-3.5" />
+            {formatSeconds(elapsed)}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Trophy className="h-3.5 w-3.5 text-primary" />
+            {isNo ? "Best" : "Best"}: <span className="font-mono tabular-nums">{formatSeconds(stats.best)}</span>
+          </span>
+          <span>
+            {isNo ? "Snitt" : "Avg"}: <span className="font-mono tabular-nums">{formatSeconds(stats.avg)}</span>
+          </span>
+          <span>
+            {stats.plays} {isNo ? "spill" : "plays"}
+          </span>
+        </div>
+
         {/* Word list */}
         <div className="flex flex-wrap gap-1.5 justify-center">
           {words.map((w) => (

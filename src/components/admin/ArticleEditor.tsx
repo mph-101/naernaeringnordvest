@@ -441,23 +441,24 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         }
       };
 
-      if (articleId) {
-        const { error } = await supabase.from("articles").update(articleData).eq("id", articleId);
+      const idForUpdate = currentArticleId;
+      if (idForUpdate) {
+        const { error } = await supabase.from("articles").update(articleData).eq("id", idForUpdate);
         if (error) throw error;
-        await supabase.from("article_company_tags").delete().eq("article_id", articleId);
+        await supabase.from("article_company_tags").delete().eq("article_id", idForUpdate);
         if (companyTags.length > 0) {
           await supabase.from("article_company_tags").insert(
-            companyTags.map((t) => ({ article_id: articleId, orgnr: t.orgnr, company_name: t.company_name }))
+            companyTags.map((t) => ({ article_id: idForUpdate, orgnr: t.orgnr, company_name: t.company_name }))
           );
         }
-        await supabase.from("article_tags").delete().eq("article_id", articleId);
+        await supabase.from("article_tags").delete().eq("article_id", idForUpdate);
         if (articleTags.length > 0) {
           const { data: { user } } = await supabase.auth.getUser();
           await supabase.from("article_tags").insert(
-            articleTags.map((t) => ({ article_id: articleId, tag_id: t.id, created_by: user?.id }))
+            articleTags.map((t) => ({ article_id: idForUpdate, tag_id: t.id, created_by: user?.id }))
           );
         }
-        await syncSharedRegions(articleId);
+        await syncSharedRegions(idForUpdate);
         toast({ title: "Lagret", description: "Artikkelen er oppdatert" });
       } else {
         const { data: inserted, error } = await supabase
@@ -466,7 +467,10 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           .select("id")
           .single();
         if (error) throw error;
-        if (inserted?.id) await syncSharedRegions(inserted.id);
+        if (inserted?.id) {
+          setCurrentArticleId(inserted.id);
+          await syncSharedRegions(inserted.id);
+        }
         toast({ title: "Opprettet", description: "Artikkelen er opprettet" });
         onBack();
       }

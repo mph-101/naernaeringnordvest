@@ -60,6 +60,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
+  // Local mirror of articleId so we can flip a freshly-created draft into
+  // "edit mode" without remounting the editor.
+  const [currentArticleId, setCurrentArticleId] = useState<string | null>(articleId);
+  // Re-sync if the parent passes a different id (e.g. opening another article).
+  useEffect(() => {
+    setCurrentArticleId(articleId);
+  }, [articleId]);
   const [generatingPoints, setGeneratingPoints] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [suggestingCompanies, setSuggestingCompanies] = useState(false);
@@ -171,50 +178,106 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     if (form.body && form.body.length > 20) {
       const calculated = calcReadTime(form.body, form.type);
       if (calculated !== form.read_time) {
-        setForm(prev => ({ ...prev, read_time: calculated }));
+        // Use updateForm so the new read_time is included in auto-save
+        updateForm({ read_time: calculated });
       }
     }
   }, [form.body, form.type]);
 
-  // Auto-save (debounced, only for existing articles)
+  // Auto-save (debounced). For new articles, the first auto-save creates
+  // the row so subsequent edits update in place.
   const triggerAutoSave = useCallback(() => {
-    if (!articleId) return;
     setAutoSaveStatus("unsaved");
     if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
-    autoSaveRef.current = setTimeout(async () => {
-      const currentForm = formRef.current;
-      if (!currentForm || !currentForm.title) return;
-      setAutoSaveStatus("saving");
-      try {
-        const { error } = await supabase.from("articles").update({
-          title: currentForm.title,
-          title_en: currentForm.title_en || null,
-          excerpt: currentForm.excerpt,
-          excerpt_en: currentForm.excerpt_en || null,
-          body: currentForm.body,
-          body_en: currentForm.body_en || null,
-          category: currentForm.category,
-          author: currentForm.author,
-          type: currentForm.type,
-          premium: currentForm.premium,
-          read_time: currentForm.read_time || null,
-          image_url: currentForm.image_url || null,
-          image_crop: currentForm.image_crop ?? null,
-          image_focal: currentForm.image_focal ?? null,
-          key_points: currentForm.key_points,
-          key_points_en: currentForm.key_points_en,
-          status: currentForm.status,
-          published: currentForm.status === "published",
-          published_at: currentForm.status === "published" ? new Date().toISOString() : null,
-          region_slug: currentForm.region_slug || null,
-        } as any).eq("id", articleId);
-        if (!error) setAutoSaveStatus("saved");
-        else setAutoSaveStatus("unsaved");
-      } catch {
-        setAutoSaveStatus("unsaved");
+    autoSaveRef.current = setTimeout(() => {
+      void runAutoSave();
+    }, 1200);
+  }, []);
+
+  // Performs the actual save. Extracted so we can also call it
+  // synchronously from beforeunload / onBack to flush pending edits.
+  const runAutoSave = useCallback(async () => {
+    const currentForm = formRef.current;
+    if (!currentForm) return;
+    // Need at least a title before we'll create a draft row
+    if (!currentForm.title || !currentForm.title.trim()) return;
+    setAutoSaveStatus("saving");
+    const payload = {
+      title: currentForm.title,
+      title_en: currentForm.title_en || null,
+      excerpt: currentForm.excerpt,
+      excerpt_en: currentForm.excerpt_en || null,
+      body: currentForm.body,
+      body_en: currentForm.body_en || null,
+      category: currentForm.category,
+      author: currentForm.author,
+      type: currentForm.type,
+      premium: currentForm.premium,
+      read_time: currentForm.read_time || null,
+      image_url: currentForm.image_url || null,
+      image_crop: currentForm.image_crop ?? null,
+      image_focal: currentForm.image_focal ?? null,
+      key_points: currentForm.key_points,
+      key_points_en: currentForm.key_points_en,
+      status: currentForm.status,
+      published: currentForm.status === "published",
+      published_at: currentForm.status === "published" ? new Date().toISOString() : null,
+      region_slug: currentForm.region_slug || null,
+    } as any;
+    try {
+      if (currentArticleId) {
+        const { error } = await supabase
+          .from("articles")
+          .update(payload)
+          .eq("id", currentArticleId);
+        if (error) throw error;
+      } else {
+        // First auto-save: create the row so future edits can update in place.
+        // Insert a minimal record (excerpt/category/author may still be empty,
+        // so fall back to safe defaults that satisfy NOT NULL constraints).
+        const insertPayload = {
+          ...payload,
+          excerpt: payload.excerpt || "",
+          category: payload.category || "Annet",
+          author: payload.author || "",
+        };
+        const { data: inserted, error } = await supabase
+          .from("articles")
+          .insert(insertPayload)
+          .select("id")
+          .single();
+        if (error) throw error;
+        if (inserted?.id) setCurrentArticleId(inserted.id);
       }
-    }, 3000);
-  }, [articleId]);
+      setAutoSaveStatus("saved");
+    } catch {
+      setAutoSaveStatus("unsaved");
+    }
+  }, [currentArticleId]);
+
+  // Flush pending edits when the user closes the tab or navigates away.
+  useEffect(() => {
+    const flush = () => {
+      if (autoSaveRef.current) {
+        clearTimeout(autoSaveRef.current);
+        autoSaveRef.current = null;
+        void runAutoSave();
+      }
+    };
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (autoSaveStatus === "unsaved") {
+        // Try a synchronous flush so we don't lose data
+        flush();
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      flush();
+    };
+  }, [autoSaveStatus, runAutoSave]);
 
   const updateForm = (updates: Partial<typeof form>) => {
     setForm((prev) => ({ ...prev, ...updates }));

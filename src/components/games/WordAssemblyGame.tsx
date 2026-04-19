@@ -126,6 +126,27 @@ export function WordAssemblyGame({ language }: Props) {
         </div>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-5">
+        {/* Stats row */}
+        <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1 font-mono text-sm text-foreground tabular-nums">
+            <Target className="h-3.5 w-3.5" />
+            {attempts} {isNo ? "forsøk" : "attempts"}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Trophy className="h-3.5 w-3.5 text-primary" />
+            {isNo ? "Best" : "Best"}: <span className="font-mono tabular-nums">{stats.best ?? "–"}</span>
+          </span>
+          <span>
+            {isNo ? "Snitt" : "Avg"}:{" "}
+            <span className="font-mono tabular-nums">
+              {stats.avg != null ? stats.avg.toFixed(1) : "–"}
+            </span>
+          </span>
+          <span>
+            {stats.plays} {isNo ? "spill" : "plays"}
+          </span>
+        </div>
+
         {/* Found words */}
         <div className="flex flex-wrap gap-1.5 justify-center min-h-[28px]">
           {puzzle.words.map((w) => (

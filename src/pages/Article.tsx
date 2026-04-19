@@ -7,6 +7,7 @@ import { TagChips } from "@/components/TagChips";
 import { ArticleNotes } from "@/components/ArticleNotes";
 import { RelatedByTags } from "@/components/RelatedByTags";
 import { CompanyMiniProfile } from "@/components/CompanyMiniProfile";
+import { ArticleGallery } from "@/components/ArticleGallery";
 import { ArticleBody } from "@/components/charts/ArticleBody";
 import { pickDropcapVariant, dropcapClassName } from "@/lib/dropcap";
 import { cropToObjectPosition, parseCrop, parseFocal } from "@/lib/image-crop";

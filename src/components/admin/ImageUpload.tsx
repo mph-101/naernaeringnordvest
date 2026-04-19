@@ -42,8 +42,10 @@ const MAX_BYTES = 5 * 1024 * 1024;
 
 export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "article-images" }: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
   const [preview, setPreview] = useState(currentUrl || "");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string>("");
   const [metaOpen, setMetaOpen] = useState(false);
   const [altText, setAltText] = useState("");
   const [caption, setCaption] = useState("");

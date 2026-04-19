@@ -199,6 +199,30 @@ export function IdrettAIChat() {
                     </div>
                   )}
                 </div>
+                {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
+                  <div className="basis-full pl-9">
+                    <div className="mt-2 p-2.5 rounded-xl bg-muted/50 border border-border/50">
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
+                        <FileText className="w-3 h-3" /> Kilder
+                      </p>
+                      <ol className="space-y-1">
+                        {msg.sources.map((s) => (
+                          <li key={s.id} className="text-[11px] leading-snug">
+                            <span className="text-muted-foreground font-mono mr-1">[{s.n}]</span>
+                            <Link
+                              to={`/article/${s.id}`}
+                              className="text-primary hover:underline"
+                              onClick={() => setOpen(false)}
+                            >
+                              {s.title}
+                            </Link>
+                            {s.author && <span className="text-muted-foreground"> — {s.author}</span>}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
             {isLoading && (

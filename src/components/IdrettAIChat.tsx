@@ -10,7 +10,7 @@ interface ArticleSource {
   excerpt: string;
   author: string;
   published_at: string | null;
-  similarity: number;
+  rank: number;
 }
 
 interface Message {

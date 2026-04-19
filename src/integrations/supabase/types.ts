@@ -305,8 +305,6 @@ export type Database = {
           category: string
           created_at: string
           created_by: string | null
-          embedding: string | null
-          embedding_updated_at: string | null
           excerpt: string
           excerpt_en: string | null
           forked_from_article_id: string | null
@@ -321,6 +319,7 @@ export type Database = {
           published_at: string | null
           read_time: string | null
           region_slug: string | null
+          search_tsv: unknown
           status: string
           title: string
           title_en: string | null
@@ -334,8 +333,6 @@ export type Database = {
           category: string
           created_at?: string
           created_by?: string | null
-          embedding?: string | null
-          embedding_updated_at?: string | null
           excerpt: string
           excerpt_en?: string | null
           forked_from_article_id?: string | null
@@ -350,6 +347,7 @@ export type Database = {
           published_at?: string | null
           read_time?: string | null
           region_slug?: string | null
+          search_tsv?: unknown
           status?: string
           title: string
           title_en?: string | null
@@ -363,8 +361,6 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string | null
-          embedding?: string | null
-          embedding_updated_at?: string | null
           excerpt?: string
           excerpt_en?: string | null
           forked_from_article_id?: string | null
@@ -379,6 +375,7 @@ export type Database = {
           published_at?: string | null
           read_time?: string | null
           region_slug?: string | null
+          search_tsv?: unknown
           status?: string
           title?: string
           title_en?: string | null
@@ -1702,12 +1699,13 @@ export type Database = {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
-      match_articles: {
-        Args: {
-          match_count?: number
-          min_similarity?: number
-          query_embedding: string
-        }
+      merge_tags: {
+        Args: { _source_id: string; _target_id: string }
+        Returns: undefined
+      }
+      revoke_api_key: { Args: { _id: string }; Returns: undefined }
+      search_articles: {
+        Args: { match_count?: number; query_text: string }
         Returns: {
           author: string
           body: string
@@ -1715,16 +1713,11 @@ export type Database = {
           excerpt: string
           id: string
           published_at: string
+          rank: number
           region_slug: string
-          similarity: number
           title: string
         }[]
       }
-      merge_tags: {
-        Args: { _source_id: string; _target_id: string }
-        Returns: undefined
-      }
-      revoke_api_key: { Args: { _id: string }; Returns: undefined }
       validate_api_key: {
         Args: { _key_hash: string }
         Returns: {

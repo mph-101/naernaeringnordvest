@@ -565,7 +565,38 @@ export const RichTextEditor = ({
       {/* Editor */}
       <EditorContent
         editor={editor}
-        className="prose prose-sm dark:prose-invert max-w-none p-4 min-h-[300px] focus-within:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[280px] [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-muted-foreground [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0"
+        className={[
+          // Match the published article styling (see ArticleBody)
+          "article-body",
+          "prose prose-lg dark:prose-invert max-w-none font-body",
+          "px-6 md:px-10 py-8 min-h-[400px]",
+          "focus-within:outline-none",
+          // Body text
+          "prose-p:text-foreground prose-p:text-base md:prose-p:text-lg prose-p:leading-[1.8]",
+          // H1 (rare in body, but match headline font)
+          "prose-h1:font-headline prose-h1:text-headline prose-h1:font-bold",
+          "prose-h1:text-3xl md:prose-h1:text-4xl prose-h1:leading-tight",
+          "prose-h1:mt-12 prose-h1:mb-6",
+          // H2
+          "prose-h2:font-headline prose-h2:text-headline prose-h2:font-bold",
+          "prose-h2:text-2xl md:prose-h2:text-[1.7rem] prose-h2:leading-tight",
+          "prose-h2:mt-16 md:prose-h2:mt-20 prose-h2:mb-6",
+          // H3
+          "prose-h3:font-headline prose-h3:text-headline prose-h3:font-semibold",
+          "prose-h3:text-xl md:prose-h3:text-2xl prose-h3:mt-12 prose-h3:mb-5",
+          // Lists, quotes, links, strong
+          "prose-li:my-3 prose-li:leading-[1.9]",
+          "prose-blockquote:border-l-accent prose-blockquote:text-headline prose-blockquote:font-medium prose-blockquote:my-10",
+          "prose-a:text-accent prose-a:underline-offset-4 hover:prose-a:opacity-80",
+          "prose-strong:text-headline prose-strong:font-semibold",
+          // ProseMirror internals
+          "[&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[380px]",
+          "[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-muted-foreground",
+          "[&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]",
+          "[&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left",
+          "[&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none",
+          "[&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0",
+        ].join(" ")}
       />
     </div>
   );

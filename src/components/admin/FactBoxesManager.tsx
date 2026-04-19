@@ -223,9 +223,14 @@ export const FactBoxesManager = () => {
             Sentralt bibliotek av gjenbrukbare faktabokser for hele redaksjonen.
           </p>
         </div>
-        <Button onClick={handleNew}>
-          <Plus className="w-4 h-4 mr-1" /> Ny faktaboks
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={openGenerator}>
+            <Sparkles className="w-4 h-4 mr-1" /> Generer fra kilde
+          </Button>
+          <Button onClick={handleNew}>
+            <Plus className="w-4 h-4 mr-1" /> Ny faktaboks
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 mb-4">

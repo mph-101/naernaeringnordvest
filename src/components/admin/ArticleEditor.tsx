@@ -284,6 +284,71 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     triggerAutoSave();
   };
 
+  // Track first render so we don't auto-sync relations right after fetchArticle
+  // populates them (which would just re-write the same data).
+  const relationsHydratedRef = useRef(false);
+  useEffect(() => {
+    // Reset whenever the loaded article changes
+    relationsHydratedRef.current = false;
+  }, [articleId]);
+
+  // Debounced auto-save of company tags, article tags and shared regions.
+  // Only runs once we have a persisted article id.
+  useEffect(() => {
+    if (!currentArticleId) return;
+    if (!relationsHydratedRef.current) {
+      // Skip the very first run after hydration
+      relationsHydratedRef.current = true;
+      return;
+    }
+    setAutoSaveStatus("unsaved");
+    const t = setTimeout(async () => {
+      setAutoSaveStatus("saving");
+      try {
+        // Company tags
+        await supabase.from("article_company_tags").delete().eq("article_id", currentArticleId);
+        if (companyTags.length > 0) {
+          await supabase.from("article_company_tags").insert(
+            companyTags.map((t) => ({
+              article_id: currentArticleId,
+              orgnr: t.orgnr,
+              company_name: t.company_name,
+            })),
+          );
+        }
+        // Article tags
+        await supabase.from("article_tags").delete().eq("article_id", currentArticleId);
+        if (articleTags.length > 0) {
+          const { data: { user } } = await supabase.auth.getUser();
+          await supabase.from("article_tags").insert(
+            articleTags.map((tag) => ({
+              article_id: currentArticleId,
+              tag_id: tag.id,
+              created_by: user?.id,
+            })),
+          );
+        }
+        // Shared regions
+        await supabase.from("article_shared_regions" as any).delete().eq("article_id", currentArticleId);
+        const targets = sharedRegions.filter((s) => s && s !== formRef.current?.region_slug);
+        if (targets.length > 0) {
+          const { data: { user } } = await supabase.auth.getUser();
+          await supabase.from("article_shared_regions" as any).insert(
+            targets.map((region_slug) => ({
+              article_id: currentArticleId,
+              region_slug,
+              shared_by: user?.id,
+            })),
+          );
+        }
+        setAutoSaveStatus("saved");
+      } catch {
+        setAutoSaveStatus("unsaved");
+      }
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [currentArticleId, companyTags, articleTags, sharedRegions]);
+
   const fetchArticle = async () => {
     if (!articleId) return;
     setLoading(true);

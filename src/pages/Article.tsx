@@ -238,6 +238,8 @@ const Article = () => {
           )}
         </div>
 
+        <ArticleGallery articleId={id!} />
+
         <div className="flex items-center gap-4 mb-12">
           <div className="flex-1 h-px bg-border" />
           <span className="text-muted-foreground/40 text-lg">✦</span>

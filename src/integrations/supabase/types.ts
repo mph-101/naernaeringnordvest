@@ -319,6 +319,7 @@ export type Database = {
           published_at: string | null
           read_time: string | null
           region_slug: string | null
+          search_tsv: unknown
           status: string
           title: string
           title_en: string | null
@@ -346,6 +347,7 @@ export type Database = {
           published_at?: string | null
           read_time?: string | null
           region_slug?: string | null
+          search_tsv?: unknown
           status?: string
           title: string
           title_en?: string | null
@@ -373,6 +375,7 @@ export type Database = {
           published_at?: string | null
           read_time?: string | null
           region_slug?: string | null
+          search_tsv?: unknown
           status?: string
           title?: string
           title_en?: string | null
@@ -1701,6 +1704,20 @@ export type Database = {
         Returns: undefined
       }
       revoke_api_key: { Args: { _id: string }; Returns: undefined }
+      search_articles: {
+        Args: { match_count?: number; query_text: string }
+        Returns: {
+          author: string
+          body: string
+          category: string
+          excerpt: string
+          id: string
+          published_at: string
+          rank: number
+          region_slug: string
+          title: string
+        }[]
+      }
       validate_api_key: {
         Args: { _key_hash: string }
         Returns: {

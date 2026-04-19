@@ -79,6 +79,19 @@ export function WordSearchGame({ language }: Props) {
   const [found, setFound] = useState<Set<string>>(new Set());
   const [selecting, setSelecting] = useState<[number, number][]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [stats, setStats] = useState<GameStats>(() => getStats("wordsearch"));
+  const [elapsed, setElapsed] = useState(0);
+  const startRef = useRef<number>(Date.now());
+  const recordedRef = useRef(false);
+
+  // Tick the timer each second while puzzle is active
+  useEffect(() => {
+    if (found.size === placed.length && placed.length > 0) return;
+    const id = window.setInterval(() => {
+      setElapsed((Date.now() - startRef.current) / 1000);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [found, placed]);
 
   const foundCells = useMemo(() => {
     const set = new Set<string>();

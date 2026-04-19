@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { InlineDiff } from "./InlineDiff";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
+import { ArticleGalleryEditor } from "./ArticleGalleryEditor";
 import { ImageCropDialog } from "./ImageCropDialog";
 import type { ImageCrop, ImageFocal } from "@/lib/image-crop";
 import { cropToObjectPosition, parseCrop, parseFocal } from "@/lib/image-crop";

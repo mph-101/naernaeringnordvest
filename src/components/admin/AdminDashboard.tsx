@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   BarChart3,
-  UserCog
+  UserCog,
+  ImageIcon
 } from "lucide-react";
 import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
@@ -24,6 +25,7 @@ import { TagsManager } from "./TagsManager";
 import { SourcesManager } from "./SourcesManager";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
 import { UsersManager } from "./UsersManager";
+import { MediaArchive } from "./MediaArchive";
 import { useAuth } from "@/hooks/useAuth";
 
 interface AdminDashboardProps {
@@ -31,7 +33,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources" | "analytics" | "users";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources" | "analytics" | "users" | "media";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const { hasRole } = useAuth();
@@ -56,6 +58,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "articles" as View, label: "Artikler", icon: FileText },
     { id: "sources" as View, label: "Kilder & AI", icon: Sparkles },
     { id: "fact-boxes" as View, label: "Faktabokser", icon: BookOpen },
+    { id: "media" as View, label: "Mediearkiv", icon: ImageIcon },
     { id: "tags" as View, label: "Tags", icon: TagIcon },
     { id: "tips" as View, label: "Tips", icon: MessageSquare },
     { id: "job-changes" as View, label: "Jobbytter", icon: Users },
@@ -231,6 +234,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "sources" && (
           <SourcesManager />
+        )}
+
+        {view === "media" && (
+          <MediaArchive />
         )}
       </main>
     </div>

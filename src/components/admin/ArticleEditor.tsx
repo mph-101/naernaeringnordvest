@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { InlineDiff } from "./InlineDiff";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
+import { ArticleGalleryEditor } from "./ArticleGalleryEditor";
 import { ImageCropDialog } from "./ImageCropDialog";
 import type { ImageCrop, ImageFocal } from "@/lib/image-crop";
 import { cropToObjectPosition, parseCrop, parseFocal } from "@/lib/image-crop";
@@ -1146,6 +1147,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             />
           )}
         </div>
+
+        {/* Bildegalleri */}
+        <ArticleGalleryEditor articleId={articleId} />
 
         {/* Norwegian content */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">

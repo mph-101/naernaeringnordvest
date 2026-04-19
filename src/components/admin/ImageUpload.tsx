@@ -66,11 +66,33 @@ export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "
       return;
     }
     setPendingFile(file);
+    setPendingPreviewUrl(URL.createObjectURL(file));
     setAltText("");
     setCaption("");
     setPhotographer("");
     setSource("");
     setMetaOpen(true);
+  };
+
+  const handleSuggest = async () => {
+    if (!pendingFile) return;
+    setSuggesting(true);
+    try {
+      const imageBase64 = await fileToBase64(pendingFile);
+      const { data, error } = await supabase.functions.invoke("suggest-image-meta", {
+        body: { imageBase64, mimeType: pendingFile.type, hint: caption || altText || "" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.alt_text && !altText.trim()) setAltText(data.alt_text);
+      if (data?.caption && !caption.trim()) setCaption(data.caption);
+      if (data?.photographer && !photographer.trim()) setPhotographer(data.photographer);
+      toast({ title: "AI-forslag klart", description: "Du kan redigere før lagring." });
+    } catch (err: any) {
+      toast({ title: "AI-forslag feilet", description: err.message || "Ukjent feil", variant: "destructive" });
+    } finally {
+      setSuggesting(false);
+    }
   };
 
   const handleConfirmUpload = async () => {

@@ -67,6 +67,7 @@ export function WordAssemblyGame({ language }: Props) {
       toast.error(isNo ? "Minimum 3 bokstaver" : "Minimum 3 letters");
       return;
     }
+    setAttempts((a) => a + 1);
     if (found.has(word)) {
       toast.info(isNo ? "Allerede funnet!" : "Already found!");
       clearCurrent();
@@ -77,7 +78,22 @@ export function WordAssemblyGame({ language }: Props) {
       setFound(next);
       toast.success(`✓ ${word}`);
       if (next.size === puzzle.words.length) {
-        toast.success(isNo ? "🎉 Du fant alle ordene!" : "🎉 You found all words!");
+        if (!recordedRef.current) {
+          recordedRef.current = true;
+          // attempts state hasn't flushed yet — compute the final value
+          const finalAttempts = attempts + 1;
+          const { stats: updated, newBest } = recordRun("wordassembly", finalAttempts, true);
+          setStats(updated);
+          toast.success(
+            newBest
+              ? isNo
+                ? `🏆 Ny rekord: ${finalAttempts} forsøk!`
+                : `🏆 New record: ${finalAttempts} attempts!`
+              : isNo
+                ? `🎉 Ferdig på ${finalAttempts} forsøk!`
+                : `🎉 Done in ${finalAttempts} attempts!`,
+          );
+        }
       }
     } else {
       toast.error(isNo ? `"${word}" er ikke i listen` : `"${word}" is not in the list`);
@@ -94,6 +110,8 @@ export function WordAssemblyGame({ language }: Props) {
     setPuzzleIdx((prev) => (prev + 1) % puzzles.length);
     setFound(new Set());
     clearCurrent();
+    setAttempts(0);
+    recordedRef.current = false;
   };
 
   return (

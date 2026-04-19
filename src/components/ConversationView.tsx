@@ -27,6 +27,31 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
   const [isLoading, setIsLoading] = useState(false);
   const hasStarted = useRef(false);
 
+  const linkifyCitations = (content: string, sources?: ArticleSource[], assistantId?: string) => {
+    if (!content) return content;
+    const validNumbers = new Set((sources ?? []).map((s) => s.n));
+    return content.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, group: string) => {
+      const nums = group.split(",").map((n) => n.trim());
+      const parts = nums.map((n) => {
+        const num = Number(n);
+        if (!validNumbers.has(num)) return `[${n}]`;
+        return `[\\[${n}\\]](#src-${assistantId}-${num})`;
+      });
+      return parts.join("");
+    });
+  };
+
+  const handleCitationClick = (e: React.MouseEvent<HTMLAnchorElement>, href?: string) => {
+    if (!href || !href.startsWith("#src-")) return;
+    e.preventDefault();
+    const el = document.getElementById(href.slice(1));
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-accent", "rounded");
+      setTimeout(() => el.classList.remove("ring-2", "ring-accent", "rounded"), 1500);
+    }
+  };
+
   const sendMessage = async (rawInput: string, history: Message[]) => {
     const trimmed = rawInput.trim();
     if (!trimmed || isLoading) return;
@@ -118,10 +143,24 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                           ol: ({ children }) => <ol className="mb-3 space-y-1 pl-5 list-decimal marker:text-primary/60">{children}</ol>,
                           li: ({ children }) => <li className="leading-[1.6]">{children}</li>,
                           strong: ({ children }) => <strong className="font-semibold text-headline">{children}</strong>,
-                          a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{children}</a>,
+                          a: ({ href, children }) => {
+                            const isCitation = href?.startsWith("#src-");
+                            if (isCitation) {
+                              return (
+                                <a
+                                  href={href}
+                                  onClick={(e) => handleCitationClick(e, href)}
+                                  className="text-accent font-mono text-xs align-super no-underline hover:underline"
+                                >
+                                  {children}
+                                </a>
+                              );
+                            }
+                            return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{children}</a>;
+                          },
                         }}
                       >
-                        {message.content}
+                        {linkifyCitations(message.content, message.sources, message.id)}
                       </ReactMarkdown>
                     </div>
                   )}
@@ -130,7 +169,7 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                       <p className="font-subhead text-sm text-muted-foreground mb-3 flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" />{t.sources}</p>
                       <ol className="space-y-2">
                         {message.sources.map((source) => (
-                          <li key={source.id} className="text-sm leading-relaxed">
+                          <li key={source.id} id={`src-${message.id}-${source.n}`} className="text-sm leading-relaxed scroll-mt-24">
                             <span className="text-muted-foreground font-mono mr-2">[{source.n}]</span>
                             <Link to={`/article/${source.id}`} className="text-primary hover:underline">
                               {source.title}

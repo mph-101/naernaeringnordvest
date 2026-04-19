@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Upload, X, Loader2, Sparkles } from "lucide-react";
+import { Upload, X, Loader2, Sparkles, Library, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const fileToBase64 = (file: File): Promise<string> =>
@@ -36,11 +36,28 @@ interface ImageUploadProps {
   /** Optional: receive full metadata + media_assets row id */
   onUploadWithMeta?: (meta: UploadedImageMeta) => void;
   bucket?: string;
+  /** Show "Velg fra arkiv"-knapp som lar bruker plukke fra media_assets. Default true. */
+  enableArchivePicker?: boolean;
+}
+
+interface ArchiveAsset {
+  id: string;
+  public_url: string;
+  alt_text: string;
+  caption: string;
+  photographer: string;
+  source: string | null;
 }
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
-export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "article-images" }: ImageUploadProps) => {
+export const ImageUpload = ({
+  currentUrl,
+  onUpload,
+  onUploadWithMeta,
+  bucket = "article-images",
+  enableArchivePicker = true,
+}: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
   const [preview, setPreview] = useState(currentUrl || "");
@@ -51,8 +68,55 @@ export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "
   const [caption, setCaption] = useState("");
   const [photographer, setPhotographer] = useState("");
   const [source, setSource] = useState("");
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archiveLoading, setArchiveLoading] = useState(false);
+  const [archiveAssets, setArchiveAssets] = useState<ArchiveAsset[]>([]);
+  const [archiveSearch, setArchiveSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const openArchive = async () => {
+    setArchiveOpen(true);
+    if (archiveAssets.length === 0) {
+      setArchiveLoading(true);
+      const { data, error } = await (supabase as any)
+        .from("media_assets")
+        .select("id, public_url, alt_text, caption, photographer, source")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      setArchiveLoading(false);
+      if (error) {
+        toast({ title: "Feil", description: error.message, variant: "destructive" });
+        return;
+      }
+      setArchiveAssets((data as ArchiveAsset[]) || []);
+    }
+  };
+
+  const pickFromArchive = (asset: ArchiveAsset) => {
+    setPreview(asset.public_url);
+    onUpload(asset.public_url);
+    onUploadWithMeta?.({
+      url: asset.public_url,
+      mediaId: asset.id,
+      alt_text: asset.alt_text,
+      caption: asset.caption,
+      photographer: asset.photographer,
+      source: asset.source || undefined,
+    });
+    setArchiveOpen(false);
+    toast({ title: "Bilde valgt", description: "Bildet ble hentet fra mediearkivet." });
+  };
+
+  const filteredArchive = archiveAssets.filter((a) => {
+    const q = archiveSearch.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      a.caption.toLowerCase().includes(q) ||
+      a.alt_text.toLowerCase().includes(q) ||
+      a.photographer.toLowerCase().includes(q)
+    );
+  });
 
   const handleFilePicked = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -190,22 +254,36 @@ export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          className="w-full h-48 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-muted/30 transition-colors"
-        >
-          {uploading ? (
-            <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
-          ) : (
-            <>
-              <Upload className="w-8 h-8 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Klikk for å laste opp bilde</span>
-              <span className="text-xs text-muted-foreground">Maks 5 MB · krever bildetekst, fotograf og alt-tekst</span>
-            </>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="w-full h-48 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-muted/30 transition-colors"
+          >
+            {uploading ? (
+              <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+            ) : (
+              <>
+                <Upload className="w-8 h-8 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Klikk for å laste opp bilde</span>
+                <span className="text-xs text-muted-foreground">Maks 5 MB · krever bildetekst, fotograf og alt-tekst</span>
+              </>
+            )}
+          </button>
+          {enableArchivePicker && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={openArchive}
+              disabled={uploading}
+            >
+              <Library className="w-4 h-4 mr-2" /> Velg fra mediearkiv
+            </Button>
           )}
-        </button>
+        </div>
       )}
       <input ref={inputRef} type="file" accept="image/*" onChange={handleFilePicked} className="hidden" />
 
@@ -301,6 +379,57 @@ export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "
             <Button onClick={handleConfirmUpload} disabled={uploading}>
               {uploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Laster opp…</> : "Last opp"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={archiveOpen} onOpenChange={setArchiveOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Velg bilde fra mediearkivet</DialogTitle>
+          </DialogHeader>
+          <div className="relative mb-4">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={archiveSearch}
+              onChange={(e) => setArchiveSearch(e.target.value)}
+              placeholder="Søk i bildetekst, alt-tekst eller fotograf…"
+              className="pl-9"
+            />
+          </div>
+          {archiveLoading ? (
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Laster mediearkiv…
+            </div>
+          ) : filteredArchive.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">
+              Ingen bilder funnet. Last opp et bilde for å bygge arkivet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {filteredArchive.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => pickFromArchive(a)}
+                  className="text-left bg-muted/30 rounded-lg overflow-hidden border border-border hover:border-primary transition-colors"
+                >
+                  <img
+                    src={a.public_url}
+                    alt={a.alt_text}
+                    className="w-full aspect-video object-cover"
+                    loading="lazy"
+                  />
+                  <div className="p-2">
+                    <p className="text-xs line-clamp-2">{a.caption}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Foto: {a.photographer}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setArchiveOpen(false)}>Lukk</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

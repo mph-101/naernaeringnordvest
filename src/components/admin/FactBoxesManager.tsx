@@ -367,6 +367,96 @@ export const FactBoxesManager = () => {
           {previewing && <FactBox data={previewing} />}
         </DialogContent>
       </Dialog>
+
+      {/* AI generator dialog */}
+      <Dialog open={genOpen} onOpenChange={(o) => !generating && setGenOpen(o)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-headline flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" /> Generer faktaboks fra kilde
+            </DialogTitle>
+            <DialogDescription>
+              Velg én eller flere kilder fra kildebiblioteket. AI velger best egnet faktaboks-variant og forhåndsutfyller redigeringsskjemaet.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="hint">Hva skal faktaboksen handle om? (valgfri)</Label>
+              <Textarea
+                id="hint"
+                rows={2}
+                value={genHint}
+                onChange={(e) => setGenHint(e.target.value)}
+                placeholder="F.eks. 'Nøkkeltall for selskapet' eller 'Bakgrunn om saken'"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label>Velg kilder ({selectedSources.size} valgt)</Label>
+                <div className="relative w-48">
+                  <Search className="absolute left-2 top-2 w-3.5 h-3.5 text-muted-foreground" />
+                  <Input
+                    value={sourceSearch}
+                    onChange={(e) => setSourceSearch(e.target.value)}
+                    placeholder="Søk i kilder…"
+                    className="pl-7 h-8 text-sm"
+                  />
+                </div>
+              </div>
+              <div className="border border-border rounded-lg max-h-72 overflow-y-auto divide-y divide-border">
+                {sourcesLoading ? (
+                  <div className="p-6 text-center text-muted-foreground">
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                  </div>
+                ) : filteredSources.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-muted-foreground font-body">
+                    {sources.length === 0
+                      ? "Ingen kilder ennå. Last opp kilder under Kilder & AI-generering."
+                      : "Ingen kilder matcher søket."}
+                  </div>
+                ) : (
+                  filteredSources.map((s) => {
+                    const Icon = SRC_ICONS[s.source_type] ?? FileText;
+                    const isSel = selectedSources.has(s.id);
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => toggleSource(s.id)}
+                        className={`w-full text-left p-3 flex items-start gap-3 hover:bg-muted/50 transition-colors ${isSel ? "bg-primary/5" : ""}`}
+                      >
+                        <Checkbox checked={isSel} className="mt-0.5 pointer-events-none" />
+                        <Icon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-body font-medium text-sm text-foreground truncate">{s.title}</div>
+                          <div className="text-xs text-muted-foreground line-clamp-1 font-body">
+                            {s.content?.slice(0, 140) || "(ingen tekst)"}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGenOpen(false)} disabled={generating}>
+              Avbryt
+            </Button>
+            <Button onClick={runGeneration} disabled={generating || selectedSources.size === 0}>
+              {generating ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Genererer…</>
+              ) : (
+                <><Sparkles className="w-4 h-4 mr-2" /> Generer</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

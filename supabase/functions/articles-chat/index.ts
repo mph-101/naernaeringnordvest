@@ -14,9 +14,8 @@ const corsHeaders = {
 };
 
 const CHAT_MODEL = "google/gemini-3-flash-preview";
-const EMBED_MODEL = "google/text-embedding-004";
+const QUERY_REWRITE_MODEL = "google/gemini-2.5-flash-lite";
 const MATCH_COUNT = 6;
-const MIN_SIMILARITY = 0.25;
 
 function stripHtml(html: string): string {
   return html
@@ -27,15 +26,36 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-async function embed(text: string, apiKey: string): Promise<number[]> {
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: EMBED_MODEL, input: text.slice(0, 8000) }),
-  });
-  if (!resp.ok) throw new Error(`Embedding failed: ${resp.status}`);
-  const json = await resp.json();
-  return json?.data?.[0]?.embedding as number[];
+/**
+ * Use a small, fast LLM to extract the most distinctive search keywords
+ * from the conversation. This dramatically improves recall for Postgres
+ * full-text search compared to feeding the raw question (which is full of
+ * stop-words and conversational filler).
+ */
+async function extractSearchTerms(question: string, apiKey: string): Promise<string> {
+  try {
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: QUERY_REWRITE_MODEL,
+        messages: [
+          {
+            role: "system",
+            content:
+              "Du hjelper med å lage søk i en norsk avisarkivdatabase. Returner KUN 3–8 nøkkelord (egennavn, bransjer, steder, selskaper) fra brukerens spørsmål, atskilt med mellomrom. Ingen forklaring, ingen tegnsetting, ingen anførselstegn.",
+          },
+          { role: "user", content: question },
+        ],
+      }),
+    });
+    if (!resp.ok) return question;
+    const json = await resp.json();
+    const terms = json?.choices?.[0]?.message?.content as string | undefined;
+    return (terms || question).trim();
+  } catch {
+    return question;
+  }
 }
 
 serve(async (req) => {
@@ -76,13 +96,13 @@ serve(async (req) => {
 
     if (queryText.trim().length > 2) {
       try {
-        const vec = await embed(queryText, LOVABLE_API_KEY);
-        const { data: matches, error: matchErr } = await supabase.rpc("match_articles", {
-          query_embedding: vec as unknown as string,
+        const searchTerms = await extractSearchTerms(queryText, LOVABLE_API_KEY);
+        console.log("articles-chat: search terms =", searchTerms);
+        const { data: matches, error: matchErr } = await supabase.rpc("search_articles", {
+          query_text: searchTerms,
           match_count: MATCH_COUNT,
-          min_similarity: MIN_SIMILARITY,
         });
-        if (matchErr) console.error("match_articles error:", matchErr);
+        if (matchErr) console.error("search_articles error:", matchErr);
 
         sources = (matches || []).map((m: any, i: number) => ({
           n: i + 1,

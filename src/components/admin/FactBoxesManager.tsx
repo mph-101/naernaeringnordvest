@@ -145,6 +145,75 @@ export const FactBoxesManager = () => {
     void loadBoxes();
   };
 
+  // ---- AI generation from sources ----
+  const openGenerator = async () => {
+    setGenOpen(true);
+    setSelectedSources(new Set());
+    setGenHint("");
+    setSourceSearch("");
+    setSourcesLoading(true);
+    const { data, error } = await supabase
+      .from("article_sources")
+      .select("id, source_type, title, content, metadata")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) {
+      toast({ title: "Kunne ikke hente kilder", description: error.message, variant: "destructive" });
+    } else {
+      setSources((data || []) as SourceLite[]);
+    }
+    setSourcesLoading(false);
+  };
+
+  const toggleSource = (id: string) => {
+    setSelectedSources((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const filteredSources = useMemo(() => {
+    const q = sourceSearch.trim().toLowerCase();
+    return sources.filter((s) => {
+      if (s.metadata?.status === "processing" || s.metadata?.status === "failed") return false;
+      if (!q) return true;
+      return (s.title + " " + (s.content || "")).toLowerCase().includes(q);
+    });
+  }, [sources, sourceSearch]);
+
+  const runGeneration = async () => {
+    if (selectedSources.size === 0) {
+      toast({ title: "Velg minst én kilde", variant: "destructive" });
+      return;
+    }
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-fact-box", {
+        body: { sourceIds: Array.from(selectedSources), hint: genHint },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const fb = data.factBox;
+      setGenOpen(false);
+      setEditing({
+        variant: (fb.variant as FactBoxVariant) || "rich",
+        title: fb.title || "",
+        body: fb.body || "",
+        image_url: "",
+        image_caption: "",
+        items: Array.isArray(fb.items) && fb.items.length > 0 ? fb.items : [{ label: "", value: "" }],
+        tags: Array.isArray(fb.tags) ? fb.tags : [],
+      });
+      setDialogOpen(true);
+      toast({ title: "Faktaboks generert", description: "Sjekk og rediger før du lagrer." });
+    } catch (e: any) {
+      toast({ title: "Generering feilet", description: e.message || "Ukjent feil", variant: "destructive" });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   return (
     <div>
       <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">

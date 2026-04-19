@@ -74,8 +74,10 @@ serve(async (req) => {
     if (body.article_id) {
       query = query.eq("id", body.article_id);
     } else if (!body.force) {
-      // Only rows that need embedding (never embedded, or article changed since last embed)
-      query = query.or("embedding_updated_at.is.null,embedding_updated_at.lt.updated_at");
+      // Only rows that have never been embedded. To re-embed an updated
+      // article, call this function with {"article_id": "..."} from the
+      // article editor on save, or with {"force": true} to refresh all.
+      query = query.is("embedding_updated_at", null);
     }
 
     query = query.limit(body.limit ?? 50);

@@ -1148,6 +1148,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           )}
         </div>
 
+        {/* Bildegalleri */}
+        <ArticleGalleryEditor articleId={articleId} />
+
         {/* Norwegian content */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
           <div className="flex items-center justify-between border-b border-border pb-3">

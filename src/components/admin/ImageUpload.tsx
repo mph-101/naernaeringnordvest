@@ -382,6 +382,57 @@ export const ImageUpload = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={archiveOpen} onOpenChange={setArchiveOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Velg bilde fra mediearkivet</DialogTitle>
+          </DialogHeader>
+          <div className="relative mb-4">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={archiveSearch}
+              onChange={(e) => setArchiveSearch(e.target.value)}
+              placeholder="Søk i bildetekst, alt-tekst eller fotograf…"
+              className="pl-9"
+            />
+          </div>
+          {archiveLoading ? (
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Laster mediearkiv…
+            </div>
+          ) : filteredArchive.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">
+              Ingen bilder funnet. Last opp et bilde for å bygge arkivet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {filteredArchive.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => pickFromArchive(a)}
+                  className="text-left bg-muted/30 rounded-lg overflow-hidden border border-border hover:border-primary transition-colors"
+                >
+                  <img
+                    src={a.public_url}
+                    alt={a.alt_text}
+                    className="w-full aspect-video object-cover"
+                    loading="lazy"
+                  />
+                  <div className="p-2">
+                    <p className="text-xs line-clamp-2">{a.caption}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Foto: {a.photographer}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setArchiveOpen(false)}>Lukk</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

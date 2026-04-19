@@ -158,6 +158,8 @@ export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "
       toast({ title: "Lastet opp", description: "Bildet er lagret i mediearkivet" });
       setMetaOpen(false);
       setPendingFile(null);
+      if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+      setPendingPreviewUrl("");
       if (inputRef.current) inputRef.current.value = "";
     } catch (err: any) {
       toast({ title: "Feil", description: err.message, variant: "destructive" });
@@ -169,6 +171,8 @@ export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "
   const handleCancel = () => {
     setMetaOpen(false);
     setPendingFile(null);
+    if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+    setPendingPreviewUrl("");
     if (inputRef.current) inputRef.current.value = "";
   };
 

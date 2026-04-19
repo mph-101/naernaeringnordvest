@@ -51,7 +51,13 @@ interface ArchiveAsset {
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
-export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "article-images" }: ImageUploadProps) => {
+export const ImageUpload = ({
+  currentUrl,
+  onUpload,
+  onUploadWithMeta,
+  bucket = "article-images",
+  enableArchivePicker = true,
+}: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
   const [preview, setPreview] = useState(currentUrl || "");
@@ -62,8 +68,55 @@ export const ImageUpload = ({ currentUrl, onUpload, onUploadWithMeta, bucket = "
   const [caption, setCaption] = useState("");
   const [photographer, setPhotographer] = useState("");
   const [source, setSource] = useState("");
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archiveLoading, setArchiveLoading] = useState(false);
+  const [archiveAssets, setArchiveAssets] = useState<ArchiveAsset[]>([]);
+  const [archiveSearch, setArchiveSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const openArchive = async () => {
+    setArchiveOpen(true);
+    if (archiveAssets.length === 0) {
+      setArchiveLoading(true);
+      const { data, error } = await (supabase as any)
+        .from("media_assets")
+        .select("id, public_url, alt_text, caption, photographer, source")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      setArchiveLoading(false);
+      if (error) {
+        toast({ title: "Feil", description: error.message, variant: "destructive" });
+        return;
+      }
+      setArchiveAssets((data as ArchiveAsset[]) || []);
+    }
+  };
+
+  const pickFromArchive = (asset: ArchiveAsset) => {
+    setPreview(asset.public_url);
+    onUpload(asset.public_url);
+    onUploadWithMeta?.({
+      url: asset.public_url,
+      mediaId: asset.id,
+      alt_text: asset.alt_text,
+      caption: asset.caption,
+      photographer: asset.photographer,
+      source: asset.source || undefined,
+    });
+    setArchiveOpen(false);
+    toast({ title: "Bilde valgt", description: "Bildet ble hentet fra mediearkivet." });
+  };
+
+  const filteredArchive = archiveAssets.filter((a) => {
+    const q = archiveSearch.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      a.caption.toLowerCase().includes(q) ||
+      a.alt_text.toLowerCase().includes(q) ||
+      a.photographer.toLowerCase().includes(q)
+    );
+  });
 
   const handleFilePicked = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

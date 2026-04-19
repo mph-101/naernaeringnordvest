@@ -3,8 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Plus, Pencil, Trash2, Loader2, Eye } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Loader2, Eye, Sparkles, FileText, Mic, ImageIcon, Link2 } from "lucide-react";
 import { FactBoxLibraryDialog } from "@/components/factbox/FactBoxLibraryDialog";
 import { FactBox, type FactBoxData, type FactBoxVariant, type FactBoxKeyValueItem } from "@/components/factbox/FactBox";
 import {
@@ -12,7 +15,21 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
+
+interface SourceLite {
+  id: string;
+  source_type: string;
+  title: string;
+  content: string | null;
+  metadata?: { status?: string } | null;
+}
+
+const SRC_ICONS: Record<string, any> = {
+  text: FileText, document: FileText, audio: Mic, image: ImageIcon, url: Link2,
+};
 
 interface FactBoxRow {
   id: string;

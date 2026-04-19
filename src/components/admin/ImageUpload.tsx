@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Upload, X, Loader2, Sparkles } from "lucide-react";
+import { Upload, X, Loader2, Sparkles, Library, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const fileToBase64 = (file: File): Promise<string> =>

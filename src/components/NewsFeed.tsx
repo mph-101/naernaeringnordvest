@@ -243,7 +243,7 @@ export const NewsFeed = () => {
 
   if (loading) {
     return (
-      <section className="py-16">
+      <section className="py-[44px]">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
         </div>
@@ -253,7 +253,7 @@ export const NewsFeed = () => {
 
   if (articles.length === 0) {
     return (
-      <section className="py-16">
+      <section className="py-[44px]">
         <div className="max-w-5xl mx-auto px-6 text-center text-muted-foreground">
           {language === "no" ? "Ingen publiserte artikler ennå." : "No published articles yet."}
         </div>
@@ -262,7 +262,7 @@ export const NewsFeed = () => {
   }
 
   return (
-    <section className="py-16">
+    <section className="py-[44px]">
       <div className="max-w-5xl mx-auto px-6">
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">

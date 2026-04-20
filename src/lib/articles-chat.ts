@@ -43,10 +43,12 @@ export async function streamArticlesChat({
   const reader = resp.body.getReader();
   const decoder = new TextDecoder();
   let textBuffer = "";
-  let streamDone = false;
   let currentEvent = "message";
 
-  while (!streamDone) {
+  // Keep reading until the underlying stream closes — the edge function
+  // appends a custom `event: sources` block AFTER the upstream `[DONE]`,
+  // so we cannot bail early on `[DONE]`.
+  while (true) {
     const { done, value } = await reader.read();
     if (done) break;
 
@@ -59,10 +61,14 @@ export async function streamArticlesChat({
 
       if (line.endsWith("\r")) line = line.slice(0, -1);
 
-      if (line.startsWith(":") || line.trim() === "") {
-        if (line.trim() === "") currentEvent = "message";
+      // Blank line = SSE event boundary; reset event type for next block
+      if (line.trim() === "") {
+        currentEvent = "message";
         continue;
       }
+
+      // Comment line
+      if (line.startsWith(":")) continue;
 
       if (line.startsWith("event: ")) {
         currentEvent = line.slice(7).trim();
@@ -72,10 +78,8 @@ export async function streamArticlesChat({
       if (!line.startsWith("data: ")) continue;
 
       const jsonStr = line.slice(6).trim();
-      if (jsonStr === "[DONE]") {
-        streamDone = true;
-        break;
-      }
+      // Skip the upstream sentinel but keep reading for our trailing sources event
+      if (jsonStr === "[DONE]") continue;
 
       try {
         const parsed = JSON.parse(jsonStr);

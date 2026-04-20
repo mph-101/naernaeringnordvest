@@ -20,7 +20,7 @@ export function TrendingSection() {
   };
 
   return (
-    <section className="py-10">
+    <section className="py-[20px]">
       <div className="max-w-5xl mx-auto px-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

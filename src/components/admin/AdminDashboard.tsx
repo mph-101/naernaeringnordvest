@@ -278,3 +278,78 @@ const DashboardCard = ({ title, description, icon: Icon, onClick, disabled }: Da
     </p>
   </button>
 );
+
+interface MediaStats {
+  total: number;
+  recent: { id: string; public_url: string; alt_text: string }[];
+  latestAt: string | null;
+}
+
+const MediaArchiveCard = ({ onClick }: { onClick: () => void }) => {
+  const [stats, setStats] = useReactState<MediaStats | null>(null);
+  const [loading, setLoading] = useReactState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data, count } = await supabase
+        .from("media_assets")
+        .select("id, public_url, alt_text, created_at", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .limit(4);
+      if (!active) return;
+      setStats({
+        total: count ?? 0,
+        recent: (data ?? []).map((d) => ({ id: d.id, public_url: d.public_url, alt_text: d.alt_text })),
+        latestAt: data?.[0]?.created_at ?? null,
+      });
+      setLoading(false);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const latestLabel = stats?.latestAt
+    ? new Intl.DateTimeFormat("nb-NO", { dateStyle: "medium" }).format(new Date(stats.latestAt))
+    : null;
+
+  return (
+    <button
+      onClick={onClick}
+      className="bg-card rounded-xl p-6 text-left shadow-soft transition-all hover:shadow-elevated hover:-translate-y-1 cursor-pointer flex flex-col"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+          <ImageIcon className="w-6 h-6 text-primary" />
+        </div>
+        {!loading && (
+          <div className="text-right">
+            <div className="font-headline text-2xl font-semibold text-headline leading-none">
+              {stats?.total ?? 0}
+            </div>
+            <div className="text-xs text-muted-foreground font-body mt-1">filer</div>
+          </div>
+        )}
+      </div>
+      <h3 className="font-headline text-lg font-medium text-headline mb-1">Mediearkiv</h3>
+      <p className="text-sm text-muted-foreground font-body mb-3">
+        {latestLabel ? `Sist oppdatert ${latestLabel}` : "Bilder, alt-tekst og kreditering"}
+      </p>
+      {stats && stats.recent.length > 0 && (
+        <div className="grid grid-cols-4 gap-1.5 mt-auto">
+          {stats.recent.map((m) => (
+            <div key={m.id} className="aspect-square rounded-md overflow-hidden bg-muted">
+              <img
+                src={m.public_url}
+                alt={m.alt_text}
+                loading="lazy"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </button>
+  );
+};

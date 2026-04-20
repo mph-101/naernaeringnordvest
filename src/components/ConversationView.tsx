@@ -26,6 +26,8 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
   const hasStarted = useRef(false);
 
   const linkifyCitations = (content: string, sources?: ArticleSource[], assistantId?: string) => {

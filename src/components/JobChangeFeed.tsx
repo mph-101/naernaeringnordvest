@@ -143,6 +143,19 @@ export const JobChangeFeed = () => {
                 {body}
               </p>
             )}
+            <div className="flex items-center gap-2 pt-1">
+              <a
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}&summary=${encodeURIComponent(`${name} – ${role || ""}${role && company ? " · " : ""}${company || ""}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1.5 text-xs font-subhead font-medium text-primary hover:bg-primary/10 px-2 py-1 rounded-md transition-colors"
+                aria-label={isNo ? "Del på LinkedIn" : "Share on LinkedIn"}
+              >
+                <Linkedin className="w-3.5 h-3.5" />
+                {isNo ? "Del på LinkedIn" : "Share on LinkedIn"}
+              </a>
+            </div>
           </div>
         )}
       </li>

@@ -51,6 +51,10 @@ export const translations = {
     you: "Deg",
     sources: "Kilder",
     followUp: "Still et oppfølgingsspørsmål...",
+    copyAnswer: "Kopier svar",
+    copied: "Kopiert",
+    shareConversation: "Del samtale",
+    shareLinkCopied: "Lenke kopiert",
 
     // Related Articles
     relatedCoverage: "Relaterte artikler",

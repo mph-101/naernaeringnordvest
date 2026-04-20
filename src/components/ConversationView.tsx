@@ -6,6 +6,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { streamArticlesChat, type ArticleSource } from "@/lib/articles-chat";
 import { toast } from "@/hooks/use-toast";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 interface Message {
   id: string;
@@ -199,7 +200,9 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                           a: ({ href, children }) => {
                             const isCitation = href?.startsWith("#src-");
                             if (isCitation) {
-                              return (
+                              const num = Number(href!.split("-").pop());
+                              const source = message.sources?.find((s) => s.n === num);
+                              const link = (
                                 <a
                                   href={href}
                                   onClick={(e) => handleCitationClick(e, href)}
@@ -207,6 +210,41 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                                 >
                                   {children}
                                 </a>
+                              );
+                              if (!source) return link;
+                              return (
+                                <HoverCard openDelay={150} closeDelay={80}>
+                                  <HoverCardTrigger asChild>{link}</HoverCardTrigger>
+                                  <HoverCardContent
+                                    side="top"
+                                    align="center"
+                                    className="w-80 p-4 bg-card border border-border shadow-soft"
+                                  >
+                                    <div className="space-y-2">
+                                      <div className="flex items-baseline gap-2">
+                                        <span className="font-mono text-xs text-muted-foreground shrink-0">[{source.n}]</span>
+                                        <Link
+                                          to={`/article/${source.id}`}
+                                          className="font-headline text-sm font-semibold text-headline hover:text-primary transition-colors leading-snug"
+                                        >
+                                          {source.title}
+                                        </Link>
+                                      </div>
+                                      {source.excerpt && (
+                                        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+                                          {source.excerpt}
+                                        </p>
+                                      )}
+                                      <div className="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
+                                        {source.author && <span>{source.author}</span>}
+                                        {source.author && source.published_at && <span>·</span>}
+                                        {source.published_at && (
+                                          <span>{new Date(source.published_at).toLocaleDateString(language === "no" ? "nb-NO" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </HoverCardContent>
+                                </HoverCard>
                               );
                             }
                             return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{children}</a>;

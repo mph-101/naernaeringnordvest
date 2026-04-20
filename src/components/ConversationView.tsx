@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, ArrowRight, ArrowLeft, User, Bot, FileText } from "lucide-react";
+import { Search, ArrowRight, ArrowLeft, User, Bot, FileText, Copy, Check, Share2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { streamArticlesChat, type ArticleSource } from "@/lib/articles-chat";
+import { toast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -27,7 +27,6 @@ import { AnalyticsDashboard } from "./AnalyticsDashboard";
 import { UsersManager } from "./UsersManager";
 import { MediaArchive } from "./MediaArchive";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState as useReactState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AdminDashboardProps {
@@ -286,8 +285,8 @@ interface MediaStats {
 }
 
 const MediaArchiveCard = ({ onClick }: { onClick: () => void }) => {
-  const [stats, setStats] = useReactState<MediaStats | null>(null);
-  const [loading, setLoading] = useReactState(true);
+  const [stats, setStats] = useState<MediaStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;

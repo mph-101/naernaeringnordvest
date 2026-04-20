@@ -61,14 +61,6 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 pt-8 pb-16">
-      {/* Decorative badge */}
-      <div className="animate-fade-up mb-8" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
-        <span className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 text-accent rounded-full text-sm font-subhead font-medium border border-accent/20">
-          <Sparkles className="w-3.5 h-3.5" />
-          {language === "no" ? "Drevet av AI" : "Powered by AI"}
-        </span>
-      </div>
-
       {/* Headline */}
       <div className="text-center mb-12 max-w-2xl">
         <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-headline leading-[1.1]">

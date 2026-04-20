@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Briefcase, ExternalLink } from "lucide-react";
+import { Briefcase, ExternalLink, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -37,6 +37,7 @@ export const JobChangeFeed = () => {
   const isNo = language === "no";
   const [items, setItems] = useState<JobChange[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,37 +74,77 @@ export const JobChangeFeed = () => {
     const name = structured?.key_points.name || item.person_name;
     const role = structured?.key_points.role || item.new_role;
     const company = structured?.key_points.company || item.new_company;
+    const body = structured?.body || item.generated_notice;
+    const isExpanded = expandedId === item.id;
+    const canExpand = Boolean(body || item.image_url);
 
     return (
-      <li className="flex items-start gap-3 py-3 border-b border-border last:border-0">
-        <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-0.5">
-          <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline flex-wrap gap-x-2">
-            <span className="font-subhead font-semibold text-sm text-headline">{name}</span>
-            <span className={`px-1.5 py-0.5 text-[10px] font-subhead font-medium rounded ${typeBg(item.change_type)}`}>
-              {typeLabel(item.change_type)}
-            </span>
+      <li className="border-b border-border last:border-0">
+        <button
+          type="button"
+          onClick={() => canExpand && setExpandedId(isExpanded ? null : item.id)}
+          className={`w-full flex items-start gap-3 py-3 text-left ${canExpand ? "hover:bg-muted/30 cursor-pointer" : "cursor-default"} transition-colors`}
+          aria-expanded={isExpanded}
+        >
+          <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
           </div>
-          {(role || company) && (
-            <p className="text-sm text-foreground font-body truncate">
-              {role}{role && company ? ` · ${company}` : company || ""}
-            </p>
-          )}
-          <div className="flex items-center gap-3 mt-0.5">
-            {item.published_at && (
-              <span className="text-xs text-muted-foreground font-body">
-                {new Date(item.published_at).toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "short" })}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline flex-wrap gap-x-2">
+              <span className="font-subhead font-semibold text-sm text-headline">{name}</span>
+              <span className={`px-1.5 py-0.5 text-[10px] font-subhead font-medium rounded ${typeBg(item.change_type)}`}>
+                {typeLabel(item.change_type)}
               </span>
+            </div>
+            {(role || company) && (
+              <p className="text-sm text-foreground font-body truncate">
+                {role}{role && company ? ` · ${company}` : company || ""}
+              </p>
             )}
-            {item.source_url && (
-              <a href={item.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
-                <ExternalLink className="w-3 h-3" /> {isNo ? "Kilde" : "Source"}
-              </a>
+            <div className="flex items-center gap-3 mt-0.5">
+              {item.published_at && (
+                <span className="text-xs text-muted-foreground font-body">
+                  {new Date(item.published_at).toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "short" })}
+                </span>
+              )}
+              {item.source_url && (
+                <a
+                  href={item.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs text-primary hover:underline flex items-center gap-1"
+                >
+                  <ExternalLink className="w-3 h-3" /> {isNo ? "Kilde" : "Source"}
+                </a>
+              )}
+            </div>
+          </div>
+          {canExpand && (
+            <ChevronDown
+              className={`w-4 h-4 text-muted-foreground flex-shrink-0 mt-1 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+            />
+          )}
+        </button>
+        {isExpanded && canExpand && (
+          <div className="pl-10 pr-2 pb-4 -mt-1 space-y-3 animate-fade-up">
+            {item.image_url && (
+              <div className="relative rounded-lg overflow-hidden">
+                <img src={item.image_url} alt={name} className="w-full max-h-64 object-cover" />
+                {item.photo_credit && (
+                  <span className="absolute bottom-1.5 right-1.5 bg-background/80 backdrop-blur-sm text-[10px] text-muted-foreground font-body px-1.5 py-0.5 rounded">
+                    {item.photo_credit}
+                  </span>
+                )}
+              </div>
+            )}
+            {body && (
+              <p className="text-sm text-foreground font-body leading-relaxed whitespace-pre-line">
+                {body}
+              </p>
             )}
           </div>
-        </div>
+        )}
       </li>
     );
   };

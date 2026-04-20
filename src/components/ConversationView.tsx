@@ -233,6 +233,18 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                       </ol>
                     </div>
                   )}
+                  {message.role === "assistant" && message.content && !(isLoading && index === messages.length - 1) && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        onClick={() => handleCopyAnswer(message)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors font-subhead"
+                        aria-label={t.copyAnswer}
+                      >
+                        {copiedId === message.id ? <Check className="w-3.5 h-3.5 text-accent" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedId === message.id ? t.copied : t.copyAnswer}</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

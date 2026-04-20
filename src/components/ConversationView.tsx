@@ -112,6 +112,47 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
     void sendMessage(input, messages);
   };
 
+  const buildPlainText = (message: Message) => {
+    const stripped = message.content.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_m, g) => `[${g}]`);
+    if (!message.sources?.length) return stripped;
+    const sourceLines = message.sources
+      .map((s) => `[${s.n}] ${s.title}${s.author ? ` — ${s.author}` : ""}`)
+      .join("\n");
+    return `${stripped}\n\n${t.sources}:\n${sourceLines}`;
+  };
+
+  const handleCopyAnswer = async (message: Message) => {
+    try {
+      await navigator.clipboard.writeText(buildPlainText(message));
+      setCopiedId(message.id);
+      window.setTimeout(() => setCopiedId((id) => (id === message.id ? null : id)), 1800);
+    } catch {
+      toast({ description: "Kunne ikke kopiere", variant: "destructive" });
+    }
+  };
+
+  const handleShareConversation = async () => {
+    const url = window.location.href;
+    const title = `${t.brandName} ${t.brandSub}`.trim();
+    const text = messages.find((m) => m.role === "user")?.content?.slice(0, 140) ?? "";
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch {
+        // user cancelled or share failed — fall back to clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      window.setTimeout(() => setShareCopied(false), 1800);
+      toast({ description: t.shareLinkCopied });
+    } catch {
+      toast({ description: "Kunne ikke dele", variant: "destructive" });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border">
@@ -119,7 +160,16 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
           <button onClick={onBack} className="p-2.5 hover:bg-secondary rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <span className="font-headline text-lg font-bold text-headline">{t.brandName} {t.brandSub}</span>
+          <span className="font-headline text-lg font-bold text-headline flex-1">{t.brandName} {t.brandSub}</span>
+          <button
+            onClick={handleShareConversation}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            title={t.shareConversation}
+            aria-label={t.shareConversation}
+          >
+            {shareCopied ? <Check className="w-4 h-4 text-accent" /> : <Share2 className="w-4 h-4" />}
+            <span className="hidden sm:inline font-subhead">{shareCopied ? t.shareLinkCopied : t.shareConversation}</span>
+          </button>
         </div>
       </header>
 

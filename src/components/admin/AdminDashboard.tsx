@@ -27,6 +27,8 @@ import { AnalyticsDashboard } from "./AnalyticsDashboard";
 import { UsersManager } from "./UsersManager";
 import { MediaArchive } from "./MediaArchive";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState as useReactState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AdminDashboardProps {
   session: any;
@@ -167,6 +169,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 icon={BookOpen}
                 onClick={() => setView("fact-boxes")}
               />
+              <MediaArchiveCard onClick={() => setView("media")} />
               <DashboardCard
                 title="Tags"
                 description="Nøkkelord, redigering og sammenslåing"

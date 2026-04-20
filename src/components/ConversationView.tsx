@@ -6,6 +6,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { streamArticlesChat, type ArticleSource } from "@/lib/articles-chat";
 import { toast } from "@/hooks/use-toast";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 interface Message {
   id: string;

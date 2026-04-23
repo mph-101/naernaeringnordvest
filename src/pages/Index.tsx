@@ -8,6 +8,7 @@ import { NewsFeed } from "@/components/NewsFeed";
 import { ViewToggle } from "@/components/ViewToggle";
 import { JobChangeFeed } from "@/components/JobChangeFeed";
 import { TrendingSection } from "@/components/TrendingSection";
+import { MarketTicker } from "@/components/MarketTicker";
 
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -75,6 +76,7 @@ const Index = () => {
         
         {view === "search" ? <SearchHero onSearch={handleSearch} /> : (
           <>
+            <MarketTicker />
             <TrendingSection />
             <NewsFeed />
             {!hiddenElements.includes("job_changes") && (

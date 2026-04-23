@@ -7,10 +7,11 @@ import { CompanyTable } from "@/components/tall/CompanyTable";
 import { CompanyLists } from "@/components/tall/CompanyLists";
 import { EstablishmentsOverview } from "@/components/tall/EstablishmentsOverview";
 import { CompanyQuery } from "@/components/tall/CompanyQuery";
+import { LaborMarketOverview } from "@/components/tall/LaborMarketOverview";
 import { useTheme } from "@/hooks/useTheme";
-import { Search, List, TrendingUp, MessageSquare } from "lucide-react";
+import { Search, List, TrendingUp, MessageSquare, Briefcase } from "lucide-react";
 
-type Tab = "search" | "lists" | "overview" | "query";
+type Tab = "search" | "lists" | "overview" | "query" | "labor";
 
 export default function Tall() {
   const { language } = useTheme();
@@ -31,6 +32,7 @@ export default function Tall() {
     { id: "query", label: isNo ? "Spør databasen" : "Ask Database", icon: MessageSquare },
     { id: "lists", label: isNo ? "Mine lister" : "My Lists", icon: List },
     { id: "overview", label: isNo ? "Etablering og konkurs" : "Establishments & Bankruptcies", icon: TrendingUp },
+    { id: "labor", label: isNo ? "Arbeidsmarked" : "Labor Market", icon: Briefcase },
   ];
 
   return (
@@ -100,6 +102,7 @@ export default function Tall() {
             onKommunerChange={setSelectedKommuner}
           />
         )}
+        {tab === "labor" && <LaborMarketOverview />}
       </div>
     </div>
   );

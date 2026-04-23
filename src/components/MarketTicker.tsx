@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown, Minus, Zap, Droplets, Banknote, Percent, Bitcoin } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Zap, Droplets, Banknote, Percent, Bitcoin, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -17,6 +17,8 @@ interface TickerItem {
   label: string;
   value: string;
   change?: number | null;
+  sourceLabel: string;
+  sourceUrl: string;
 }
 
 const REFRESH_MS = 5 * 60 * 1000;
@@ -26,6 +28,14 @@ const fmtNok = (n: number) =>
 
 const fmtDec = (n: number, d = 2) =>
   new Intl.NumberFormat("nb-NO", { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
+
+const SOURCES = {
+  power: { label: "hvakosterstrommen.no", url: "https://www.hvakosterstrommen.no/strompris-api" },
+  brent: { label: "Stooq", url: "https://stooq.com/q/?s=cb.f" },
+  fx: { label: "Norges Bank", url: "https://www.norges-bank.no/tema/Statistikk/Valutakurser/" },
+  rate: { label: "Norges Bank", url: "https://www.norges-bank.no/tema/pengepolitikk/Styringsrenten/" },
+  btc: { label: "CoinGecko", url: "https://www.coingecko.com/en/coins/bitcoin" },
+} as const;
 
 export const MarketTicker = () => {
   const { language } = useTheme();

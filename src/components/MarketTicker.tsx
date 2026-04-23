@@ -89,12 +89,16 @@ export const MarketTicker = () => {
       icon: Zap,
       label: isNo ? "Strøm (snitt)" : "Power (avg)",
       value: `${fmtDec(avg, 1)} øre/kWh`,
+      sourceLabel: SOURCES.power.label,
+      sourceUrl: SOURCES.power.url,
     });
     data.power.forEach((p) => {
       items.push({
         icon: Zap,
         label: p.zone,
         value: `${fmtDec(p.ore_per_kwh, 1)} øre`,
+        sourceLabel: SOURCES.power.label,
+        sourceUrl: SOURCES.power.url,
       });
     });
   }
@@ -104,6 +108,8 @@ export const MarketTicker = () => {
       icon: Droplets,
       label: "Brent",
       value: `$${fmtDec(data.brent.usd, 2)}`,
+      sourceLabel: SOURCES.brent.label,
+      sourceUrl: SOURCES.brent.url,
     });
   }
 
@@ -113,6 +119,8 @@ export const MarketTicker = () => {
         icon: Banknote,
         label: `${f.code}/NOK`,
         value: fmtDec(f.nok, 4),
+        sourceLabel: SOURCES.fx.label,
+        sourceUrl: SOURCES.fx.url,
       });
     });
   }
@@ -122,6 +130,8 @@ export const MarketTicker = () => {
       icon: Percent,
       label: isNo ? "Styringsrente" : "Policy rate",
       value: `${fmtDec(data.policy_rate.rate, 2)} %`,
+      sourceLabel: SOURCES.rate.label,
+      sourceUrl: SOURCES.rate.url,
     });
   }
 
@@ -131,6 +141,8 @@ export const MarketTicker = () => {
       label: "BTC",
       value: `${fmtNok(data.btc.nok)} kr`,
       change: data.btc.change_24h,
+      sourceLabel: SOURCES.btc.label,
+      sourceUrl: SOURCES.btc.url,
     });
   }
 

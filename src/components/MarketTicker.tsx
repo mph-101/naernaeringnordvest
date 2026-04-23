@@ -190,6 +190,17 @@ export const MarketTicker = () => {
                     {fmtDec(Math.abs(item.change), 2)}%
                   </span>
                 )}
+                <a
+                  href={item.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-0.5 text-[10px] text-muted-foreground/70 hover:text-foreground transition-colors border-l border-border/60 pl-2 ml-1"
+                  title={isNo ? `Kilde: ${item.sourceLabel}` : `Source: ${item.sourceLabel}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span>{isNo ? "Kilde:" : "Source:"} {item.sourceLabel}</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </a>
               </div>
             );
           })}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown, Minus, Zap, Droplets, Banknote, Percent, Bitcoin } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Zap, Droplets, Banknote, Percent, Bitcoin, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -17,6 +17,8 @@ interface TickerItem {
   label: string;
   value: string;
   change?: number | null;
+  sourceLabel: string;
+  sourceUrl: string;
 }
 
 const REFRESH_MS = 5 * 60 * 1000;
@@ -26,6 +28,14 @@ const fmtNok = (n: number) =>
 
 const fmtDec = (n: number, d = 2) =>
   new Intl.NumberFormat("nb-NO", { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
+
+const SOURCES = {
+  power: { label: "hvakosterstrommen.no", url: "https://www.hvakosterstrommen.no/strompris-api" },
+  brent: { label: "Stooq", url: "https://stooq.com/q/?s=cb.f" },
+  fx: { label: "Norges Bank", url: "https://www.norges-bank.no/tema/Statistikk/Valutakurser/" },
+  rate: { label: "Norges Bank", url: "https://www.norges-bank.no/tema/pengepolitikk/Styringsrenten/" },
+  btc: { label: "CoinGecko", url: "https://www.coingecko.com/en/coins/bitcoin" },
+} as const;
 
 export const MarketTicker = () => {
   const { language } = useTheme();
@@ -79,12 +89,16 @@ export const MarketTicker = () => {
       icon: Zap,
       label: isNo ? "Strøm (snitt)" : "Power (avg)",
       value: `${fmtDec(avg, 1)} øre/kWh`,
+      sourceLabel: SOURCES.power.label,
+      sourceUrl: SOURCES.power.url,
     });
     data.power.forEach((p) => {
       items.push({
         icon: Zap,
         label: p.zone,
         value: `${fmtDec(p.ore_per_kwh, 1)} øre`,
+        sourceLabel: SOURCES.power.label,
+        sourceUrl: SOURCES.power.url,
       });
     });
   }
@@ -94,6 +108,8 @@ export const MarketTicker = () => {
       icon: Droplets,
       label: "Brent",
       value: `$${fmtDec(data.brent.usd, 2)}`,
+      sourceLabel: SOURCES.brent.label,
+      sourceUrl: SOURCES.brent.url,
     });
   }
 
@@ -103,6 +119,8 @@ export const MarketTicker = () => {
         icon: Banknote,
         label: `${f.code}/NOK`,
         value: fmtDec(f.nok, 4),
+        sourceLabel: SOURCES.fx.label,
+        sourceUrl: SOURCES.fx.url,
       });
     });
   }
@@ -112,6 +130,8 @@ export const MarketTicker = () => {
       icon: Percent,
       label: isNo ? "Styringsrente" : "Policy rate",
       value: `${fmtDec(data.policy_rate.rate, 2)} %`,
+      sourceLabel: SOURCES.rate.label,
+      sourceUrl: SOURCES.rate.url,
     });
   }
 
@@ -121,6 +141,8 @@ export const MarketTicker = () => {
       label: "BTC",
       value: `${fmtNok(data.btc.nok)} kr`,
       change: data.btc.change_24h,
+      sourceLabel: SOURCES.btc.label,
+      sourceUrl: SOURCES.btc.url,
     });
   }
 
@@ -168,6 +190,17 @@ export const MarketTicker = () => {
                     {fmtDec(Math.abs(item.change), 2)}%
                   </span>
                 )}
+                <a
+                  href={item.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-0.5 text-[10px] text-muted-foreground/70 hover:text-foreground transition-colors border-l border-border/60 pl-2 ml-1"
+                  title={isNo ? `Kilde: ${item.sourceLabel}` : `Source: ${item.sourceLabel}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span>{isNo ? "Kilde:" : "Source:"} {item.sourceLabel}</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </a>
               </div>
             );
           })}

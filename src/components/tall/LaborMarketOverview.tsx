@@ -41,7 +41,7 @@ const fmtNumber = (n: number, isNo: boolean, digits = 0) =>
 const SOURCES = {
   unemployment: { label: "SSB tabell 10540", url: "https://www.ssb.no/statbank/table/10540" },
   employment:   { label: "SSB tabell 13536", url: "https://www.ssb.no/statbank/table/13536" },
-  vacancies:    { label: "SSB tabell 11414", url: "https://www.ssb.no/statbank/table/11414" },
+  navUnemployed:{ label: "NAV / SSB AKU 13760", url: "https://www.nav.no/no/nav-og-samfunn/statistikk/arbeidssokere-og-stillinger-statistikk/hovedtall-om-arbeidsmarkedet" },
   wages:        { label: "SSB tabell 11418", url: "https://www.ssb.no/statbank/table/11418" },
   sickLeave:    { label: "SSB tabell 12442", url: "https://www.ssb.no/statbank/table/12442" },
 };
@@ -119,12 +119,12 @@ export function LaborMarketOverview() {
       help: isNo ? "Sysselsatte (1 000 personer, 15–74 år)" : "Employed (thousands, 15–74)",
     },
     {
-      key: "vacancies",
-      icon: Briefcase,
-      label: isNo ? "Ledige stillinger" : "Vacancies",
-      point: data?.vacancies,
-      format: (v: number) => fmtNumber(v, isNo, 0),
-      help: isNo ? "Totalt antall (nasjonalt)" : "Total (national)",
+      key: "navUnemployed",
+      icon: UserMinus,
+      label: isNo ? "Arbeidsledige (NAV)" : "Unemployed (NAV)",
+      point: data?.navUnemployed,
+      format: (v: number) => `${fmtNumber(v, isNo, 0)} 000`,
+      help: isNo ? "Estimert antall (nasjonalt)" : "Estimated count (national)",
     },
     {
       key: "wages",

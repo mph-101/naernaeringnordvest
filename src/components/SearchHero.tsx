@@ -1,51 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, ArrowRight, Sparkles, Tag as TagIcon } from "lucide-react";
+import { Search, ArrowRight } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-import { supabase } from "@/integrations/supabase/client";
-import type { Tag } from "@/lib/tag-utils";
 
 interface SearchHeroProps {
   onSearch: (query: string) => void;
-}
-
-interface TagWithCount extends Tag {
-  count: number;
 }
 
 export function SearchHero({ onSearch }: SearchHeroProps) {
   const [query, setQuery] = useState("");
   const { language } = useTheme();
   const t = translations[language];
-  const [topTags, setTopTags] = useState<TagWithCount[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      // Fetch all tag links (capped at 1000 by Supabase) and aggregate.
-      const { data } = await supabase
-        .from("article_tags")
-        .select("tag_id, tags(id, name, slug, description)");
-      if (cancelled) return;
-      const counts = new Map<string, { tag: Tag; count: number }>();
-      (data || []).forEach((row: any) => {
-        if (!row.tags) return;
-        const tag = row.tags as Tag;
-        const cur = counts.get(tag.id);
-        if (cur) cur.count += 1;
-        else counts.set(tag.id, { tag, count: 1 });
-      });
-      const sorted = Array.from(counts.values())
-        .sort((a, b) => b.count - a.count || a.tag.name.localeCompare(b.tag.name, "nb"))
-        .slice(0, 8)
-        .map((c) => ({ ...c.tag, count: c.count }));
-      setTopTags(sorted);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.ssb-labor]
 verify_jwt = false
+
+[functions.ssb-housing]
+verify_jwt = false

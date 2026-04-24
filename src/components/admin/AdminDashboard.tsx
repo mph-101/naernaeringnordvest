@@ -241,6 +241,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
           <SourcesManager />
         )}
 
+        {view === "trusted-sources" && (
+          <TrustedSourcesManager />
+        )}
+
         {view === "media" && (
           <MediaArchive />
         )}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown, Minus, Zap, Droplets, Banknote, Percent, Bitcoin, ExternalLink } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Zap, Droplets, Banknote, Percent, Bitcoin, ExternalLink, LineChart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -10,6 +10,7 @@ interface MarketData {
   policy_rate: { rate: number } | null;
   brent: { usd: number } | null;
   btc: { nok: number; change_24h: number | null } | null;
+  cpi: { pct: number; period: string } | null;
 }
 
 interface TickerItem {
@@ -35,6 +36,7 @@ const SOURCES = {
   fx: { label: "Norges Bank", url: "https://www.norges-bank.no/tema/Statistikk/Valutakurser/" },
   rate: { label: "Norges Bank", url: "https://www.norges-bank.no/tema/pengepolitikk/Styringsrenten/" },
   btc: { label: "CoinGecko", url: "https://www.coingecko.com/en/coins/bitcoin" },
+  cpi: { label: "SSB (KPI)", url: "https://www.ssb.no/priser-og-prisindekser/konsumpriser/statistikk/konsumprisindeksen" },
 } as const;
 
 export const MarketTicker = () => {
@@ -132,6 +134,18 @@ export const MarketTicker = () => {
       value: `${fmtDec(data.policy_rate.rate, 2)} %`,
       sourceLabel: SOURCES.rate.label,
       sourceUrl: SOURCES.rate.url,
+    });
+  }
+
+  if (data.cpi) {
+    items.push({
+      icon: LineChart,
+      label: isNo
+        ? `KPI ${data.cpi.period}`
+        : `CPI ${data.cpi.period}`,
+      value: `${fmtDec(data.cpi.pct, 1)} %`,
+      sourceLabel: SOURCES.cpi.label,
+      sourceUrl: SOURCES.cpi.url,
     });
   }
 

@@ -32,9 +32,17 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
   const [shareCopied, setShareCopied] = useState(false);
   const hasStarted = useRef(false);
 
-  const linkifyCitations = (content: string, sources?: ArticleSource[], assistantId?: string) => {
+  const linkifyCitations = (
+    content: string,
+    sources?: ArticleSource[],
+    trustedSources?: TrustedSource[],
+    assistantId?: string,
+  ) => {
     if (!content) return content;
-    const validNumbers = new Set((sources ?? []).map((s) => s.n));
+    const validNumbers = new Set<number>([
+      ...(sources ?? []).map((s) => s.n),
+      ...(trustedSources ?? []).map((s) => s.n),
+    ]);
     return content.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, group: string) => {
       const nums = group.split(",").map((n) => n.trim());
       const parts = nums.map((n) => {

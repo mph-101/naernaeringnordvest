@@ -222,6 +222,7 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                             if (isCitation) {
                               const num = Number(href!.split("-").pop());
                               const source = message.sources?.find((s) => s.n === num);
+                              const trusted = !source ? message.trustedSources?.find((s) => s.n === num) : undefined;
                               const link = (
                                 <a
                                   href={href}
@@ -231,8 +232,8 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                                   {children}
                                 </a>
                               );
-                              if (!source) return link;
-                              return (
+                              if (source) {
+                                return (
                                 <HoverCard openDelay={150} closeDelay={80}>
                                   <HoverCardTrigger asChild>{link}</HoverCardTrigger>
                                   <HoverCardContent
@@ -265,21 +266,75 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                                     </div>
                                   </HoverCardContent>
                                 </HoverCard>
-                              );
+                                );
+                              }
+                              if (trusted) {
+                                const TypeIcon = trusted.source_type === "rss" ? Rss
+                                  : trusted.source_type === "api" ? Database
+                                  : trusted.source_type === "document" ? FileTextIcon
+                                  : Globe;
+                                return (
+                                  <HoverCard openDelay={150} closeDelay={80}>
+                                    <HoverCardTrigger asChild>{link}</HoverCardTrigger>
+                                    <HoverCardContent
+                                      side="top"
+                                      align="center"
+                                      className="w-80 p-4 bg-card border border-border shadow-soft"
+                                    >
+                                      <div className="space-y-2">
+                                        <div className="flex items-baseline gap-2">
+                                          <span className="font-mono text-xs text-muted-foreground shrink-0">[{trusted.n}]</span>
+                                          {trusted.source_url ? (
+                                            <a
+                                              href={trusted.source_url}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="font-headline text-sm font-semibold text-headline hover:text-primary transition-colors leading-snug inline-flex items-baseline gap-1"
+                                            >
+                                              {trusted.title || trusted.source_name}
+                                              <ExternalLink className="w-3 h-3 self-center" />
+                                            </a>
+                                          ) : (
+                                            <span className="font-headline text-sm font-semibold text-headline leading-snug">
+                                              {trusted.title || trusted.source_name}
+                                            </span>
+                                          )}
+                                        </div>
+                                        {trusted.content && (
+                                          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+                                            {trusted.content}
+                                          </p>
+                                        )}
+                                        <div className="flex items-center gap-1.5 pt-1 text-xs text-muted-foreground">
+                                          <TypeIcon className="w-3 h-3" />
+                                          <span>{trusted.source_name}</span>
+                                          {trusted.published_at && (
+                                            <>
+                                              <span>·</span>
+                                              <span>{new Date(trusted.published_at).toLocaleDateString(language === "no" ? "nb-NO" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </HoverCardContent>
+                                  </HoverCard>
+                                );
+                              }
+                              return link;
                             }
                             return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{children}</a>;
                           },
                         }}
                       >
-                        {linkifyCitations(message.content, message.sources, message.id)}
+                        {linkifyCitations(message.content, message.sources, message.trustedSources, message.id)}
                       </ReactMarkdown>
                     </div>
                   )}
-                  {message.sources && (
+                  {((message.sources && message.sources.length > 0) || (message.trustedSources && message.trustedSources.length > 0)) && (
                     <div className="mt-4 pt-4 border-t border-border">
                       <p className="font-subhead text-sm text-muted-foreground mb-3 flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" />{t.sources}</p>
                       <ol className="space-y-2">
-                        {message.sources.map((source) => (
+                        {(message.sources ?? []).map((source) => (
                           <li key={source.id} id={`src-${message.id}-${source.n}`} className="text-sm leading-relaxed scroll-mt-24">
                             <span className="text-muted-foreground font-mono mr-2">[{source.n}]</span>
                             <Link to={`/article/${source.id}`} className="text-primary hover:underline">
@@ -288,6 +343,38 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                             {source.author && <span className="text-muted-foreground"> — {source.author}</span>}
                           </li>
                         ))}
+                        {(message.trustedSources ?? []).map((trusted) => {
+                          const TypeIcon = trusted.source_type === "rss" ? Rss
+                            : trusted.source_type === "api" ? Database
+                            : trusted.source_type === "document" ? FileTextIcon
+                            : Globe;
+                          const label = trusted.title || trusted.source_name;
+                          return (
+                            <li
+                              key={`trusted-${trusted.n}`}
+                              id={`src-${message.id}-${trusted.n}`}
+                              className="text-sm leading-relaxed scroll-mt-24 flex items-baseline gap-2"
+                            >
+                              <span className="text-muted-foreground font-mono">[{trusted.n}]</span>
+                              <TypeIcon className="w-3 h-3 text-muted-foreground translate-y-0.5 shrink-0" />
+                              {trusted.source_url ? (
+                                <a
+                                  href={trusted.source_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline inline-flex items-baseline gap-1"
+                                  title={trusted.source_url}
+                                >
+                                  {label}
+                                  <ExternalLink className="w-3 h-3 self-center" />
+                                </a>
+                              ) : (
+                                <span className="text-foreground">{label}</span>
+                              )}
+                              <span className="text-muted-foreground text-xs"> — {trusted.source_name}</span>
+                            </li>
+                          );
+                        })}
                       </ol>
                     </div>
                   )}

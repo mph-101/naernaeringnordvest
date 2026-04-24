@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MessageCircle, X, Send, Bot, User, Loader2, FileText } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User, Loader2, FileText, ExternalLink, Rss, Database, Globe } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { streamArticlesChat, type ArticleSource } from "@/lib/articles-chat";
+import { streamArticlesChat, type ArticleSource, type TrustedSource } from "@/lib/articles-chat";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
   sources?: ArticleSource[];
+  trustedSources?: TrustedSource[];
 }
 
 export function IdrettAIChat() {
@@ -36,20 +37,39 @@ export function IdrettAIChat() {
 
     let assistantSoFar = "";
     let pendingSources: ArticleSource[] | null = null;
+    let pendingTrusted: TrustedSource[] | null = null;
 
-    const upsertAssistant = (chunk: string, sources?: ArticleSource[]) => {
+    const upsertAssistant = (
+      chunk: string,
+      sources?: ArticleSource[],
+      trustedSources?: TrustedSource[],
+    ) => {
       if (chunk) assistantSoFar += chunk;
       if (sources) pendingSources = sources;
+      if (trustedSources) pendingTrusted = trustedSources;
       setMessages((prev) => {
         const last = prev[prev.length - 1];
         if (last?.role === "assistant") {
           return prev.map((m, i) =>
             i === prev.length - 1
-              ? { ...m, content: assistantSoFar, sources: pendingSources ?? m.sources }
+              ? {
+                  ...m,
+                  content: assistantSoFar,
+                  sources: pendingSources ?? m.sources,
+                  trustedSources: pendingTrusted ?? m.trustedSources,
+                }
               : m,
           );
         }
-        return [...prev, { role: "assistant", content: assistantSoFar, sources: pendingSources ?? undefined }];
+        return [
+          ...prev,
+          {
+            role: "assistant",
+            content: assistantSoFar,
+            sources: pendingSources ?? undefined,
+            trustedSources: pendingTrusted ?? undefined,
+          },
+        ];
       });
     };
 
@@ -57,7 +77,7 @@ export function IdrettAIChat() {
       await streamArticlesChat({
         messages: [...messages, userMsg].map(({ role, content }) => ({ role, content })),
         onContent: (content) => upsertAssistant(content),
-        onSources: (sources) => upsertAssistant("", sources),
+        onSources: (sources, trustedSources) => upsertAssistant("", sources, trustedSources),
       });
     } catch (error) {
       upsertAssistant(error instanceof Error ? error.message : "Beklager, noe gikk galt. Prøv igjen.");

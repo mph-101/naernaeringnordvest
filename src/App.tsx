@@ -26,6 +26,8 @@ import HjernevelvPanel from "./pages/HjernevelvPanel";
 import HjernevelvWriter from "./pages/HjernevelvWriter";
 import HjernevelvEssay from "./pages/HjernevelvEssay";
 import Tag from "./pages/Tag";
+import Subscribe from "./pages/Subscribe";
+import SubscribeReturn from "./pages/SubscribeReturn";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +60,8 @@ const App = () => (
               <Route path="/hjernevelvet/skribent/:slug" element={<HjernevelvWriter />} />
               <Route path="/hjernevelvet/essay/:id" element={<HjernevelvEssay />} />
               <Route path="/tag/:slug" element={<Tag />} />
+              <Route path="/abonnement" element={<Subscribe />} />
+              <Route path="/abonnement/takk" element={<SubscribeReturn />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

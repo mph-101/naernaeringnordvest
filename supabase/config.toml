@@ -14,3 +14,21 @@ verify_jwt = false
 
 [functions.ssb-housing]
 verify_jwt = false
+
+[functions.payments-webhook]
+verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.create-portal-session]
+verify_jwt = false
+
+[functions.check-article-access]
+verify_jwt = false
+
+[functions.verify-business-domain]
+verify_jwt = false
+
+[functions.invite-business-seat]
+verify_jwt = false

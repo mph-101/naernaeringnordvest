@@ -399,6 +399,113 @@ export type Database = {
           },
         ]
       }
+      business_accounts: {
+        Row: {
+          company_name: string
+          created_at: string
+          current_period_end: string | null
+          domain_verification_token: string | null
+          domain_verified_at: string | null
+          email_domain: string | null
+          environment: string
+          id: string
+          orgnr: string | null
+          owner_user_id: string
+          provider: string
+          provider_customer_id: string | null
+          provider_subscription_id: string | null
+          seat_count: number
+          status: string
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          current_period_end?: string | null
+          domain_verification_token?: string | null
+          domain_verified_at?: string | null
+          email_domain?: string | null
+          environment?: string
+          id?: string
+          orgnr?: string | null
+          owner_user_id: string
+          provider?: string
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
+          seat_count?: number
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          current_period_end?: string | null
+          domain_verification_token?: string | null
+          domain_verified_at?: string | null
+          email_domain?: string | null
+          environment?: string
+          id?: string
+          orgnr?: string | null
+          owner_user_id?: string
+          provider?: string
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
+          seat_count?: number
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      business_seats: {
+        Row: {
+          accepted_at: string | null
+          business_account_id: string
+          created_at: string
+          email: string
+          id: string
+          invite_token: string | null
+          invited_at: string
+          source: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          business_account_id: string
+          created_at?: string
+          email: string
+          id?: string
+          invite_token?: string | null
+          invited_at?: string
+          source?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          business_account_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          invite_token?: string | null
+          invited_at?: string
+          source?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_seats_business_account_id_fkey"
+            columns: ["business_account_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           color: string | null
@@ -1454,6 +1561,63 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          environment: string
+          id: string
+          plan: string
+          price_id: string | null
+          product_id: string | null
+          provider: string
+          provider_customer_id: string
+          provider_subscription_id: string
+          status: string
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          plan: string
+          price_id?: string | null
+          product_id?: string | null
+          provider?: string
+          provider_customer_id: string
+          provider_subscription_id: string
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          plan?: string
+          price_id?: string | null
+          product_id?: string | null
+          provider?: string
+          provider_customer_id?: string
+          provider_subscription_id?: string
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           created_at: string
@@ -1784,6 +1948,7 @@ export type Database = {
           key_prefix: string
         }[]
       }
+      has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -13,7 +13,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, Plus, Pencil, Trash2, Upload, UserCircle2 } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Upload, UserCircle2, Crop } from "lucide-react";
+import { AvatarCropDialog } from "./AvatarCropDialog";
 
 interface Author {
   id: string;
@@ -57,6 +58,8 @@ export const AuthorsManager = () => {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [cropSource, setCropSource] = useState<string | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
 
   const fetchAuthors = async () => {
     setLoading(true);
@@ -100,14 +103,17 @@ export const AuthorsManager = () => {
     setDialogOpen(true);
   };
 
-  const handleAvatarUpload = async (file: File) => {
+  const uploadAvatarBlob = async (blob: Blob) => {
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-      const filename = `${crypto.randomUUID()}.${ext}`;
+      const filename = `${crypto.randomUUID()}.jpg`;
       const { error: upErr } = await supabase.storage
         .from("author-avatars")
-        .upload(filename, file, { cacheControl: "3600", upsert: false });
+        .upload(filename, blob, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: "image/jpeg",
+        });
       if (upErr) throw upErr;
       const { data } = supabase.storage.from("author-avatars").getPublicUrl(filename);
       setForm((prev) => ({ ...prev, avatar_url: data.publicUrl }));
@@ -120,6 +126,18 @@ export const AuthorsManager = () => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleFileSelected = (file: File) => {
+    const url = URL.createObjectURL(file);
+    setCropSource(url);
+    setCropOpen(true);
+  };
+
+  const handleEditExistingAvatar = () => {
+    if (!form.avatar_url) return;
+    setCropSource(form.avatar_url);
+    setCropOpen(true);
   };
 
   const handleSave = async () => {
@@ -312,10 +330,23 @@ export const AuthorsManager = () => {
                       className="hidden"
                       onChange={(e) => {
                         const f = e.target.files?.[0];
-                        if (f) handleAvatarUpload(f);
+                        if (f) handleFileSelected(f);
+                        // reset so same file can be re-selected
+                        e.target.value = "";
                       }}
                     />
                   </label>
+                  {form.avatar_url && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleEditExistingAvatar}
+                    >
+                      <Crop className="w-3.5 h-3.5 mr-1" />
+                      Juster utsnitt
+                    </Button>
+                  )}
                   {form.avatar_url && (
                     <Button
                       type="button"
@@ -406,6 +437,22 @@ export const AuthorsManager = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {cropSource && (
+        <AvatarCropDialog
+          open={cropOpen}
+          onOpenChange={(o) => {
+            setCropOpen(o);
+            if (!o) {
+              // Revoke object URL only if it's a blob URL (file upload)
+              if (cropSource.startsWith("blob:")) URL.revokeObjectURL(cropSource);
+              setCropSource(null);
+            }
+          }}
+          imageUrl={cropSource}
+          onSave={uploadAvatarBlob}
+        />
+      )}
     </div>
   );
 };

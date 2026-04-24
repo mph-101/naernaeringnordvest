@@ -168,7 +168,7 @@ Regler:
 - Aldri dikt opp tall, navn eller hendelser som ikke står i kildene.
 - Skriv kort: gjerne en oppsummerende setning, deretter kulepunkter eller en kort tabell hvis det passer.
 
-${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}` : "Ingen relevante artikler ble funnet i arkivet for dette spørsmålet."}`;
+${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}\n\n` : ""}${trustedSources.length > 0 ? `BETRODDE EKSTERNE KILDER (kuratert av redaksjonen):\n\n${trustedBlock}` : ""}${sources.length === 0 && trustedSources.length === 0 ? "Ingen relevante artikler eller betrodde kilder ble funnet for dette spørsmålet." : ""}`;
 
     const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

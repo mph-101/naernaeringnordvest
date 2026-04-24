@@ -478,6 +478,8 @@ export const TrustedSourcesManager = () => {
           })}
         </div>
       )}
+        </>
+      )}
     </div>
   );
 };

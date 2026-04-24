@@ -162,7 +162,7 @@ async function fetchCpi() {
           { code: "Konsumgrp", selection: { filter: "item", values: ["TOTAL"] } },
           {
             code: "ContentsCode",
-            selection: { filter: "item", values: ["TolvmanedersEndring"] },
+            selection: { filter: "item", values: ["Tolvmanedersendring"] },
           },
           { code: "Tid", selection: { filter: "top", values: ["1"] } },
         ],

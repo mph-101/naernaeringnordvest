@@ -6,6 +6,8 @@ import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { SubscriptionStatusBadge } from "@/components/SubscriptionStatusBadge";
+import { SubscriptionTrialBanner } from "@/components/SubscriptionTrialBanner";
 
 interface HeaderProps {
   showSearch?: boolean;
@@ -54,6 +56,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border">
+      <SubscriptionTrialBanner />
       <div className="max-w-5xl mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -111,6 +114,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
 
             {userId ? (
               <div className="flex items-center gap-1">
+                <SubscriptionStatusBadge />
                 {isAdmin && (
                   <button
                     onClick={() => navigate("/admin")}

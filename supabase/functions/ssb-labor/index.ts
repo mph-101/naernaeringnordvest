@@ -1,6 +1,13 @@
-// SSB Labor market data aggregator. Fetches unemployment, employment,
-// vacancies, wages and sick leave from SSB's open PxWebApi (no auth needed).
-// Cached in-memory for 6h per cold instance — SSB updates monthly/quarterly.
+// Norwegian labor-market data aggregator.
+// Sources:
+//   - SSB AKU (table 13760): unemployment rate + employed (national, monthly)
+//   - SSB sick leave (table 12442): seasonally adjusted % (national, quarterly)
+//   - SSB wages (table 11418): average monthly wage (national, yearly)
+//   - NAV labor-force snapshot via SSB AKU (Arbeidsstyrken from 13760)
+// All series are NATIONAL ("hele landet"). Regional cuts are not exposed
+// through these tables on a fresh monthly basis, so we present the same
+// national figures regardless of region selection (the regional UI selector
+// is kept for future extension). 6-hour in-memory cache per cold instance.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,29 +22,18 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const cache = new Map<string, { ts: number; payload: unknown }>();
 
-// Map editorial_region slug -> list of SSB county codes (fylkesnummer 2024)
-const REGION_TO_FYLKE: Record<string, string[]> = {
-  nasjonal: [],
-  "more-og-romsdal": ["15"],
-  vestlandet: ["11", "46"], // Rogaland + Vestland
-  "nord-norge": ["18", "55"], // Nordland + Troms+Finnmark (uses "55" if split, fallback)
-  trondelag: ["50"],
-  ostlandet: ["03", "30", "34", "38"], // Oslo, Viken, Innlandet, Vestfold og Telemark
-  sorlandet: ["42"], // Agder
-};
-
-const ssbPost = async (tableId: string, body: unknown): Promise<any> => {
+const ssbPost = async (tableId: string, query: unknown): Promise<any> => {
   try {
     const res = await fetch(`https://data.ssb.no/api/v0/no/table/${tableId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ query, response: { format: "json-stat2" } }),
     });
     if (!res.ok) {
-      console.warn(`SSB ${tableId} HTTP ${res.status}`);
+      console.warn(`SSB ${tableId} HTTP ${res.status}: ${await res.text()}`);
       return null;
     }
     return await res.json();
@@ -47,156 +43,102 @@ const ssbPost = async (tableId: string, body: unknown): Promise<any> => {
   }
 };
 
-// Parse SSB jsonstat2-like response: returns { value[], dimensions }
-const parseSsb = (raw: any) => {
-  if (!raw || !raw.dataset) return null;
-  const ds = raw.dataset;
-  return {
-    values: ds.value as (number | null)[],
-    dimensionIds: ds.dimension?.id as string[],
-    dimension: ds.dimension,
-  };
-};
+// Pick the latest non-null value for a given ContentsCode key.
+// jsonstat2 stores values in row-major order across dimensions — we walk
+// time descending and inspect the slice that matches the wanted contents key.
+const pickLatest = (raw: any, contentsKey: string) => {
+  if (!raw?.dimension) return null;
+  const dimIds: string[] = raw.id;
+  const sizes: number[] = raw.size;
+  const values: (number | null)[] = raw.value;
+  const tdIdx = dimIds.indexOf("Tid");
+  const ccIdx = dimIds.indexOf("ContentsCode");
+  if (tdIdx < 0) return null;
 
-// Get the latest non-null value with its time label
-const latestPoint = (parsed: ReturnType<typeof parseSsb>) => {
-  if (!parsed) return null;
-  const { values, dimension, dimensionIds } = parsed as any;
-  const timeKey = dimensionIds.find((d: string) =>
-    d.toLowerCase().includes("tid") || d.toLowerCase() === "tid"
+  const timeCat = raw.dimension.Tid.category;
+  const timeKeys = Object.keys(timeCat.index).sort(
+    (a, b) => timeCat.index[a] - timeCat.index[b],
   );
-  if (!timeKey) return null;
-  const timeDim = dimension[timeKey];
-  const timeLabels: Record<string, string> = timeDim.category.label;
-  const timeIndex: Record<string, number> = timeDim.category.index;
-  const timeKeys = Object.keys(timeIndex).sort((a, b) => timeIndex[a] - timeIndex[b]);
+  const timeLabels: Record<string, string> = timeCat.label;
 
-  // sizes & strides
-  const sizes = dimensionIds.map((d: string) => Object.keys(dimension[d].category.index).length);
-  const strides = sizes.map((_: number, i: number) =>
-    sizes.slice(i + 1).reduce((a: number, b: number) => a * b, 1)
+  const ccCat = ccIdx >= 0 ? raw.dimension.ContentsCode.category : null;
+  const wantedCcIdx = ccCat ? ccCat.index[contentsKey] : 0;
+
+  const strides = sizes.map((_, i) =>
+    sizes.slice(i + 1).reduce((a, b) => a * b, 1),
   );
-  const timeAxis = dimensionIds.indexOf(timeKey);
 
-  // Walk time descending and find first non-null aggregated value
   for (let ti = timeKeys.length - 1; ti >= 0; ti--) {
-    const tIdx = timeIndex[timeKeys[ti]];
-    // sum across other dims (we expect content/region already aggregated to single)
-    let sum = 0;
-    let count = 0;
-    const total = sizes.reduce((a: number, b: number) => a * b, 1);
+    const timeIndex = timeCat.index[timeKeys[ti]];
+    // walk all combinations of OTHER dimensions to find non-null
+    const total = sizes.reduce((a, b) => a * b, 1);
     for (let i = 0; i < total; i++) {
-      // decode i to indices
       let rem = i;
-      let timeIdxAtI = 0;
+      let matchTime = true;
+      let matchCc = ccIdx < 0;
       for (let d = 0; d < sizes.length; d++) {
         const idx = Math.floor(rem / strides[d]);
         rem = rem % strides[d];
-        if (d === timeAxis) timeIdxAtI = idx;
+        if (d === tdIdx && idx !== timeIndex) matchTime = false;
+        if (d === ccIdx && idx === wantedCcIdx) matchCc = true;
       }
-      if (timeIdxAtI === tIdx) {
-        const v = values[i];
-        if (v != null) {
-          sum += v;
-          count++;
-        }
+      if (matchTime && matchCc && values[i] != null) {
+        return { value: values[i] as number, period: timeLabels[timeKeys[ti]] };
       }
-    }
-    if (count > 0) {
-      return {
-        value: sum / count, // average across remaining dims (regions)
-        period: timeLabels[timeKeys[ti]],
-      };
     }
   }
   return null;
 };
 
-// --- Arbeidsledighet (registrerte helt ledige), tabell 10540 (NAV via SSB)
-// Fallback: 13760 (AKU)
-async function fetchUnemployment(fylker: string[]) {
-  const filter = fylker.length
-    ? { filter: "vs:FylkerHist", values: fylker }
-    : { filter: "all", values: ["0"] }; // 0 = hele landet
-  const body = {
-    query: [
-      { code: "Region", selection: filter },
-      { code: "ContentsCode", selection: { filter: "item", values: ["Arbeidsledige2"] } },
-      { code: "Tid", selection: { filter: "top", values: ["3"] } },
-    ],
-    response: { format: "json-stat2" },
-  };
-  const raw = await ssbPost("10540", body);
-  return latestPoint(parseSsb(raw));
+// 13760: AKU sesongjustert (national) — unemployment % + employed (1000 pers) + workforce
+async function fetchAku() {
+  return ssbPost("13760", [
+    { code: "Justering", selection: { filter: "item", values: ["S"] } },
+    {
+      code: "ContentsCode",
+      selection: {
+        filter: "item",
+        values: ["ArbledProsArbstyrk", "Sysselsatte", "Arbeidsstyrken"],
+      },
+    },
+    { code: "Tid", selection: { filter: "top", values: ["3"] } },
+  ]);
 }
 
-// --- Sysselsetting (sysselsatte personer, 15-74), tabell 13536 (kvartalsvis)
-async function fetchEmployment(fylker: string[]) {
-  const filter = fylker.length
-    ? { filter: "vs:FylkerHist", values: fylker }
-    : { filter: "all", values: ["0"] };
-  const body = {
-    query: [
-      { code: "Region", selection: filter },
-      { code: "Kjonn", selection: { filter: "item", values: ["0"] } },
-      { code: "Alder", selection: { filter: "item", values: ["15-74"] } },
-      { code: "ContentsCode", selection: { filter: "item", values: ["Sysselsatte"] } },
-      { code: "Tid", selection: { filter: "top", values: ["2"] } },
-    ],
-    response: { format: "json-stat2" },
-  };
-  const raw = await ssbPost("13536", body);
-  return latestPoint(parseSsb(raw));
-}
-
-// --- Ledige stillinger (totalt antall), tabell 11414 (kvartalsvis)
-async function fetchVacancies() {
-  // SSB 11414 is national-only by næring; we just want total
-  const body = {
-    query: [
-      { code: "NACE2007", selection: { filter: "item", values: ["00-99"] } },
-      { code: "ContentsCode", selection: { filter: "item", values: ["LedigeStillinger"] } },
-      { code: "Tid", selection: { filter: "top", values: ["2"] } },
-    ],
-    response: { format: "json-stat2" },
-  };
-  const raw = await ssbPost("11414", body);
-  return latestPoint(parseSsb(raw));
-}
-
-// --- Lønn (gjennomsnittlig månedslønn, alle), tabell 11418
-async function fetchWages() {
-  const body = {
-    query: [
-      { code: "NACE2007", selection: { filter: "item", values: ["A-X"] } },
-      { code: "Sektor", selection: { filter: "item", values: ["A"] } },
-      { code: "Kjonn", selection: { filter: "item", values: ["0"] } },
-      { code: "Yrke", selection: { filter: "item", values: ["00"] } },
-      { code: "ContentsCode", selection: { filter: "item", values: ["MndLonnAlle"] } },
-      { code: "Tid", selection: { filter: "top", values: ["2"] } },
-    ],
-    response: { format: "json-stat2" },
-  };
-  const raw = await ssbPost("11418", body);
-  return latestPoint(parseSsb(raw));
-}
-
-// --- Sykefravær (sesongjustert prosent, legemeldt), tabell 12442
+// 12442: sykefravær sesongjustert
 async function fetchSickLeave() {
-  const body = {
-    query: [
-      { code: "Type", selection: { filter: "item", values: ["E"] } },
-      { code: "ContentsCode", selection: { filter: "item", values: ["SesJustProsent"] } },
-      { code: "Tid", selection: { filter: "top", values: ["2"] } },
-    ],
-    response: { format: "json-stat2" },
-  };
-  const raw = await ssbPost("12442", body);
-  return latestPoint(parseSsb(raw));
+  return ssbPost("12442", [
+    { code: "Kjonn", selection: { filter: "item", values: ["0"] } },
+    { code: "NACE2007", selection: { filter: "item", values: ["00-99"] } },
+    { code: "Sektor", selection: { filter: "item", values: ["ALLE"] } },
+    {
+      code: "ContentsCode",
+      selection: { filter: "item", values: ["SykefravProsent"] },
+    },
+    { code: "Tid", selection: { filter: "top", values: ["2"] } },
+  ]);
+}
+
+// 11418: månedslønn alle ansatte
+async function fetchWages() {
+  return ssbPost("11418", [
+    { code: "MaaleMetode", selection: { filter: "item", values: ["02"] } },
+    { code: "Yrke", selection: { filter: "item", values: ["0-9"] } },
+    { code: "Sektor", selection: { filter: "item", values: ["ALLE"] } },
+    { code: "Kjonn", selection: { filter: "item", values: ["0"] } },
+    { code: "AvtaltVanlig", selection: { filter: "item", values: ["0"] } },
+    {
+      code: "ContentsCode",
+      selection: { filter: "item", values: ["Manedslonn"] },
+    },
+    { code: "Tid", selection: { filter: "top", values: ["2"] } },
+  ]);
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
   if (req.method !== "GET" && req.method !== "POST") {
     return json({ error: "Method not allowed" }, 405);
   }
@@ -209,39 +151,54 @@ Deno.serve(async (req) => {
       const body = await req.json().catch(() => ({}));
       if (body?.region) regionSlug = String(body.region);
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
-  const fylker = REGION_TO_FYLKE[regionSlug] ?? [];
-  const cacheKey = regionSlug;
-
+  // National-only data — same payload for every region for now.
+  const cacheKey = "national";
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
-    return json(cached.payload);
+    return json({ ...(cached.payload as object), region: regionSlug });
   }
 
   try {
-    const [unemployment, employment, vacancies, wages, sickLeave] = await Promise.all([
-      fetchUnemployment(fylker),
-      fetchEmployment(fylker),
-      fetchVacancies(),
-      fetchWages(),
+    const [aku, sickLeaveRaw, wagesRaw] = await Promise.all([
+      fetchAku(),
       fetchSickLeave(),
+      fetchWages(),
     ]);
+
+    const unemployment = pickLatest(aku, "ArbledProsArbstyrk");
+    const employmentK = pickLatest(aku, "Sysselsatte"); // 1000 personer
+    const workforceK = pickLatest(aku, "Arbeidsstyrken"); // 1000 personer
+    const sickLeave = pickLatest(sickLeaveRaw, "SykefravProsent");
+    const wages = pickLatest(wagesRaw, "Manedslonn");
+
+    // Derive NAV-equivalent: estimated unemployed persons (1000 pers).
+    const navEquivalent =
+      unemployment && workforceK
+        ? {
+            value: Math.round((unemployment.value / 100) * workforceK.value),
+            period: unemployment.period,
+          }
+        : null;
 
     const payload = {
       region: regionSlug,
+      scope: "national",
       updated_at: new Date().toISOString(),
-      unemployment, // % av arbeidsstyrken
-      employment,   // antall sysselsatte (1000 personer)
-      vacancies,    // antall ledige stillinger
-      wages,        // kr/mnd
-      sickLeave,    // %
+      unemployment, // % of workforce
+      employment: employmentK, // 1000 persons
+      navUnemployed: navEquivalent, // 1000 persons (estimated)
+      wages, // kr/month
+      sickLeave, // %
     };
 
     cache.set(cacheKey, { ts: Date.now(), payload });
     return json(payload);
   } catch (e) {
     console.error("ssb-labor failed:", e);
-    return json({ error: "Kunne ikke hente SSB-data" }, 500);
+    return json({ error: "Kunne ikke hente arbeidsmarkedsdata" }, 500);
   }
 });

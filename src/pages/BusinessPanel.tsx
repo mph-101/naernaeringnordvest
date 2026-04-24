@@ -603,6 +603,67 @@ export default function BusinessPanel() {
           )}
         </section>
       </div>
+
+      <Dialog open={seatRequestOpen} onOpenChange={setSeatRequestOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Be om flere seter</DialogTitle>
+            <DialogDescription>
+              Salgsteamet vårt tar kontakt på e-posten du er logget inn med, og
+              sender pristilbud for utvidelsen. Vi åpner også et e-postutkast så
+              du kan legge til detaljer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label htmlFor="seat-request-count">Antall ekstra seter</Label>
+              <Input
+                id="seat-request-count"
+                type="number"
+                min={1}
+                max={500}
+                value={seatRequestCount}
+                onChange={(e) => setSeatRequestCount(Number(e.target.value))}
+                className="mt-1.5"
+              />
+              <p className="text-xs text-muted-foreground font-body mt-1.5">
+                Nåværende plan: {account.seat_count} seter ({usedSeats} i bruk).
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="seat-request-note">Kommentar (valgfritt)</Label>
+              <Textarea
+                id="seat-request-note"
+                placeholder="F.eks. ønsket startdato, faktureringsadresse, eller spørsmål om volumrabatt."
+                value={seatRequestNote}
+                onChange={(e) => setSeatRequestNote(e.target.value)}
+                rows={4}
+                className="mt-1.5"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setSeatRequestOpen(false)}
+              disabled={seatRequestSubmitting}
+            >
+              Avbryt
+            </Button>
+            <Button
+              onClick={handleSeatRequest}
+              disabled={seatRequestSubmitting || seatRequestCount < 1}
+            >
+              {seatRequestSubmitting ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Mail className="w-4 h-4 mr-2" />
+              )}
+              Send forespørsel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1155,16 +1155,26 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </div>
         )}
 
+        <button
+          type="button"
+          onClick={() => setPreviewDialogOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-subhead font-medium text-foreground bg-card hover:bg-muted border border-border rounded-full transition-colors"
+          title="Live forhåndsvisning av usav nede endringer"
+        >
+          <Eye className="w-3.5 h-3.5" />
+          Live preview
+        </button>
+
         {(articleId || currentArticleId) && (
           <a
             href={`/article/${articleId || currentArticleId}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-subhead font-medium text-foreground bg-card hover:bg-muted border border-border rounded-full transition-colors"
-            title={form.status === "published" ? "Åpne publisert artikkel i ny fane" : "Åpne forhåndsvisning av kladd i ny fane"}
+            title={form.status === "published" ? "Åpne publisert artikkel i ny fane" : "Åpne lagret kladd i ny fane"}
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            {form.status === "published" ? "Gå til artikkel" : "Forhåndsvis"}
+            {form.status === "published" ? "Gå til artikkel" : "Åpne lagret"}
           </a>
         )}
 

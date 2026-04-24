@@ -15,7 +15,8 @@ import {
   BarChart3,
   UserCog,
   ImageIcon,
-  Library
+  Library,
+  PenLine
 } from "lucide-react";
 import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
@@ -28,6 +29,7 @@ import { TrustedSourcesManager } from "./TrustedSourcesManager";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
 import { UsersManager } from "./UsersManager";
 import { MediaArchive } from "./MediaArchive";
+import { AuthorsManager } from "./AuthorsManager";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -36,7 +38,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media" | "authors";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const { hasRole } = useAuth();
@@ -63,6 +65,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "trusted-sources" as View, label: "Betrodde kilder", icon: Library },
     { id: "fact-boxes" as View, label: "Faktabokser", icon: BookOpen },
     { id: "media" as View, label: "Mediearkiv", icon: ImageIcon },
+    { id: "authors" as View, label: "Forfattere", icon: PenLine },
     { id: "tags" as View, label: "Tags", icon: TagIcon },
     { id: "tips" as View, label: "Tips", icon: MessageSquare },
     { id: "job-changes" as View, label: "Jobbytter", icon: Users },
@@ -253,6 +256,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "media" && (
           <MediaArchive />
+        )}
+
+        {view === "authors" && (
+          <AuthorsManager />
         )}
       </main>
     </div>

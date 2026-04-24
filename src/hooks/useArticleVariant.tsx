@@ -45,9 +45,15 @@ export function useArticleVariant(articleId: string | undefined): ResolvedVarian
         .maybeSingle();
 
       const hasB = !!(data && data.active && (data.title || data.image_url));
-      const chosen = getOrAssign(articleId, hasB);
       if (cancelled) return;
 
+      // No active test — skip variant assignment entirely.
+      if (!hasB) {
+        setVariant(null);
+        return;
+      }
+
+      const chosen = getOrAssign(articleId, hasB);
       const resolved: ResolvedVariant =
         chosen === "B" && data
           ? {
@@ -61,9 +67,6 @@ export function useArticleVariant(articleId: string | undefined): ResolvedVarian
 
       setVariant(resolved);
 
-      // Only log impressions when there is actually an active B variant —
-      // otherwise the test isn't running and stats would be meaningless.
-      if (!hasB) return;
       try {
         const sessionId = getSessionId();
         const impressionKey = `${STORAGE_PREFIX}imp_${articleId}`;

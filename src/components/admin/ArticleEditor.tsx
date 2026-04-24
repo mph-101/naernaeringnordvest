@@ -1924,6 +1924,24 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         </div>
       </form>
 
+      <ArticlePreviewDialog
+        open={previewDialogOpen}
+        onOpenChange={setPreviewDialogOpen}
+        article={{
+          id: currentArticleId,
+          title: form.title,
+          excerpt: form.excerpt,
+          body: composedBody || form.body,
+          category: form.category,
+          author: form.author,
+          read_time: form.read_time,
+          image_url: form.image_url,
+          image_crop: form.image_crop,
+          image_focal: form.image_focal,
+          key_points: form.key_points,
+        }}
+      />
+
       <Dialog
         open={chartDialogOpen}
         onOpenChange={(open) => (open ? setChartDialogOpen(true) : handleCloseChartDialog())}

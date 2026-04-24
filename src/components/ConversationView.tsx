@@ -502,3 +502,40 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
     </div>
   );
 }
+
+const TabButton = ({
+  active,
+  onClick,
+  icon,
+  label,
+  badge,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+  badge?: number;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-pressed={active}
+    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-subhead font-medium transition-colors ${
+      active
+        ? "bg-accent/10 text-accent"
+        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+    }`}
+  >
+    {icon}
+    <span>{label}</span>
+    {typeof badge === "number" && badge > 0 && (
+      <span
+        className={`tabular-nums px-1.5 rounded-full text-[10px] ${
+          active ? "bg-accent/20" : "bg-muted"
+        }`}
+      >
+        {badge}
+      </span>
+    )}
+  </button>
+);

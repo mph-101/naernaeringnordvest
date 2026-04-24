@@ -1,10 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Article {
   id: string;
@@ -21,9 +28,18 @@ interface ArticlesListProps {
   onEdit: (id: string | null) => void;
 }
 
+type SortKey = "title" | "category" | "author" | "status" | "created_at";
+type SortDir = "asc" | "desc";
+type StatusFilter = "all" | "draft" | "review" | "published";
+
+const STATUS_RANK: Record<string, number> = { draft: 0, review: 1, published: 2 };
+
 export const ArticlesList = ({ onEdit }: ArticlesListProps) => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortKey, setSortKey] = useState<SortKey>("created_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -101,6 +117,49 @@ export const ArticlesList = ({ onEdit }: ArticlesListProps) => {
     }
   };
 
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir(key === "created_at" ? "desc" : "asc");
+    }
+  };
+
+  const SortIcon = ({ active }: { active: boolean }) => {
+    if (!active) return <ArrowUpDown className="w-3 h-3 opacity-40" />;
+    return sortDir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />;
+  };
+
+  const visibleArticles = useMemo(() => {
+    const filtered = statusFilter === "all"
+      ? articles
+      : articles.filter((a) => a.status === statusFilter);
+
+    const sorted = [...filtered].sort((a, b) => {
+      let cmp = 0;
+      switch (sortKey) {
+        case "title":
+          cmp = a.title.localeCompare(b.title, "nb");
+          break;
+        case "category":
+          cmp = (a.category || "").localeCompare(b.category || "", "nb");
+          break;
+        case "author":
+          cmp = (a.author || "").localeCompare(b.author || "", "nb");
+          break;
+        case "status":
+          cmp = (STATUS_RANK[a.status] ?? 99) - (STATUS_RANK[b.status] ?? 99);
+          break;
+        case "created_at":
+          cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [articles, sortKey, sortDir, statusFilter]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -115,10 +174,23 @@ export const ArticlesList = ({ onEdit }: ArticlesListProps) => {
         <h2 className="font-headline text-2xl font-semibold text-headline">
           Artikler
         </h2>
-        <Button onClick={() => onEdit(null)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Ny artikkel
-        </Button>
+        <div className="flex items-center gap-3">
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+            <SelectTrigger className="w-[160px] h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle ({articles.length})</SelectItem>
+              <SelectItem value="draft">Kladd ({articles.filter((a) => a.status === "draft").length})</SelectItem>
+              <SelectItem value="review">Gjennomlesning ({articles.filter((a) => a.status === "review").length})</SelectItem>
+              <SelectItem value="published">Publisert ({articles.filter((a) => a.status === "published").length})</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={() => onEdit(null)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Ny artikkel
+          </Button>
+        </div>
       </div>
 
       {articles.length === 0 ? (
@@ -138,19 +210,29 @@ export const ArticlesList = ({ onEdit }: ArticlesListProps) => {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-left px-6 py-4 font-medium text-muted-foreground font-body">
-                    Tittel
+                    <button type="button" onClick={() => toggleSort("title")} className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors">
+                      Tittel <SortIcon active={sortKey === "title"} />
+                    </button>
                   </th>
                   <th className="text-left px-6 py-4 font-medium text-muted-foreground font-body hidden md:table-cell">
-                    Kategori
+                    <button type="button" onClick={() => toggleSort("category")} className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors">
+                      Kategori <SortIcon active={sortKey === "category"} />
+                    </button>
                   </th>
                   <th className="text-left px-6 py-4 font-medium text-muted-foreground font-body hidden lg:table-cell">
-                    Forfatter
+                    <button type="button" onClick={() => toggleSort("author")} className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors">
+                      Forfatter <SortIcon active={sortKey === "author"} />
+                    </button>
                   </th>
                   <th className="text-left px-6 py-4 font-medium text-muted-foreground font-body">
-                    Status
+                    <button type="button" onClick={() => toggleSort("status")} className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors">
+                      Status <SortIcon active={sortKey === "status"} />
+                    </button>
                   </th>
                   <th className="text-left px-6 py-4 font-medium text-muted-foreground font-body hidden md:table-cell">
-                    Opprettet
+                    <button type="button" onClick={() => toggleSort("created_at")} className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors">
+                      Opprettet <SortIcon active={sortKey === "created_at"} />
+                    </button>
                   </th>
                   <th className="text-right px-6 py-4 font-medium text-muted-foreground font-body">
                     Handlinger
@@ -158,7 +240,7 @@ export const ArticlesList = ({ onEdit }: ArticlesListProps) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {articles.map((article) => (
+                {visibleArticles.map((article) => (
                   <tr key={article.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-medium text-headline font-body line-clamp-1">

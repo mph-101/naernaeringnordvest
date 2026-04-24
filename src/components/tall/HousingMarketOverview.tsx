@@ -123,7 +123,7 @@ export function HousingMarketOverview() {
       label: isNo ? "Igangsatte boliger" : "Housing starts",
       point: data?.housingStarts,
       format: (v: number) => `${fmtNumber(v, isNo, 0)}`,
-      help: isNo ? "Antall boliger denne måneden (nasjonalt)" : "Dwellings started this month (national)",
+      help: isNo ? "Antall boliger siste år (nasjonalt)" : "Dwellings started last year (national)",
     },
     {
       key: "householdDebt",

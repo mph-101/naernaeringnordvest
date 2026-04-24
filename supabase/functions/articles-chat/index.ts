@@ -16,6 +16,7 @@ const corsHeaders = {
 const CHAT_MODEL = "google/gemini-3-flash-preview";
 const QUERY_REWRITE_MODEL = "google/gemini-2.5-flash-lite";
 const MATCH_COUNT = 6;
+const TRUSTED_MATCH_COUNT = 4;
 
 function stripHtml(html: string): string {
   return html

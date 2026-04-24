@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, ArrowRight, ArrowLeft, User, Bot, FileText, Copy, Check, Share2, ExternalLink, Rss, Database, FileText as FileTextIcon, Globe } from "lucide-react";
+import { Search, ArrowRight, ArrowLeft, User, Bot, Copy, Check, Share2, ExternalLink, Rss, Database, FileText as FileTextIcon, Globe } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { streamArticlesChat, type ArticleSource, type TrustedSource } from "@/lib/articles-chat";
 import { toast } from "@/hooks/use-toast";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { SourceVerificationLog } from "@/components/SourceVerificationLog";
 
 interface Message {
   id: string;
@@ -330,54 +331,12 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                       </ReactMarkdown>
                     </div>
                   )}
-                  {((message.sources && message.sources.length > 0) || (message.trustedSources && message.trustedSources.length > 0)) && (
-                    <div className="mt-4 pt-4 border-t border-border">
-                      <p className="font-subhead text-sm text-muted-foreground mb-3 flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" />{t.sources}</p>
-                      <ol className="space-y-2">
-                        {(message.sources ?? []).map((source) => (
-                          <li key={source.id} id={`src-${message.id}-${source.n}`} className="text-sm leading-relaxed scroll-mt-24">
-                            <span className="text-muted-foreground font-mono mr-2">[{source.n}]</span>
-                            <Link to={`/article/${source.id}`} className="text-primary hover:underline">
-                              {source.title}
-                            </Link>
-                            {source.author && <span className="text-muted-foreground"> — {source.author}</span>}
-                          </li>
-                        ))}
-                        {(message.trustedSources ?? []).map((trusted) => {
-                          const TypeIcon = trusted.source_type === "rss" ? Rss
-                            : trusted.source_type === "api" ? Database
-                            : trusted.source_type === "document" ? FileTextIcon
-                            : Globe;
-                          const label = trusted.title || trusted.source_name;
-                          return (
-                            <li
-                              key={`trusted-${trusted.n}`}
-                              id={`src-${message.id}-${trusted.n}`}
-                              className="text-sm leading-relaxed scroll-mt-24 flex items-baseline gap-2"
-                            >
-                              <span className="text-muted-foreground font-mono">[{trusted.n}]</span>
-                              <TypeIcon className="w-3 h-3 text-muted-foreground translate-y-0.5 shrink-0" />
-                              {trusted.source_url ? (
-                                <a
-                                  href={trusted.source_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-primary hover:underline inline-flex items-baseline gap-1"
-                                  title={trusted.source_url}
-                                >
-                                  {label}
-                                  <ExternalLink className="w-3 h-3 self-center" />
-                                </a>
-                              ) : (
-                                <span className="text-foreground">{label}</span>
-                              )}
-                              <span className="text-muted-foreground text-xs"> — {trusted.source_name}</span>
-                            </li>
-                          );
-                        })}
-                      </ol>
-                    </div>
-                  )}
+                  <SourceVerificationLog
+                    content={message.content}
+                    sources={message.sources}
+                    trustedSources={message.trustedSources}
+                    title={t.sources}
+                  />
                   {message.role === "assistant" && message.content && !(isLoading && index === messages.length - 1) && (
                     <div className="mt-3 flex items-center gap-2">
                       <button

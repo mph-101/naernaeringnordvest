@@ -17,6 +17,7 @@ import { InlineDiff } from "./InlineDiff";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
 import { ArticleGalleryEditor } from "./ArticleGalleryEditor";
+import { ArticleVariantsManager } from "./ArticleVariantsManager";
 import { ImageCropDialog } from "./ImageCropDialog";
 import type { ImageCrop, ImageFocal } from "@/lib/image-crop";
 import { cropToObjectPosition, parseCrop, parseFocal } from "@/lib/image-crop";
@@ -1338,6 +1339,15 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
         {/* Bildegalleri */}
         <ArticleGalleryEditor articleId={articleId} />
+
+        {/* A/B-testing av tittel + bilde */}
+        {currentArticleId && (
+          <ArticleVariantsManager
+            articleId={currentArticleId}
+            baselineTitle={form.title}
+            baselineImage={form.image_url || null}
+          />
+        )}
 
         {/* Norwegian content */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">

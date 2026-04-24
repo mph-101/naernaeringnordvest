@@ -1,6 +1,6 @@
 import { Children, isValidElement, useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Search, ArrowRight, ArrowLeft, User, Bot, Copy, Check, Share2, ExternalLink, Rss, Database, FileText as FileTextIcon, Globe } from "lucide-react";
+import { Search, ArrowRight, ArrowLeft, User, Bot, Copy, Check, Share2, ExternalLink, Rss, Database, FileText as FileTextIcon, Globe, MessageSquare, BarChart3 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -8,6 +8,7 @@ import { streamArticlesChat, type ArticleSource, type TrustedSource } from "@/li
 import { toast } from "@/hooks/use-toast";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { SourceVerificationLog } from "@/components/SourceVerificationLog";
+import { ConversationSourceTimeline } from "@/components/ConversationSourceTimeline";
 
 interface Message {
   id: string;
@@ -31,7 +32,34 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<"chat" | "timeline">("chat");
   const hasStarted = useRef(false);
+  // Build aggregated source timeline data: pair every assistant turn with the
+  // user question that triggered it.
+  const assistantTurns = (() => {
+    const out: {
+      id: string;
+      question: string;
+      content: string;
+      sources?: ArticleSource[];
+      trustedSources?: TrustedSource[];
+    }[] = [];
+    let lastUser = "";
+    for (const m of messages) {
+      if (m.role === "user") {
+        lastUser = m.content;
+      } else if (m.content) {
+        out.push({
+          id: m.id,
+          question: lastUser,
+          content: m.content,
+          sources: m.sources,
+          trustedSources: m.trustedSources,
+        });
+      }
+    }
+    return out;
+  })();
 
   const linkifyCitations = (
     content: string,
@@ -243,7 +271,7 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
+        <div className="max-w-3xl mx-auto px-6 pt-4 pb-3 flex items-center gap-4">
           <button onClick={onBack} className="p-2.5 hover:bg-secondary rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
@@ -258,9 +286,27 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
             <span className="hidden sm:inline font-subhead">{shareCopied ? t.shareLinkCopied : t.shareConversation}</span>
           </button>
         </div>
+        <div className="max-w-3xl mx-auto px-6 pb-2 flex items-center gap-1">
+          <TabButton
+            active={activeTab === "chat"}
+            onClick={() => setActiveTab("chat")}
+            icon={<MessageSquare className="w-3.5 h-3.5" />}
+            label="Samtale"
+          />
+          <TabButton
+            active={activeTab === "timeline"}
+            onClick={() => setActiveTab("timeline")}
+            icon={<BarChart3 className="w-3.5 h-3.5" />}
+            label="Kildebruk"
+            badge={assistantTurns.length > 0 ? assistantTurns.length : undefined}
+          />
+        </div>
       </header>
 
       <div className="flex-1 max-w-3xl mx-auto w-full px-6 py-8">
+        {activeTab === "timeline" ? (
+          <ConversationSourceTimeline turns={assistantTurns} />
+        ) : (
         <div className="space-y-8">
           {messages.map((message, index) => (
             <div key={message.id} className="animate-fade-up" style={{ animationDelay: `${index * 100}ms` }}>
@@ -437,6 +483,7 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
             </div>
           )}
         </div>
+        )}
       </div>
 
       <div className="sticky bottom-0 bg-background border-t border-border py-4">
@@ -455,3 +502,40 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
     </div>
   );
 }
+
+const TabButton = ({
+  active,
+  onClick,
+  icon,
+  label,
+  badge,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+  badge?: number;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-pressed={active}
+    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-subhead font-medium transition-colors ${
+      active
+        ? "bg-accent/10 text-accent"
+        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+    }`}
+  >
+    {icon}
+    <span>{label}</span>
+    {typeof badge === "number" && badge > 0 && (
+      <span
+        className={`tabular-nums px-1.5 rounded-full text-[10px] ${
+          active ? "bg-accent/20" : "bg-muted"
+        }`}
+      >
+        {badge}
+      </span>
+    )}
+  </button>
+);

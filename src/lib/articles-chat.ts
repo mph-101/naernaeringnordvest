@@ -8,6 +8,16 @@ export interface ArticleSource {
   rank: number;
 }
 
+export interface TrustedSource {
+  n: number;
+  source_name: string;
+  source_type: string;
+  title: string | null;
+  content: string;
+  source_url: string | null;
+  published_at: string | null;
+}
+
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
@@ -18,7 +28,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/articles-cha
 interface StreamArticlesChatOptions {
   messages: ChatMessage[];
   onContent: (chunk: string) => void;
-  onSources?: (sources: ArticleSource[]) => void;
+  onSources?: (sources: ArticleSource[], trustedSources?: TrustedSource[]) => void;
 }
 
 export async function streamArticlesChat({

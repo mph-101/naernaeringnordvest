@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Children, isValidElement, useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Search, ArrowRight, ArrowLeft, User, Bot, Copy, Check, Share2, ExternalLink, Rss, Database, FileText as FileTextIcon, Globe } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -64,6 +64,71 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
       el.classList.add("ring-2", "ring-accent", "rounded");
       setTimeout(() => el.classList.remove("ring-2", "ring-accent", "rounded"), 1500);
     }
+  };
+
+  /**
+   * Walks paragraph children and wraps every sentence that contains a
+   * citation link (`<a href="#src-...">`) in a highlighted span. This makes
+   * it visually obvious which statements are backed by a source.
+   */
+  const highlightCitedSentences = (children: ReactNode): ReactNode => {
+    // Sentence boundary: . ! ? optionally followed by closing quote/paren, then space.
+    const SENTENCE_RE = /[^.!?]+[.!?]+["')\]]?\s*|[^.!?]+$/g;
+    type Token = { kind: "text"; text: string } | { kind: "node"; node: ReactNode };
+    const tokens: Token[] = [];
+
+    Children.forEach(children, (child) => {
+      if (typeof child === "string") {
+        const matches = child.match(SENTENCE_RE);
+        if (matches) {
+          for (const m of matches) tokens.push({ kind: "text", text: m });
+        } else if (child.length) {
+          tokens.push({ kind: "text", text: child });
+        }
+      } else if (typeof child === "number" || typeof child === "boolean") {
+        tokens.push({ kind: "text", text: String(child) });
+      } else {
+        tokens.push({ kind: "node", node: child });
+      }
+    });
+
+    // Group tokens into sentences. A new sentence starts after any text token
+    // whose text ends with sentence-terminating punctuation.
+    const sentences: Token[][] = [[]];
+    for (const tok of tokens) {
+      sentences[sentences.length - 1].push(tok);
+      if (tok.kind === "text" && /[.!?]["')\]]?\s*$/.test(tok.text)) {
+        sentences.push([]);
+      }
+    }
+    if (sentences[sentences.length - 1].length === 0) sentences.pop();
+
+    const isCitationNode = (n: ReactNode): boolean => {
+      if (!isValidElement(n)) return false;
+      const el = n as ReactElement<{ href?: string }>;
+      return typeof el.props?.href === "string" && el.props.href.startsWith("#src-");
+    };
+
+    return sentences.map((group, i) => {
+      const hasCitation = group.some((t) => t.kind === "node" && isCitationNode(t.node));
+      const rendered = group.map((t, j) =>
+        t.kind === "text" ? (
+          <span key={j}>{t.text}</span>
+        ) : (
+          <span key={j}>{t.node}</span>
+        ),
+      );
+      if (!hasCitation) return <span key={i}>{rendered}</span>;
+      return (
+        <mark
+          key={i}
+          className="bg-accent/10 text-foreground rounded-sm px-0.5 -mx-0.5 decoration-accent/40 underline decoration-dotted underline-offset-4"
+          title="Setning støttet av kilde"
+        >
+          {rendered}
+        </mark>
+      );
+    });
   };
 
   const sendMessage = async (rawInput: string, history: Message[]) => {
@@ -213,10 +278,18 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                     <div className="prose prose-sm dark:prose-invert max-w-none font-body [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                       <ReactMarkdown
                         components={{
-                          p: ({ children }) => <p className="mb-3 leading-[1.7] text-base">{children}</p>,
+                          p: ({ children }) => (
+                            <p className="mb-3 leading-[1.7] text-base">
+                              {highlightCitedSentences(children)}
+                            </p>
+                          ),
+                          li: ({ children }) => (
+                            <li className="leading-[1.6]">
+                              {highlightCitedSentences(children)}
+                            </li>
+                          ),
                           ul: ({ children }) => <ul className="mb-3 space-y-1 pl-5 list-disc marker:text-primary/60">{children}</ul>,
                           ol: ({ children }) => <ol className="mb-3 space-y-1 pl-5 list-decimal marker:text-primary/60">{children}</ol>,
-                          li: ({ children }) => <li className="leading-[1.6]">{children}</li>,
                           strong: ({ children }) => <strong className="font-semibold text-headline">{children}</strong>,
                           a: ({ href, children }) => {
                             const isCitation = href?.startsWith("#src-");

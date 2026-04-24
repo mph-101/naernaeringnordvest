@@ -131,10 +131,14 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
 
   const buildPlainText = (message: Message) => {
     const stripped = message.content.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_m, g) => `[${g}]`);
-    if (!message.sources?.length) return stripped;
-    const sourceLines = message.sources
-      .map((s) => `[${s.n}] ${s.title}${s.author ? ` — ${s.author}` : ""}`)
-      .join("\n");
+    const articleLines = (message.sources ?? []).map(
+      (s) => `[${s.n}] ${s.title}${s.author ? ` — ${s.author}` : ""}`,
+    );
+    const trustedLines = (message.trustedSources ?? []).map(
+      (s) => `[${s.n}] ${s.title || s.source_name} — ${s.source_name}${s.source_url ? ` (${s.source_url})` : ""}`,
+    );
+    const sourceLines = [...articleLines, ...trustedLines].join("\n");
+    if (!sourceLines) return stripped;
     return `${stripped}\n\n${t.sources}:\n${sourceLines}`;
   };
 

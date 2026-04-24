@@ -213,7 +213,7 @@ ${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contex
             controller.enqueue(value);
           }
           // Send our sources as a synthetic SSE event the client knows about
-          const sourcesPayload = `event: sources\ndata: ${JSON.stringify({ sources })}\n\n`;
+          const sourcesPayload = `event: sources\ndata: ${JSON.stringify({ sources, trustedSources })}\n\n`;
           controller.enqueue(encoder.encode(sourcesPayload));
         } catch (e) {
           console.error("stream pipe error:", e);

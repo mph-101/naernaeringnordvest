@@ -166,6 +166,12 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 onClick={() => setView("sources")}
               />
               <DashboardCard
+                title="Betrodde kilder"
+                description="Eksterne kilder chatboten kan bruke"
+                icon={Library}
+                onClick={() => setView("trusted-sources")}
+              />
+              <DashboardCard
                 title="Faktabokser"
                 description="Gjenbrukbart faktaboks-bibliotek"
                 icon={BookOpen}

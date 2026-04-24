@@ -420,6 +420,18 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Hard guard: if the user somehow has status=published but the checklist
+    // is incomplete (e.g. tags removed after promoting), refuse to save and
+    // demote back to draft so nothing accidentally goes live half-baked.
+    if (form.status === "published" && !canPublish) {
+      toast({
+        title: "Kan ikke publisere",
+        description: "Fullfør publiseringskravene før du lagrer som publisert.",
+        variant: "destructive",
+      });
+      updateForm({ status: "draft" });
+      return;
+    }
     setSaving(true);
     try {
       const articleData = {

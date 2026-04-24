@@ -87,27 +87,6 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
         </div>
       </div>
 
-      {/* Browse by topic */}
-      {topTags.length > 0 && (
-        <div className="w-full max-w-xl mt-10 animate-fade-up" style={{ animationDelay: '700ms', animationFillMode: 'both' }}>
-          <p className="font-subhead text-xs text-muted-foreground mb-3 text-center uppercase tracking-widest flex items-center justify-center gap-1.5">
-            <TagIcon className="w-3 h-3" />
-            {language === "no" ? "Bla etter emne" : "Browse by topic"}
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {topTags.map((tag) => (
-              <Link
-                key={tag.id}
-                to={`/tag/${tag.slug}`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-card hover:bg-primary/10 border border-border hover:border-primary/40 rounded-full text-sm font-body text-foreground/80 hover:text-foreground transition-all duration-200 hover:shadow-soft"
-              >
-                {tag.name}
-                <span className="text-[10px] text-muted-foreground">{tag.count}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

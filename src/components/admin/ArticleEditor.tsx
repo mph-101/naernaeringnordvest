@@ -142,6 +142,18 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [allRegions, setAllRegions] = useState<EditorialRegion[]>([]);
   const [forking, setForking] = useState(false);
 
+  // Pre-publish checklist: items must all be done before status can be set
+  // to "published" (and before submit is allowed with that status). The list
+  // is derived on every render so it always reflects unsaved edits.
+  const publishChecklist = buildPublishChecklist({
+    author: form.author,
+    imageUrl: form.image_url,
+    excerpt: form.excerpt,
+    tagCount: articleTags.length,
+    body: form.body,
+  });
+  const canPublish = publishChecklist.every((i) => i.done);
+
   // Load regions list once
   useEffect(() => {
     fetchRegions().then(setAllRegions).catch(() => {});

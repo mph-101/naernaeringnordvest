@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2, Undo2, ExternalLink, Crop as CropIcon, Eye } from "lucide-react";
 import { ArticlePreviewDialog } from "./ArticlePreviewDialog";
+import { PrePublishChecklist, buildPublishChecklist } from "./PrePublishChecklist";
 import { Dialog as ImproveDialog, DialogContent as ImproveDialogContent, DialogHeader as ImproveDialogHeader, DialogTitle as ImproveDialogTitle, DialogFooter as ImproveDialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -140,6 +141,18 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [forkedFromTitle, setForkedFromTitle] = useState<string | null>(null);
   const [allRegions, setAllRegions] = useState<EditorialRegion[]>([]);
   const [forking, setForking] = useState(false);
+
+  // Pre-publish checklist: items must all be done before status can be set
+  // to "published" (and before submit is allowed with that status). The list
+  // is derived on every render so it always reflects unsaved edits.
+  const publishChecklist = buildPublishChecklist({
+    author: form.author,
+    imageUrl: form.image_url,
+    excerpt: form.excerpt,
+    tagCount: articleTags.length,
+    body: form.body,
+  });
+  const canPublish = publishChecklist.every((i) => i.done);
 
   // Load regions list once
   useEffect(() => {
@@ -407,6 +420,18 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Hard guard: if the user somehow has status=published but the checklist
+    // is incomplete (e.g. tags removed after promoting), refuse to save and
+    // demote back to draft so nothing accidentally goes live half-baked.
+    if (form.status === "published" && !canPublish) {
+      toast({
+        title: "Kan ikke publisere",
+        description: "Fullfør publiseringskravene før du lagrer som publisert.",
+        variant: "destructive",
+      });
+      updateForm({ status: "draft" });
+      return;
+    }
     setSaving(true);
     try {
       const articleData = {
@@ -1183,20 +1208,38 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             <button
               key={s}
               type="button"
-              onClick={() => updateForm({ status: s })}
+              onClick={() => {
+                if (s === "published" && !canPublish) {
+                  toast({
+                    title: "Kan ikke publisere ennå",
+                    description: "Fullfør publiseringskravene under for å aktivere publisering.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                updateForm({ status: s });
+              }}
+              disabled={s === "published" && !canPublish}
+              title={s === "published" && !canPublish ? "Fullfør publiseringskravene først" : undefined}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                 form.status === s
                   ? `${STATUS_CONFIG[s].bg} ${STATUS_CONFIG[s].color}`
                   : "bg-muted/50 text-muted-foreground hover:bg-muted"
-              }`}
+              } ${s === "published" && !canPublish ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {STATUS_CONFIG[s].label}
             </button>
           ))}
+          <PrePublishChecklist items={publishChecklist} variant="compact" />
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Pre-publish checklist — surfaced when not yet published so editors
+            can see exactly what's missing without hunting through fields. */}
+        {form.status !== "published" && !canPublish && (
+          <PrePublishChecklist items={publishChecklist} variant="card" />
+        )}
         {/* Featured Image */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-4">
           <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">Hovedbilde</h3>

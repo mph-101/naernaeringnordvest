@@ -14,7 +14,8 @@ import {
   X,
   BarChart3,
   UserCog,
-  ImageIcon
+  ImageIcon,
+  Library
 } from "lucide-react";
 import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
@@ -23,6 +24,7 @@ import { JobChangeReview } from "./JobChangeReview";
 import { FactBoxesManager } from "./FactBoxesManager";
 import { TagsManager } from "./TagsManager";
 import { SourcesManager } from "./SourcesManager";
+import { TrustedSourcesManager } from "./TrustedSourcesManager";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
 import { UsersManager } from "./UsersManager";
 import { MediaArchive } from "./MediaArchive";

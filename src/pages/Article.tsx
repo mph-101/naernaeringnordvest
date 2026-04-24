@@ -16,7 +16,6 @@ import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/articles";
 import { supabase } from "@/integrations/supabase/client";
 import { useArticleTracking } from "@/hooks/useArticleTracking";
-import { useNavigate as _useNavigate } from "react-router-dom";
 
 interface ArticleData {
   id: string;

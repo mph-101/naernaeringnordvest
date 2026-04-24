@@ -12,6 +12,8 @@ import {
   Trash2,
   UserPlus,
   Users,
+  Plus,
+  AlertCircle,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
@@ -19,6 +21,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { getStripeEnvironment } from "@/lib/stripe";
@@ -70,6 +81,10 @@ export default function BusinessPanel() {
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [openingPortal, setOpeningPortal] = useState(false);
+  const [seatRequestOpen, setSeatRequestOpen] = useState(false);
+  const [seatRequestCount, setSeatRequestCount] = useState<number>(5);
+  const [seatRequestNote, setSeatRequestNote] = useState("");
+  const [seatRequestSubmitting, setSeatRequestSubmitting] = useState(false);
 
   // Auth gate
   useEffect(() => {
@@ -211,6 +226,75 @@ export default function BusinessPanel() {
   const copyToClipboard = (value: string, label: string) => {
     navigator.clipboard.writeText(value);
     toast.success(`${label} kopiert`);
+  };
+
+  const handleSeatRequest = async () => {
+    if (!account) return;
+    const extra = Math.max(1, Math.floor(seatRequestCount || 0));
+    setSeatRequestSubmitting(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const requesterEmail = userData.user?.email ?? "ukjent";
+      const subject = `Forespørsel om flere seter – ${account.company_name}`;
+      const bodyLines = [
+        `Hei,`,
+        ``,
+        `Vi ønsker å utvide bedriftsabonnementet vårt på Nær Næring.`,
+        ``,
+        `Bedrift: ${account.company_name}`,
+        account.orgnr ? `Org.nr: ${account.orgnr}` : null,
+        `Konto-ID: ${account.id}`,
+        `Nåværende seter: ${account.seat_count}`,
+        `Brukte seter: ${usedSeats}`,
+        `Ønsket antall ekstra seter: ${extra}`,
+        ``,
+        seatRequestNote.trim() ? `Kommentar:\n${seatRequestNote.trim()}` : null,
+        ``,
+        `Vennligst send tilbud / bekreftelse til ${requesterEmail}.`,
+        ``,
+        `Med vennlig hilsen,`,
+        requesterEmail,
+      ].filter(Boolean) as string[];
+      const body = bodyLines.join("\n");
+
+      // Log the request via the existing tip channel so support can follow up server-side.
+      try {
+        await supabase.functions.invoke("submit-tip", {
+          body: {
+            journalistId: "salg",
+            journalistName: "Salg / Kundeservice",
+            content:
+              `[Seat-utvidelse]\n` +
+              `Bedrift: ${account.company_name} (${account.orgnr ?? "uten org.nr"})\n` +
+              `Konto-ID: ${account.id}\n` +
+              `Nåværende: ${account.seat_count} seter, brukt: ${usedSeats}\n` +
+              `Ønsket ekstra: ${extra}\n` +
+              (seatRequestNote.trim() ? `Kommentar: ${seatRequestNote.trim()}\n` : "") +
+              `Kontakt: ${requesterEmail}`,
+            isAnonymous: false,
+            followUpEmail: requesterEmail,
+          },
+        });
+      } catch {
+        // Non-blocking: even if logging fails, we still open the mail draft below.
+      }
+
+      // Open the user's mail client with a prefilled draft to support.
+      const mailto = `mailto:support@naernaering.no?subject=${encodeURIComponent(
+        subject
+      )}&body=${encodeURIComponent(body)}`;
+      window.location.href = mailto;
+
+      toast.success("Forespørsel registrert. E-postutkast åpnet.");
+      setSeatRequestOpen(false);
+      setSeatRequestNote("");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Kunne ikke sende forespørsel"
+      );
+    } finally {
+      setSeatRequestSubmitting(false);
+    }
   };
 
   if (authLoading || loading) {
@@ -427,9 +511,43 @@ export default function BusinessPanel() {
             </Button>
           </form>
           {usedSeats >= account.seat_count && (
-            <p className="text-sm text-destructive font-body mt-3">
-              Du har brukt alle {account.seat_count} seter. Oppgrader i fakturaportalen for flere.
-            </p>
+            <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-subhead font-semibold text-sm text-destructive mb-1">
+                    Alle {account.seat_count} seter er i bruk
+                  </p>
+                  <p className="text-sm text-muted-foreground font-body mb-3">
+                    Trenger du plass til flere medarbeidere? Be om utvidelse, så
+                    tar salgsteamet kontakt med tilbud.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => setSeatRequestOpen(true)}
+                      className="gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Be om flere seter
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleOpenPortal}
+                      disabled={openingPortal}
+                    >
+                      {openingPortal ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                      )}
+                      Endre i fakturaportal
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </section>
 
@@ -485,6 +603,67 @@ export default function BusinessPanel() {
           )}
         </section>
       </div>
+
+      <Dialog open={seatRequestOpen} onOpenChange={setSeatRequestOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Be om flere seter</DialogTitle>
+            <DialogDescription>
+              Salgsteamet vårt tar kontakt på e-posten du er logget inn med, og
+              sender pristilbud for utvidelsen. Vi åpner også et e-postutkast så
+              du kan legge til detaljer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label htmlFor="seat-request-count">Antall ekstra seter</Label>
+              <Input
+                id="seat-request-count"
+                type="number"
+                min={1}
+                max={500}
+                value={seatRequestCount}
+                onChange={(e) => setSeatRequestCount(Number(e.target.value))}
+                className="mt-1.5"
+              />
+              <p className="text-xs text-muted-foreground font-body mt-1.5">
+                Nåværende plan: {account.seat_count} seter ({usedSeats} i bruk).
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="seat-request-note">Kommentar (valgfritt)</Label>
+              <Textarea
+                id="seat-request-note"
+                placeholder="F.eks. ønsket startdato, faktureringsadresse, eller spørsmål om volumrabatt."
+                value={seatRequestNote}
+                onChange={(e) => setSeatRequestNote(e.target.value)}
+                rows={4}
+                className="mt-1.5"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setSeatRequestOpen(false)}
+              disabled={seatRequestSubmitting}
+            >
+              Avbryt
+            </Button>
+            <Button
+              onClick={handleSeatRequest}
+              disabled={seatRequestSubmitting || seatRequestCount < 1}
+            >
+              {seatRequestSubmitting ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Mail className="w-4 h-4 mr-2" />
+              )}
+              Send forespørsel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

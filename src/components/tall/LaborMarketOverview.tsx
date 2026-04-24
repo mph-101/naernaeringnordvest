@@ -3,15 +3,16 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { fetchRegions, regionLabel, EditorialRegion } from "@/lib/regions";
-import { Briefcase, Users, TrendingDown, Banknote, HeartPulse, ExternalLink, Newspaper, Loader2 } from "lucide-react";
+import { UserMinus, Users, TrendingDown, Banknote, HeartPulse, ExternalLink, Newspaper, Loader2 } from "lucide-react";
 
 interface SsbPoint { value: number; period: string }
 interface LaborData {
   region: string;
+  scope?: string;
   updated_at: string;
   unemployment: SsbPoint | null;
   employment: SsbPoint | null;
-  vacancies: SsbPoint | null;
+  navUnemployed: SsbPoint | null;
   wages: SsbPoint | null;
   sickLeave: SsbPoint | null;
 }

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import {
   Plus, Trash2, RefreshCw, Loader2, Globe, Rss, FileText, Database,
-  CheckCircle2, AlertCircle, Edit3, X, Save,
+  CheckCircle2, AlertCircle, Edit3, X, Save, List, Activity,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TrustedSourcesStatus } from "./TrustedSourcesStatus";
 
 type SourceType = "url" | "rss" | "document" | "api";
 
@@ -52,6 +53,7 @@ export const TrustedSourcesManager = () => {
   const [indexing, setIndexing] = useState<string | null>(null);
   const [tagsInput, setTagsInput] = useState("");
   const [docFile, setDocFile] = useState<File | null>(null);
+  const [tab, setTab] = useState<"list" | "status">("list");
 
   const load = async () => {
     setLoading(true);

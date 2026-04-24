@@ -74,14 +74,20 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
     const assistantId = crypto.randomUUID();
     let assistantContent = "";
     let assistantSources: ArticleSource[] | undefined;
+    let assistantTrustedSources: TrustedSource[] | undefined;
 
     setMessages(nextMessages);
     setInput("");
     setIsLoading(true);
 
-    const upsertAssistant = (chunk: string, sources?: ArticleSource[]) => {
+    const upsertAssistant = (
+      chunk: string,
+      sources?: ArticleSource[],
+      trustedSources?: TrustedSource[],
+    ) => {
       if (chunk) assistantContent += chunk;
       if (sources) assistantSources = sources;
+      if (trustedSources) assistantTrustedSources = trustedSources;
 
       setMessages((prev) => {
         const assistantMessage: Message = {
@@ -89,6 +95,7 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
           role: "assistant",
           content: assistantContent,
           sources: assistantSources,
+          trustedSources: assistantTrustedSources,
         };
         const existingIndex = prev.findIndex((message) => message.id === assistantId);
         if (existingIndex >= 0) {
@@ -102,7 +109,7 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
       await streamArticlesChat({
         messages: nextMessages.map(({ role, content }) => ({ role, content })),
         onContent: (chunk) => upsertAssistant(chunk),
-        onSources: (sources) => upsertAssistant("", sources),
+        onSources: (sources, trustedSources) => upsertAssistant("", sources, trustedSources),
       });
     } catch (error) {
       upsertAssistant(error instanceof Error ? error.message : "Noe gikk galt, prøv igjen.");

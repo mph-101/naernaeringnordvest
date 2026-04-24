@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, ArrowRight, ArrowLeft, User, Bot, FileText, Copy, Check, Share2 } from "lucide-react";
+import { Search, ArrowRight, ArrowLeft, User, Bot, FileText, Copy, Check, Share2, ExternalLink, Rss, Database, FileText as FileTextIcon, Globe } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-import { streamArticlesChat, type ArticleSource } from "@/lib/articles-chat";
+import { streamArticlesChat, type ArticleSource, type TrustedSource } from "@/lib/articles-chat";
 import { toast } from "@/hooks/use-toast";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
@@ -13,6 +13,7 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   sources?: ArticleSource[];
+  trustedSources?: TrustedSource[];
 }
 
 interface ConversationViewProps {
@@ -31,9 +32,17 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
   const [shareCopied, setShareCopied] = useState(false);
   const hasStarted = useRef(false);
 
-  const linkifyCitations = (content: string, sources?: ArticleSource[], assistantId?: string) => {
+  const linkifyCitations = (
+    content: string,
+    sources?: ArticleSource[],
+    trustedSources?: TrustedSource[],
+    assistantId?: string,
+  ) => {
     if (!content) return content;
-    const validNumbers = new Set((sources ?? []).map((s) => s.n));
+    const validNumbers = new Set<number>([
+      ...(sources ?? []).map((s) => s.n),
+      ...(trustedSources ?? []).map((s) => s.n),
+    ]);
     return content.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, group: string) => {
       const nums = group.split(",").map((n) => n.trim());
       const parts = nums.map((n) => {
@@ -65,14 +74,20 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
     const assistantId = crypto.randomUUID();
     let assistantContent = "";
     let assistantSources: ArticleSource[] | undefined;
+    let assistantTrustedSources: TrustedSource[] | undefined;
 
     setMessages(nextMessages);
     setInput("");
     setIsLoading(true);
 
-    const upsertAssistant = (chunk: string, sources?: ArticleSource[]) => {
+    const upsertAssistant = (
+      chunk: string,
+      sources?: ArticleSource[],
+      trustedSources?: TrustedSource[],
+    ) => {
       if (chunk) assistantContent += chunk;
       if (sources) assistantSources = sources;
+      if (trustedSources) assistantTrustedSources = trustedSources;
 
       setMessages((prev) => {
         const assistantMessage: Message = {
@@ -80,6 +95,7 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
           role: "assistant",
           content: assistantContent,
           sources: assistantSources,
+          trustedSources: assistantTrustedSources,
         };
         const existingIndex = prev.findIndex((message) => message.id === assistantId);
         if (existingIndex >= 0) {
@@ -93,7 +109,7 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
       await streamArticlesChat({
         messages: nextMessages.map(({ role, content }) => ({ role, content })),
         onContent: (chunk) => upsertAssistant(chunk),
-        onSources: (sources) => upsertAssistant("", sources),
+        onSources: (sources, trustedSources) => upsertAssistant("", sources, trustedSources),
       });
     } catch (error) {
       upsertAssistant(error instanceof Error ? error.message : "Noe gikk galt, prøv igjen.");
@@ -115,10 +131,14 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
 
   const buildPlainText = (message: Message) => {
     const stripped = message.content.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_m, g) => `[${g}]`);
-    if (!message.sources?.length) return stripped;
-    const sourceLines = message.sources
-      .map((s) => `[${s.n}] ${s.title}${s.author ? ` — ${s.author}` : ""}`)
-      .join("\n");
+    const articleLines = (message.sources ?? []).map(
+      (s) => `[${s.n}] ${s.title}${s.author ? ` — ${s.author}` : ""}`,
+    );
+    const trustedLines = (message.trustedSources ?? []).map(
+      (s) => `[${s.n}] ${s.title || s.source_name} — ${s.source_name}${s.source_url ? ` (${s.source_url})` : ""}`,
+    );
+    const sourceLines = [...articleLines, ...trustedLines].join("\n");
+    if (!sourceLines) return stripped;
     return `${stripped}\n\n${t.sources}:\n${sourceLines}`;
   };
 
@@ -202,6 +222,7 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                             if (isCitation) {
                               const num = Number(href!.split("-").pop());
                               const source = message.sources?.find((s) => s.n === num);
+                              const trusted = !source ? message.trustedSources?.find((s) => s.n === num) : undefined;
                               const link = (
                                 <a
                                   href={href}
@@ -211,8 +232,8 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                                   {children}
                                 </a>
                               );
-                              if (!source) return link;
-                              return (
+                              if (source) {
+                                return (
                                 <HoverCard openDelay={150} closeDelay={80}>
                                   <HoverCardTrigger asChild>{link}</HoverCardTrigger>
                                   <HoverCardContent
@@ -245,21 +266,75 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                                     </div>
                                   </HoverCardContent>
                                 </HoverCard>
-                              );
+                                );
+                              }
+                              if (trusted) {
+                                const TypeIcon = trusted.source_type === "rss" ? Rss
+                                  : trusted.source_type === "api" ? Database
+                                  : trusted.source_type === "document" ? FileTextIcon
+                                  : Globe;
+                                return (
+                                  <HoverCard openDelay={150} closeDelay={80}>
+                                    <HoverCardTrigger asChild>{link}</HoverCardTrigger>
+                                    <HoverCardContent
+                                      side="top"
+                                      align="center"
+                                      className="w-80 p-4 bg-card border border-border shadow-soft"
+                                    >
+                                      <div className="space-y-2">
+                                        <div className="flex items-baseline gap-2">
+                                          <span className="font-mono text-xs text-muted-foreground shrink-0">[{trusted.n}]</span>
+                                          {trusted.source_url ? (
+                                            <a
+                                              href={trusted.source_url}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="font-headline text-sm font-semibold text-headline hover:text-primary transition-colors leading-snug inline-flex items-baseline gap-1"
+                                            >
+                                              {trusted.title || trusted.source_name}
+                                              <ExternalLink className="w-3 h-3 self-center" />
+                                            </a>
+                                          ) : (
+                                            <span className="font-headline text-sm font-semibold text-headline leading-snug">
+                                              {trusted.title || trusted.source_name}
+                                            </span>
+                                          )}
+                                        </div>
+                                        {trusted.content && (
+                                          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+                                            {trusted.content}
+                                          </p>
+                                        )}
+                                        <div className="flex items-center gap-1.5 pt-1 text-xs text-muted-foreground">
+                                          <TypeIcon className="w-3 h-3" />
+                                          <span>{trusted.source_name}</span>
+                                          {trusted.published_at && (
+                                            <>
+                                              <span>·</span>
+                                              <span>{new Date(trusted.published_at).toLocaleDateString(language === "no" ? "nb-NO" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </HoverCardContent>
+                                  </HoverCard>
+                                );
+                              }
+                              return link;
                             }
                             return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{children}</a>;
                           },
                         }}
                       >
-                        {linkifyCitations(message.content, message.sources, message.id)}
+                        {linkifyCitations(message.content, message.sources, message.trustedSources, message.id)}
                       </ReactMarkdown>
                     </div>
                   )}
-                  {message.sources && (
+                  {((message.sources && message.sources.length > 0) || (message.trustedSources && message.trustedSources.length > 0)) && (
                     <div className="mt-4 pt-4 border-t border-border">
                       <p className="font-subhead text-sm text-muted-foreground mb-3 flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" />{t.sources}</p>
                       <ol className="space-y-2">
-                        {message.sources.map((source) => (
+                        {(message.sources ?? []).map((source) => (
                           <li key={source.id} id={`src-${message.id}-${source.n}`} className="text-sm leading-relaxed scroll-mt-24">
                             <span className="text-muted-foreground font-mono mr-2">[{source.n}]</span>
                             <Link to={`/article/${source.id}`} className="text-primary hover:underline">
@@ -268,6 +343,38 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                             {source.author && <span className="text-muted-foreground"> — {source.author}</span>}
                           </li>
                         ))}
+                        {(message.trustedSources ?? []).map((trusted) => {
+                          const TypeIcon = trusted.source_type === "rss" ? Rss
+                            : trusted.source_type === "api" ? Database
+                            : trusted.source_type === "document" ? FileTextIcon
+                            : Globe;
+                          const label = trusted.title || trusted.source_name;
+                          return (
+                            <li
+                              key={`trusted-${trusted.n}`}
+                              id={`src-${message.id}-${trusted.n}`}
+                              className="text-sm leading-relaxed scroll-mt-24 flex items-baseline gap-2"
+                            >
+                              <span className="text-muted-foreground font-mono">[{trusted.n}]</span>
+                              <TypeIcon className="w-3 h-3 text-muted-foreground translate-y-0.5 shrink-0" />
+                              {trusted.source_url ? (
+                                <a
+                                  href={trusted.source_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline inline-flex items-baseline gap-1"
+                                  title={trusted.source_url}
+                                >
+                                  {label}
+                                  <ExternalLink className="w-3 h-3 self-center" />
+                                </a>
+                              ) : (
+                                <span className="text-foreground">{label}</span>
+                              )}
+                              <span className="text-muted-foreground text-xs"> — {trusted.source_name}</span>
+                            </li>
+                          );
+                        })}
                       </ol>
                     </div>
                   )}

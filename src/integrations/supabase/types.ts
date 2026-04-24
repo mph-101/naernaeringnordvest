@@ -1532,6 +1532,113 @@ export type Database = {
         }
         Relationships: []
       }
+      trusted_source_documents: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string
+          id: string
+          metadata: Json
+          published_at: string | null
+          search_tsv: unknown
+          source_id: string
+          source_url: string | null
+          title: string | null
+        }
+        Insert: {
+          chunk_index?: number
+          content: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          published_at?: string | null
+          search_tsv?: unknown
+          source_id: string
+          source_url?: string | null
+          title?: string | null
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          published_at?: string | null
+          search_tsv?: unknown
+          source_id?: string
+          source_url?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trusted_source_documents_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "trusted_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trusted_sources: {
+        Row: {
+          active: boolean
+          api_config: Json | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          index_strategy: string
+          last_index_error: string | null
+          last_indexed_at: string | null
+          name: string
+          priority: number
+          refresh_interval_hours: number
+          source_type: string
+          storage_path: string | null
+          tags: string[]
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          active?: boolean
+          api_config?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          index_strategy?: string
+          last_index_error?: string | null
+          last_indexed_at?: string | null
+          name: string
+          priority?: number
+          refresh_interval_hours?: number
+          source_type: string
+          storage_path?: string | null
+          tags?: string[]
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          active?: boolean
+          api_config?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          index_strategy?: string
+          last_index_error?: string | null
+          last_indexed_at?: string | null
+          name?: string
+          priority?: number
+          refresh_interval_hours?: number
+          source_type?: string
+          storage_path?: string | null
+          tags?: string[]
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       user_events: {
         Row: {
           event_data: Json
@@ -1715,6 +1822,21 @@ export type Database = {
           published_at: string
           rank: number
           region_slug: string
+          title: string
+        }[]
+      }
+      search_trusted_sources: {
+        Args: { match_count?: number; query_text: string }
+        Returns: {
+          content: string
+          document_id: string
+          priority: number
+          published_at: string
+          rank: number
+          source_id: string
+          source_name: string
+          source_type: string
+          source_url: string
           title: string
         }[]
       }

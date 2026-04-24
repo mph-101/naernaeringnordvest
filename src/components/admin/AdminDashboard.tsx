@@ -14,7 +14,8 @@ import {
   X,
   BarChart3,
   UserCog,
-  ImageIcon
+  ImageIcon,
+  Library
 } from "lucide-react";
 import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
@@ -23,6 +24,7 @@ import { JobChangeReview } from "./JobChangeReview";
 import { FactBoxesManager } from "./FactBoxesManager";
 import { TagsManager } from "./TagsManager";
 import { SourcesManager } from "./SourcesManager";
+import { TrustedSourcesManager } from "./TrustedSourcesManager";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
 import { UsersManager } from "./UsersManager";
 import { MediaArchive } from "./MediaArchive";
@@ -34,7 +36,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources" | "analytics" | "users" | "media";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const { hasRole } = useAuth();
@@ -58,6 +60,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "analytics" as View, label: "Analyse", icon: BarChart3 },
     { id: "articles" as View, label: "Artikler", icon: FileText },
     { id: "sources" as View, label: "Kilder & AI", icon: Sparkles },
+    { id: "trusted-sources" as View, label: "Betrodde kilder", icon: Library },
     { id: "fact-boxes" as View, label: "Faktabokser", icon: BookOpen },
     { id: "media" as View, label: "Mediearkiv", icon: ImageIcon },
     { id: "tags" as View, label: "Tags", icon: TagIcon },
@@ -163,6 +166,12 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 onClick={() => setView("sources")}
               />
               <DashboardCard
+                title="Betrodde kilder"
+                description="Eksterne kilder chatboten kan bruke"
+                icon={Library}
+                onClick={() => setView("trusted-sources")}
+              />
+              <DashboardCard
                 title="Faktabokser"
                 description="Gjenbrukbart faktaboks-bibliotek"
                 icon={BookOpen}
@@ -236,6 +245,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "sources" && (
           <SourcesManager />
+        )}
+
+        {view === "trusted-sources" && (
+          <TrustedSourcesManager />
         )}
 
         {view === "media" && (

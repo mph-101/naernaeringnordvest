@@ -16,6 +16,7 @@ const corsHeaders = {
 const CHAT_MODEL = "google/gemini-3-flash-preview";
 const QUERY_REWRITE_MODEL = "google/gemini-2.5-flash-lite";
 const MATCH_COUNT = 6;
+const TRUSTED_MATCH_COUNT = 4;
 
 function stripHtml(html: string): string {
   return html
@@ -92,17 +93,31 @@ serve(async (req) => {
       published_at: string | null;
       rank: number;
     }> = [];
+    let trustedSources: Array<{
+      n: number;
+      source_name: string;
+      source_type: string;
+      title: string | null;
+      content: string;
+      source_url: string | null;
+      published_at: string | null;
+    }> = [];
     let contextBlock = "";
+    let trustedBlock = "";
 
     if (queryText.trim().length > 2) {
       try {
         const searchTerms = await extractSearchTerms(queryText, LOVABLE_API_KEY);
         console.log("articles-chat: search terms =", searchTerms);
-        const { data: matches, error: matchErr } = await supabase.rpc("search_articles", {
-          query_text: searchTerms,
-          match_count: MATCH_COUNT,
-        });
+        const [
+          { data: matches, error: matchErr },
+          { data: trusted, error: trustedErr },
+        ] = await Promise.all([
+          supabase.rpc("search_articles", { query_text: searchTerms, match_count: MATCH_COUNT }),
+          supabase.rpc("search_trusted_sources", { query_text: searchTerms, match_count: TRUSTED_MATCH_COUNT }),
+        ]);
         if (matchErr) console.error("search_articles error:", matchErr);
+        if (trustedErr) console.error("search_trusted_sources error:", trustedErr);
 
         sources = (matches || []).map((m: any, i: number) => ({
           n: i + 1,
@@ -121,6 +136,24 @@ serve(async (req) => {
             return `[${i + 1}] "${m.title}" — ${m.author}${date ? `, ${date}` : ""}\nIngress: ${m.excerpt}\nUtdrag: ${body}`;
           })
           .join("\n\n---\n\n");
+
+        const baseN = sources.length;
+        trustedSources = (trusted || []).map((t: any, i: number) => ({
+          n: baseN + i + 1,
+          source_name: t.source_name,
+          source_type: t.source_type,
+          title: t.title,
+          content: t.content,
+          source_url: t.source_url,
+          published_at: t.published_at,
+        }));
+        trustedBlock = (trusted || [])
+          .map((t: any, i: number) => {
+            const date = t.published_at ? new Date(t.published_at).toISOString().slice(0, 10) : "";
+            const snippet = (t.content || "").slice(0, 1000);
+            return `[${baseN + i + 1}] ${t.title || t.source_name} — kilde: ${t.source_name}${date ? `, ${date}` : ""}\n${snippet}`;
+          })
+          .join("\n\n---\n\n");
       } catch (e) {
         console.error("retrieval failed:", e);
       }
@@ -135,7 +168,7 @@ Regler:
 - Aldri dikt opp tall, navn eller hendelser som ikke står i kildene.
 - Skriv kort: gjerne en oppsummerende setning, deretter kulepunkter eller en kort tabell hvis det passer.
 
-${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}` : "Ingen relevante artikler ble funnet i arkivet for dette spørsmålet."}`;
+${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}\n\n` : ""}${trustedSources.length > 0 ? `BETRODDE EKSTERNE KILDER (kuratert av redaksjonen):\n\n${trustedBlock}` : ""}${sources.length === 0 && trustedSources.length === 0 ? "Ingen relevante artikler eller betrodde kilder ble funnet for dette spørsmålet." : ""}`;
 
     const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -180,7 +213,7 @@ ${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contex
             controller.enqueue(value);
           }
           // Send our sources as a synthetic SSE event the client knows about
-          const sourcesPayload = `event: sources\ndata: ${JSON.stringify({ sources })}\n\n`;
+          const sourcesPayload = `event: sources\ndata: ${JSON.stringify({ sources, trustedSources })}\n\n`;
           controller.enqueue(encoder.encode(sourcesPayload));
         } catch (e) {
           console.error("stream pipe error:", e);

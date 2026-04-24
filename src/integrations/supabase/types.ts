@@ -252,6 +252,86 @@ export type Database = {
           },
         ]
       }
+      article_variant_events: {
+        Row: {
+          article_id: string
+          event_type: string
+          id: string
+          occurred_at: string
+          session_id: string
+          user_id: string | null
+          variant_key: string
+        }
+        Insert: {
+          article_id: string
+          event_type: string
+          id?: string
+          occurred_at?: string
+          session_id: string
+          user_id?: string | null
+          variant_key: string
+        }
+        Update: {
+          article_id?: string
+          event_type?: string
+          id?: string
+          occurred_at?: string
+          session_id?: string
+          user_id?: string | null
+          variant_key?: string
+        }
+        Relationships: []
+      }
+      article_variants: {
+        Row: {
+          active: boolean
+          article_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          image_crop: Json | null
+          image_focal: Json | null
+          image_url: string | null
+          title: string | null
+          updated_at: string
+          variant_key: string
+        }
+        Insert: {
+          active?: boolean
+          article_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_crop?: Json | null
+          image_focal?: Json | null
+          image_url?: string | null
+          title?: string | null
+          updated_at?: string
+          variant_key: string
+        }
+        Update: {
+          active?: boolean
+          article_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_crop?: Json | null
+          image_focal?: Json | null
+          image_url?: string | null
+          title?: string | null
+          updated_at?: string
+          variant_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_variants_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       article_views: {
         Row: {
           article_id: string
@@ -1975,6 +2055,16 @@ export type Database = {
           daily_active_users: number
           day: string
           new_signups: number
+        }[]
+      }
+      article_variant_stats: {
+        Args: { _article_id: string }
+        Returns: {
+          completion_rate: number
+          completions: number
+          impressions: number
+          unique_sessions: number
+          variant_key: string
         }[]
       }
       create_api_key: {

@@ -17,6 +17,7 @@ import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/articles";
 import { supabase } from "@/integrations/supabase/client";
 import { useArticleTracking } from "@/hooks/useArticleTracking";
+import { useArticleVariant, logVariantCompleted } from "@/hooks/useArticleVariant";
 
 interface ArticleData {
   id: string;
@@ -62,6 +63,8 @@ const Article = () => {
   const [hasFullAccess, setHasFullAccess] = useState(false);
   const [previewBody, setPreviewBody] = useState<string | null>(null);
   const [previewBodyEn, setPreviewBodyEn] = useState<string | null>(null);
+  const variant = useArticleVariant(article?.id);
+  const completedRef = useState({ done: false })[0];
 
   useEffect(() => {
     if (!id) return;
@@ -108,6 +111,16 @@ const Article = () => {
   // Track view, read time, scroll depth + funnel events
   useArticleTracking(article?.id, !!article?.premium);
 
+  // Mark the assigned A/B variant as "completed" once the reader scrolls
+  // past the body. We rely on the read-progress signal already tracked.
+  useEffect(() => {
+    if (!article?.id || !variant || completedRef.done) return;
+    if (readProgress >= 80) {
+      completedRef.done = true;
+      logVariantCompleted(article.id, variant.variant_key);
+    }
+  }, [readProgress, article?.id, variant, completedRef]);
+
   if (loading || (article?.premium && !accessChecked)) {
     return (
       <div className="min-h-screen bg-background">
@@ -142,7 +155,9 @@ const Article = () => {
   }
 
   // Resolve language-aware fields
-  const title = language === "en" && article.title_en ? article.title_en : article.title;
+  const baselineTitle = language === "en" && article.title_en ? article.title_en : article.title;
+  // For variant B, use the alternative title only on the Norwegian view.
+  const title = variant?.variant_key === "B" && variant.title && language === "no" ? variant.title : baselineTitle;
   const excerpt = language === "en" && article.excerpt_en ? article.excerpt_en : article.excerpt;
   const fullBody = language === "en" && article.body_en ? article.body_en : article.body;
   const preview = language === "en" && previewBodyEn ? previewBodyEn : previewBody;
@@ -150,9 +165,13 @@ const Article = () => {
   const keyPoints: string[] = language === "en" && article.key_points_en?.length ? article.key_points_en : (article.key_points || []);
   const publishedAt = article.published_at ? timeAgo(article.published_at, language) : "";
   const readTime = article.read_time || "";
-  const heroImage = article.image_url ? `url(${article.image_url})` : getArticleImage(article.id, article.category);
-  const heroPosition = article.image_url
-    ? cropToObjectPosition(parseCrop(article.image_crop), parseFocal(article.image_focal))
+  const variantImageUrl = variant?.variant_key === "B" ? variant.image_url ?? null : null;
+  const effectiveImageUrl = variantImageUrl || article.image_url;
+  const effectiveCrop = variantImageUrl ? variant?.image_crop ?? null : article.image_crop;
+  const effectiveFocal = variantImageUrl ? variant?.image_focal ?? null : article.image_focal;
+  const heroImage = effectiveImageUrl ? `url(${effectiveImageUrl})` : getArticleImage(article.id, article.category);
+  const heroPosition = effectiveImageUrl
+    ? cropToObjectPosition(parseCrop(effectiveCrop), parseFocal(effectiveFocal))
     : "center";
 
   const BackButton = () => (

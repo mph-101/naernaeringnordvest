@@ -177,8 +177,8 @@ export const ArticleVariantsManager = ({ articleId, baselineTitle, baselineImage
               <div>
                 <Label className="text-xs">Alternativt bilde</Label>
                 <ImageUpload
-                  value={draft.image_url}
-                  onChange={(url) => setDraft((d) => ({ ...d, image_url: url }))}
+                  currentUrl={draft.image_url}
+                  onUpload={(url) => setDraft((d) => ({ ...d, image_url: url }))}
                 />
               </div>
             </div>

@@ -61,7 +61,9 @@ export function useArticleVariant(articleId: string | undefined): ResolvedVarian
 
       setVariant(resolved);
 
-      // Fire impression once per session per article
+      // Only log impressions when there is actually an active B variant —
+      // otherwise the test isn't running and stats would be meaningless.
+      if (!hasB) return;
       try {
         const sessionId = getSessionId();
         const impressionKey = `${STORAGE_PREFIX}imp_${articleId}`;

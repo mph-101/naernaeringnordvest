@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, User, Calendar, Lock, BookOpen } from "lucide-react";
+import { ArrowLeft, Lock, BookOpen } from "lucide-react";
 import { Header } from "@/components/Header";
+import { ArticleByline } from "@/components/ArticleByline";
 import { ArticleDiscussion } from "@/components/ArticleDiscussion";
 import { TagChips } from "@/components/TagChips";
 import { ArticleNotes } from "@/components/ArticleNotes";
@@ -161,21 +162,6 @@ const Article = () => {
     </button>
   );
 
-  const ArticleMeta = ({ showBorder = false }: { showBorder?: boolean }) => (
-    <div className={`flex items-center gap-4 text-sm text-muted-foreground font-body ${showBorder ? "mb-8 pb-8 border-b border-border" : "mb-10"}`}>
-      <span className="flex items-center gap-2">
-        <div className="w-7 h-7 bg-accent/10 rounded-full flex items-center justify-center">
-          <User className="w-3.5 h-3.5 text-accent" />
-        </div>
-        <span className="font-subhead font-medium text-foreground">{article.author}</span>
-      </span>
-      <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-      <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />{publishedAt}</span>
-      <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-      <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{readTime}</span>
-    </div>
-  );
-
   // Check if body contains HTML
   const isHtml = /<[a-z][\s\S]*>/i.test(body);
   const showPaywall = article.premium && !hasFullAccess;
@@ -202,7 +188,9 @@ const Article = () => {
       <article className="max-w-xl mx-auto px-6 pt-10 pb-14">
         <BackButton />
         <h1 className="font-headline text-2xl md:text-3xl lg:text-4xl font-bold text-headline leading-[1.15] mb-6 animate-fade-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>{title}</h1>
-        <div className="animate-fade-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}><ArticleMeta /></div>
+        <div className="animate-fade-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
+          <ArticleByline authorName={article.author} publishedAt={publishedAt} readTime={readTime} />
+        </div>
 
         {keyPoints.length > 0 && (
           <div className="bg-card rounded-2xl p-7 mb-12 border border-border shadow-soft animate-fade-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>

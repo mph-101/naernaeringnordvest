@@ -151,6 +151,52 @@ async function fetchBtc() {
   };
 }
 
+// --- KPI (inflasjon) via SSB tabell 03013, 12-mnd endring totalindeks ---
+async function fetchCpi() {
+  try {
+    const res = await fetch("https://data.ssb.no/api/v0/no/table/03013", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: [
+          { code: "Konsumgrp", selection: { filter: "item", values: ["TOTAL"] } },
+          {
+            code: "ContentsCode",
+            selection: { filter: "item", values: ["TolvmanedersEndring"] },
+          },
+          { code: "Tid", selection: { filter: "top", values: ["1"] } },
+        ],
+        response: { format: "json-stat2" },
+      }),
+    });
+    if (!res.ok) return null;
+    const raw: any = await res.json();
+    const values: (number | null)[] = raw?.value || [];
+    const timeCat = raw?.dimension?.Tid?.category;
+    if (!values.length || !timeCat) return null;
+    // Last non-null value
+    let lastIdx = -1;
+    for (let i = values.length - 1; i >= 0; i--) {
+      if (values[i] != null) { lastIdx = i; break; }
+    }
+    if (lastIdx < 0) return null;
+    const timeKeys = Object.keys(timeCat.index).sort(
+      (a, b) => timeCat.index[a] - timeCat.index[b],
+    );
+    // The time index of lastIdx within Tid dimension — single content/group, so
+    // the index in `value` corresponds directly to the time order.
+    const timeKey = timeKeys[lastIdx] ?? timeKeys[timeKeys.length - 1];
+    const period = timeCat.label?.[timeKey] ?? timeKey;
+    return {
+      pct: Math.round((values[lastIdx] as number) * 10) / 10,
+      period,
+    };
+  } catch (e) {
+    console.error("cpi fetch failed", e);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -164,12 +210,13 @@ Deno.serve(async (req) => {
     return json({ ...cache.payload, cached: true });
   }
 
-  const [power, fx, policyRate, brent, btc] = await Promise.all([
+  const [power, fx, policyRate, brent, btc, cpi] = await Promise.all([
     fetchPower(),
     fetchFx(),
     fetchPolicyRate(),
     fetchBrent(),
     fetchBtc(),
+    fetchCpi(),
   ]);
 
   const payload = {
@@ -179,6 +226,7 @@ Deno.serve(async (req) => {
     policy_rate: policyRate,
     brent,
     btc,
+    cpi,
     cached: false,
   };
 

@@ -1,10 +1,10 @@
 // Norwegian housing-market data aggregator (SSB).
 // Sources:
 //   - 07221: Boligprisindeks (kvartalsvis, brukte boliger), nasjonalt
-//   - 10996: Igangsatte boliger (månedlig), nasjonalt
+//   - 05940: Igangsatte boliger (årlig), nasjonalt
 //   - 11597: Husholdningenes innenlandske lånegjeld K2 (månedlig, 12-mnd vekst %)
 // 6-hour in-memory cache per cold instance. Region cuts only apply to 07221;
-// 10996 and 11597 are national. The "region" parameter is forwarded so the
+// 05940 and 11597 are national. The "region" parameter is forwarded so the
 // frontend can display the user's region label, but other series remain national.
 
 const corsHeaders = {
@@ -140,13 +140,15 @@ async function fetchHousePriceIndex() {
   };
 }
 
-// 10996: Igangsatte boliger, nasjonalt, månedlig (ujustert)
+// 05940: Igangsatte boliger, nasjonalt, årlig (alle bygningstyper)
 async function fetchHousingStarts() {
-  const raw = await ssbPost("10996", [
-    { code: "ContentsCode", selection: { filter: "item", values: ["BoligIgang"] } },
+  const raw = await ssbPost("05940", [
+    { code: "Region", selection: { filter: "item", values: ["0"] } },
+    { code: "Byggeareal", selection: { filter: "item", values: ["111"] } },
+    { code: "ContentsCode", selection: { filter: "item", values: ["Igangsatte"] } },
     { code: "Tid", selection: { filter: "top", values: ["3"] } },
   ]);
-  return pickLatest(raw, "BoligIgang");
+  return pickLatest(raw, "Igangsatte");
 }
 
 // 11597: Husholdningenes innenlandske lånegjeld (K2), 12-måneders vekst (%)

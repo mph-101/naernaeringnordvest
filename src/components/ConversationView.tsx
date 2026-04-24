@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, ArrowRight, ArrowLeft, User, Bot, FileText, Copy, Check, Share2 } from "lucide-react";
+import { Search, ArrowRight, ArrowLeft, User, Bot, FileText, Copy, Check, Share2, ExternalLink, Rss, Database, FileText as FileTextIcon, Globe } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-import { streamArticlesChat, type ArticleSource } from "@/lib/articles-chat";
+import { streamArticlesChat, type ArticleSource, type TrustedSource } from "@/lib/articles-chat";
 import { toast } from "@/hooks/use-toast";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
@@ -13,6 +13,7 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   sources?: ArticleSource[];
+  trustedSources?: TrustedSource[];
 }
 
 interface ConversationViewProps {

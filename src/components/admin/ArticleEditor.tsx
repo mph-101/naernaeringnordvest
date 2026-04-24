@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2, Undo2, ExternalLink, Crop as CropIcon } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2, Undo2, ExternalLink, Crop as CropIcon, Eye } from "lucide-react";
+import { ArticlePreviewDialog } from "./ArticlePreviewDialog";
 import { Dialog as ImproveDialog, DialogContent as ImproveDialogContent, DialogHeader as ImproveDialogHeader, DialogTitle as ImproveDialogTitle, DialogFooter as ImproveDialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -133,6 +134,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     region_slug: null as string | null,
   });
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [sharedRegions, setSharedRegions] = useState<string[]>([]);
   const [forkedFromArticleId, setForkedFromArticleId] = useState<string | null>(null);
   const [forkedFromTitle, setForkedFromTitle] = useState<string | null>(null);
@@ -1153,16 +1155,26 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </div>
         )}
 
+        <button
+          type="button"
+          onClick={() => setPreviewDialogOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-subhead font-medium text-foreground bg-card hover:bg-muted border border-border rounded-full transition-colors"
+          title="Live forhåndsvisning av usav nede endringer"
+        >
+          <Eye className="w-3.5 h-3.5" />
+          Live preview
+        </button>
+
         {(articleId || currentArticleId) && (
           <a
             href={`/article/${articleId || currentArticleId}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-subhead font-medium text-foreground bg-card hover:bg-muted border border-border rounded-full transition-colors"
-            title={form.status === "published" ? "Åpne publisert artikkel i ny fane" : "Åpne forhåndsvisning av kladd i ny fane"}
+            title={form.status === "published" ? "Åpne publisert artikkel i ny fane" : "Åpne lagret kladd i ny fane"}
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            {form.status === "published" ? "Gå til artikkel" : "Forhåndsvis"}
+            {form.status === "published" ? "Gå til artikkel" : "Åpne lagret"}
           </a>
         )}
 
@@ -1911,6 +1923,24 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </Button>
         </div>
       </form>
+
+      <ArticlePreviewDialog
+        open={previewDialogOpen}
+        onOpenChange={setPreviewDialogOpen}
+        article={{
+          id: currentArticleId,
+          title: form.title,
+          excerpt: form.excerpt,
+          body: composedBody || form.body,
+          category: form.category,
+          author: form.author,
+          read_time: form.read_time,
+          image_url: form.image_url,
+          image_crop: form.image_crop,
+          image_focal: form.image_focal,
+          key_points: form.key_points,
+        }}
+      />
 
       <Dialog
         open={chartDialogOpen}

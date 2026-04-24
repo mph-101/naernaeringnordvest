@@ -1230,10 +1230,16 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               {STATUS_CONFIG[s].label}
             </button>
           ))}
+          <PrePublishChecklist items={publishChecklist} variant="compact" />
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Pre-publish checklist — surfaced when not yet published so editors
+            can see exactly what's missing without hunting through fields. */}
+        {form.status !== "published" && !canPublish && (
+          <PrePublishChecklist items={publishChecklist} variant="card" />
+        )}
         {/* Featured Image */}
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-4">
           <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">Hovedbilde</h3>

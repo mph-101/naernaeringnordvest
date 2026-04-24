@@ -156,14 +156,14 @@ export function IdrettAIChat() {
                     </div>
                   )}
                 </div>
-                {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
+                {msg.role === "assistant" && ((msg.sources && msg.sources.length > 0) || (msg.trustedSources && msg.trustedSources.length > 0)) && (
                   <div className="basis-full pl-9">
                     <div className="mt-2 p-2.5 rounded-xl bg-muted/50 border border-border/50">
                       <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
                         <FileText className="w-3 h-3" /> Kilder
                       </p>
                       <ol className="space-y-1">
-                        {msg.sources.map((s) => (
+                        {(msg.sources ?? []).map((s) => (
                           <li key={s.id} className="text-[11px] leading-snug">
                             <span className="text-muted-foreground font-mono mr-1">[{s.n}]</span>
                             <Link
@@ -176,6 +176,34 @@ export function IdrettAIChat() {
                             {s.author && <span className="text-muted-foreground"> — {s.author}</span>}
                           </li>
                         ))}
+                        {(msg.trustedSources ?? []).map((t) => {
+                          const TypeIcon = t.source_type === "rss" ? Rss
+                            : t.source_type === "api" ? Database
+                            : t.source_type === "document" ? FileText
+                            : Globe;
+                          const label = t.title || t.source_name;
+                          return (
+                            <li key={`t-${t.n}`} className="text-[11px] leading-snug flex items-baseline gap-1">
+                              <span className="text-muted-foreground font-mono">[{t.n}]</span>
+                              <TypeIcon className="w-2.5 h-2.5 text-muted-foreground translate-y-0.5 shrink-0" />
+                              {t.source_url ? (
+                                <a
+                                  href={t.source_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline inline-flex items-baseline gap-0.5"
+                                  title={t.source_url}
+                                >
+                                  {label}
+                                  <ExternalLink className="w-2.5 h-2.5 self-center" />
+                                </a>
+                              ) : (
+                                <span className="text-foreground">{label}</span>
+                              )}
+                              <span className="text-muted-foreground"> — {t.source_name}</span>
+                            </li>
+                          );
+                        })}
                       </ol>
                     </div>
                   </div>

@@ -24,6 +24,7 @@ const safeFetch = async (url: string, init?: RequestInit) => {
   try {
     const res = await fetch(url, {
       ...init,
+      signal: AbortSignal.timeout(8000),
       headers: {
         "User-Agent": "naer-naering/1.0 (market-ticker)",
         Accept: "application/json",
@@ -120,7 +121,9 @@ async function fetchPolicyRate() {
 // --- Olje (Brent) i USD via Stooq CSV (gratis, ingen nøkkel) ---
 async function fetchBrent() {
   try {
-    const res = await fetch("https://stooq.com/q/l/?s=cb.f&f=sd2t2ohlcv&h&e=csv");
+    const res = await fetch("https://stooq.com/q/l/?s=cb.f&f=sd2t2ohlcv&h&e=csv", {
+      signal: AbortSignal.timeout(8000),
+    });
     if (!res.ok) return null;
     const csv = await res.text();
     const lines = csv.trim().split("\n");
@@ -156,6 +159,7 @@ async function fetchCpi() {
   try {
     const res = await fetch("https://data.ssb.no/api/v0/no/table/03013", {
       method: "POST",
+      signal: AbortSignal.timeout(8000),
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         query: [

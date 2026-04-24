@@ -134,6 +134,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     region_slug: null as string | null,
   });
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [sharedRegions, setSharedRegions] = useState<string[]>([]);
   const [forkedFromArticleId, setForkedFromArticleId] = useState<string | null>(null);
   const [forkedFromTitle, setForkedFromTitle] = useState<string | null>(null);

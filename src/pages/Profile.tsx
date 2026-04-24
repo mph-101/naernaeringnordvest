@@ -4,6 +4,7 @@ import { User, StickyNote, Users, LogOut, Loader2, Trash2, Globe, Lock, Settings
 import { Header } from "@/components/Header";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { ApiKeysSection } from "@/components/ApiKeysSection";
+import { SubscriptionSection } from "@/components/SubscriptionSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme, HideableElement } from "@/hooks/useTheme";
 import { toast } from "sonner";
@@ -445,6 +446,8 @@ const Profile = () => {
         {/* Settings Tab */}
         {activeTab === "settings" && (
           <div className="space-y-6">
+            <SubscriptionSection isNo={isNo} />
+
             <div className="bg-card border border-border rounded-xl p-6">
               <h3 className="font-headline text-lg font-semibold text-headline mb-1">{t.visibilityTitle}</h3>
               <p className="text-sm text-muted-foreground font-body mb-5">{t.visibilityDesc}</p>

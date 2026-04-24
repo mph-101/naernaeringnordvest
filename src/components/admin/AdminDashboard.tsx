@@ -36,7 +36,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources" | "analytics" | "users" | "media";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const { hasRole } = useAuth();
@@ -60,6 +60,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "analytics" as View, label: "Analyse", icon: BarChart3 },
     { id: "articles" as View, label: "Artikler", icon: FileText },
     { id: "sources" as View, label: "Kilder & AI", icon: Sparkles },
+    { id: "trusted-sources" as View, label: "Betrodde kilder", icon: Library },
     { id: "fact-boxes" as View, label: "Faktabokser", icon: BookOpen },
     { id: "media" as View, label: "Mediearkiv", icon: ImageIcon },
     { id: "tags" as View, label: "Tags", icon: TagIcon },

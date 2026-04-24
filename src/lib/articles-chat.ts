@@ -94,7 +94,10 @@ export async function streamArticlesChat({
       try {
         const parsed = JSON.parse(jsonStr);
         if (currentEvent === "sources" && Array.isArray(parsed.sources)) {
-          onSources?.(parsed.sources as ArticleSource[]);
+          onSources?.(
+            parsed.sources as ArticleSource[],
+            (parsed.trustedSources as TrustedSource[]) || [],
+          );
           continue;
         }
 

@@ -1,12 +1,11 @@
 // Norwegian housing-market data aggregator (SSB).
 // Sources:
-//   - 07221: Boligprisindeks (kvartalsvis, brukte boliger), nasjonalt + region
-//   - 05940: Igangsatte boliger (månedlig), nasjonalt
-//   - 10945: Husholdningenes gjeld K2 (månedlig, prosent endring), nasjonalt
+//   - 07221: Boligprisindeks (kvartalsvis, brukte boliger), nasjonalt
+//   - 10996: Igangsatte boliger (månedlig), nasjonalt
+//   - 11597: Husholdningenes innenlandske lånegjeld K2 (månedlig, 12-mnd vekst %)
 // 6-hour in-memory cache per cold instance. Region cuts only apply to 07221;
-// 05940 and 10945 are national. The "region" parameter is forwarded so the
-// frontend can display the user's region label, but 05940/10945 are returned
-// as national series.
+// 10996 and 11597 are national. The "region" parameter is forwarded so the
+// frontend can display the user's region label, but other series remain national.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -87,12 +86,13 @@ const pickLatest = (raw: any, contentsKey: string) => {
   return null;
 };
 
-// 07221: Boligprisindeks (2015=100), brukte boliger, alle boligtyper.
+// 07221: Boligprisindeks (2015=100), brukte boliger, alle boligtyper, hele landet.
 // Returns latest index value + YoY change vs same quarter previous year.
 async function fetchHousePriceIndex() {
   const raw = await ssbPost("07221", [
+    { code: "Region", selection: { filter: "item", values: ["TOTAL"] } },
     { code: "Boligtype", selection: { filter: "item", values: ["00"] } },
-    { code: "ContentsCode", selection: { filter: "item", values: ["KvPris"] } },
+    { code: "ContentsCode", selection: { filter: "item", values: ["Boligindeks"] } },
     { code: "Tid", selection: { filter: "top", values: ["5"] } },
   ]);
   if (!raw?.dimension) return { latest: null, yoy: null };
@@ -140,24 +140,24 @@ async function fetchHousePriceIndex() {
   };
 }
 
-// 05940: Igangsatte boliger, nasjonalt, månedlig
+// 10996: Igangsatte boliger, nasjonalt, månedlig (ujustert)
 async function fetchHousingStarts() {
-  const raw = await ssbPost("05940", [
-    { code: "Region", selection: { filter: "item", values: ["0"] } },
-    { code: "ContentsCode", selection: { filter: "item", values: ["IgangsattBoliger"] } },
+  const raw = await ssbPost("10996", [
+    { code: "ContentsCode", selection: { filter: "item", values: ["BoligIgang"] } },
     { code: "Tid", selection: { filter: "top", values: ["3"] } },
   ]);
-  return pickLatest(raw, "IgangsattBoliger");
+  return pickLatest(raw, "BoligIgang");
 }
 
-// 10945: Husholdningenes K2-gjeld, 12-måneders vekst (%)
+// 11597: Husholdningenes innenlandske lånegjeld (K2), 12-måneders vekst (%)
 async function fetchHouseholdDebt() {
-  const raw = await ssbPost("10945", [
-    { code: "Sektor", selection: { filter: "item", values: ["6500"] } },
-    { code: "ContentsCode", selection: { filter: "item", values: ["TolvmnVekst"] } },
+  const raw = await ssbPost("11597", [
+    { code: "Valuta", selection: { filter: "item", values: ["00"] } },
+    { code: "Lantaker3", selection: { filter: "item", values: ["05"] } },
+    { code: "ContentsCode", selection: { filter: "item", values: ["Aarstransprosent"] } },
     { code: "Tid", selection: { filter: "top", values: ["3"] } },
   ]);
-  return pickLatest(raw, "TolvmnVekst");
+  return pickLatest(raw, "Aarstransprosent");
 }
 
 Deno.serve(async (req) => {

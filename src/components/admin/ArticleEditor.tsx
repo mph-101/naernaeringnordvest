@@ -29,6 +29,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ArticleTagInput } from "./ArticleTagInput";
 import { AIDraftFromSourcesButton } from "./AIDraftFromSourcesButton";
 import { RegionPicker } from "./RegionPicker";
+import { AuthorSelect } from "./AuthorSelect";
 import { fetchRegions, type EditorialRegion } from "@/lib/regions";
 import type { Tag as ArticleTag } from "@/lib/tag-utils";
 
@@ -1714,7 +1715,10 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
             <div>
               <Label htmlFor="author">Forfatter *</Label>
-              <Input id="author" value={form.author} onChange={(e) => updateForm({ author: e.target.value })} placeholder="Forfatterens navn" className="mt-1.5" required />
+              <AuthorSelect
+                value={form.author}
+                onChange={(name) => updateForm({ author: name })}
+              />
             </div>
 
             <div>

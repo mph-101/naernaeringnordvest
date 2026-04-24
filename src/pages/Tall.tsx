@@ -8,10 +8,11 @@ import { CompanyLists } from "@/components/tall/CompanyLists";
 import { EstablishmentsOverview } from "@/components/tall/EstablishmentsOverview";
 import { CompanyQuery } from "@/components/tall/CompanyQuery";
 import { LaborMarketOverview } from "@/components/tall/LaborMarketOverview";
+import { HousingMarketOverview } from "@/components/tall/HousingMarketOverview";
 import { useTheme } from "@/hooks/useTheme";
-import { Search, List, TrendingUp, MessageSquare, Briefcase } from "lucide-react";
+import { Search, List, TrendingUp, MessageSquare, Briefcase, Home } from "lucide-react";
 
-type Tab = "search" | "lists" | "overview" | "query" | "labor";
+type Tab = "search" | "lists" | "overview" | "query" | "labor" | "housing";
 
 export default function Tall() {
   const { language } = useTheme();
@@ -33,6 +34,7 @@ export default function Tall() {
     { id: "lists", label: isNo ? "Mine lister" : "My Lists", icon: List },
     { id: "overview", label: isNo ? "Etablering og konkurs" : "Establishments & Bankruptcies", icon: TrendingUp },
     { id: "labor", label: isNo ? "Arbeidsmarked" : "Labor Market", icon: Briefcase },
+    { id: "housing", label: isNo ? "Boligmarked" : "Housing Market", icon: Home },
   ];
 
   return (
@@ -103,6 +105,7 @@ export default function Tall() {
           />
         )}
         {tab === "labor" && <LaborMarketOverview />}
+        {tab === "housing" && <HousingMarketOverview />}
       </div>
     </div>
   );

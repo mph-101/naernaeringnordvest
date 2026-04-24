@@ -137,6 +137,18 @@ export const MarketTicker = () => {
     });
   }
 
+  if (data.cpi) {
+    items.push({
+      icon: LineChart,
+      label: isNo
+        ? `KPI ${data.cpi.period}`
+        : `CPI ${data.cpi.period}`,
+      value: `${fmtDec(data.cpi.pct, 1)} %`,
+      sourceLabel: SOURCES.cpi.label,
+      sourceUrl: SOURCES.cpi.url,
+    });
+  }
+
   if (data.btc) {
     items.push({
       icon: Bitcoin,

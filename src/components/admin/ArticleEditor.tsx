@@ -1196,12 +1196,24 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             <button
               key={s}
               type="button"
-              onClick={() => updateForm({ status: s })}
+              onClick={() => {
+                if (s === "published" && !canPublish) {
+                  toast({
+                    title: "Kan ikke publisere ennå",
+                    description: "Fullfør publiseringskravene under for å aktivere publisering.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                updateForm({ status: s });
+              }}
+              disabled={s === "published" && !canPublish}
+              title={s === "published" && !canPublish ? "Fullfør publiseringskravene først" : undefined}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                 form.status === s
                   ? `${STATUS_CONFIG[s].bg} ${STATUS_CONFIG[s].color}`
                   : "bg-muted/50 text-muted-foreground hover:bg-muted"
-              }`}
+              } ${s === "published" && !canPublish ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {STATUS_CONFIG[s].label}
             </button>

@@ -39,8 +39,8 @@ const fmtNumber = (n: number, isNo: boolean, digits = 0) =>
   }).format(n);
 
 const SOURCES = {
-  unemployment: { label: "SSB tabell 10540", url: "https://www.ssb.no/statbank/table/10540" },
-  employment:   { label: "SSB tabell 13536", url: "https://www.ssb.no/statbank/table/13536" },
+  unemployment: { label: "SSB AKU 13760", url: "https://www.ssb.no/statbank/table/13760" },
+  employment:   { label: "SSB AKU 13760", url: "https://www.ssb.no/statbank/table/13760" },
   navUnemployed:{ label: "NAV / SSB AKU 13760", url: "https://www.nav.no/no/nav-og-samfunn/statistikk/arbeidssokere-og-stillinger-statistikk/hovedtall-om-arbeidsmarkedet" },
   wages:        { label: "SSB tabell 11418", url: "https://www.ssb.no/statbank/table/11418" },
   sickLeave:    { label: "SSB tabell 12442", url: "https://www.ssb.no/statbank/table/12442" },

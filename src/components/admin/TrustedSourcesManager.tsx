@@ -192,7 +192,7 @@ export const TrustedSourcesManager = () => {
             Eksterne kilder som chatboten kan bruke i tillegg til artikkelarkivet og databasene.
           </p>
         </div>
-        {!editing && (
+        {!editing && tab === "list" && (
           <button
             onClick={() => startEdit()}
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-subhead hover:bg-primary/90 transition-colors"
@@ -202,6 +202,34 @@ export const TrustedSourcesManager = () => {
         )}
       </div>
 
+      {/* Tabs */}
+      <div className="flex items-center gap-1 mb-6 border-b border-border">
+        <button
+          onClick={() => setTab("list")}
+          className={`inline-flex items-center gap-2 px-4 py-2 -mb-px border-b-2 text-sm font-subhead transition-colors ${
+            tab === "list"
+              ? "border-primary text-headline"
+              : "border-transparent text-muted-foreground hover:text-headline"
+          }`}
+        >
+          <List className="w-4 h-4" /> Liste
+        </button>
+        <button
+          onClick={() => setTab("status")}
+          className={`inline-flex items-center gap-2 px-4 py-2 -mb-px border-b-2 text-sm font-subhead transition-colors ${
+            tab === "status"
+              ? "border-primary text-headline"
+              : "border-transparent text-muted-foreground hover:text-headline"
+          }`}
+        >
+          <Activity className="w-4 h-4" /> Status & test
+        </button>
+      </div>
+
+      {tab === "status" ? (
+        <TrustedSourcesStatus />
+      ) : (
+        <>
       {editing && (
         <div className="bg-card border border-border rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-between mb-4">

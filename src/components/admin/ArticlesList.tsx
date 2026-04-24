@@ -240,6 +240,13 @@ export const ArticlesList = ({ onEdit }: ArticlesListProps) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
+                {visibleArticles.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-10 text-center text-sm text-muted-foreground">
+                      Ingen artikler matcher filteret.
+                    </td>
+                  </tr>
+                )}
                 {visibleArticles.map((article) => (
                   <tr key={article.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-6 py-4">

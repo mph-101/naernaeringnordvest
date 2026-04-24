@@ -57,6 +57,10 @@ const Article = () => {
   const [parallaxOffset, setParallaxOffset] = useState(0);
   const [article, setArticle] = useState<ArticleData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [accessChecked, setAccessChecked] = useState(false);
+  const [hasFullAccess, setHasFullAccess] = useState(false);
+  const [previewBody, setPreviewBody] = useState<string | null>(null);
+  const [previewBodyEn, setPreviewBodyEn] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -64,6 +68,25 @@ const Article = () => {
       const { data } = await supabase.from("articles").select("*").eq("id", id).single();
       setArticle(data);
       setLoading(false);
+
+      // For premium articles, ask the server whether the caller has full access
+      // and, if not, get a safe preview (excerpt + first paragraph).
+      if (data?.premium) {
+        const { data: access } = await supabase.functions.invoke("check-article-access", {
+          body: { articleId: data.id },
+        });
+        if (access?.access === "full") {
+          setHasFullAccess(true);
+        } else {
+          setHasFullAccess(false);
+          setPreviewBody(access?.preview ?? null);
+          setPreviewBodyEn(access?.preview_en ?? null);
+        }
+        setAccessChecked(true);
+      } else {
+        setHasFullAccess(true);
+        setAccessChecked(true);
+      }
     };
     fetchArticle();
     supabase.from("article_company_tags").select("orgnr, company_name").eq("article_id", id).then(({ data }) => setCompanyTags(data || []));
@@ -84,7 +107,7 @@ const Article = () => {
   // Track view, read time, scroll depth + funnel events
   useArticleTracking(article?.id, !!article?.premium);
 
-  if (loading) {
+  if (loading || (article?.premium && !accessChecked)) {
     return (
       <div className="min-h-screen bg-background">
         <Header showSearch={false} />
@@ -120,7 +143,9 @@ const Article = () => {
   // Resolve language-aware fields
   const title = language === "en" && article.title_en ? article.title_en : article.title;
   const excerpt = language === "en" && article.excerpt_en ? article.excerpt_en : article.excerpt;
-  const body = language === "en" && article.body_en ? article.body_en : article.body;
+  const fullBody = language === "en" && article.body_en ? article.body_en : article.body;
+  const preview = language === "en" && previewBodyEn ? previewBodyEn : previewBody;
+  const body = hasFullAccess ? fullBody : (preview ?? "");
   const keyPoints: string[] = language === "en" && article.key_points_en?.length ? article.key_points_en : (article.key_points || []);
   const publishedAt = article.published_at ? timeAgo(article.published_at, language) : "";
   const readTime = article.read_time || "";
@@ -151,37 +176,9 @@ const Article = () => {
     </div>
   );
 
-  if (article.premium) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header showSearch={false} />
-        <article className="max-w-2xl mx-auto px-6 py-14">
-          <BackButton />
-          <div className="mb-5">
-            <span className="px-3 py-1.5 bg-accent/10 text-accent text-sm font-subhead font-medium rounded-full border border-accent/20">{article.category}</span>
-          </div>
-          <h1 className="font-headline text-2xl md:text-3xl lg:text-4xl font-bold text-headline leading-[1.15] mb-6">{title}</h1>
-          <ArticleMeta showBorder />
-          <div className="relative mb-10">
-            <p className="text-foreground font-body text-lg leading-[1.8]">{excerpt}</p>
-            <div className="h-28 bg-gradient-to-t from-background to-transparent absolute bottom-0 left-0 right-0" />
-          </div>
-          <div className="bg-card rounded-2xl border border-border p-10 text-center shadow-elevated">
-            <div className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-6"><Lock className="w-8 h-8 text-accent" /></div>
-            <h2 className="font-headline text-2xl font-bold text-headline mb-3">{t.subscribeTitle}</h2>
-            <p className="text-muted-foreground font-body mb-8 max-w-md mx-auto leading-relaxed">{t.subscribeDesc}</p>
-            <div className="space-y-3 max-w-xs mx-auto">
-              <button className="w-full py-3.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">{t.subscribeButton}</button>
-              <button className="w-full py-3.5 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors">{t.signIn}</button>
-            </div>
-          </div>
-        </article>
-      </div>
-    );
-  }
-
   // Check if body contains HTML
   const isHtml = /<[a-z][\s\S]*>/i.test(body);
+  const showPaywall = article.premium && !hasFullAccess;
 
   return (
     <div className="min-h-screen bg-background">
@@ -224,9 +221,9 @@ const Article = () => {
         )}
 
         <div className="mb-16 animate-fade-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
-          {isHtml ? (
+          {body && isHtml ? (
             <ArticleBody html={body} category={article.category} />
-          ) : (
+          ) : body ? (
             (() => {
               const dropClass = dropcapClassName(pickDropcapVariant(article.category, body));
               return body.split('\n\n').map((paragraph, index) => (
@@ -235,6 +232,33 @@ const Article = () => {
                 </p>
               ));
             })()
+          ) : null}
+
+          {showPaywall && (
+            <div className="relative -mt-24 pt-24">
+              <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+              <div className="bg-card rounded-2xl border border-border p-10 text-center shadow-elevated">
+                <div className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <Lock className="w-8 h-8 text-accent" />
+                </div>
+                <h2 className="font-headline text-2xl font-bold text-headline mb-3">{t.subscribeTitle}</h2>
+                <p className="text-muted-foreground font-body mb-8 max-w-md mx-auto leading-relaxed">{t.subscribeDesc}</p>
+                <div className="space-y-3 max-w-xs mx-auto">
+                  <button
+                    onClick={() => navigate("/abonnement")}
+                    className="w-full py-3.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft"
+                  >
+                    {t.subscribeButton}
+                  </button>
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="w-full py-3.5 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors"
+                  >
+                    {t.signIn}
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
 

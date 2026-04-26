@@ -1368,6 +1368,18 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 {generatingTitleExcerpt ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                 {generatingTitleExcerpt ? "Genererer..." : "Generer tittel/ingress"}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setSocialDialogOpen(true)}
+                disabled={!form.title || !form.body || form.body.length < 50}
+                className="gap-2"
+                title="Generer SoMe-utkast for LinkedIn, Facebook/X og Instagram"
+              >
+                <Megaphone className="w-3.5 h-3.5" />
+                SoMe-forslag
+              </Button>
               <AudioTranscriber ref={audioRef} onTranscript={handleAudioTranscript} />
             </div>
           </div>

@@ -294,7 +294,7 @@ const Article = () => {
 
         <RelatedByTags articleId={id!} />
 
-        <ArticleDiscussion authorName={article.author} />
+        <ArticleDiscussion articleId={id!} authorName={article.author} />
       </article>
 
       <ArticleNotes articleId={id!} articleTitle={title} />

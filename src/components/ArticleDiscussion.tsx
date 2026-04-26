@@ -131,7 +131,7 @@ export function ArticleDiscussion({ articleId, authorName }: ArticleDiscussionPr
   const text = COPY[language];
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userId, isAuthenticated, isStaff, hasRole } = useAuth();
+  const { userId, isAuthenticated, isStaff } = useAuth();
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);

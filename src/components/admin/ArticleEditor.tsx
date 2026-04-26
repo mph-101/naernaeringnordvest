@@ -78,6 +78,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [generatingTitleExcerpt, setGeneratingTitleExcerpt] = useState(false);
   const [proofreading, setProofreading] = useState(false);
   const [generatingSubheadings, setGeneratingSubheadings] = useState(false);
+  const [socialDialogOpen, setSocialDialogOpen] = useState(false);
   const [proofSuggestions, setProofSuggestions] = useState<{ id: string; original: string; suggestion: string; reason: string; category: string }[]>([]);
   // Undo stack for accepted proofreading changes. Each entry captures the
   // body BEFORE the change plus the suggestion(s) that were applied, so we

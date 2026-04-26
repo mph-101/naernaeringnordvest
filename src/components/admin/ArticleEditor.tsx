@@ -33,6 +33,7 @@ import { ArticleTagInput } from "./ArticleTagInput";
 import { AIDraftFromSourcesButton } from "./AIDraftFromSourcesButton";
 import { RegionPicker } from "./RegionPicker";
 import { AuthorSelect } from "./AuthorSelect";
+import { SocialPostsDialog } from "./SocialPostsDialog";
 import { fetchRegions, type EditorialRegion } from "@/lib/regions";
 import type { Tag as ArticleTag } from "@/lib/tag-utils";
 

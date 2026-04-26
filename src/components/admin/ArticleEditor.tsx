@@ -2009,6 +2009,15 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         }}
       />
 
+      <SocialPostsDialog
+        open={socialDialogOpen}
+        onOpenChange={setSocialDialogOpen}
+        title={form.title}
+        excerpt={form.excerpt}
+        body={composedBody || form.body}
+        category={form.category}
+      />
+
       <Dialog
         open={chartDialogOpen}
         onOpenChange={(open) => (open ? setChartDialogOpen(true) : handleCloseChartDialog())}

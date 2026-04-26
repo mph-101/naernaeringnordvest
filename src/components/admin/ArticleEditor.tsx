@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2, Undo2, ExternalLink, Crop as CropIcon, Eye } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2, Undo2, ExternalLink, Crop as CropIcon, Eye, Megaphone } from "lucide-react";
 import { ArticlePreviewDialog } from "./ArticlePreviewDialog";
 import { PrePublishChecklist, buildPublishChecklist } from "./PrePublishChecklist";
 import { Dialog as ImproveDialog, DialogContent as ImproveDialogContent, DialogHeader as ImproveDialogHeader, DialogTitle as ImproveDialogTitle, DialogFooter as ImproveDialogFooter } from "@/components/ui/dialog";
@@ -33,6 +33,7 @@ import { ArticleTagInput } from "./ArticleTagInput";
 import { AIDraftFromSourcesButton } from "./AIDraftFromSourcesButton";
 import { RegionPicker } from "./RegionPicker";
 import { AuthorSelect } from "./AuthorSelect";
+import { SocialPostsDialog } from "./SocialPostsDialog";
 import { fetchRegions, type EditorialRegion } from "@/lib/regions";
 import type { Tag as ArticleTag } from "@/lib/tag-utils";
 
@@ -77,6 +78,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [generatingTitleExcerpt, setGeneratingTitleExcerpt] = useState(false);
   const [proofreading, setProofreading] = useState(false);
   const [generatingSubheadings, setGeneratingSubheadings] = useState(false);
+  const [socialDialogOpen, setSocialDialogOpen] = useState(false);
   const [proofSuggestions, setProofSuggestions] = useState<{ id: string; original: string; suggestion: string; reason: string; category: string }[]>([]);
   // Undo stack for accepted proofreading changes. Each entry captures the
   // body BEFORE the change plus the suggestion(s) that were applied, so we
@@ -1366,6 +1368,18 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 {generatingTitleExcerpt ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                 {generatingTitleExcerpt ? "Genererer..." : "Generer tittel/ingress"}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setSocialDialogOpen(true)}
+                disabled={!form.title || !form.body || form.body.length < 50}
+                className="gap-2"
+                title="Generer SoMe-utkast for LinkedIn, Facebook/X og Instagram"
+              >
+                <Megaphone className="w-3.5 h-3.5" />
+                SoMe-forslag
+              </Button>
               <AudioTranscriber ref={audioRef} onTranscript={handleAudioTranscript} />
             </div>
           </div>
@@ -1993,6 +2007,15 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           image_focal: form.image_focal,
           key_points: form.key_points,
         }}
+      />
+
+      <SocialPostsDialog
+        open={socialDialogOpen}
+        onOpenChange={setSocialDialogOpen}
+        title={form.title}
+        excerpt={form.excerpt}
+        body={composedBody || form.body}
+        category={form.category}
       />
 
       <Dialog

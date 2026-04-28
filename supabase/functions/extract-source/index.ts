@@ -7,6 +7,45 @@ const corsHeaders = {
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
+// SSRF protection: block private/link-local/loopback IPs and disallowed schemes.
+function isPrivateOrBlockedHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  if (h === "localhost" || h.endsWith(".localhost") || h.endsWith(".internal")) return true;
+  // IPv6 loopback / link-local / unique local
+  if (h === "::1" || h === "[::1]") return true;
+  if (h.startsWith("fe80:") || h.startsWith("fc") || h.startsWith("fd")) return true;
+  // IPv4 literal
+  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (m) {
+    const [a, b] = [parseInt(m[1], 10), parseInt(m[2], 10)];
+    if (a === 10) return true;
+    if (a === 127) return true;
+    if (a === 0) return true;
+    if (a === 169 && b === 254) return true; // link-local / metadata
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
+    if (a >= 224) return true; // multicast / reserved
+  }
+  return false;
+}
+
+function validatePublicUrl(rawUrl: string): URL {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error("Ugyldig URL");
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error("Bare http(s)-URL-er er tillatt");
+  }
+  if (isPrivateOrBlockedHost(parsed.hostname)) {
+    throw new Error("URL peker mot et internt eller blokkert nettverk");
+  }
+  return parsed;
+}
+
 // Extract text from an uploaded source: document (PDF/DOCX/TXT), audio, image (OCR), or URL
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -21,6 +60,33 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Require an authenticated caller (any signed-in user) before doing
+    // server-side work, especially the URL fetch path which is SSRF-sensitive.
+    const authHeader = req.headers.get("Authorization") || "";
+    const jwt = authHeader.toLowerCase().startsWith("bearer ")
+      ? authHeader.slice(7).trim()
+      : "";
+    if (!jwt) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    {
+      const authClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: `Bearer ${jwt}` } } },
+      );
+      const { data: userData, error: userErr } = await authClient.auth.getUser();
+      if (userErr || !userData?.user) {
+        return new Response(JSON.stringify({ error: "Invalid session" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -32,11 +98,18 @@ Deno.serve(async (req) => {
 
     if (sourceType === "url") {
       if (!url) throw new Error("url required");
-      const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 NaerNaering/1.0" } });
+      const safeUrl = validatePublicUrl(String(url));
+      const res = await fetch(safeUrl.toString(), {
+        headers: { "User-Agent": "Mozilla/5.0 NaerNaering/1.0" },
+        redirect: "manual",
+      });
+      if (res.status >= 300 && res.status < 400) {
+        throw new Error("Omdirigeringer er ikke tillatt for kildehenting");
+      }
       if (!res.ok) throw new Error(`Failed to fetch URL: ${res.status}`);
       const html = await res.text();
       const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-      title = titleMatch ? titleMatch[1].trim() : url;
+      title = titleMatch ? titleMatch[1].trim() : safeUrl.toString();
       // Strip scripts, styles, then tags
       extractedText = html
         .replace(/<script[\s\S]*?<\/script>/gi, " ")

@@ -11,7 +11,6 @@ export const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,31 +18,15 @@ export const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin
-          }
-        });
-        if (error) throw error;
-        toast({
-          title: "Konto opprettet",
-          description: "Du kan nå logge inn. Kontakt en administrator for å få tildelt en rolle.",
-        });
-        setIsSignUp(false);
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        toast({
-          title: "Logget inn",
-          description: "Velkommen tilbake!",
-        });
-      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      toast({
+        title: "Logget inn",
+        description: "Velkommen tilbake!",
+      });
     } catch (error: any) {
       toast({
         title: "Feil",
@@ -75,7 +58,7 @@ export const AdminLogin = () => {
               Admin
             </h1>
             <p className="text-sm text-muted-foreground font-body">
-              {isSignUp ? "Opprett konto" : "Logg inn for å administrere"}
+              Logg inn for å administrere
             </p>
           </div>
         </div>
@@ -119,12 +102,11 @@ export const AdminLogin = () => {
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Vennligst vent..." : isSignUp ? "Opprett konto" : "Logg inn"}
+            {isLoading ? "Vennligst vent..." : "Logg inn"}
           </Button>
         </form>
 
-        {!isSignUp && (
-          <div className="mt-4 text-center">
+        <div className="mt-4 text-center">
             <button
               onClick={async () => {
                 if (!email) {
@@ -146,16 +128,12 @@ export const AdminLogin = () => {
             >
               Glemt passord?
             </button>
-          </div>
-        )}
+        </div>
 
         <div className="mt-4 text-center">
-          <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {isSignUp ? "Har du allerede en konto? Logg inn" : "Ny bruker? Opprett konto"}
-          </button>
+          <p className="text-xs text-muted-foreground">
+            Tilgang gis kun ved invitasjon. Kontakt en administrator.
+          </p>
         </div>
       </div>
     </div>

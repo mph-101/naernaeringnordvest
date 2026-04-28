@@ -146,6 +146,30 @@ async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
   }
 }
 
+async function handleJobPremiumCheckout(session: any, env: StripeEnv) {
+  const purpose = session.metadata?.purpose;
+  if (purpose !== "job_premium") return;
+  const jobListingId = session.metadata?.jobListingId;
+  if (!jobListingId) {
+    console.error("job_premium checkout missing jobListingId", session.id);
+    return;
+  }
+  const sb = getSupabase();
+  await sb
+    .from("job_listings")
+    .update({
+      is_premium: true,
+      premium_paid_at: new Date().toISOString(),
+      premium_payment_method: "stripe",
+      premium_amount_nok: Math.round((session.amount_total ?? 0) / 100),
+      premium_stripe_session_id: session.id,
+      featured_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", jobListingId);
+  console.log("Marked job as premium:", jobListingId, "env:", env);
+}
+
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
 
@@ -156,6 +180,9 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       break;
     case "customer.subscription.deleted":
       await handleSubscriptionDeleted(event.data.object, env);
+      break;
+    case "checkout.session.completed":
+      await handleJobPremiumCheckout(event.data.object, env);
       break;
     default:
       console.log("Unhandled event:", event.type);

@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Sparkles, Check, Building2, Loader2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
-import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
+import { JobPremiumCheckout } from "@/components/JobPremiumCheckout";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { EMPLOYMENT_TYPES, PREMIUM_PRICE_NOK, PREMIUM_PRICE_ID } from "@/lib/jobs";
+import { EMPLOYMENT_TYPES, PREMIUM_PRICE_NOK } from "@/lib/jobs";
 import { toast } from "sonner";
 
 type Region = { slug: string; name: string };
@@ -147,11 +147,8 @@ export default function StillingNy() {
           <p className="text-sm text-muted-foreground font-body mb-6">
             {PREMIUM_PRICE_NOK} kr · {isNo ? "engangsbetaling per stilling" : "one-time per posting"}
           </p>
-          <StripeEmbeddedCheckout
-            priceId={PREMIUM_PRICE_ID}
-            quantity={1}
-            customerEmail={user?.email}
-            userId={userId ?? undefined}
+          <JobPremiumCheckout
+            jobListingId={createdJobId}
             returnUrl={`${window.location.origin}/stillinger/ny/takk?job_id=${createdJobId}&session_id={CHECKOUT_SESSION_ID}`}
           />
         </main>

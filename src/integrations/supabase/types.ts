@@ -877,6 +877,68 @@ export type Database = {
         }
         Relationships: []
       }
+      employer_profiles: {
+        Row: {
+          company_name: string
+          cover_image_url: string | null
+          created_at: string
+          description_html: string | null
+          id: string
+          industry: string | null
+          is_published: boolean
+          logo_url: string | null
+          orgnr: string | null
+          owner_user_id: string | null
+          region_slug: string | null
+          slug: string
+          tagline: string | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          company_name: string
+          cover_image_url?: string | null
+          created_at?: string
+          description_html?: string | null
+          id?: string
+          industry?: string | null
+          is_published?: boolean
+          logo_url?: string | null
+          orgnr?: string | null
+          owner_user_id?: string | null
+          region_slug?: string | null
+          slug: string
+          tagline?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          company_name?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description_html?: string | null
+          id?: string
+          industry?: string | null
+          is_published?: boolean
+          logo_url?: string | null
+          orgnr?: string | null
+          owner_user_id?: string | null
+          region_slug?: string | null
+          slug?: string
+          tagline?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employer_profiles_region_slug_fkey"
+            columns: ["region_slug"]
+            isOneToOne: false
+            referencedRelation: "editorial_regions"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       fact_boxes: {
         Row: {
           body: string | null
@@ -1447,10 +1509,71 @@ export type Database = {
         }
         Relationships: []
       }
+      job_invoice_requests: {
+        Row: {
+          amount_nok: number
+          company_name: string
+          created_at: string
+          id: string
+          invoice_email: string
+          invoice_reference: string | null
+          job_listing_id: string
+          notes: string | null
+          orgnr: string | null
+          processed_at: string | null
+          processed_by: string | null
+          requested_by: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_nok?: number
+          company_name: string
+          created_at?: string
+          id?: string
+          invoice_email: string
+          invoice_reference?: string | null
+          job_listing_id: string
+          notes?: string | null
+          orgnr?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          requested_by: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_nok?: number
+          company_name?: string
+          created_at?: string
+          id?: string
+          invoice_email?: string
+          invoice_reference?: string | null
+          job_listing_id?: string
+          notes?: string | null
+          orgnr?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          requested_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_invoice_requests_job_listing_id_fkey"
+            columns: ["job_listing_id"]
+            isOneToOne: false
+            referencedRelation: "job_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_listings: {
         Row: {
+          additional_regions: string[]
           application_deadline: string | null
           application_url: string | null
+          apply_click_count: number
           company_logo_url: string | null
           company_name: string
           company_orgnr: string | null
@@ -1459,24 +1582,35 @@ export type Database = {
           contact_phone: string | null
           created_at: string
           description_html: string
+          employer_profile_id: string | null
           employment_type: string
           expires_at: string | null
+          featured_until: string | null
           id: string
           industry: string | null
+          is_premium: boolean
           location: string
+          premium_amount_nok: number | null
+          premium_paid_at: string | null
+          premium_payment_method: string | null
+          premium_stripe_session_id: string | null
           published_at: string | null
           region_slug: string | null
           rejection_reason: string | null
           reviewed_by: string | null
           salary_range: string | null
+          slug: string | null
           status: string
           submitted_by: string | null
           title: string
           updated_at: string
+          view_count: number
         }
         Insert: {
+          additional_regions?: string[]
           application_deadline?: string | null
           application_url?: string | null
+          apply_click_count?: number
           company_logo_url?: string | null
           company_name: string
           company_orgnr?: string | null
@@ -1485,24 +1619,35 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description_html: string
+          employer_profile_id?: string | null
           employment_type?: string
           expires_at?: string | null
+          featured_until?: string | null
           id?: string
           industry?: string | null
+          is_premium?: boolean
           location: string
+          premium_amount_nok?: number | null
+          premium_paid_at?: string | null
+          premium_payment_method?: string | null
+          premium_stripe_session_id?: string | null
           published_at?: string | null
           region_slug?: string | null
           rejection_reason?: string | null
           reviewed_by?: string | null
           salary_range?: string | null
+          slug?: string | null
           status?: string
           submitted_by?: string | null
           title: string
           updated_at?: string
+          view_count?: number
         }
         Update: {
+          additional_regions?: string[]
           application_deadline?: string | null
           application_url?: string | null
+          apply_click_count?: number
           company_logo_url?: string | null
           company_name?: string
           company_orgnr?: string | null
@@ -1511,22 +1656,38 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description_html?: string
+          employer_profile_id?: string | null
           employment_type?: string
           expires_at?: string | null
+          featured_until?: string | null
           id?: string
           industry?: string | null
+          is_premium?: boolean
           location?: string
+          premium_amount_nok?: number | null
+          premium_paid_at?: string | null
+          premium_payment_method?: string | null
+          premium_stripe_session_id?: string | null
           published_at?: string | null
           region_slug?: string | null
           rejection_reason?: string | null
           reviewed_by?: string | null
           salary_range?: string | null
+          slug?: string | null
           status?: string
           submitted_by?: string | null
           title?: string
           updated_at?: string
+          view_count?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "job_listings_employer_profile_id_fkey"
+            columns: ["employer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "employer_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "job_listings_region_slug_fkey"
             columns: ["region_slug"]
@@ -2193,6 +2354,11 @@ export type Database = {
           registration_count: number
         }[]
       }
+      increment_job_apply_click: {
+        Args: { _job_id: string }
+        Returns: undefined
+      }
+      increment_job_view: { Args: { _job_id: string }; Returns: undefined }
       is_group_admin: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean

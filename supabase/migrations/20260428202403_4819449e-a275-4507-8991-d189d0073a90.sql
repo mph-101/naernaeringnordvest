@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "Anyone can submit tips" ON public.tips;
+COMMENT ON TABLE public.tips IS 'Tip submissions. Inserts must go through the submit-tip edge function (service role). No client-side insert policy by design.';

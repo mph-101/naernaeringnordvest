@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.invite-business-seat]
 verify_jwt = false
+
+[functions.create-job-premium-checkout]
+verify_jwt = false

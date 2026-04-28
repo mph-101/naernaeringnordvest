@@ -29,6 +29,10 @@ import Tag from "./pages/Tag";
 import Subscribe from "./pages/Subscribe";
 import SubscribeReturn from "./pages/SubscribeReturn";
 import BusinessPanel from "./pages/BusinessPanel";
+import Stillinger from "./pages/Stillinger";
+import StillingDetail from "./pages/StillingDetail";
+import StillingNy from "./pages/StillingNy";
+import StillingNyTakk from "./pages/StillingNyTakk";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +68,10 @@ const App = () => (
               <Route path="/abonnement" element={<Subscribe />} />
               <Route path="/abonnement/takk" element={<SubscribeReturn />} />
               <Route path="/abonnement/bedrift/:id" element={<BusinessPanel />} />
+              <Route path="/stillinger" element={<Stillinger />} />
+              <Route path="/stillinger/ny" element={<StillingNy />} />
+              <Route path="/stillinger/ny/takk" element={<StillingNyTakk />} />
+              <Route path="/stillinger/:slug" element={<StillingDetail />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

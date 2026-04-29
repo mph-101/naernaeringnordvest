@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { fetchRegions, regionLabel, EditorialRegion } from "@/lib/regions";
-import { UserMinus, Users, TrendingDown, Banknote, HeartPulse, ExternalLink, Newspaper, Loader2 } from "lucide-react";
+import { UserMinus, Users, TrendingDown, Banknote, HeartPulse, ExternalLink, Newspaper, Loader2, Briefcase, Sparkles, MapPin, Plus } from "lucide-react";
+import { fetchPublishedJobs, jobUrl, type JobListing } from "@/lib/jobs";
 
 interface SsbPoint { value: number; period: string }
 interface LaborData {
@@ -55,6 +56,8 @@ export function LaborMarketOverview() {
   const [loading, setLoading] = useState(true);
   const [articles, setArticles] = useState<ArticleRow[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(true);
+  const [jobs, setJobs] = useState<JobListing[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
 
   useEffect(() => {
     fetchRegions().then(setRegions).catch(() => setRegions([]));

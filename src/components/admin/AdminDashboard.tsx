@@ -205,6 +205,18 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 icon={Users}
                 onClick={() => setView("job-changes")}
               />
+              <DashboardCard
+                title="Stillingsannonser"
+                description="Godkjenn innsendte stillingsannonser"
+                icon={Briefcase}
+                onClick={() => setView("job-listings")}
+              />
+              <DashboardCard
+                title="Faktura-forespørsler"
+                description="Håndter Premium-fakturaer for stillinger"
+                icon={Receipt}
+                onClick={() => setView("job-invoices")}
+              />
               {isAdmin && (
                 <DashboardCard
                   title="Brukere"
@@ -242,6 +254,14 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "job-changes" && (
           <JobChangeReview />
+        )}
+
+        {view === "job-listings" && (
+          <JobListingsReview />
+        )}
+
+        {view === "job-invoices" && (
+          <JobInvoiceRequests />
         )}
 
         {view === "fact-boxes" && (

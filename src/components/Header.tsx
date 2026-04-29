@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import logoImg from "@/assets/logo.png";
-import { Menu, X, Search, Moon, Sun, Globe, Users, LogIn, LogOut, UserCircle, Shield, Brain } from "lucide-react";
+import { Menu, X, Search, Moon, Sun, Globe, Users, LogIn, LogOut, UserCircle, Shield, Brain, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -110,6 +110,10 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
 
             <button onClick={() => navigate("/grupper")} className="p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Grupper" : "Groups"}>
               <Users className="w-4 h-4 text-foreground/70" />
+            </button>
+
+            <button onClick={() => navigate("/stillinger")} className="p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Stillinger" : "Jobs"}>
+              <Briefcase className="w-4 h-4 text-foreground/70" />
             </button>
 
             {userId ? (

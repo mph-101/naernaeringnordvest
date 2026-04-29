@@ -235,6 +235,69 @@ export function LaborMarketOverview() {
       </div>
 
       {/* Articles */}
+      {/* Job listings */}
+      <div>
+        <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-muted-foreground" />
+            <h3 className="font-headline text-lg font-bold text-headline">
+              {isNo ? "Ledige stillinger" : "Open positions"}
+            </h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/stillinger/ny"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-subhead font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {isNo ? "Legg ut gratis" : "Post free"}
+            </Link>
+            <Link
+              to="/stillinger"
+              className="text-xs font-subhead text-muted-foreground hover:text-foreground"
+            >
+              {isNo ? "Se alle →" : "View all →"}
+            </Link>
+          </div>
+        </div>
+        {jobsLoading ? (
+          <p className="text-sm text-muted-foreground font-body py-6 text-center">
+            {isNo ? "Laster stillinger..." : "Loading jobs..."}
+          </p>
+        ) : jobs.length === 0 ? (
+          <p className="text-sm text-muted-foreground font-body py-6 text-center">
+            {isNo ? "Ingen ledige stillinger akkurat nå." : "No open positions right now."}
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {jobs.map((j) => (
+              <Link
+                key={j.id}
+                to={jobUrl(j)}
+                className={`bg-card border rounded-xl p-4 hover:border-accent transition-colors block ${j.is_premium ? "border-accent/40" : "border-border"}`}
+              >
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-subhead font-medium text-sm text-headline line-clamp-2">{j.title}</p>
+                    <p className="text-xs text-muted-foreground font-body mt-1 inline-flex items-center gap-1.5">
+                      {j.company_name}
+                      <span className="text-muted-foreground/60">·</span>
+                      <MapPin className="w-3 h-3" /> {j.location}
+                    </p>
+                  </div>
+                  {j.is_premium && (
+                    <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-accent font-subhead font-semibold whitespace-nowrap">
+                      <Sparkles className="w-3 h-3" /> Premium
+                    </span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Articles */}
       <div>
         <div className="flex items-center gap-2 mb-3">
           <Newspaper className="w-4 h-4 text-muted-foreground" />

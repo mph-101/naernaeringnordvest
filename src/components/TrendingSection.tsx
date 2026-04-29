@@ -1,21 +1,79 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { TrendingUp, ArrowRight, Clock, Flame } from "lucide-react";
+import { Clock, Flame } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
-import { translations } from "@/lib/translations";
-import { getArticles, Article } from "@/lib/articles";
+import { supabase } from "@/integrations/supabase/client";
+import { PUBLISHED_ARTICLE_SELECT, toUiArticle, type UiArticle } from "@/lib/article-data";
 
 export function TrendingSection() {
   const { language } = useTheme();
-  const t = translations[language];
   const navigate = useNavigate();
+  const [trending, setTrending] = useState<UiArticle[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Pick top 4 articles as "trending"
-  const articles = getArticles(language);
-  const trending = articles.slice(0, 4);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      // 1) Top viewed in last 7 days
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: views } = await supabase
+        .from("article_views")
+        .select("article_id")
+        .gte("viewed_at", since);
 
-  if (trending.length === 0) return null;
+      const counts = new Map<string, number>();
+      (views ?? []).forEach((v: any) => {
+        if (!v.article_id) return;
+        counts.set(v.article_id, (counts.get(v.article_id) ?? 0) + 1);
+      });
+      const topIds = Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([id]) => id)
+        .slice(0, 12);
 
-  const handleClick = (item: Article) => {
+      let articles: any[] = [];
+      if (topIds.length > 0) {
+        const { data } = await supabase
+          .from("articles")
+          .select(PUBLISHED_ARTICLE_SELECT)
+          .eq("published", true)
+          .in("id", topIds);
+        const order = new Map(topIds.map((id, i) => [id, i]));
+        articles = (data ?? []).sort(
+          (a: any, b: any) => (order.get(a.id) ?? 99) - (order.get(b.id) ?? 99),
+        );
+      }
+
+      // 2) Fallback / fill with most recently published
+      if (articles.length < 4) {
+        const { data: recent } = await supabase
+          .from("articles")
+          .select(PUBLISHED_ARTICLE_SELECT)
+          .eq("published", true)
+          .order("published_at", { ascending: false })
+          .limit(8);
+        const have = new Set(articles.map((a) => a.id));
+        (recent ?? []).forEach((a: any) => {
+          if (!have.has(a.id) && articles.length < 4) {
+            articles.push(a);
+            have.add(a.id);
+          }
+        });
+      }
+
+      if (cancelled) return;
+      setTrending(articles.slice(0, 4).map((a) => toUiArticle(a, language)));
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [language]);
+
+  if (loading || trending.length === 0) return null;
+
+  const handleClick = (item: UiArticle) => {
     navigate(`/article/${item.id}`);
   };
 

@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { fetchRegions, regionLabel, EditorialRegion } from "@/lib/regions";
-import { UserMinus, Users, TrendingDown, Banknote, HeartPulse, ExternalLink, Newspaper, Loader2 } from "lucide-react";
+import { UserMinus, Users, TrendingDown, Banknote, HeartPulse, ExternalLink, Newspaper, Loader2, Briefcase, Sparkles, MapPin, Plus } from "lucide-react";
+import { fetchPublishedJobs, jobUrl, type JobListing } from "@/lib/jobs";
 
 interface SsbPoint { value: number; period: string }
 interface LaborData {
@@ -55,6 +56,8 @@ export function LaborMarketOverview() {
   const [loading, setLoading] = useState(true);
   const [articles, setArticles] = useState<ArticleRow[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(true);
+  const [jobs, setJobs] = useState<JobListing[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
 
   useEffect(() => {
     fetchRegions().then(setRegions).catch(() => setRegions([]));
@@ -100,6 +103,19 @@ export function LaborMarketOverview() {
     () => regionLabel(regions, selectedRegion) || (isNo ? "Nasjonalt" : "National"),
     [regions, selectedRegion, isNo]
   );
+
+  // Fetch active job listings (premium first), filtered by region when applicable
+  useEffect(() => {
+    let cancelled = false;
+    setJobsLoading(true);
+    fetchPublishedJobs({
+      region: selectedRegion && selectedRegion !== "nasjonal" ? selectedRegion : null,
+      limit: 6,
+    })
+      .then((rows) => { if (!cancelled) setJobs(rows); })
+      .finally(() => { if (!cancelled) setJobsLoading(false); });
+    return () => { cancelled = true; };
+  }, [selectedRegion]);
 
   const metrics = [
     {
@@ -216,6 +232,69 @@ export function LaborMarketOverview() {
             </div>
           );
         })}
+      </div>
+
+      {/* Articles */}
+      {/* Job listings */}
+      <div>
+        <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-muted-foreground" />
+            <h3 className="font-headline text-lg font-bold text-headline">
+              {isNo ? "Ledige stillinger" : "Open positions"}
+            </h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/stillinger/ny"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-subhead font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {isNo ? "Legg ut gratis" : "Post free"}
+            </Link>
+            <Link
+              to="/stillinger"
+              className="text-xs font-subhead text-muted-foreground hover:text-foreground"
+            >
+              {isNo ? "Se alle →" : "View all →"}
+            </Link>
+          </div>
+        </div>
+        {jobsLoading ? (
+          <p className="text-sm text-muted-foreground font-body py-6 text-center">
+            {isNo ? "Laster stillinger..." : "Loading jobs..."}
+          </p>
+        ) : jobs.length === 0 ? (
+          <p className="text-sm text-muted-foreground font-body py-6 text-center">
+            {isNo ? "Ingen ledige stillinger akkurat nå." : "No open positions right now."}
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {jobs.map((j) => (
+              <Link
+                key={j.id}
+                to={jobUrl(j)}
+                className={`bg-card border rounded-xl p-4 hover:border-accent transition-colors block ${j.is_premium ? "border-accent/40" : "border-border"}`}
+              >
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-subhead font-medium text-sm text-headline line-clamp-2">{j.title}</p>
+                    <p className="text-xs text-muted-foreground font-body mt-1 inline-flex items-center gap-1.5">
+                      {j.company_name}
+                      <span className="text-muted-foreground/60">·</span>
+                      <MapPin className="w-3 h-3" /> {j.location}
+                    </p>
+                  </div>
+                  {j.is_premium && (
+                    <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-accent font-subhead font-semibold whitespace-nowrap">
+                      <Sparkles className="w-3 h-3" /> Premium
+                    </span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Articles */}

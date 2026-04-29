@@ -16,12 +16,16 @@ import {
   UserCog,
   ImageIcon,
   Library,
-  PenLine
+  PenLine,
+  Briefcase,
+  Receipt
 } from "lucide-react";
 import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
 import { TipsList } from "./TipsList";
 import { JobChangeReview } from "./JobChangeReview";
+import { JobListingsReview } from "./JobListingsReview";
+import { JobInvoiceRequests } from "./JobInvoiceRequests";
 import { FactBoxesManager } from "./FactBoxesManager";
 import { TagsManager } from "./TagsManager";
 import { SourcesManager } from "./SourcesManager";
@@ -38,7 +42,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media" | "authors";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "job-listings" | "job-invoices" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media" | "authors";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const { hasRole } = useAuth();
@@ -69,6 +73,8 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "tags" as View, label: "Tags", icon: TagIcon },
     { id: "tips" as View, label: "Tips", icon: MessageSquare },
     { id: "job-changes" as View, label: "Jobbytter", icon: Users },
+    { id: "job-listings" as View, label: "Stillingsannonser", icon: Briefcase },
+    { id: "job-invoices" as View, label: "Faktura-forespørsler", icon: Receipt },
     ...(isAdmin ? [{ id: "users" as View, label: "Brukere", icon: UserCog }] : []),
   ];
 
@@ -199,6 +205,18 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 icon={Users}
                 onClick={() => setView("job-changes")}
               />
+              <DashboardCard
+                title="Stillingsannonser"
+                description="Godkjenn innsendte stillingsannonser"
+                icon={Briefcase}
+                onClick={() => setView("job-listings")}
+              />
+              <DashboardCard
+                title="Faktura-forespørsler"
+                description="Håndter Premium-fakturaer for stillinger"
+                icon={Receipt}
+                onClick={() => setView("job-invoices")}
+              />
               {isAdmin && (
                 <DashboardCard
                   title="Brukere"
@@ -236,6 +254,14 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "job-changes" && (
           <JobChangeReview />
+        )}
+
+        {view === "job-listings" && (
+          <JobListingsReview />
+        )}
+
+        {view === "job-invoices" && (
+          <JobInvoiceRequests />
         )}
 
         {view === "fact-boxes" && (

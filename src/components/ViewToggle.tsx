@@ -52,24 +52,25 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   };
 
   return (
-    <div className="flex items-center justify-center py-6">
-      <div className="inline-flex items-center bg-secondary rounded-full p-1.5">
+    <div className="flex items-center justify-center py-4 sm:py-6 px-3">
+      <div className="inline-flex items-center bg-secondary rounded-full p-1 sm:p-1.5 max-w-full">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = isActive(tab.id);
-          const className = `relative flex items-center gap-2 px-5 py-2.5 rounded-full font-body text-sm font-medium transition-all duration-200 ${
+          const className = `relative flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-5 py-2 sm:py-2.5 rounded-full font-body text-xs sm:text-sm font-medium transition-all duration-200 ${
             active
               ? "bg-card text-foreground shadow-soft"
               : "text-muted-foreground hover:text-foreground"
           }`;
+          const labelClass = active ? "" : "hidden sm:inline";
 
           if (tab.to) {
             return (
-              <Link key={tab.id} to={tab.to} className={className}>
-                <Icon className="w-4 h-4" />
-                {tab.label}
+              <Link key={tab.id} to={tab.to} className={className} title={tab.label}>
+                <Icon className="w-4 h-4 shrink-0" />
+                <span className={labelClass}>{tab.label}</span>
                 {defaultView === tab.id && (
-                  <Star className="w-3 h-3 fill-primary text-primary" />
+                  <Star className="w-3 h-3 fill-primary text-primary shrink-0" />
                 )}
               </Link>
             );
@@ -80,11 +81,12 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
               key={tab.id}
               onClick={() => handleClick(tab.id)}
               className={className}
+              title={tab.label}
             >
-              <Icon className="w-4 h-4" />
-              {tab.label}
+              <Icon className="w-4 h-4 shrink-0" />
+              <span className={labelClass}>{tab.label}</span>
               {defaultView === tab.id && (
-                <Star className="w-3 h-3 fill-primary text-primary" />
+                <Star className="w-3 h-3 fill-primary text-primary shrink-0" />
               )}
             </button>
           );
@@ -93,7 +95,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="ml-1 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-card/50 transition-all duration-200"
+              className="ml-0.5 sm:ml-1 p-1.5 sm:p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-card/50 transition-all duration-200 shrink-0"
               title={language === "no" ? "Velg startside" : "Choose landing page"}
             >
               <Star className="w-3.5 h-3.5" />

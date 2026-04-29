@@ -104,6 +104,19 @@ export function LaborMarketOverview() {
     [regions, selectedRegion, isNo]
   );
 
+  // Fetch active job listings (premium first), filtered by region when applicable
+  useEffect(() => {
+    let cancelled = false;
+    setJobsLoading(true);
+    fetchPublishedJobs({
+      region: selectedRegion && selectedRegion !== "nasjonal" ? selectedRegion : null,
+      limit: 6,
+    })
+      .then((rows) => { if (!cancelled) setJobs(rows); })
+      .finally(() => { if (!cancelled) setJobsLoading(false); });
+    return () => { cancelled = true; };
+  }, [selectedRegion]);
+
   const metrics = [
     {
       key: "unemployment",

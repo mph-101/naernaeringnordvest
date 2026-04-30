@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X, MapPin } from "lucide-react";
+import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X, MapPin, Megaphone } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/articles";
@@ -31,6 +31,18 @@ interface DbArticle {
   published_at: string | null;
   key_points: any;
   region_slug: string | null;
+}
+
+interface NativeAd {
+  id: string;
+  title: string;
+  excerpt: string;
+  image_url: string | null;
+  sponsor_name: string;
+  sponsor_logo_url: string | null;
+  cta_label: string | null;
+  cta_url: string | null;
+  pinned_position: number;
 }
 
 const regionToSportLabel: Record<string, { no: string; en: string }> = {
@@ -73,6 +85,7 @@ export const NewsFeed = () => {
   const [selectedRegionSlug, setSelectedRegionSlug] = useState<string | "all">("all");
   const [userEditorialRegion, setUserEditorialRegion] = useState<string | null>(null);
   const [articleSharedRegions, setArticleSharedRegions] = useState<Map<string, string[]>>(new Map());
+  const [nativeAds, setNativeAds] = useState<NativeAd[]>([]);
   const navigate = useNavigate();
 
   // Load region list + the signed-in user's primary region (used as default filter)
@@ -106,6 +119,17 @@ export const NewsFeed = () => {
       setLoading(false);
     };
     fetchArticles();
+  }, []);
+
+  // Fetch active native ads (RLS already filters by active + dates)
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("native_ads" as any)
+        .select("id, title, excerpt, image_url, sponsor_name, sponsor_logo_url, cta_label, cta_url, pinned_position")
+        .order("pinned_position", { ascending: true });
+      setNativeAds(((data || []) as unknown) as NativeAd[]);
+    })();
   }, []);
 
   // Fetch shared regions for loaded articles

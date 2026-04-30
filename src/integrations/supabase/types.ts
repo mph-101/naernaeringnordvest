@@ -1757,6 +1757,63 @@ export type Database = {
         }
         Relationships: []
       }
+      native_ads: {
+        Row: {
+          active: boolean
+          body: string
+          created_at: string
+          created_by: string | null
+          cta_label: string | null
+          cta_url: string | null
+          end_at: string | null
+          excerpt: string
+          id: string
+          image_url: string | null
+          pinned_position: number
+          sponsor_logo_url: string | null
+          sponsor_name: string
+          start_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
+          end_at?: string | null
+          excerpt?: string
+          id?: string
+          image_url?: string | null
+          pinned_position?: number
+          sponsor_logo_url?: string | null
+          sponsor_name: string
+          start_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
+          end_at?: string | null
+          excerpt?: string
+          id?: string
+          image_url?: string | null
+          pinned_position?: number
+          sponsor_logo_url?: string | null
+          sponsor_name?: string
+          start_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_issues: {
         Row: {
           created_at: string

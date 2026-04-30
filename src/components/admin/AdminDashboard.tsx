@@ -18,7 +18,8 @@ import {
   Library,
   PenLine,
   Briefcase,
-  Receipt
+  Receipt,
+  Megaphone
 } from "lucide-react";
 import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
@@ -26,6 +27,7 @@ import { TipsList } from "./TipsList";
 import { JobChangeReview } from "./JobChangeReview";
 import { JobListingsReview } from "./JobListingsReview";
 import { JobInvoiceRequests } from "./JobInvoiceRequests";
+import { NativeAdsManager } from "./NativeAdsManager";
 import { FactBoxesManager } from "./FactBoxesManager";
 import { TagsManager } from "./TagsManager";
 import { SourcesManager } from "./SourcesManager";
@@ -42,7 +44,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "job-listings" | "job-invoices" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media" | "authors";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "job-listings" | "job-invoices" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media" | "authors" | "native-ads";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const { hasRole } = useAuth();
@@ -75,6 +77,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "job-changes" as View, label: "Jobbytter", icon: Users },
     { id: "job-listings" as View, label: "Stillingsannonser", icon: Briefcase },
     { id: "job-invoices" as View, label: "Faktura-forespørsler", icon: Receipt },
+    { id: "native-ads" as View, label: "Native-annonser", icon: Megaphone },
     ...(isAdmin ? [{ id: "users" as View, label: "Brukere", icon: UserCog }] : []),
   ];
 
@@ -217,6 +220,12 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 icon={Receipt}
                 onClick={() => setView("job-invoices")}
               />
+              <DashboardCard
+                title="Native-annonser"
+                description="Sponset innhold tydelig merket og festet i feeden"
+                icon={Megaphone}
+                onClick={() => setView("native-ads")}
+              />
               {isAdmin && (
                 <DashboardCard
                   title="Brukere"
@@ -262,6 +271,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "job-invoices" && (
           <JobInvoiceRequests />
+        )}
+
+        {view === "native-ads" && (
+          <NativeAdsManager />
         )}
 
         {view === "fact-boxes" && (

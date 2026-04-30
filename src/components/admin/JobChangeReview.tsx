@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 interface JobChange {
   id: string;
-  person_name: string;
+  person_name: string | null;
   new_role: string | null;
   new_company: string | null;
   old_role: string | null;
@@ -66,11 +66,15 @@ export const JobChangeReview = () => {
   };
 
   const handleRegenerate = async (item: JobChange) => {
+    if (!item.person_name && !item.source_text) {
+      toast.error("Fyll inn navn eller kildetekst før generering");
+      return;
+    }
     setRegeneratingId(item.id);
     try {
       const { data, error } = await supabase.functions.invoke("generate-job-notice", {
         body: item.source_text
-          ? { source_text: item.source_text, person_name: item.person_name }
+          ? { source_text: item.source_text, person_name: item.person_name || "ukjent" }
           : { person_name: item.person_name, new_role: item.new_role, new_company: item.new_company, old_role: item.old_role, old_company: item.old_company, change_type: item.change_type },
       });
       if (error) throw error;
@@ -86,6 +90,10 @@ export const JobChangeReview = () => {
 
   const handleNoticeEdit = async (id: string, notice: string) => {
     await supabase.from("job_changes").update({ generated_notice: notice } as any).eq("id", id);
+  };
+
+  const handleFieldEdit = async (id: string, field: string, value: string) => {
+    await supabase.from("job_changes").update({ [field]: value || null } as any).eq("id", id);
   };
 
   const typeLabel = (t: string) => t === "promotion" ? "Rykket opp" : t === "job_change" ? "Byttet jobb" : "Ny jobb";
@@ -124,7 +132,7 @@ export const JobChangeReview = () => {
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-headline text-base font-semibold text-headline">{item.person_name}</span>
+                      <span className="font-headline text-base font-semibold text-headline">{item.person_name || <span className="text-muted-foreground italic">Tips uten navn</span>}</span>
                       <span className="px-2 py-0.5 text-xs font-subhead font-medium rounded-full bg-secondary text-muted-foreground">{typeLabel(item.change_type)}</span>
                     </div>
                     <div className="text-xs text-muted-foreground font-body space-x-3">
@@ -138,6 +146,24 @@ export const JobChangeReview = () => {
                     {new Date(item.created_at).toLocaleDateString("nb-NO", { day: "numeric", month: "short" })}
                   </span>
                 </div>
+
+                {filter === "pending" && (
+                  <div className="mb-3 p-3 bg-secondary/40 rounded-lg space-y-2">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-subhead">Redaksjonelle felter</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input defaultValue={item.person_name || ""} onBlur={(e) => handleFieldEdit(item.id, "person_name", e.target.value)} placeholder="Navn" className="px-2 py-1.5 bg-background border border-border rounded text-xs font-body" />
+                      <select defaultValue={item.change_type} onBlur={(e) => handleFieldEdit(item.id, "change_type", e.target.value)} className="px-2 py-1.5 bg-background border border-border rounded text-xs font-body">
+                        <option value="new_job">Ny jobb</option>
+                        <option value="job_change">Byttet jobb</option>
+                        <option value="promotion">Rykket opp</option>
+                      </select>
+                      <input defaultValue={item.new_role || ""} onBlur={(e) => handleFieldEdit(item.id, "new_role", e.target.value)} placeholder="Ny rolle" className="px-2 py-1.5 bg-background border border-border rounded text-xs font-body" />
+                      <input defaultValue={item.new_company || ""} onBlur={(e) => handleFieldEdit(item.id, "new_company", e.target.value)} placeholder="Nytt selskap" className="px-2 py-1.5 bg-background border border-border rounded text-xs font-body" />
+                      <input defaultValue={item.old_role || ""} onBlur={(e) => handleFieldEdit(item.id, "old_role", e.target.value)} placeholder="Gammel rolle" className="px-2 py-1.5 bg-background border border-border rounded text-xs font-body" />
+                      <input defaultValue={item.old_company || ""} onBlur={(e) => handleFieldEdit(item.id, "old_company", e.target.value)} placeholder="Gammelt selskap" className="px-2 py-1.5 bg-background border border-border rounded text-xs font-body" />
+                    </div>
+                  </div>
+                )}
 
                 {item.source_text && (
                   <details className="mb-3">

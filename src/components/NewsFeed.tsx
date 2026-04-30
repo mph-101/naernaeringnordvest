@@ -401,7 +401,10 @@ export const NewsFeed = () => {
 
         {/* News Grid */}
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {regularItems.map((item, index) => (
+          {gridEntries.map((entry, index) => entry.kind === "ad" ? (
+            <NativeAdCard key={`ad-${entry.ad.id}`} ad={entry.ad} index={index} language={language} />
+          ) : (
+            (() => { const item = entry.item; return (
             <button
               key={item.id}
               onClick={() => handleArticleClick(item)}
@@ -457,9 +460,78 @@ export const NewsFeed = () => {
                 </div>
               </div>
             </button>
+            ); })()
           ))}
         </div>
       </div>
     </section>
+  );
+};
+
+interface NativeAdCardProps {
+  ad: {
+    id: string;
+    title: string;
+    excerpt: string;
+    image_url: string | null;
+    sponsor_name: string;
+    sponsor_logo_url: string | null;
+    cta_label: string | null;
+    cta_url: string | null;
+  };
+  index: number;
+  language: "no" | "en";
+}
+
+const NativeAdCard = ({ ad, index, language }: NativeAdCardProps) => {
+  const labelText = language === "no" ? "Annonsørinnhold" : "Sponsored content";
+  const sponsoredBy = language === "no" ? "Fra" : "From";
+  const cta = ad.cta_label || (language === "no" ? "Les mer" : "Read more");
+  const Wrapper: any = ad.cta_url ? "a" : "div";
+  const wrapperProps = ad.cta_url
+    ? { href: ad.cta_url, target: "_blank", rel: "noopener sponsored nofollow" }
+    : {};
+  return (
+    <Wrapper
+      {...wrapperProps}
+      className="group block w-full text-left bg-card rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/50 hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden relative"
+      style={{ animationDelay: `${index * 50}ms` }}
+    >
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400 text-amber-950 text-[10px] font-subhead font-bold uppercase tracking-wide shadow-sm">
+        <Megaphone className="w-3 h-3" />
+        {labelText}
+      </div>
+      <div
+        className="h-36 w-full bg-muted relative overflow-hidden"
+        style={ad.image_url ? { backgroundImage: `url(${ad.image_url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+      >
+        {!ad.image_url && (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            <Megaphone className="w-8 h-8 opacity-40" />
+          </div>
+        )}
+      </div>
+      <div className="p-5">
+        <div className="flex items-center gap-2 mb-3 text-xs text-muted-foreground font-body">
+          {ad.sponsor_logo_url ? (
+            <img src={ad.sponsor_logo_url} alt="" className="w-5 h-5 rounded object-contain" />
+          ) : null}
+          <span>
+            {sponsoredBy} <span className="font-semibold text-foreground">{ad.sponsor_name}</span>
+          </span>
+        </div>
+        <h3 className="font-headline text-base font-bold text-headline mb-2.5 leading-snug line-clamp-2">
+          {ad.title}
+        </h3>
+        <p className="text-sm text-muted-foreground font-body leading-relaxed mb-4 line-clamp-2">
+          {ad.excerpt}
+        </p>
+        {ad.cta_url && (
+          <div className="text-sm font-subhead font-semibold text-accent group-hover:underline">
+            {cta} →
+          </div>
+        )}
+      </div>
+    </Wrapper>
   );
 };

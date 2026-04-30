@@ -1,0 +1,1 @@
+ALTER TABLE public.job_changes ALTER COLUMN person_name DROP NOT NULL;

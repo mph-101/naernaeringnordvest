@@ -265,6 +265,20 @@ export const NewsFeed = () => {
   const featuredItem = filteredNews.find((item) => item.featured);
   const regularItems = filteredNews.filter((item) => !item.featured);
 
+  // Inject native ads at their pinned position into the regular grid (positions 2,3,4…)
+  // Position 1 is reserved for the featured article — ads pinned to 1 are bumped to 2.
+  type FeedEntry =
+    | { kind: "article"; item: typeof regularItems[0] }
+    | { kind: "ad"; ad: NativeAd };
+  const gridEntries: FeedEntry[] = regularItems.map((item) => ({ kind: "article" as const, item }));
+  // Sort ads by position ascending and insert. Position N means index (N-2) in the grid (after featured).
+  const sortedAds = [...nativeAds].sort((a, b) => a.pinned_position - b.pinned_position);
+  sortedAds.forEach((ad) => {
+    const targetIndex = Math.max(0, ad.pinned_position - 2);
+    const insertAt = Math.min(targetIndex, gridEntries.length);
+    gridEntries.splice(insertAt, 0, { kind: "ad" as const, ad });
+  });
+
   if (loading) {
     return (
       <section className="py-[44px]">

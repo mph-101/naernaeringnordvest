@@ -1,10 +1,8 @@
 import { useState, useRef } from "react";
-import { Briefcase, Link as LinkIcon, Sparkles, Loader2, Send, ImagePlus, X } from "lucide-react";
+import { Briefcase, Loader2, Send, ImagePlus, X, Link as LinkIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
-
-type ChangeType = "new_job" | "job_change" | "promotion";
 
 interface JobChangeFormProps {
   onSubmitted?: () => void;
@@ -14,17 +12,8 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
   const { language } = useTheme();
   const isNo = language === "no";
 
-  const [mode, setMode] = useState<"form" | "paste">("form");
-  const [personName, setPersonName] = useState("");
-  const [newRole, setNewRole] = useState("");
-  const [newCompany, setNewCompany] = useState("");
-  const [oldRole, setOldRole] = useState("");
-  const [oldCompany, setOldCompany] = useState("");
-  const [changeType, setChangeType] = useState<ChangeType>("new_job");
   const [sourceUrl, setSourceUrl] = useState("");
   const [sourceText, setSourceText] = useState("");
-  const [generatedNotice, setGeneratedNotice] = useState("");
-  const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -34,62 +23,36 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
 
   const t = isNo
     ? {
-        title: "Meld inn jobbendring",
-        subtitle: "Tips oss om noen som har byttet jobb, fått ny jobb eller rykket opp",
-        formMode: "Fyll inn skjema",
-        pasteMode: "Lim inn tekst/lenke",
-        name: "Navn",
-        newRole: "Ny rolle",
-        newCompany: "Nytt selskap",
-        oldRole: "Gammel rolle",
-        oldCompany: "Gammelt selskap",
-        type: "Type endring",
-        newJob: "Ny jobb",
-        jobChange: "Byttet jobb",
-        promotion: "Rykket opp",
-        sourceUrl: "Kilde-URL (valgfritt)",
-        pasteLabel: "Lim inn tekst fra LinkedIn eller annen kilde",
-        generate: "Generer notis",
-        regenerate: "Generer på nytt",
-        submit: "Send inn",
-        generating: "Genererer...",
+        title: "Tips om jobbendring",
+        subtitle: "Send oss en lenke til kilden – redaksjonen tar seg av resten",
+        sourceUrl: "Kilde-URL (f.eks. LinkedIn-innlegg)",
+        sourceText: "Tilleggsinformasjon (valgfritt)",
+        sourceTextPlaceholder: "Eventuell tekst, sitat eller kontekst",
+        submit: "Send inn tips",
         submitting: "Sender...",
-        success: "Takk! Jobbendringen er sendt inn og venter på godkjenning.",
-        loginRequired: "Du må logge inn for å melde inn jobbendringer.",
-        generatedLabel: "Generert notis (kan redigeres)",
-        addImage: "Legg til bilde",
-        photoCredit: "Fotokreditering (f.eks. Foto: Navn / Kilde)",
-        imageRequired: "Bilde er påkrevd",
-        photoCreditRequired: "Fotokreditering er påkrevd",
+        success: "Takk! Tipset er mottatt og redaksjonen vurderer det.",
+        loginRequired: "Du må logge inn for å sende inn tips.",
+        addImage: "Legg til bilde (valgfritt)",
+        photoCredit: "Fotokreditering (påkrevd hvis bilde)",
+        urlRequired: "Kilde-URL er påkrevd",
+        photoCreditRequired: "Fotokreditering er påkrevd når du legger ved bilde",
+        editorialNote: "Redaksjonen skriver selve notisen basert på tipset.",
       }
     : {
-        title: "Report a job change",
-        subtitle: "Let us know about someone who changed jobs, got a new position or was promoted",
-        formMode: "Fill in form",
-        pasteMode: "Paste text/link",
-        name: "Name",
-        newRole: "New role",
-        newCompany: "New company",
-        oldRole: "Previous role",
-        oldCompany: "Previous company",
-        type: "Type of change",
-        newJob: "New job",
-        jobChange: "Job change",
-        promotion: "Promotion",
-        sourceUrl: "Source URL (optional)",
-        pasteLabel: "Paste text from LinkedIn or another source",
-        generate: "Generate notice",
-        regenerate: "Regenerate",
-        submit: "Submit",
-        generating: "Generating...",
+        title: "Tip about a job change",
+        subtitle: "Send us a link to the source – the editorial team handles the rest",
+        sourceUrl: "Source URL (e.g. LinkedIn post)",
+        sourceText: "Additional info (optional)",
+        sourceTextPlaceholder: "Any text, quote or context",
+        submit: "Submit tip",
         submitting: "Submitting...",
-        success: "Thank you! The job change has been submitted and is pending review.",
-        loginRequired: "You need to log in to report job changes.",
-        generatedLabel: "Generated notice (editable)",
-        addImage: "Add image",
-        photoCredit: "Photo credit (e.g. Photo: Name / Source)",
-        imageRequired: "Image is required",
-        photoCreditRequired: "Photo credit is required",
+        success: "Thanks! The tip has been received and the editorial team will review it.",
+        loginRequired: "You need to log in to submit tips.",
+        addImage: "Add image (optional)",
+        photoCredit: "Photo credit (required if image)",
+        urlRequired: "Source URL is required",
+        photoCreditRequired: "Photo credit is required when attaching an image",
+        editorialNote: "The editorial team writes the actual notice based on the tip.",
       };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,24 +72,6 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleGenerate = async () => {
-    setGenerating(true);
-    try {
-      const body =
-        mode === "paste"
-          ? { source_text: sourceText, person_name: personName || "ukjent" }
-          : { person_name: personName, new_role: newRole, new_company: newCompany, old_role: oldRole, old_company: oldCompany, change_type: changeType };
-
-      const { data, error } = await supabase.functions.invoke("generate-job-notice", { body });
-      if (error) throw error;
-      setGeneratedNotice(data.notice || "");
-    } catch (e: any) {
-      toast.error(e.message || "Feil ved generering");
-    } finally {
-      setGenerating(false);
-    }
-  };
-
   const handleSubmit = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -134,43 +79,40 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
       return;
     }
 
-    if (!imageFile) {
-      toast.error(t.imageRequired);
+    if (!sourceUrl.trim()) {
+      toast.error(t.urlRequired);
       return;
     }
-    if (!photoCredit.trim()) {
+    if (imageFile && !photoCredit.trim()) {
       toast.error(t.photoCreditRequired);
       return;
     }
 
     setSubmitting(true);
     try {
-      // Upload image
-      const ext = imageFile.name.split(".").pop() || "jpg";
-      const path = `${session.user.id}/${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("job-images").upload(path, imageFile);
-      if (uploadErr) throw uploadErr;
-
-      const { data: urlData } = supabase.storage.from("job-images").getPublicUrl(path);
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        const ext = imageFile.name.split(".").pop() || "jpg";
+        const path = `${session.user.id}/${Date.now()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from("job-images").upload(path, imageFile);
+        if (uploadErr) throw uploadErr;
+        const { data: urlData } = supabase.storage.from("job-images").getPublicUrl(path);
+        imageUrl = urlData.publicUrl;
+      }
 
       const { error } = await supabase.from("job_changes").insert({
-        person_name: personName,
-        new_role: newRole || null,
-        new_company: newCompany || null,
-        old_role: oldRole || null,
-        old_company: oldCompany || null,
-        change_type: changeType,
-        source_url: sourceUrl || null,
-        source_text: mode === "paste" ? sourceText || null : null,
-        generated_notice: generatedNotice || null,
+        person_name: null,
+        change_type: "new_job",
+        source_url: sourceUrl.trim(),
+        source_text: sourceText.trim() || null,
+        generated_notice: null,
         submitted_by: session.user.id,
-        image_url: urlData.publicUrl,
-        photo_credit: photoCredit.trim(),
+        image_url: imageUrl,
+        photo_credit: imageUrl ? photoCredit.trim() : null,
       } as any);
       if (error) throw error;
       toast.success(t.success);
-      setPersonName(""); setNewRole(""); setNewCompany(""); setOldRole(""); setOldCompany("");
-      setSourceUrl(""); setSourceText(""); setGeneratedNotice("");
+      setSourceUrl(""); setSourceText("");
       removeImage(); setPhotoCredit("");
       onSubmitted?.();
     } catch (e: any) {
@@ -180,8 +122,7 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
     }
   };
 
-  const canGenerate = mode === "paste" ? sourceText.trim().length > 10 : personName.trim().length > 0;
-  const canSubmit = personName.trim().length > 0 && generatedNotice.trim().length > 0 && !!imageFile && photoCredit.trim().length > 0;
+  const canSubmit = sourceUrl.trim().length > 0 && (!imageFile || photoCredit.trim().length > 0);
 
   return (
     <div className="bg-card border border-border rounded-2xl p-6">
@@ -195,59 +136,29 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
         </div>
       </div>
 
-      {/* Mode toggle */}
-      <div className="flex gap-2 mb-5">
-        <button onClick={() => setMode("form")} className={`px-3 py-1.5 rounded-full text-sm font-subhead font-medium transition-all ${mode === "form" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
-          {t.formMode}
-        </button>
-        <button onClick={() => setMode("paste")} className={`px-3 py-1.5 rounded-full text-sm font-subhead font-medium transition-all ${mode === "paste" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
-          <LinkIcon className="w-3.5 h-3.5 inline mr-1" />
-          {t.pasteMode}
-        </button>
-      </div>
-
       <div className="space-y-3">
-        {/* Name always shown */}
-        <input
-          value={personName}
-          onChange={(e) => setPersonName(e.target.value)}
-          placeholder={t.name}
-          className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
+        {/* Source URL — required */}
+        <div className="relative">
+          <LinkIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="url"
+            value={sourceUrl}
+            onChange={(e) => setSourceUrl(e.target.value)}
+            placeholder={`${t.sourceUrl} *`}
+            className="w-full pl-9 pr-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+        </div>
+
+        {/* Optional text */}
+        <textarea
+          value={sourceText}
+          onChange={(e) => setSourceText(e.target.value)}
+          placeholder={t.sourceTextPlaceholder}
+          rows={3}
+          className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
         />
 
-        {mode === "form" ? (
-          <>
-            <select
-              value={changeType}
-              onChange={(e) => setChangeType(e.target.value as ChangeType)}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
-            >
-              <option value="new_job">{t.newJob}</option>
-              <option value="job_change">{t.jobChange}</option>
-              <option value="promotion">{t.promotion}</option>
-            </select>
-            <div className="grid grid-cols-2 gap-3">
-              <input value={newRole} onChange={(e) => setNewRole(e.target.value)} placeholder={t.newRole} className="px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30" />
-              <input value={newCompany} onChange={(e) => setNewCompany(e.target.value)} placeholder={t.newCompany} className="px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30" />
-              <input value={oldRole} onChange={(e) => setOldRole(e.target.value)} placeholder={t.oldRole} className="px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30" />
-              <input value={oldCompany} onChange={(e) => setOldCompany(e.target.value)} placeholder={t.oldCompany} className="px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30" />
-            </div>
-            <input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder={t.sourceUrl} className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30" />
-          </>
-        ) : (
-          <>
-            <textarea
-              value={sourceText}
-              onChange={(e) => setSourceText(e.target.value)}
-              placeholder={t.pasteLabel}
-              rows={5}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-            />
-            <input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder={t.sourceUrl} className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30" />
-          </>
-        )}
-
-        {/* Image upload */}
+        {/* Image upload — optional */}
         <div>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
           {imagePreview ? (
@@ -263,41 +174,22 @@ export const JobChangeForm = ({ onSubmitted }: JobChangeFormProps) => {
               onClick={() => fileInputRef.current?.click()}
               className="flex items-center gap-2 px-3 py-2 border border-dashed border-border rounded-lg text-sm font-subhead text-muted-foreground hover:border-primary hover:text-primary transition-colors"
             >
-              <ImagePlus className="w-4 h-4" /> {t.addImage} *
+              <ImagePlus className="w-4 h-4" /> {t.addImage}
             </button>
           )}
         </div>
 
-        {/* Photo credit */}
-        <input
-          value={photoCredit}
-          onChange={(e) => setPhotoCredit(e.target.value)}
-          placeholder={`${t.photoCredit} *`}
-          className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
-        />
-
-        {/* Generate button */}
-        <button
-          onClick={handleGenerate}
-          disabled={!canGenerate || generating}
-          className="flex items-center gap-2 px-4 py-2 bg-secondary text-foreground rounded-lg text-sm font-subhead font-medium hover:bg-secondary/80 transition-colors disabled:opacity-50"
-        >
-          {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          {generating ? t.generating : generatedNotice ? t.regenerate : t.generate}
-        </button>
-
-        {/* Generated notice */}
-        {generatedNotice && (
-          <div>
-            <label className="text-xs text-muted-foreground font-body mb-1 block">{t.generatedLabel}</label>
-            <textarea
-              value={generatedNotice}
-              onChange={(e) => setGeneratedNotice(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 bg-background border border-primary/30 rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-            />
-          </div>
+        {/* Photo credit — only when image attached */}
+        {imageFile && (
+          <input
+            value={photoCredit}
+            onChange={(e) => setPhotoCredit(e.target.value)}
+            placeholder={`${t.photoCredit} *`}
+            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
         )}
+
+        <p className="text-xs text-muted-foreground font-body italic">{t.editorialNote}</p>
 
         {/* Submit */}
         <button

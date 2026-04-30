@@ -1457,7 +1457,7 @@ export type Database = {
           new_role: string | null
           old_company: string | null
           old_role: string | null
-          person_name: string
+          person_name: string | null
           photo_credit: string | null
           published_at: string | null
           reviewed_by: string | null
@@ -1477,7 +1477,7 @@ export type Database = {
           new_role?: string | null
           old_company?: string | null
           old_role?: string | null
-          person_name: string
+          person_name?: string | null
           photo_credit?: string | null
           published_at?: string | null
           reviewed_by?: string | null
@@ -1497,7 +1497,7 @@ export type Database = {
           new_role?: string | null
           old_company?: string | null
           old_role?: string | null
-          person_name?: string
+          person_name?: string | null
           photo_credit?: string | null
           published_at?: string | null
           reviewed_by?: string | null

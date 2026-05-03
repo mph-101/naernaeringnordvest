@@ -54,11 +54,12 @@ export function cropToObjectPosition(
 
 /**
  * Convert crop + focal into background-image styles that emulate the crop
- * by zooming into the chosen rectangle. Returns CSS background-size and
- * background-position percentages.
+ * by zooming into the chosen rectangle while preserving the image aspect
+ * ratio. Returns a uniform background-size (single percent applied to both
+ * axes via a single value) and a background-position.
  *
- * If only a focal point is set (no crop), background-size is "cover" and
- * the focal point becomes the position.
+ * Uses cover-style uniform zoom: scale = max(100/cropW, 100/cropH).
+ * If only a focal point is set, falls back to background-size: cover.
  */
 export function cropToBackgroundStyle(
   crop: ImageCrop | null | undefined,
@@ -69,11 +70,10 @@ export function cropToBackgroundStyle(
   }
   const cw = Math.max(1, Math.min(100, crop.width));
   const ch = Math.max(1, Math.min(100, crop.height));
-  // Zoom factor: scale the image so the crop rect fills the container
-  const sizeW = (100 / cw) * 100; // percent
-  const sizeH = (100 / ch) * 100;
-  // Position: where to place the image so the crop rect aligns with the container.
-  // For background-position percentage, 0% aligns left edges, 100% aligns right edges.
+  // Uniform zoom relative to container's larger dimension — picks the most
+  // aggressive zoom so the crop fully fits, preserving aspect ratio.
+  const zoom = Math.max(100 / cw, 100 / ch);
+  const sizePct = (zoom * 100).toFixed(2);
   const denomX = 100 - cw;
   const denomY = 100 - ch;
   const posX = denomX <= 0 ? 50 : (crop.x / denomX) * 100;
@@ -81,7 +81,7 @@ export function cropToBackgroundStyle(
   const cx = Math.max(0, Math.min(100, posX));
   const cy = Math.max(0, Math.min(100, posY));
   return {
-    size: `${sizeW.toFixed(2)}% ${sizeH.toFixed(2)}%`,
+    size: `${sizePct}% auto`,
     position: `${cx.toFixed(2)}% ${cy.toFixed(2)}%`,
   };
 }

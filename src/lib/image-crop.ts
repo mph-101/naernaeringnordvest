@@ -80,8 +80,12 @@ export function cropToBackgroundStyle(
   const posY = denomY <= 0 ? 50 : (crop.y / denomY) * 100;
   const cx = Math.max(0, Math.min(100, posX));
   const cy = Math.max(0, Math.min(100, posY));
+  const sizeW = ((100 / cw) * 100).toFixed(2);
+  const sizeH = ((100 / ch) * 100).toFixed(2);
   return {
-    size: `${sizePct}% auto`,
+    // Stretch crop rect to fill container. Aspect mismatch may distort
+    // slightly, but matches editor intent more accurately than cover.
+    size: `${sizeW}% ${sizeH}%`,
     position: `${cx.toFixed(2)}% ${cy.toFixed(2)}%`,
   };
 }

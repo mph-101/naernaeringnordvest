@@ -7,7 +7,7 @@ import { getArticleImage } from "@/lib/articles";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tag } from "@/lib/tag-utils";
 import { fetchRegions, type EditorialRegion } from "@/lib/regions";
-import { cropToObjectPosition, parseCrop, parseFocal } from "@/lib/image-crop";
+import { cropToBackgroundStyle, parseCrop, parseFocal } from "@/lib/image-crop";
 
 interface TagWithCount extends Tag {
   count: number;
@@ -259,8 +259,10 @@ export const NewsFeed = () => {
     return getArticleImage(item.id, item.category);
   };
 
-  const getBackgroundPosition = (item: typeof articles[0]) =>
-    item.image_url ? cropToObjectPosition(item.image_crop, item.image_focal) : "center";
+  const getBackgroundStyle = (item: typeof articles[0]) =>
+    item.image_url
+      ? cropToBackgroundStyle(item.image_crop, item.image_focal)
+      : { size: "cover", position: "center" };
 
   const featuredItem = filteredNews.find((item) => item.featured);
   const regularItems = filteredNews.filter((item) => !item.featured);

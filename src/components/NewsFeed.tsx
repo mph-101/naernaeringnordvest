@@ -356,7 +356,7 @@ export const NewsFeed = () => {
             <div className="md:flex">
               <div
                 className="h-56 md:h-auto md:w-2/5 flex-shrink-0 flex items-center justify-center relative overflow-hidden"
-                style={{ background: getBackground(featuredItem), backgroundSize: 'cover', backgroundPosition: getBackgroundPosition(featuredItem) }}
+                style={(() => { const bg = getBackgroundStyle(featuredItem); return { backgroundImage: getBackground(featuredItem), backgroundRepeat: 'no-repeat', backgroundSize: bg.size, backgroundPosition: bg.position }; })()}
               >
                 <div className="absolute inset-0 bg-black/10" />
                 {!featuredItem.image_url && (
@@ -415,7 +415,7 @@ export const NewsFeed = () => {
             >
               <div
                 className="h-36 w-full flex items-center justify-center relative overflow-hidden"
-                style={{ background: getBackground(item), backgroundSize: 'cover', backgroundPosition: getBackgroundPosition(item) }}
+                style={(() => { const bg = getBackgroundStyle(item); return { backgroundImage: getBackground(item), backgroundRepeat: 'no-repeat', backgroundSize: bg.size, backgroundPosition: bg.position }; })()}
               >
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
                 {!item.image_url && (

@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ArticleByline } from "@/components/ArticleByline";
 import { ArticleBody } from "@/components/charts/ArticleBody";
 import { pickDropcapVariant, dropcapClassName } from "@/lib/dropcap";
-import { cropToObjectPosition, parseCrop, parseFocal, type ImageCrop, type ImageFocal } from "@/lib/image-crop";
+import { cropToBackgroundStyle, parseCrop, parseFocal, type ImageCrop, type ImageFocal } from "@/lib/image-crop";
 import { getArticleImage } from "@/lib/articles";
 import { Eye } from "lucide-react";
 
@@ -35,9 +35,9 @@ export const ArticlePreviewDialog = ({ open, onOpenChange, article }: ArticlePre
   const heroImage = article.image_url
     ? `url(${article.image_url})`
     : getArticleImage(article.id || "preview", article.category);
-  const heroPosition = article.image_url
-    ? cropToObjectPosition(parseCrop(article.image_crop), parseFocal(article.image_focal))
-    : "center";
+  const heroBg = article.image_url
+    ? cropToBackgroundStyle(parseCrop(article.image_crop), parseFocal(article.image_focal))
+    : { size: "cover", position: "center" };
 
   const isHtml = /<[a-z][\s\S]*>/i.test(article.body);
   const dropClass = dropcapClassName(pickDropcapVariant(article.category, article.body));
@@ -57,10 +57,10 @@ export const ArticlePreviewDialog = ({ open, onOpenChange, article }: ArticlePre
 
         <div className="bg-background">
           {/* Hero */}
-          <div className="relative w-full h-48 md:h-64 overflow-hidden">
+          <div className="relative w-full h-64 md:h-[420px] overflow-hidden">
             <div
               className="absolute inset-0"
-              style={{ background: heroImage, backgroundSize: "cover", backgroundPosition: heroPosition }}
+              style={{ backgroundImage: heroImage, backgroundRepeat: "no-repeat", backgroundSize: heroBg.size, backgroundPosition: heroBg.position }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
             <div className="relative flex items-end h-full max-w-xl mx-auto w-full px-6 pb-8">

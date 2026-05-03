@@ -53,6 +53,40 @@ export function cropToObjectPosition(
 }
 
 /**
+ * Convert crop + focal into background-image styles that emulate the crop
+ * by zooming into the chosen rectangle. Returns CSS background-size and
+ * background-position percentages.
+ *
+ * If only a focal point is set (no crop), background-size is "cover" and
+ * the focal point becomes the position.
+ */
+export function cropToBackgroundStyle(
+  crop: ImageCrop | null | undefined,
+  focal: ImageFocal | null | undefined,
+): { size: string; position: string } {
+  if (!crop) {
+    return { size: "cover", position: cropToObjectPosition(null, focal) };
+  }
+  const cw = Math.max(1, Math.min(100, crop.width));
+  const ch = Math.max(1, Math.min(100, crop.height));
+  // Zoom factor: scale the image so the crop rect fills the container
+  const sizeW = (100 / cw) * 100; // percent
+  const sizeH = (100 / ch) * 100;
+  // Position: where to place the image so the crop rect aligns with the container.
+  // For background-position percentage, 0% aligns left edges, 100% aligns right edges.
+  const denomX = 100 - cw;
+  const denomY = 100 - ch;
+  const posX = denomX <= 0 ? 50 : (crop.x / denomX) * 100;
+  const posY = denomY <= 0 ? 50 : (crop.y / denomY) * 100;
+  const cx = Math.max(0, Math.min(100, posX));
+  const cy = Math.max(0, Math.min(100, posY));
+  return {
+    size: `${sizeW.toFixed(2)}% ${sizeH.toFixed(2)}%`,
+    position: `${cx.toFixed(2)}% ${cy.toFixed(2)}%`,
+  };
+}
+
+/**
  * Parse a value coming from Supabase jsonb (could be null, object, or string).
  */
 export function parseCrop(v: unknown): ImageCrop | null {

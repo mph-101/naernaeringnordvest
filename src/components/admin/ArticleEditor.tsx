@@ -20,7 +20,7 @@ import { ArticleGalleryEditor } from "./ArticleGalleryEditor";
 import { ArticleVariantsManager } from "./ArticleVariantsManager";
 import { ImageCropDialog } from "./ImageCropDialog";
 import type { ImageCrop, ImageFocal } from "@/lib/image-crop";
-import { cropToObjectPosition, cropToBackgroundStyle, parseCrop, parseFocal } from "@/lib/image-crop";
+import { cropToBackgroundStyle, parseCrop, parseFocal } from "@/lib/image-crop";
 import { CategorySelect } from "./CategorySelect";
 import { AudioTranscriber, type AudioTranscriberHandle } from "./AudioTranscriber";
 import { ProofreadRules, loadProofreadRules, loadProofreadSettings, loadProofreadSettingsFromDb, type ProofreadRule } from "./ProofreadRules";

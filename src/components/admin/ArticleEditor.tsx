@@ -20,7 +20,7 @@ import { ArticleGalleryEditor } from "./ArticleGalleryEditor";
 import { ArticleVariantsManager } from "./ArticleVariantsManager";
 import { ImageCropDialog } from "./ImageCropDialog";
 import type { ImageCrop, ImageFocal } from "@/lib/image-crop";
-import { cropToObjectPosition, parseCrop, parseFocal } from "@/lib/image-crop";
+import { cropToBackgroundStyle, parseCrop, parseFocal } from "@/lib/image-crop";
 import { CategorySelect } from "./CategorySelect";
 import { AudioTranscriber, type AudioTranscriberHandle } from "./AudioTranscriber";
 import { ProofreadRules, loadProofreadRules, loadProofreadSettings, loadProofreadSettingsFromDb, type ProofreadRule } from "./ProofreadRules";
@@ -1300,29 +1300,17 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                   <div className="text-[11px] text-muted-foreground mb-1">Hero (16:9)</div>
                   <div
                     className="relative w-full rounded-md overflow-hidden border border-border bg-muted"
-                    style={{ aspectRatio: "16 / 9" }}
-                  >
-                    <img
-                      src={form.image_url}
-                      alt="Hero forhåndsvisning"
-                      className="w-full h-full object-cover"
-                      style={{ objectPosition: cropToObjectPosition(form.image_crop, form.image_focal) }}
-                    />
-                  </div>
+                    style={(() => { const bg = cropToBackgroundStyle(form.image_crop, form.image_focal); return { aspectRatio: "16 / 9", backgroundImage: `url(${form.image_url})`, backgroundRepeat: "no-repeat", backgroundSize: bg.size, backgroundPosition: bg.position }; })()}
+                    aria-label="Hero forhåndsvisning"
+                  />
                 </div>
                 <div>
                   <div className="text-[11px] text-muted-foreground mb-1">Kort (4:3)</div>
                   <div
                     className="relative w-full rounded-md overflow-hidden border border-border bg-muted"
-                    style={{ aspectRatio: "4 / 3" }}
-                  >
-                    <img
-                      src={form.image_url}
-                      alt="Kort forhåndsvisning"
-                      className="w-full h-full object-cover"
-                      style={{ objectPosition: cropToObjectPosition(form.image_crop, form.image_focal) }}
-                    />
-                  </div>
+                    style={(() => { const bg = cropToBackgroundStyle(form.image_crop, form.image_focal); return { aspectRatio: "4 / 3", backgroundImage: `url(${form.image_url})`, backgroundRepeat: "no-repeat", backgroundSize: bg.size, backgroundPosition: bg.position }; })()}
+                    aria-label="Kort forhåndsvisning"
+                  />
                 </div>
               </div>
             </div>

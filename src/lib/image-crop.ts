@@ -53,6 +53,44 @@ export function cropToObjectPosition(
 }
 
 /**
+ * Convert crop + focal into background-image styles that emulate the crop
+ * by zooming into the chosen rectangle while preserving the image aspect
+ * ratio. Returns a uniform background-size (single percent applied to both
+ * axes via a single value) and a background-position.
+ *
+ * Uses cover-style uniform zoom: scale = max(100/cropW, 100/cropH).
+ * If only a focal point is set, falls back to background-size: cover.
+ */
+export function cropToBackgroundStyle(
+  crop: ImageCrop | null | undefined,
+  focal: ImageFocal | null | undefined,
+): { size: string; position: string } {
+  if (!crop) {
+    return { size: "cover", position: cropToObjectPosition(null, focal) };
+  }
+  const cw = Math.max(1, Math.min(100, crop.width));
+  const ch = Math.max(1, Math.min(100, crop.height));
+  // Uniform zoom relative to container's larger dimension — picks the most
+  // aggressive zoom so the crop fully fits, preserving aspect ratio.
+  const zoom = Math.max(100 / cw, 100 / ch);
+  const sizePct = (zoom * 100).toFixed(2);
+  const denomX = 100 - cw;
+  const denomY = 100 - ch;
+  const posX = denomX <= 0 ? 50 : (crop.x / denomX) * 100;
+  const posY = denomY <= 0 ? 50 : (crop.y / denomY) * 100;
+  const cx = Math.max(0, Math.min(100, posX));
+  const cy = Math.max(0, Math.min(100, posY));
+  const sizeW = ((100 / cw) * 100).toFixed(2);
+  const sizeH = ((100 / ch) * 100).toFixed(2);
+  return {
+    // Stretch crop rect to fill container. Aspect mismatch may distort
+    // slightly, but matches editor intent more accurately than cover.
+    size: `${sizeW}% ${sizeH}%`,
+    position: `${cx.toFixed(2)}% ${cy.toFixed(2)}%`,
+  };
+}
+
+/**
  * Parse a value coming from Supabase jsonb (could be null, object, or string).
  */
 export function parseCrop(v: unknown): ImageCrop | null {

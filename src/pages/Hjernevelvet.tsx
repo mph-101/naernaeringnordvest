@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Brain, MapPin, Calendar, Users, ArrowRight, Loader2, MessageSquare } from "lucide-react";
 import { Header } from "@/components/Header";
+import { ViewToggle } from "@/components/ViewToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
@@ -109,6 +110,7 @@ const Hjernevelvet = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header showSearch={false} />
+        <ViewToggle view="feed" onViewChange={() => {}} />
         <div className="flex justify-center py-24"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       </div>
     );
@@ -118,6 +120,7 @@ const Hjernevelvet = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header showSearch={false} />
+        <ViewToggle view="feed" onViewChange={() => {}} />
         <main className="max-w-3xl mx-auto px-6 py-20 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent/10 text-accent mb-5">
             <Brain className="w-8 h-8" />
@@ -141,6 +144,7 @@ const Hjernevelvet = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header showSearch={false} />
+      <ViewToggle view="feed" onViewChange={() => {}} />
       <main className="max-w-5xl mx-auto px-6 py-12">
         {/* Hero */}
         <header className="mb-10">

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Crop as CropIcon, Target, RotateCcw } from "lucide-react";
 import type { ImageCrop, ImageFocal } from "@/lib/image-crop";
-import { cropToObjectPosition } from "@/lib/image-crop";
+import { cropToBackgroundStyle } from "@/lib/image-crop";
 
 interface ImageCropDialogProps {
   open: boolean;
@@ -112,7 +112,7 @@ export const ImageCropDialog = ({
   };
 
   // Preview helpers — apply crop + focal to small format previews
-  const previewObjectPosition = cropToObjectPosition(
+  const previewBg = cropToBackgroundStyle(
     crop ? { x: crop.x as number, y: crop.y as number, width: crop.width as number, height: crop.height as number } : null,
     focal,
   );
@@ -225,25 +225,31 @@ export const ImageCropDialog = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="text-xs text-muted-foreground mb-1.5">Hero (16:9)</div>
-              <div className="relative w-full rounded-md overflow-hidden border border-border bg-muted" style={{ aspectRatio: "16 / 9" }}>
-                <img
-                  src={imageUrl}
-                  alt="Hero forhåndsvisning"
-                  className="w-full h-full object-cover"
-                  style={{ objectPosition: previewObjectPosition }}
-                />
-              </div>
+              <div
+                className="relative w-full rounded-md overflow-hidden border border-border bg-muted"
+                style={{
+                  aspectRatio: "16 / 9",
+                  backgroundImage: `url(${imageUrl})`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: previewBg.size,
+                  backgroundPosition: previewBg.position,
+                }}
+                aria-label="Hero forhåndsvisning"
+              />
             </div>
             <div>
               <div className="text-xs text-muted-foreground mb-1.5">Kort (4:3)</div>
-              <div className="relative w-full rounded-md overflow-hidden border border-border bg-muted" style={{ aspectRatio: "4 / 3" }}>
-                <img
-                  src={imageUrl}
-                  alt="Kort forhåndsvisning"
-                  className="w-full h-full object-cover"
-                  style={{ objectPosition: previewObjectPosition }}
-                />
-              </div>
+              <div
+                className="relative w-full rounded-md overflow-hidden border border-border bg-muted"
+                style={{
+                  aspectRatio: "4 / 3",
+                  backgroundImage: `url(${imageUrl})`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: previewBg.size,
+                  backgroundPosition: previewBg.position,
+                }}
+                aria-label="Kort forhåndsvisning"
+              />
             </div>
           </div>
         </div>

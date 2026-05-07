@@ -65,28 +65,16 @@ export function cropToBackgroundStyle(
   crop: ImageCrop | null | undefined,
   focal: ImageFocal | null | undefined,
 ): { size: string; position: string } {
-  if (!crop) {
-    return { size: "cover", position: cropToObjectPosition(null, focal) };
-  }
-  const cw = Math.max(1, Math.min(100, crop.width));
-  const ch = Math.max(1, Math.min(100, crop.height));
-  // Uniform zoom relative to container's larger dimension — picks the most
-  // aggressive zoom so the crop fully fits, preserving aspect ratio.
-  const zoom = Math.max(100 / cw, 100 / ch);
-  const sizePct = (zoom * 100).toFixed(2);
-  const denomX = 100 - cw;
-  const denomY = 100 - ch;
-  const posX = denomX <= 0 ? 50 : (crop.x / denomX) * 100;
-  const posY = denomY <= 0 ? 50 : (crop.y / denomY) * 100;
-  const cx = Math.max(0, Math.min(100, posX));
-  const cy = Math.max(0, Math.min(100, posY));
-  const sizeW = ((100 / cw) * 100).toFixed(2);
-  const sizeH = ((100 / ch) * 100).toFixed(2);
+  // Always preserve image aspect ratio — never stretch or distort.
+  // We use background-size: cover (fills the container without changing
+  // the image's proportions) and pan to the crop's focal centre via
+  // background-position. The crop rectangle therefore drives FRAMING
+  // (which part of the image to keep visible), not zoom level. This is
+  // the safest behaviour when the container's aspect ratio differs from
+  // the crop's, and matches what `<img object-fit: cover>` does.
   return {
-    // Stretch crop rect to fill container. Aspect mismatch may distort
-    // slightly, but matches editor intent more accurately than cover.
-    size: `${sizeW}% ${sizeH}%`,
-    position: `${cx.toFixed(2)}% ${cy.toFixed(2)}%`,
+    size: "cover",
+    position: cropToObjectPosition(crop, focal),
   };
 }
 

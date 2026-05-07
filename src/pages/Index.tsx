@@ -9,6 +9,7 @@ import { ViewToggle } from "@/components/ViewToggle";
 import { JobChangeFeed } from "@/components/JobChangeFeed";
 import { TrendingSection } from "@/components/TrendingSection";
 import { MarketTicker } from "@/components/MarketTicker";
+import type { ArticleSource } from "@/lib/articles-chat";
 
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -28,6 +29,7 @@ const Index = () => {
 
   const [view, setView] = useState<"search" | "feed">(getInitialView);
   const [conversationQuery, setConversationQuery] = useState<string | null>(null);
+  const [conversationSources, setConversationSources] = useState<ArticleSource[]>([]);
 
   useEffect(() => {
     const v = searchParams.get("view");
@@ -48,10 +50,12 @@ const Index = () => {
 
   const handleSearch = (query: string) => {
     setConversationQuery(query);
+    setConversationSources([]);
   };
 
   const handleBackToSearch = () => {
     setConversationQuery(null);
+    setConversationSources([]);
   };
 
   // If in conversation mode, show the conversation view
@@ -61,8 +65,9 @@ const Index = () => {
         <ConversationView
           initialQuery={conversationQuery}
           onBack={handleBackToSearch}
+          onSourcesChange={setConversationSources}
         />
-        <RelatedArticles />
+        <RelatedArticles sources={conversationSources} />
       </div>
     );
   }

@@ -21,9 +21,15 @@ interface Message {
 interface ConversationViewProps {
   initialQuery: string;
   onBack: () => void;
+  /**
+   * Called whenever the aggregated set of article sources used across the
+   * conversation changes. Lets the parent mirror the same articles in a
+   * "Related coverage" strip below the chat.
+   */
+  onSourcesChange?: (sources: ArticleSource[]) => void;
 }
 
-export function ConversationView({ initialQuery, onBack }: ConversationViewProps) {
+export function ConversationView({ initialQuery, onBack, onSourcesChange }: ConversationViewProps) {
   const { language } = useTheme();
   const t = translations[language];
 
@@ -34,6 +40,24 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
   const [shareCopied, setShareCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"chat" | "timeline">("chat");
   const hasStarted = useRef(false);
+  // Aggregate ALL article sources across the conversation, de-duplicated by id,
+  // newest-turn first. Bubbled up to the parent so the related-coverage strip
+  // shows the very same articles the AI cited.
+  useEffect(() => {
+    if (!onSourcesChange) return;
+    const seen = new Set<string>();
+    const aggregated: ArticleSource[] = [];
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m.role !== "assistant" || !m.sources) continue;
+      for (const s of m.sources) {
+        if (seen.has(s.id)) continue;
+        seen.add(s.id);
+        aggregated.push(s);
+      }
+    }
+    onSourcesChange(aggregated);
+  }, [messages, onSourcesChange]);
   // Build aggregated source timeline data: pair every assistant turn with the
   // user question that triggered it.
   const assistantTurns = (() => {
@@ -468,6 +492,34 @@ export function ConversationView({ initialQuery, onBack }: ConversationViewProps
                       </button>
                     </div>
                   )}
+                  {message.role === "assistant" &&
+                    message.content &&
+                    !isLoading &&
+                    index === messages.length - 1 &&
+                    message.sources && message.sources.length > 0 && (
+                      <div className="mt-5">
+                        <p className="font-subhead text-[11px] text-muted-foreground mb-2 uppercase tracking-widest">
+                          {language === "no" ? "Foreslåtte oppfølginger" : "Suggested follow-ups"}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {message.sources.slice(0, 3).map((s) => {
+                            const prompt = language === "no"
+                              ? `Fortell mer om: ${s.title}`
+                              : `Tell me more about: ${s.title}`;
+                            return (
+                              <button
+                                key={s.id}
+                                onClick={() => void sendMessage(prompt, messages)}
+                                className="px-3 py-1.5 bg-card hover:bg-secondary border border-border hover:border-accent/30 rounded-full text-xs font-body text-foreground/80 hover:text-foreground transition-all line-clamp-1 max-w-full text-left"
+                                title={prompt}
+                              >
+                                {prompt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>

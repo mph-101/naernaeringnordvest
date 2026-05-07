@@ -65,27 +65,15 @@ export function cropToBackgroundStyle(
   crop: ImageCrop | null | undefined,
   focal: ImageFocal | null | undefined,
 ): { size: string; position: string } {
-  if (!crop) {
-    return { size: "cover", position: cropToObjectPosition(null, focal) };
-  }
-  const cw = Math.max(1, Math.min(100, crop.width));
-  const ch = Math.max(1, Math.min(100, crop.height));
-  // Use the LEAST aggressive zoom that still fills both axes (cover behaviour),
-  // applied uniformly so the image always keeps its aspect ratio. We never
-  // stretch — slight overflow on one axis is acceptable.
-  const zoom = Math.max(100 / cw, 100 / ch);
-  const sizePct = (zoom * 100).toFixed(2);
-  // Background-position percentage: the image's P% point aligns with the
-  // container's P% point. To center the crop's centre in the container we
-  // use the crop centre as the position percentage.
-  const fx = focal ? focal.x : crop.x + cw / 2;
-  const fy = focal ? focal.y : crop.y + ch / 2;
-  const cx = Math.max(0, Math.min(100, fx));
-  const cy = Math.max(0, Math.min(100, fy));
+  // Always preserve image aspect ratio — never stretch.
+  // We use background-size: cover (fills container, no distortion) and
+  // approximate the crop by panning to the crop's focal centre via
+  // background-position. This means the chosen crop rectangle drives
+  // FRAMING (focal point), not zoom level — which is the safest behaviour
+  // when the container's aspect ratio differs from the crop's.
   return {
-    // Single value → height computed automatically, preserves aspect ratio.
-    size: `${sizePct}%`,
-    position: `${cx.toFixed(2)}% ${cy.toFixed(2)}%`,
+    size: "cover",
+    position: cropToObjectPosition(crop, focal),
   };
 }
 

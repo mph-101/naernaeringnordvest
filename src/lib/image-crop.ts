@@ -70,22 +70,21 @@ export function cropToBackgroundStyle(
   }
   const cw = Math.max(1, Math.min(100, crop.width));
   const ch = Math.max(1, Math.min(100, crop.height));
-  // Uniform zoom relative to container's larger dimension — picks the most
-  // aggressive zoom so the crop fully fits, preserving aspect ratio.
+  // Use the LEAST aggressive zoom that still fills both axes (cover behaviour),
+  // applied uniformly so the image always keeps its aspect ratio. We never
+  // stretch — slight overflow on one axis is acceptable.
   const zoom = Math.max(100 / cw, 100 / ch);
   const sizePct = (zoom * 100).toFixed(2);
-  const denomX = 100 - cw;
-  const denomY = 100 - ch;
-  const posX = denomX <= 0 ? 50 : (crop.x / denomX) * 100;
-  const posY = denomY <= 0 ? 50 : (crop.y / denomY) * 100;
-  const cx = Math.max(0, Math.min(100, posX));
-  const cy = Math.max(0, Math.min(100, posY));
-  const sizeW = ((100 / cw) * 100).toFixed(2);
-  const sizeH = ((100 / ch) * 100).toFixed(2);
+  // Background-position percentage: the image's P% point aligns with the
+  // container's P% point. To center the crop's centre in the container we
+  // use the crop centre as the position percentage.
+  const fx = focal ? focal.x : crop.x + cw / 2;
+  const fy = focal ? focal.y : crop.y + ch / 2;
+  const cx = Math.max(0, Math.min(100, fx));
+  const cy = Math.max(0, Math.min(100, fy));
   return {
-    // Stretch crop rect to fill container. Aspect mismatch may distort
-    // slightly, but matches editor intent more accurately than cover.
-    size: `${sizeW}% ${sizeH}%`,
+    // Single value → height computed automatically, preserves aspect ratio.
+    size: `${sizePct}%`,
     position: `${cx.toFixed(2)}% ${cy.toFixed(2)}%`,
   };
 }

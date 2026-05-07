@@ -492,6 +492,34 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                       </button>
                     </div>
                   )}
+                  {message.role === "assistant" &&
+                    message.content &&
+                    !isLoading &&
+                    index === messages.length - 1 &&
+                    message.sources && message.sources.length > 0 && (
+                      <div className="mt-5">
+                        <p className="font-subhead text-[11px] text-muted-foreground mb-2 uppercase tracking-widest">
+                          {language === "no" ? "Foreslåtte oppfølginger" : "Suggested follow-ups"}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {message.sources.slice(0, 3).map((s) => {
+                            const prompt = language === "no"
+                              ? `Fortell mer om: ${s.title}`
+                              : `Tell me more about: ${s.title}`;
+                            return (
+                              <button
+                                key={s.id}
+                                onClick={() => void sendMessage(prompt, messages)}
+                                className="px-3 py-1.5 bg-card hover:bg-secondary border border-border hover:border-accent/30 rounded-full text-xs font-body text-foreground/80 hover:text-foreground transition-all line-clamp-1 max-w-full text-left"
+                                title={prompt}
+                              >
+                                {prompt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>

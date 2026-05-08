@@ -632,6 +632,11 @@ export const RichTextEditor = ({
             <BookOpen className="w-4 h-4" />
           </ToolButton>
         )}
+        {onInsertSourceCard && (
+          <ToolButton onClick={onInsertSourceCard} title="Sett inn kildepresentasjon">
+            <UserSquare2 className="w-4 h-4" />
+          </ToolButton>
+        )}
       </div>
 
       {/* Editor */}

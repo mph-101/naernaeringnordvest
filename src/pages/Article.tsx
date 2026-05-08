@@ -56,7 +56,6 @@ const Article = () => {
   const t = translations[language];
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   const [readProgress, setReadProgress] = useState(0);
-  const [parallaxOffset, setParallaxOffset] = useState(0);
   const [article, setArticle] = useState<ArticleData | null>(null);
   const [loading, setLoading] = useState(true);
   const [accessChecked, setAccessChecked] = useState(false);
@@ -100,7 +99,6 @@ const Article = () => {
     const scrollTop = window.scrollY;
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
     if (docHeight > 0) setReadProgress(Math.min(100, (scrollTop / docHeight) * 100));
-    setParallaxOffset(scrollTop * 0.4);
   }, []);
 
   useEffect(() => {

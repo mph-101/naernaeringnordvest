@@ -1158,6 +1158,49 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     setEditingFactBox(null);
   };
 
+  const handleInsertSourceCard = (data: SourceCardData) => {
+    const encoded = encodeSourceCard(data);
+    const html = `<aside data-nn-source-card="true" data-source-card="${encoded}"><p><strong>${data.name}</strong></p></aside>`;
+    const editor = editorInstanceRef.current;
+
+    if (editingSourceCard && editor) {
+      const node = editor.state.doc.nodeAt(editingSourceCard.pos);
+      if (node && node.type.name === "sourceCard") {
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(
+            { from: editingSourceCard.pos, to: editingSourceCard.pos + node.nodeSize },
+            html,
+          )
+          .run();
+        toast({ title: "Kildepresentasjon oppdatert", description: data.name });
+        setEditingSourceCard(null);
+        setSourceCardDialogOpen(false);
+        return;
+      }
+    }
+
+    if (editor) {
+      editor.chain().focus().insertContent(html + "<p></p>").run();
+    } else {
+      updateForm({ body: form.body + html + "<p></p>" });
+    }
+    toast({ title: "Kildepresentasjon satt inn", description: data.name });
+    setSourceCardDialogOpen(false);
+    setEditingSourceCard(null);
+  };
+
+  const handleEditSourceCard = (data: SourceCardData, pos: number) => {
+    setEditingSourceCard({ data, pos });
+    setSourceCardDialogOpen(true);
+  };
+
+  const handleCloseSourceCardDialog = () => {
+    setSourceCardDialogOpen(false);
+    setEditingSourceCard(null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">

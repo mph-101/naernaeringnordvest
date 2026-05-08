@@ -308,7 +308,7 @@ const Hjernevelvet = () => {
                       >
                         {a.image_url && (
                           <div className="h-40 w-full overflow-hidden">
-                            <img src={a.image_url} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            <img src={a.image_url} alt={a.title} className="w-full h-full object-cover" />
                           </div>
                         )}
                         <div className="p-5">

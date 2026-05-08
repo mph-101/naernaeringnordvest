@@ -56,7 +56,6 @@ const Article = () => {
   const t = translations[language];
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   const [readProgress, setReadProgress] = useState(0);
-  const [parallaxOffset, setParallaxOffset] = useState(0);
   const [article, setArticle] = useState<ArticleData | null>(null);
   const [loading, setLoading] = useState(true);
   const [accessChecked, setAccessChecked] = useState(false);
@@ -100,7 +99,6 @@ const Article = () => {
     const scrollTop = window.scrollY;
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
     if (docHeight > 0) setReadProgress(Math.min(100, (scrollTop / docHeight) * 100));
-    setParallaxOffset(scrollTop * 0.4);
   }, []);
 
   useEffect(() => {
@@ -195,8 +193,8 @@ const Article = () => {
 
       <div className="relative w-full h-64 md:h-[420px] lg:h-[520px] overflow-hidden">
         <div
-          className="absolute inset-0 will-change-transform"
-          style={{ backgroundImage: heroImage, backgroundRepeat: 'no-repeat', backgroundSize: heroBg.size, backgroundPosition: heroBg.position, transform: `translateY(${parallaxOffset}px) scale(1.06)` }}
+          className="absolute inset-0"
+          style={{ backgroundImage: heroImage, backgroundRepeat: 'no-repeat', backgroundSize: heroBg.size, backgroundPosition: heroBg.position }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
         <div className="relative flex items-end h-full max-w-xl mx-auto w-full px-6 pb-8">

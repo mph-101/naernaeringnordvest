@@ -2081,6 +2081,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         initial={editingFactBox?.data || null}
       />
 
+      <SourceCardDialog
+        open={sourceCardDialogOpen}
+        onOpenChange={(open) => (open ? setSourceCardDialogOpen(true) : handleCloseSourceCardDialog())}
+        onInsert={handleInsertSourceCard}
+        initial={editingSourceCard?.data || null}
+      />
+
       <ImproveDialog open={!!improveResult} onOpenChange={(open) => !open && setImproveResult(null)}>
         <ImproveDialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <ImproveDialogHeader>

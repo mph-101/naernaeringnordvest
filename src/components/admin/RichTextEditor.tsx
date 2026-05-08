@@ -9,8 +9,10 @@ import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { ChartFigureView } from "@/components/charts/ChartFigureView";
 import { FactBoxNodeView } from "@/components/factbox/FactBoxNodeView";
+import { SourceCardNodeView } from "@/components/source-card/SourceCardNodeView";
 import type { ChartData } from "@/components/charts/ArticleChart";
 import type { FactBoxData } from "@/components/factbox/FactBox";
+import type { SourceCardData } from "@/components/source-card/SourceCard";
 import {
   Bold,
   Italic,
@@ -29,6 +31,7 @@ import {
   ImageIcon,
   BarChart3,
   BookOpen,
+  UserSquare2,
   Undo,
   Redo,
   Code,
@@ -53,11 +56,14 @@ interface RichTextEditorProps {
   onImageUpload?: () => void;
   onInsertChart?: () => void;
   onInsertFactBox?: () => void;
+  onInsertSourceCard?: () => void;
   /** Called when the user clicks an existing chart in the editor.
    *  `pos` is the ProseMirror position of the figure node, used to replace it. */
   onEditChart?: (chart: ChartData, pos: number) => void;
   /** Called when the user clicks an existing fact box in the editor. */
   onEditFactBox?: (data: FactBoxData, pos: number) => void;
+  /** Called when the user clicks an existing source card in the editor. */
+  onEditSourceCard?: (data: SourceCardData, pos: number) => void;
   /** Called once with the underlying TipTap editor instance, so the parent
    *  can imperatively replace nodes (e.g. swap an existing chart for an updated one). */
   editorRef?: (editor: ReturnType<typeof useEditor> | null) => void;

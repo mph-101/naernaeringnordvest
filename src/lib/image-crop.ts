@@ -2,13 +2,12 @@
  * Helpers for applying article image crop + focal point to <img> / background-image.
  *
  * Crop rect and focal point are stored as percentages (0-100) relative to the
- * original uploaded image. We use object-fit: cover with object-position to
- * approximate the crop without a server-side image pipeline.
+ * original uploaded image. We use object-fit/background-size: cover with
+ * object-position/background-position to pan without distorting the image.
  *
  * Strategy:
- * - If crop is set, we render the image with object-position so the chosen
- *   crop rect is centered in the visible viewport (approximation).
- * - If focal is set (without crop), we use it directly as object-position.
+ * - If crop is set, we center the crop rect in the visible viewport.
+ * - If focal is set, we use it only as a position hint.
  * - Without either, default to 50% 50% (center).
  */
 
@@ -53,13 +52,9 @@ export function cropToObjectPosition(
 }
 
 /**
- * Convert crop + focal into background-image styles that emulate the crop
- * by zooming into the chosen rectangle while preserving the image aspect
- * ratio. Returns a uniform background-size (single percent applied to both
- * axes via a single value) and a background-position.
- *
- * Uses cover-style uniform zoom: scale = max(100/cropW, 100/cropH).
- * If only a focal point is set, falls back to background-size: cover.
+ * Convert crop + focal into background-image styles. Focus/crop only affects
+ * background-position; background-size stays `cover` so we never add extra
+ * zoom/scale or stretch the image.
  */
 export function cropToBackgroundStyle(
   crop: ImageCrop | null | undefined,

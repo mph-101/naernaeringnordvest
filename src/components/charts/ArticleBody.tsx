@@ -1,5 +1,6 @@
 import { Fragment, useMemo } from "react";
 import { ArticleChart, type ChartData } from "./ArticleChart";
+import { SourceCard, decodeSourceCard, type SourceCardData } from "@/components/source-card/SourceCard";
 import { pickDropcapVariant, dropcapClassName } from "@/lib/dropcap";
 
 interface ArticleBodyProps {
@@ -9,9 +10,10 @@ interface ArticleBodyProps {
 }
 
 interface Segment {
-  type: "html" | "chart";
+  type: "html" | "chart" | "sourceCard";
   content: string;
   chart?: ChartData;
+  sourceCard?: SourceCardData;
 }
 
 const decodeChart = (encoded: string): ChartData | null => {
@@ -35,8 +37,8 @@ const decodeChart = (encoded: string): ChartData | null => {
 export const ArticleBody = ({ html, className = "", category }: ArticleBodyProps) => {
   const segments = useMemo<Segment[]>(() => {
     if (!html) return [];
-    // Match a Nær Næring chart figure regardless of attribute order
-    const regex = /<figure\b(?=[^>]*\bdata-nn-chart="true")(?=[^>]*\bdata-chart="([^"]+)")[^>]*>[\s\S]*?<\/figure>/gi;
+    // Match Nær Næring custom blocks: chart figures and source-card asides.
+    const regex = /<figure\b(?=[^>]*\bdata-nn-chart="true")(?=[^>]*\bdata-chart="([^"]+)")[^>]*>[\s\S]*?<\/figure>|<aside\b(?=[^>]*\bdata-nn-source-card="true")(?=[^>]*\bdata-source-card="([^"]+)")[^>]*>[\s\S]*?<\/aside>/gi;
     const result: Segment[] = [];
     let lastIndex = 0;
     let m: RegExpExecArray | null;
@@ -44,9 +46,20 @@ export const ArticleBody = ({ html, className = "", category }: ArticleBodyProps
       if (m.index > lastIndex) {
         result.push({ type: "html", content: html.slice(lastIndex, m.index) });
       }
-      const chart = decodeChart(m[1]);
-      if (chart) {
-        result.push({ type: "chart", content: m[0], chart });
+      if (m[1]) {
+        const chart = decodeChart(m[1]);
+        if (chart) {
+          result.push({ type: "chart", content: m[0], chart });
+        } else {
+          result.push({ type: "html", content: m[0] });
+        }
+      } else if (m[2]) {
+        const card = decodeSourceCard(m[2]);
+        if (card) {
+          result.push({ type: "sourceCard", content: m[0], sourceCard: card });
+        } else {
+          result.push({ type: "html", content: m[0] });
+        }
       } else {
         result.push({ type: "html", content: m[0] });
       }
@@ -112,6 +125,8 @@ export const ArticleBody = ({ html, className = "", category }: ArticleBodyProps
       {segments.map((seg, i) =>
         seg.type === "chart" && seg.chart ? (
           <ArticleChart key={i} data={seg.chart} />
+        ) : seg.type === "sourceCard" && seg.sourceCard ? (
+          <SourceCard key={i} data={seg.sourceCard} />
         ) : (
           <Fragment key={i}>
             <div className="my-0 pb-[5px]" dangerouslySetInnerHTML={{ __html: seg.content }} />

@@ -9,8 +9,10 @@ import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { ChartFigureView } from "@/components/charts/ChartFigureView";
 import { FactBoxNodeView } from "@/components/factbox/FactBoxNodeView";
+import { SourceCardNodeView } from "@/components/source-card/SourceCardNodeView";
 import type { ChartData } from "@/components/charts/ArticleChart";
 import type { FactBoxData } from "@/components/factbox/FactBox";
+import type { SourceCardData } from "@/components/source-card/SourceCard";
 import {
   Bold,
   Italic,
@@ -29,6 +31,7 @@ import {
   ImageIcon,
   BarChart3,
   BookOpen,
+  UserSquare2,
   Undo,
   Redo,
   Code,
@@ -53,11 +56,14 @@ interface RichTextEditorProps {
   onImageUpload?: () => void;
   onInsertChart?: () => void;
   onInsertFactBox?: () => void;
+  onInsertSourceCard?: () => void;
   /** Called when the user clicks an existing chart in the editor.
    *  `pos` is the ProseMirror position of the figure node, used to replace it. */
   onEditChart?: (chart: ChartData, pos: number) => void;
   /** Called when the user clicks an existing fact box in the editor. */
   onEditFactBox?: (data: FactBoxData, pos: number) => void;
+  /** Called when the user clicks an existing source card in the editor. */
+  onEditSourceCard?: (data: SourceCardData, pos: number) => void;
   /** Called once with the underlying TipTap editor instance, so the parent
    *  can imperatively replace nodes (e.g. swap an existing chart for an updated one). */
   editorRef?: (editor: ReturnType<typeof useEditor> | null) => void;
@@ -289,14 +295,65 @@ const FactBoxNode = Node.create({
   },
 });
 
+/**
+ * Atom-block node that preserves Nær Næring source-presentation cards
+ * (`<aside data-nn-source-card="true" data-source-card="<base64>">`).
+ */
+const SourceCardNode = Node.create({
+  name: "sourceCard",
+  group: "block",
+  atom: true,
+  selectable: true,
+  draggable: true,
+  addAttributes() {
+    return {
+      "data-source-card": { default: null },
+      name: { default: "" },
+    };
+  },
+  parseHTML() {
+    return [
+      {
+        tag: "aside[data-nn-source-card]",
+        getAttrs: (el) => {
+          if (!(el instanceof HTMLElement)) return false;
+          const data = el.getAttribute("data-source-card") || "";
+          let name = "";
+          try {
+            const json = decodeURIComponent(escape(atob(data)));
+            const parsed = JSON.parse(json);
+            name = parsed.name || "";
+          } catch {
+            // ignore
+          }
+          return { "data-source-card": data, name };
+        },
+      },
+    ];
+  },
+  renderHTML({ HTMLAttributes }) {
+    const { name, ...rest } = HTMLAttributes as Record<string, string>;
+    return [
+      "aside",
+      mergeAttributes(rest, { "data-nn-source-card": "true" }),
+      ["p", {}, ["strong", {}, name || "Kilde"]],
+    ];
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(SourceCardNodeView);
+  },
+});
+
 export const RichTextEditor = ({
   content,
   onChange,
   onImageUpload,
   onInsertChart,
   onInsertFactBox,
+  onInsertSourceCard,
   onEditChart,
   onEditFactBox,
+  onEditSourceCard,
   editorRef,
   placeholder = "Start å skrive...",
   className = "",
@@ -317,6 +374,7 @@ export const RichTextEditor = ({
       HighlightExtension.configure({ highlights: highlights || [] }),
       ChartFigureNode,
       FactBoxNode,
+      SourceCardNode,
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -377,6 +435,20 @@ export const RichTextEditor = ({
     el.addEventListener("nn-factbox-edit", handler as EventListener);
     return () => el.removeEventListener("nn-factbox-edit", handler as EventListener);
   }, [editor, onEditFactBox]);
+
+  // Listen for source-card edit requests
+  useEffect(() => {
+    if (!editor || !onEditSourceCard) return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { data: SourceCardData; pos: number | null };
+      if (detail?.data && typeof detail.pos === "number") {
+        onEditSourceCard(detail.data, detail.pos);
+      }
+    };
+    const el = editor.view.dom;
+    el.addEventListener("nn-source-card-edit", handler as EventListener);
+    return () => el.removeEventListener("nn-source-card-edit", handler as EventListener);
+  }, [editor, onEditSourceCard]);
 
   // Expose the editor to the parent for imperative operations
   useEffect(() => {
@@ -558,6 +630,11 @@ export const RichTextEditor = ({
         {onInsertFactBox && (
           <ToolButton onClick={onInsertFactBox} title="Sett inn faktaboks">
             <BookOpen className="w-4 h-4" />
+          </ToolButton>
+        )}
+        {onInsertSourceCard && (
+          <ToolButton onClick={onInsertSourceCard} title="Sett inn kildepresentasjon">
+            <UserSquare2 className="w-4 h-4" />
           </ToolButton>
         )}
       </div>

@@ -28,6 +28,8 @@ import { ChartGenerator } from "@/components/charts/ChartGenerator";
 import type { ChartData } from "@/components/charts/ArticleChart";
 import { FactBoxLibraryDialog } from "@/components/factbox/FactBoxLibraryDialog";
 import { encodeFactBox, type FactBoxData } from "@/components/factbox/FactBox";
+import { SourceCardDialog } from "@/components/source-card/SourceCardDialog";
+import { encodeSourceCard, type SourceCardData } from "@/components/source-card/SourceCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArticleTagInput } from "./ArticleTagInput";
 import { AIDraftFromSourcesButton } from "./AIDraftFromSourcesButton";
@@ -101,6 +103,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [editingChart, setEditingChart] = useState<{ chart: ChartData; pos: number } | null>(null);
   const [factBoxDialogOpen, setFactBoxDialogOpen] = useState(false);
   const [editingFactBox, setEditingFactBox] = useState<{ data: FactBoxData; pos: number } | null>(null);
+  const [sourceCardDialogOpen, setSourceCardDialogOpen] = useState(false);
+  const [editingSourceCard, setEditingSourceCard] = useState<{ data: SourceCardData; pos: number } | null>(null);
   const editorInstanceRef = useRef<any>(null);
   const { toast } = useToast();
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
@@ -1154,6 +1158,49 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     setEditingFactBox(null);
   };
 
+  const handleInsertSourceCard = (data: SourceCardData) => {
+    const encoded = encodeSourceCard(data);
+    const html = `<aside data-nn-source-card="true" data-source-card="${encoded}"><p><strong>${data.name}</strong></p></aside>`;
+    const editor = editorInstanceRef.current;
+
+    if (editingSourceCard && editor) {
+      const node = editor.state.doc.nodeAt(editingSourceCard.pos);
+      if (node && node.type.name === "sourceCard") {
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(
+            { from: editingSourceCard.pos, to: editingSourceCard.pos + node.nodeSize },
+            html,
+          )
+          .run();
+        toast({ title: "Kildepresentasjon oppdatert", description: data.name });
+        setEditingSourceCard(null);
+        setSourceCardDialogOpen(false);
+        return;
+      }
+    }
+
+    if (editor) {
+      editor.chain().focus().insertContent(html + "<p></p>").run();
+    } else {
+      updateForm({ body: form.body + html + "<p></p>" });
+    }
+    toast({ title: "Kildepresentasjon satt inn", description: data.name });
+    setSourceCardDialogOpen(false);
+    setEditingSourceCard(null);
+  };
+
+  const handleEditSourceCard = (data: SourceCardData, pos: number) => {
+    setEditingSourceCard({ data, pos });
+    setSourceCardDialogOpen(true);
+  };
+
+  const handleCloseSourceCardDialog = () => {
+    setSourceCardDialogOpen(false);
+    setEditingSourceCard(null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1527,6 +1574,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 onEditChart={handleEditChart}
                 onInsertFactBox={() => { setEditingFactBox(null); setFactBoxDialogOpen(true); }}
                 onEditFactBox={handleEditFactBox}
+                onInsertSourceCard={() => { setEditingSourceCard(null); setSourceCardDialogOpen(true); }}
+                onEditSourceCard={handleEditSourceCard}
                 editorRef={(ed) => { editorInstanceRef.current = ed; }}
                 placeholder="Skriv artikkelens innhold her..."
                 highlights={proofSuggestions.map((s) => ({
@@ -2030,6 +2079,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         onOpenChange={(open) => (open ? setFactBoxDialogOpen(true) : handleCloseFactBoxDialog())}
         onInsert={handleInsertFactBox}
         initial={editingFactBox?.data || null}
+      />
+
+      <SourceCardDialog
+        open={sourceCardDialogOpen}
+        onOpenChange={(open) => (open ? setSourceCardDialogOpen(true) : handleCloseSourceCardDialog())}
+        onInsert={handleInsertSourceCard}
+        initial={editingSourceCard?.data || null}
       />
 
       <ImproveDialog open={!!improveResult} onOpenChange={(open) => !open && setImproveResult(null)}>

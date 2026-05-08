@@ -392,6 +392,11 @@
   object-fit: contain;
   object-position: var(--nn-image-position, 50% 50%);
   transform: none !important;
+  /* Bevar bildets egne proporsjoner under lasting og ved
+     vindusendring så omkringliggende tekst ikke "hopper". */
+  aspect-ratio: auto;
+  display: block;
+  max-width: 100%;
 }
 .article-body > *:last-child {
   margin-bottom: 0 !important;

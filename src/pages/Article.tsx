@@ -191,10 +191,20 @@ const Article = () => {
 
       <Header showSearch={false} />
 
-      <div className="relative w-full h-64 md:h-[420px] lg:h-[520px] overflow-hidden">
+      <div className="relative w-full aspect-[16/9] md:aspect-[21/9] max-h-[60vh] overflow-hidden">
         <div
           className="absolute inset-0"
-          style={{ backgroundImage: heroImage, backgroundRepeat: 'no-repeat', backgroundSize: heroBg.size, backgroundPosition: heroBg.position }}
+          style={{
+            backgroundImage: heroImage,
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: heroBg.size,
+            backgroundPosition: heroBg.position,
+            // Hint the browser to keep the layer on its own composited
+            // surface so background-position is repainted cheaply on
+            // resize without re-laying out neighbouring content.
+            willChange: 'background-position',
+            backfaceVisibility: 'hidden',
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
         <div className="relative flex items-end h-full max-w-xl mx-auto w-full px-6 pb-8">

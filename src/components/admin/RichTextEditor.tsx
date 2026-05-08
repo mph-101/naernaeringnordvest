@@ -436,6 +436,20 @@ export const RichTextEditor = ({
     return () => el.removeEventListener("nn-factbox-edit", handler as EventListener);
   }, [editor, onEditFactBox]);
 
+  // Listen for source-card edit requests
+  useEffect(() => {
+    if (!editor || !onEditSourceCard) return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { data: SourceCardData; pos: number | null };
+      if (detail?.data && typeof detail.pos === "number") {
+        onEditSourceCard(detail.data, detail.pos);
+      }
+    };
+    const el = editor.view.dom;
+    el.addEventListener("nn-source-card-edit", handler as EventListener);
+    return () => el.removeEventListener("nn-source-card-edit", handler as EventListener);
+  }, [editor, onEditSourceCard]);
+
   // Expose the editor to the parent for imperative operations
   useEffect(() => {
     editorRef?.(editor || null);

@@ -1574,6 +1574,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 onEditChart={handleEditChart}
                 onInsertFactBox={() => { setEditingFactBox(null); setFactBoxDialogOpen(true); }}
                 onEditFactBox={handleEditFactBox}
+                onInsertSourceCard={() => { setEditingSourceCard(null); setSourceCardDialogOpen(true); }}
+                onEditSourceCard={handleEditSourceCard}
                 editorRef={(ed) => { editorInstanceRef.current = ed; }}
                 placeholder="Skriv artikkelens innhold her..."
                 highlights={proofSuggestions.map((s) => ({

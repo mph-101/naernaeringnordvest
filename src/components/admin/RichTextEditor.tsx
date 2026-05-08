@@ -295,14 +295,65 @@ const FactBoxNode = Node.create({
   },
 });
 
+/**
+ * Atom-block node that preserves Nær Næring source-presentation cards
+ * (`<aside data-nn-source-card="true" data-source-card="<base64>">`).
+ */
+const SourceCardNode = Node.create({
+  name: "sourceCard",
+  group: "block",
+  atom: true,
+  selectable: true,
+  draggable: true,
+  addAttributes() {
+    return {
+      "data-source-card": { default: null },
+      name: { default: "" },
+    };
+  },
+  parseHTML() {
+    return [
+      {
+        tag: "aside[data-nn-source-card]",
+        getAttrs: (el) => {
+          if (!(el instanceof HTMLElement)) return false;
+          const data = el.getAttribute("data-source-card") || "";
+          let name = "";
+          try {
+            const json = decodeURIComponent(escape(atob(data)));
+            const parsed = JSON.parse(json);
+            name = parsed.name || "";
+          } catch {
+            // ignore
+          }
+          return { "data-source-card": data, name };
+        },
+      },
+    ];
+  },
+  renderHTML({ HTMLAttributes }) {
+    const { name, ...rest } = HTMLAttributes as Record<string, string>;
+    return [
+      "aside",
+      mergeAttributes(rest, { "data-nn-source-card": "true" }),
+      ["p", {}, ["strong", {}, name || "Kilde"]],
+    ];
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(SourceCardNodeView);
+  },
+});
+
 export const RichTextEditor = ({
   content,
   onChange,
   onImageUpload,
   onInsertChart,
   onInsertFactBox,
+  onInsertSourceCard,
   onEditChart,
   onEditFactBox,
+  onEditSourceCard,
   editorRef,
   placeholder = "Start å skrive...",
   className = "",
@@ -323,6 +374,7 @@ export const RichTextEditor = ({
       HighlightExtension.configure({ highlights: highlights || [] }),
       ChartFigureNode,
       FactBoxNode,
+      SourceCardNode,
     ],
     content,
     onUpdate: ({ editor }) => {

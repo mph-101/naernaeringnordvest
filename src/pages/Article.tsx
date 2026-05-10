@@ -169,7 +169,7 @@ const Article = () => {
   const effectiveFocal = variantImageUrl ? variant?.image_focal ?? null : article.image_focal;
   const heroImage = effectiveImageUrl ? `url(${effectiveImageUrl})` : getArticleImage(article.id, article.category);
   const heroBg = effectiveImageUrl
-    ? cropToBackgroundStyle(parseCrop(effectiveCrop), parseFocal(effectiveFocal))
+    ? cropToBackgroundStyle(parseCrop(effectiveCrop), parseFocal(effectiveFocal), { precise: true })
     : { size: "cover", position: "center" };
 
   const BackButton = () => (

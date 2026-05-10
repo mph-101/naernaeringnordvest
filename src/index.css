@@ -6,6 +6,11 @@
 
 @layer base {
   :root {
+    /* Felles bakgrunn-/object-position for alle artikkelbilder.
+       Kan overstyres per element/kontekst (f.eks. på .article-body)
+       men er aldri tom. Bildets zoom/scale skal ALDRI røres. */
+    --nn-image-position: 50% 50%;
+
     /* Soft pastel Scandinavian palette */
     --background: 45 40% 97%;
     --foreground: 30 12% 25%;

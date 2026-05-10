@@ -261,7 +261,7 @@ export const NewsFeed = () => {
 
   const getBackgroundStyle = (item: typeof articles[0]) =>
     item.image_url
-      ? cropToBackgroundStyle(item.image_crop, item.image_focal)
+      ? cropToBackgroundStyle(item.image_crop, item.image_focal, { precise: true })
       : { size: "cover", position: "center" };
 
   const featuredItem = filteredNews.find((item) => item.featured);

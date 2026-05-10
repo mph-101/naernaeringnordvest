@@ -52,6 +52,31 @@ export function cropToObjectPosition(
 }
 
 /**
+ * Precision mode: combine crop rect + focal point into a single, more accurate
+ * background-position. The idea is to map the focal point — expressed in the
+ * coordinate system of the original image — into the coordinate system of the
+ * crop rectangle, so that with `background-size: cover` the focal point lands
+ * as close as possible to the centre of the visible viewport.
+ *
+ * Falls back to crop-centre, focal alone, or 50/50 when inputs are missing.
+ * Never changes background-size — caller keeps `cover` to preserve aspect.
+ */
+export function cropFocalToPrecisePosition(
+  crop: ImageCrop | null | undefined,
+  focal: ImageFocal | null | undefined,
+): string {
+  if (crop && focal) {
+    // Where does the focal point sit *inside* the crop rect, as 0-100?
+    const relX = ((focal.x - crop.x) / crop.width) * 100;
+    const relY = ((focal.y - crop.y) / crop.height) * 100;
+    const fx = Math.max(0, Math.min(100, relX));
+    const fy = Math.max(0, Math.min(100, relY));
+    return `${fx.toFixed(2)}% ${fy.toFixed(2)}%`;
+  }
+  return cropToObjectPosition(crop, focal);
+}
+
+/**
  * Convert crop + focal into background-image styles. Focus/crop only affects
  * background-position; background-size stays `cover` so we never add extra
  * zoom/scale or stretch the image.
@@ -59,18 +84,17 @@ export function cropToObjectPosition(
 export function cropToBackgroundStyle(
   crop: ImageCrop | null | undefined,
   focal: ImageFocal | null | undefined,
+  options?: { precise?: boolean },
 ): { size: string; position: string } {
   // Always preserve image aspect ratio — never stretch or distort.
-  // We use background-size: cover (fills the container without changing
-  // the image's proportions) and pan to the crop's focal centre via
-  // background-position. The crop rectangle therefore drives FRAMING
-  // (which part of the image to keep visible), not zoom level. This is
-  // the safest behaviour when the container's aspect ratio differs from
-  // the crop's, and matches what `<img object-fit: cover>` does.
-  return {
-    size: "cover",
-    position: cropToObjectPosition(crop, focal),
-  };
+  // background-size stays `cover`; only background-position changes.
+  // When `precise` is true and both crop + focal are set, we map the
+  // focal point into the crop's local coordinate system for a tighter,
+  // more predictable framing.
+  const position = options?.precise
+    ? cropFocalToPrecisePosition(crop, focal)
+    : cropToObjectPosition(crop, focal);
+  return { size: "cover", position };
 }
 
 /**

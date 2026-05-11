@@ -6,6 +6,7 @@ import { ArticleByline } from "@/components/ArticleByline";
 import { ArticleDiscussion } from "@/components/ArticleDiscussion";
 import { TagChips } from "@/components/TagChips";
 import { ArticleNotes } from "@/components/ArticleNotes";
+import { ArticleEngagementBar } from "@/components/ArticleEngagementBar";
 import { RelatedByTags } from "@/components/RelatedByTags";
 import { CompanyMiniProfile } from "@/components/CompanyMiniProfile";
 import { ArticleGallery } from "@/components/ArticleGallery";
@@ -38,6 +39,7 @@ interface ArticleData {
   excerpt_en: string | null;
   body_en: string | null;
   key_points_en: any;
+  created_by?: string | null;
 }
 
 function timeAgo(dateStr: string, lang: "no" | "en"): string {
@@ -278,6 +280,15 @@ const Article = () => {
         </div>
 
         <ArticleGallery articleId={id!} />
+
+        {!showPaywall && (
+          <ArticleEngagementBar
+            articleId={id!}
+            articleTitle={title}
+            authorName={article.author}
+            journalistId={article.created_by ?? null}
+          />
+        )}
 
         <div className="flex items-center gap-4 mb-12">
           <div className="flex-1 h-px bg-border" />

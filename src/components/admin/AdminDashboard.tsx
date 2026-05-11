@@ -19,7 +19,8 @@ import {
   PenLine,
   Briefcase,
   Receipt,
-  Megaphone
+  Megaphone,
+  Vote
 } from "lucide-react";
 import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
@@ -36,6 +37,7 @@ import { AnalyticsDashboard } from "./AnalyticsDashboard";
 import { UsersManager } from "./UsersManager";
 import { MediaArchive } from "./MediaArchive";
 import { AuthorsManager } from "./AuthorsManager";
+import { PollsManager } from "./PollsManager";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,7 +46,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "job-listings" | "job-invoices" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media" | "authors" | "native-ads";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "job-listings" | "job-invoices" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media" | "authors" | "native-ads" | "polls";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const { hasRole } = useAuth();
@@ -78,6 +80,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "job-listings" as View, label: "Stillingsannonser", icon: Briefcase },
     { id: "job-invoices" as View, label: "Faktura-forespørsler", icon: Receipt },
     { id: "native-ads" as View, label: "Native-annonser", icon: Megaphone },
+    { id: "polls" as View, label: "Meningsmåling", icon: Vote },
     ...(isAdmin ? [{ id: "users" as View, label: "Brukere", icon: UserCog }] : []),
   ];
 
@@ -299,6 +302,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "authors" && (
           <AuthorsManager />
+        )}
+
+        {view === "polls" && (
+          <PollsManager />
         )}
       </main>
     </div>

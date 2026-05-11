@@ -2,7 +2,7 @@ import { useState } from "react";
 import { StickyNote, Share2, Mail, Check, Copy, Linkedin } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { JournalistContactDialog } from "./JournalistContactDialog";
-import { logEvent } from "@/lib/analytics";
+import { trackEvent } from "@/lib/analytics";
 import { toast } from "sonner";
 
 interface Props {
@@ -25,12 +25,12 @@ export function ArticleEngagementBar({ articleId, articleTitle, authorName, jour
   const url = typeof window !== "undefined" ? window.location.href : "";
 
   const onNote = () => {
-    logEvent("engagement_note_click" as any, { article_id: articleId });
+    trackEvent("engagement_note_click", { article_id: articleId });
     window.dispatchEvent(new CustomEvent("nn:open-article-notes"));
   };
 
   const onShare = async () => {
-    logEvent("engagement_share_click" as any, { article_id: articleId });
+    trackEvent("engagement_share_click", { article_id: articleId });
     if (typeof navigator !== "undefined" && (navigator as any).share) {
       try { await (navigator as any).share({ title: articleTitle, url }); return; } catch { /* fall through */ }
     }
@@ -43,7 +43,7 @@ export function ArticleEngagementBar({ articleId, articleTitle, authorName, jour
   };
 
   const onContact = () => {
-    logEvent("engagement_contact_click" as any, { article_id: articleId });
+    trackEvent("engagement_contact_click", { article_id: articleId });
     setContactOpen(true);
   };
 
@@ -58,7 +58,7 @@ export function ArticleEngagementBar({ articleId, articleTitle, authorName, jour
           href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`}
           target="_blank" rel="noopener noreferrer"
           aria-label="LinkedIn"
-          onClick={() => logEvent("engagement_share_linkedin" as any, { article_id: articleId })}
+          onClick={() => trackEvent("engagement_share_linkedin", { article_id: articleId })}
           className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full border border-border text-muted-foreground hover:text-accent hover:border-accent transition-colors"
         >
           <Linkedin className="w-4 h-4" />

@@ -35,6 +35,12 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
   }, []);
 
   useEffect(() => {
+    const onOpen = () => setIsOpen(true);
+    window.addEventListener("nn:open-article-notes", onOpen);
+    return () => window.removeEventListener("nn:open-article-notes", onOpen);
+  }, []);
+
+  useEffect(() => {
     if (!isOpen || !userId) return;
     setLoading(true);
     supabase

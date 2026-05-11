@@ -1697,6 +1697,42 @@ export type Database = {
           },
         ]
       }
+      journalist_messages: {
+        Row: {
+          article_id: string
+          body: string
+          created_at: string
+          from_email: string | null
+          from_name: string | null
+          from_user_id: string | null
+          id: string
+          journalist_id: string | null
+          read_at: string | null
+        }
+        Insert: {
+          article_id: string
+          body: string
+          created_at?: string
+          from_email?: string | null
+          from_name?: string | null
+          from_user_id?: string | null
+          id?: string
+          journalist_id?: string | null
+          read_at?: string | null
+        }
+        Update: {
+          article_id?: string
+          body?: string
+          created_at?: string
+          from_email?: string | null
+          from_name?: string | null
+          from_user_id?: string | null
+          id?: string
+          journalist_id?: string | null
+          read_at?: string | null
+        }
+        Relationships: []
+      }
       media_assets: {
         Row: {
           alt_text: string
@@ -1921,6 +1957,80 @@ export type Database = {
         }
         Relationships: []
       }
+      poll_votes: {
+        Row: {
+          created_at: string
+          id: string
+          option_id: string
+          poll_id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_id: string
+          poll_id: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_id?: string
+          poll_id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polls: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          options: Json
+          question: string
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          options?: Json
+          question: string
+          starts_at?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          options?: Json
+          question?: string
+          starts_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1930,8 +2040,10 @@ export type Database = {
           email: string | null
           hidden_elements: string[] | null
           id: string
+          mascot_enabled: boolean
           proofread_settings: Json | null
           region: string | null
+          tour_completed_at: string | null
           updated_at: string
           user_id: string
         }
@@ -1943,8 +2055,10 @@ export type Database = {
           email?: string | null
           hidden_elements?: string[] | null
           id?: string
+          mascot_enabled?: boolean
           proofread_settings?: Json | null
           region?: string | null
+          tour_completed_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1956,8 +2070,10 @@ export type Database = {
           email?: string | null
           hidden_elements?: string[] | null
           id?: string
+          mascot_enabled?: boolean
           proofread_settings?: Json | null
           region?: string | null
+          tour_completed_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -2427,6 +2543,18 @@ export type Database = {
       merge_tags: {
         Args: { _source_id: string; _target_id: string }
         Returns: undefined
+      }
+      poll_results: {
+        Args: { _poll_id: string }
+        Returns: {
+          option_id: string
+          percent: number
+          votes: number
+        }[]
+      }
+      poll_user_choice: {
+        Args: { _poll_id: string; _session_id?: string }
+        Returns: string
       }
       revoke_api_key: { Args: { _id: string }; Returns: undefined }
       search_articles: {

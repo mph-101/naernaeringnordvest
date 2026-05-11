@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Camera, Pencil, X, Check, Loader2, User, MapPin, Building } from "lucide-react";
+import { Camera, Pencil, X, Check, Loader2, User, MapPin, Building, Compass } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
   const [selectedRegion, setSelectedRegion] = useState(userRegion || "");
   const [editorialRegion, setEditorialRegion] = useState<string>("");
   const [editorialRegions, setEditorialRegions] = useState<EditorialRegion[]>([]);
+  const [mascotEnabled, setMascotEnabled] = useState<boolean>(true);
   const fileRef = useRef<HTMLInputElement>(null);
   const isNo = language === "no";
 
@@ -44,11 +45,13 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("editorial_region")
+        .select("editorial_region, mascot_enabled")
         .eq("user_id", userId)
         .maybeSingle();
       const slug = (data as any)?.editorial_region as string | null | undefined;
       if (slug) setEditorialRegion(slug);
+      const me = (data as any)?.mascot_enabled;
+      if (typeof me === "boolean") setMascotEnabled(me);
     })();
   }, [userId]);
 
@@ -84,6 +87,17 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
       .update({ editorial_region: slug || null } as any)
       .eq("user_id", userId);
     if (error) { toast.error(error.message); return; }
+    toast.success(t.saved);
+  };
+
+  const handleMascotToggle = async (next: boolean) => {
+    setMascotEnabled(next);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ mascot_enabled: next } as any)
+      .eq("user_id", userId);
+    if (error) { toast.error(error.message); return; }
+    window.dispatchEvent(new CustomEvent("nn:mascot-toggle", { detail: { enabled: next } }));
     toast.success(t.saved);
   };
 
@@ -183,6 +197,21 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
           </select>
         </div>
       )}
+
+      {/* Mascot guide toggle */}
+      <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl mt-2">
+        <Compass className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        <span className="text-sm font-subhead font-medium text-muted-foreground flex-1">
+          {isNo ? "Vis kompass-guiden" : "Show compass guide"}
+        </span>
+        <button
+          onClick={() => handleMascotToggle(!mascotEnabled)}
+          aria-pressed={mascotEnabled}
+          className={`relative w-11 h-6 rounded-full transition-colors ${mascotEnabled ? "bg-accent" : "bg-muted"}`}
+        >
+          <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${mascotEnabled ? "translate-x-5" : ""}`} />
+        </button>
+      </div>
     </div>
   );
 }

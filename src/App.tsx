@@ -33,6 +33,7 @@ import Stillinger from "./pages/Stillinger";
 import StillingDetail from "./pages/StillingDetail";
 import StillingNy from "./pages/StillingNy";
 import StillingNyTakk from "./pages/StillingNyTakk";
+import { MascotTour } from "./components/mascot/MascotTour";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <MascotTour />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/article/:id" element={<Article />} />

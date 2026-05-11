@@ -9,6 +9,7 @@ import { ViewToggle } from "@/components/ViewToggle";
 import { JobChangeFeed } from "@/components/JobChangeFeed";
 import { TrendingSection } from "@/components/TrendingSection";
 import { MarketTicker } from "@/components/MarketTicker";
+import { FrontpagePoll } from "@/components/FrontpagePoll";
 import type { ArticleSource } from "@/lib/articles-chat";
 
 import { useTheme } from "@/hooks/useTheme";
@@ -77,13 +78,18 @@ const Index = () => {
       <Header showSearch={false} />
       
       <main>
-        <ViewToggle view={view} onViewChange={setView} />
-        
+        <div data-tour="view-toggle">
+          <ViewToggle view={view} onViewChange={setView} />
+        </div>
+
         {view === "search" ? <SearchHero onSearch={handleSearch} /> : (
           <>
             <MarketTicker />
+            <FrontpagePoll />
             <TrendingSection />
-            <NewsFeed />
+            <div data-tour="news-feed">
+              <NewsFeed />
+            </div>
             {!hiddenElements.includes("job_changes") && (
               <div className="max-w-5xl mx-auto px-6 pb-16">
                 <JobChangeFeed />

@@ -1,47 +1,117 @@
-## Problem
+## Mål
 
-To relaterte issues med bildevisning:
+Tre nye funksjoner for å øke engasjement:
+1. **Forside-meningsmåling** styrt fra CMS — gjennomsnitt vises etter eget svar
+2. **Artikkel-handlinger** under hver artikkel: Notat, Del, Kontakt journalist
+3. **Maskot-guide** ved første innlogging — animert kompass, kan skrus av/på
 
-1. **Artikkel-hero er for lav**: `h-48 md:h-64 lg:h-72` (192/256/288 px) — for trangt for 16:9-bilder, og parallax bruker `scale(1.15)` som zoomer ekstra inn.
-2. **Bildeutsnitt på front zoomer for tett**: `cropToObjectPosition()` i `src/lib/image-crop.ts` bruker bare focal point / crop-senter som `object-position`, men ignorerer crop-rektangelets størrelse. Når en redaktør lager et tett crop (f.eks. 30% av bildet), brukes hele originalbildet som `background-size: cover` med kun en posisjons-justering — så crop-en gjenspeiles ikke i hvor mye av bildet som vises. I praksis blir bildet bare panorert, ikke beskåret/zoomet.
+---
 
-## Løsning
+## 1) Meningsmåling på front
 
-### 1. Øk hero-høyden i `src/pages/Article.tsx` (linje 196, 199)
-- Endre fra `h-48 md:h-64 lg:h-72` til `h-64 md:h-[420px] lg:h-[520px]`.
-- Reduser parallax-zoom fra `scale(1.15)` til `scale(1.08)` så ansikter ikke kuttes.
+### Database
+Ny tabell `polls`:
+- `question` (text), `description` (text, valgfri)
+- `options` (jsonb: `[{ id, label }]`, 2–5 valg)
+- `active` (bool), `starts_at`, `ends_at` (timestamptz) — én aktiv om gangen via "siste publiserte mellom datoer"
+- `created_by` (uuid), standard timestamps
 
-### 2. Forbedre `cropToObjectPosition` til ekte crop-emulering
-Bruk crop-rektangelet til å beregne både `object-position` OG `background-size`, slik at et tett crop faktisk zoomer/beskjærer riktig del av bildet.
+Ny tabell `poll_votes`:
+- `poll_id`, `option_id`, `user_id` (nullable), `session_id` (text — for utloggede)
+- Unik constraint per `(poll_id, user_id)` og `(poll_id, session_id)` slik at man ikke kan stemme to ganger
+- RLS: alle kan `INSERT`, kun egen `SELECT` — aggregater hentes via SQL-funksjon
 
-Algoritme (når `crop` finnes):
-- `bgWidth  = 100 / (crop.width  / 100)` → 100/(0.3) = 333% hvis crop er 30% bredt
-- `bgHeight = 100 / (crop.height / 100)`
-- `posX = crop.x / (100 - crop.width)  * 100` (samme for Y) — flytter crop-vinduet til synlig område
-- Returner både string for position og size
+Ny SQL-funksjon `poll_results(_poll_id uuid)` (SECURITY DEFINER):
+- Returnerer `option_id, votes, percent` for alle valg
+- Også `current_user_choice(_poll_id uuid)` for å lese egen stemme
 
-Endre signatur eller legg til en ny helper:
-```ts
-export function cropToBackgroundStyle(crop, focal): { position: string; size: string }
-```
-Beholder `cropToObjectPosition` for bakoverkompatibilitet (focal-only bruk), men bruker den nye i:
-- `src/pages/Article.tsx` (hero)
-- `src/components/NewsFeed.tsx` (featured + grid-kort)
-- `src/components/admin/ArticlePreviewDialog.tsx`
-- `src/components/admin/ImageCropDialog.tsx` (preview)
+### Admin
+Nytt menypunkt "Meningsmåling" i `AdminDashboard` (`PollsManager.tsx`):
+- Liste over polls, opprett/rediger/arkiver
+- Felter: spørsmål, beskrivelse, 2–5 svaralternativ, aktiv-toggle, periode (forhåndsvalg "neste 7 dager")
+- Påminnelse: "Aktuelt spørsmål minst en gang i uken" — vis advarsel hvis ingen aktiv poll løper neste 7 dager
 
-For container med ulikt aspekt enn crop-rektangelet brukes `background-size: cover`-prinsipp på det virtuelle "crop-vinduet": vi bruker `max(bgWidth, bgHeight * containerRatio / cropRatio)` — men siden vi ikke kjenner container-ratio i CSS uten JS, bruker vi den enkle og tryggere varianten:
-- `background-size: {100/cropW*100}% {100/cropH*100}%` 
-- `background-position: {posX}% {posY}%`
+### Frontend
+Ny komponent `FrontpagePoll.tsx` plassert øverst på `/` (under hero, over feed):
+- Henter aktiv poll (`active=true` AND `now()` mellom `starts_at`/`ends_at`)
+- Før stemme: viser spørsmål + alternativer som klikkbare kort
+- Etter stemme: viser stolper med prosent + totalt antall stemmer, eget valg uthevet
+- Lokal `localStorage`-cache av session_id for utloggede + serversynk
 
-Dette gir riktig "zoom-inn" på crop-rektangelet. Mindre passende ved aspekt-mismatch, men bedre enn dagens oppførsel.
+---
 
-### 3. Verifisering
-Ingen DB-endringer. Testes visuelt på `/` (front) og en artikkel der bilde har trangt crop.
+## 2) Engasjements-handlinger under artikkel
 
-## Filer som endres
-- `src/lib/image-crop.ts` — ny `cropToBackgroundStyle` helper
-- `src/pages/Article.tsx` — større hero, mindre parallax-skalering, bruk ny helper
-- `src/components/NewsFeed.tsx` — bruk ny helper for både featured og grid
-- `src/components/admin/ArticlePreviewDialog.tsx` — bruk ny helper
-- `src/components/admin/ImageCropDialog.tsx` — bruk ny helper i preview
+Ny komponent `ArticleEngagementBar.tsx` rendres i `Article.tsx` like under brødteksten (over "Relaterte artikler"):
+- Tre kort i grid (1 kol mobil, 3 kol desktop), Scandinavian rounded-2xl-stil:
+  1. **Skriv et notat** — åpner eksisterende `ArticleNotes` FAB-dialog direkte
+  2. **Del artikkelen** — Web Share API + fallback til kopier-lenke + LinkedIn/X knapper
+  3. **Kontakt journalisten** — åpner sheet/dialog med skjema (gjenbruker `TipForm`-mønster, men adressert til artikkelens `author`/`created_by`)
+
+Hver handling logges til `user_events` for analyse (`event_type = 'engagement_*'`).
+
+For "Kontakt journalist": ny tabell `journalist_messages` med `article_id`, `journalist_id`, `from_user_id`, `from_email`, `body`, `created_at`. RLS: bruker ser egne; journalist+admin ser sine. Vises i admin under et nytt "Meldinger"-panel (kan ev. legges senere).
+
+---
+
+## 3) Kompass-maskot guide
+
+### Maskot (visuell)
+Ny `CompassMascot.tsx` — SVG basert på eksisterende kompassikon:
+- Roterende nål med subtil "puste"-animasjon (CSS keyframes: `rotate` + `scale`)
+- Reagerer på hover/klikk (nålen peker mot markøren)
+- To størrelser: full (guide) og mini (floating-knapp)
+- Bruker semantic tokens (peach/dusty rose) — ingen hardkodede farger
+
+### Onboarding-tour
+Ny `MascotTour.tsx` — overlay som guider gjennom:
+1. Toppmeny (Spør / Utforsk / Tall)
+2. Søk på forsiden
+3. Meningsmåling
+4. Artikkel-handlinger (vises kun ved første artikkelbesøk)
+5. Profil-snarvei
+
+Bruker en lett egen-implementasjon (ingen ekstra lib): et fast positionert kort + en spotlight-overlay som peker mot et `data-tour="..."`-element. Maskoten "hopper" mellom stegene.
+
+### Av/på
+- `profiles.mascot_enabled` (bool, default true) — migrering legger kolonnen til
+- Floating mini-maskot nederst-høyre når aktiv; klikk → restarter tour
+- Kan skrus av i `ProfileEditor` under "UI-innstillinger" (eksisterende seksjon)
+- Ved første pålogging: tour starter automatisk hvis `mascot_enabled = true` AND `profiles.tour_completed_at IS NULL`
+- "Skip tour"-knapp setter `tour_completed_at = now()`
+
+---
+
+## Filer
+
+### Database (én migrasjon)
+- Tabeller: `polls`, `poll_votes`, `journalist_messages`
+- Kolonner: `profiles.mascot_enabled`, `profiles.tour_completed_at`
+- Funksjoner: `poll_results`, `poll_user_choice`
+- RLS-policyer på alle nye tabeller
+
+### Nye komponenter
+- `src/components/FrontpagePoll.tsx`
+- `src/components/ArticleEngagementBar.tsx`
+- `src/components/JournalistContactDialog.tsx`
+- `src/components/mascot/CompassMascot.tsx`
+- `src/components/mascot/MascotTour.tsx`
+- `src/components/mascot/useMascotTour.tsx` (hook for state + steg)
+- `src/components/admin/PollsManager.tsx`
+
+### Endrede filer
+- `src/pages/Index.tsx` — montere `FrontpagePoll` + `data-tour`-attributter
+- `src/pages/Article.tsx` — montere `ArticleEngagementBar`
+- `src/components/admin/AdminDashboard.tsx` — nytt menypunkt "Meningsmåling"
+- `src/components/ProfileEditor.tsx` — av/på-bryter for maskot
+- `src/App.tsx` — global `MascotTour`-mount
+
+---
+
+## Spørsmål før implementering
+
+1. **Maskot-stil**: Vil du at maskoten skal ha "ansikt" (øyne på kompasshuset) eller bare en abstrakt animert nål?
+2. **Kontakt-journalist**: Skal meldingen sendes som e-post (krever Resend), lagres i DB for journalist å lese inne i appen, eller begge?
+3. **Poll-stemmer for utloggede**: Tillatt eller krever innlogging? (Anonymt gir flere svar, men kan manipuleres.)
+
+Jeg implementerer alle tre i én leveranse når du svarer.

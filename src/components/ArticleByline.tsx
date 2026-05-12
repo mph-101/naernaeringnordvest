@@ -12,6 +12,7 @@ interface ArticleBylineProps {
   authorName: string;
   publishedAt: string;
   readTime: string;
+  coAuthors?: string[];
 }
 
 /**
@@ -19,7 +20,7 @@ interface ArticleBylineProps {
  * profile, the byline shows the avatar and title. Otherwise it falls back
  * to a simple icon + name layout.
  */
-export const ArticleByline = ({ authorName, publishedAt, readTime }: ArticleBylineProps) => {
+export const ArticleByline = ({ authorName, publishedAt, readTime, coAuthors }: ArticleBylineProps) => {
   const [profile, setProfile] = useState<AuthorProfile | null>(null);
 
   useEffect(() => {
@@ -40,8 +41,10 @@ export const ArticleByline = ({ authorName, publishedAt, readTime }: ArticleByli
     };
   }, [authorName]);
 
+  const extras = (coAuthors ?? []).filter((s) => s && s.trim().length > 0);
+
   return (
-    <div className="flex items-center gap-4 text-sm text-muted-foreground font-body mb-10">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground font-body mb-10">
       <span className="flex items-center gap-2.5">
         {profile?.avatar_url ? (
           <img
@@ -61,6 +64,21 @@ export const ArticleByline = ({ authorName, publishedAt, readTime }: ArticleByli
           )}
         </span>
       </span>
+      {extras.length > 0 && (
+        <>
+          <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+          <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs">
+            {extras.map((name, i) => (
+              <span
+                key={`${name}-${i}`}
+                className="px-2 py-0.5 rounded-full bg-secondary/70 text-foreground/80 font-subhead"
+              >
+                {name}
+              </span>
+            ))}
+          </span>
+        </>
+      )}
       <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
       <span className="flex items-center gap-1.5">
         <Calendar className="w-3.5 h-3.5" />

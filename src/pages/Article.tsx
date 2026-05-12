@@ -40,6 +40,7 @@ interface ArticleData {
   body_en: string | null;
   key_points_en: any;
   created_by?: string | null;
+  co_authors?: string[] | null;
 }
 
 function timeAgo(dateStr: string, lang: "no" | "en"): string {
@@ -218,7 +219,12 @@ const Article = () => {
         <BackButton />
         <h1 className="font-headline text-2xl md:text-3xl lg:text-4xl font-bold text-headline leading-[1.15] mb-6 animate-fade-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>{title}</h1>
         <div className="animate-fade-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
-          <ArticleByline authorName={article.author} publishedAt={publishedAt} readTime={readTime} />
+          <ArticleByline
+            authorName={article.author}
+            publishedAt={publishedAt}
+            readTime={readTime}
+            coAuthors={(article as any).co_authors ?? []}
+          />
         </div>
 
         {keyPoints.length > 0 && (

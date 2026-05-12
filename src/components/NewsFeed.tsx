@@ -90,11 +90,23 @@ export const NewsFeed = () => {
   const INITIAL_COUNT = 11;
   const PAGE_SIZE = 9;
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Reset pagination when filters change
   useEffect(() => {
     setVisibleCount(INITIAL_COUNT);
+    setLoadingMore(false);
   }, [selectedTopic, selectedTagId, selectedRegionSlug]);
+
+  const handleLoadMore = () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    // Brief delay so the skeletons are perceptible and signal progress
+    setTimeout(() => {
+      setVisibleCount((c) => c + PAGE_SIZE);
+      setLoadingMore(false);
+    }, 350);
+  };
 
   // Load region list + the signed-in user's primary region (used as default filter)
   useEffect(() => {
@@ -489,13 +501,31 @@ export const NewsFeed = () => {
           ))}
         </div>
 
+        {loadingMore && (
+          <div
+            className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 mt-5"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            {Array.from({ length: Math.min(PAGE_SIZE, totalArticles - visibleCount) }).map((_, i) => (
+              <ArticleCardSkeleton key={`skeleton-${i}`} index={i} />
+            ))}
+          </div>
+        )}
+
         {hasMore && (
           <div className="flex justify-center mt-10">
             <button
-              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-              className="px-6 py-3 rounded-full bg-card border border-border text-foreground font-subhead text-sm hover:bg-secondary hover:border-accent/30 transition-all duration-200 shadow-soft"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+              className="px-6 py-3 rounded-full bg-card border border-border text-foreground font-subhead text-sm hover:bg-secondary hover:border-accent/30 transition-all duration-200 shadow-soft disabled:opacity-60 disabled:cursor-wait inline-flex items-center gap-2"
             >
-              {language === "no" ? "Last flere artikler" : "Load more articles"}
+              {loadingMore && (
+                <span className="inline-block w-4 h-4 rounded-full border-2 border-accent/40 border-t-accent animate-spin" />
+              )}
+              {loadingMore
+                ? language === "no" ? "Laster…" : "Loading…"
+                : language === "no" ? "Last flere artikler" : "Load more articles"}
             </button>
           </div>
         )}
@@ -503,6 +533,25 @@ export const NewsFeed = () => {
     </section>
   );
 };
+
+const ArticleCardSkeleton = ({ index }: { index: number }) => (
+  <div
+    className="bg-card rounded-2xl border border-border overflow-hidden animate-fade-up"
+    style={{ animationDelay: `${index * 50}ms` }}
+  >
+    <div className="aspect-[16/9] w-full bg-muted/60 animate-pulse" />
+    <div className="p-5 space-y-3">
+      <div className="h-3 w-1/3 bg-muted/60 rounded animate-pulse" />
+      <div className="h-4 w-11/12 bg-muted/60 rounded animate-pulse" />
+      <div className="h-4 w-3/4 bg-muted/60 rounded animate-pulse" />
+      <div className="h-3 w-full bg-muted/40 rounded animate-pulse" />
+      <div className="flex items-center justify-between pt-3 border-t border-border">
+        <div className="h-3 w-16 bg-muted/60 rounded animate-pulse" />
+        <div className="h-3 w-12 bg-muted/60 rounded animate-pulse" />
+      </div>
+    </div>
+  </div>
+);
 
 interface NativeAdCardProps {
   ad: {

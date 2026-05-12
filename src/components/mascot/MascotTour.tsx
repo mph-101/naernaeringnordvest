@@ -85,8 +85,14 @@ export function MascotTour() {
       const en = (e as CustomEvent).detail?.enabled;
       if (typeof en === "boolean") {
         setEnabled(en);
-        writeLocal({ mascotEnabled: en });
-        if (!en) setActive(false);
+        if (en) {
+          // Re-enable: clear completion so the tour can run again
+          setCompleted(false);
+          writeLocal({ mascotEnabled: en, completed: false });
+        } else {
+          writeLocal({ mascotEnabled: en });
+          setActive(false);
+        }
       }
     };
     window.addEventListener("nn:mascot-start", onOpen);

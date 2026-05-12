@@ -1,0 +1,1 @@
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS co_authors text[] NOT NULL DEFAULT '{}'::text[];

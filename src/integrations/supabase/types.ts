@@ -480,6 +480,7 @@ export type Database = {
           body: string
           body_en: string | null
           category: string
+          co_authors: string[]
           created_at: string
           created_by: string | null
           excerpt: string
@@ -508,6 +509,7 @@ export type Database = {
           body: string
           body_en?: string | null
           category: string
+          co_authors?: string[]
           created_at?: string
           created_by?: string | null
           excerpt: string
@@ -536,6 +538,7 @@ export type Database = {
           body?: string
           body_en?: string | null
           category?: string
+          co_authors?: string[]
           created_at?: string
           created_by?: string | null
           excerpt?: string

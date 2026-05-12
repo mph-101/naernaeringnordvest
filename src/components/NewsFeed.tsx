@@ -87,6 +87,14 @@ export const NewsFeed = () => {
   const [articleSharedRegions, setArticleSharedRegions] = useState<Map<string, string[]>>(new Map());
   const [nativeAds, setNativeAds] = useState<NativeAd[]>([]);
   const navigate = useNavigate();
+  const INITIAL_COUNT = 11;
+  const PAGE_SIZE = 9;
+  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(INITIAL_COUNT);
+  }, [selectedTopic, selectedTagId, selectedRegionSlug]);
 
   // Load region list + the signed-in user's primary region (used as default filter)
   useEffect(() => {
@@ -281,6 +289,21 @@ export const NewsFeed = () => {
     gridEntries.splice(insertAt, 0, { kind: "ad" as const, ad });
   });
 
+  // Cap visible articles to visibleCount (featured counts as 1).
+  // Ads do not count toward the article cap but should not appear past the last visible article.
+  const visibleArticleLimit = Math.max(0, visibleCount - (featuredItem ? 1 : 0));
+  let articleSeen = 0;
+  const visibleEntries: FeedEntry[] = [];
+  for (const entry of gridEntries) {
+    if (entry.kind === "article") {
+      if (articleSeen >= visibleArticleLimit) break;
+      articleSeen += 1;
+    }
+    visibleEntries.push(entry);
+  }
+  const totalArticles = (featuredItem ? 1 : 0) + regularItems.length;
+  const hasMore = visibleCount < totalArticles;
+
   if (loading) {
     return (
       <section className="py-[44px]">
@@ -403,7 +426,7 @@ export const NewsFeed = () => {
 
         {/* News Grid */}
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {gridEntries.map((entry, index) => entry.kind === "ad" ? (
+          {visibleEntries.map((entry, index) => entry.kind === "ad" ? (
             <NativeAdCard key={`ad-${entry.ad.id}`} ad={entry.ad} index={index} language={language} />
           ) : (
             (() => { const item = entry.item; return (
@@ -465,6 +488,17 @@ export const NewsFeed = () => {
             ); })()
           ))}
         </div>
+
+        {hasMore && (
+          <div className="flex justify-center mt-10">
+            <button
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="px-6 py-3 rounded-full bg-card border border-border text-foreground font-subhead text-sm hover:bg-secondary hover:border-accent/30 transition-all duration-200 shadow-soft"
+            >
+              {language === "no" ? "Last flere artikler" : "Load more articles"}
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

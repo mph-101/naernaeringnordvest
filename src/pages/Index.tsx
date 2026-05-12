@@ -85,11 +85,11 @@ const Index = () => {
         {view === "search" ? <SearchHero onSearch={handleSearch} /> : (
           <>
             <MarketTicker />
-            <FrontpagePoll />
             <TrendingSection />
             <div data-tour="news-feed">
               <NewsFeed />
             </div>
+            <FrontpagePoll />
             {!hiddenElements.includes("job_changes") && (
               <div className="max-w-5xl mx-auto px-6 pb-16">
                 <JobChangeFeed />

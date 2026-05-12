@@ -130,6 +130,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     body_en: "",
     category: "",
     author: "",
+    co_authors: [] as string[],
     type: "article" as "article" | "video" | "podcast",
     premium: false,
     read_time: "",
@@ -234,6 +235,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       body_en: currentForm.body_en || null,
       category: currentForm.category,
       author: currentForm.author,
+      co_authors: currentForm.co_authors ?? [],
       type: currentForm.type,
       premium: currentForm.premium,
       read_time: currentForm.read_time || null,
@@ -387,6 +389,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         body_en: data.body_en || "",
         category: data.category || "",
         author: data.author || "",
+        co_authors: ((data as any).co_authors as string[] | null) ?? [],
         type: (data.type as "article" | "video" | "podcast") || "article",
         premium: data.premium || false,
         read_time: data.read_time || "",
@@ -450,6 +453,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         body_en: form.body_en || null,
         category: form.category,
         author: form.author,
+        co_authors: form.co_authors ?? [],
         type: form.type,
         premium: form.premium,
         read_time: form.read_time || null,
@@ -1835,6 +1839,48 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 value={form.author}
                 onChange={(name) => updateForm({ author: name })}
               />
+            </div>
+
+            <div className="md:col-span-2 lg:col-span-3">
+              <Label htmlFor="co_authors">Ekstra bylines (kommaseparert)</Label>
+              <Input
+                id="co_authors"
+                value={(form.co_authors ?? []).join(", ")}
+                onChange={(e) =>
+                  updateForm({
+                    co_authors: e.target.value
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  })
+                }
+                placeholder="F.eks. Foto: Kari Nordmann, Bidrag: Ola Hansen"
+                className="mt-1.5"
+              />
+              {form.co_authors && form.co_authors.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {form.co_authors.map((name, i) => (
+                    <span
+                      key={`${name}-${i}`}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary text-xs font-subhead"
+                    >
+                      {name}
+                      <button
+                        type="button"
+                        aria-label={`Fjern ${name}`}
+                        onClick={() =>
+                          updateForm({
+                            co_authors: form.co_authors.filter((_, idx) => idx !== i),
+                          })
+                        }
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>

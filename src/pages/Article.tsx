@@ -40,6 +40,7 @@ interface ArticleData {
   body_en: string | null;
   key_points_en: any;
   created_by?: string | null;
+  co_authors?: string[] | null;
 }
 
 function timeAgo(dateStr: string, lang: "no" | "en"): string {
@@ -218,7 +219,12 @@ const Article = () => {
         <BackButton />
         <h1 className="font-headline text-2xl md:text-3xl lg:text-4xl font-bold text-headline leading-[1.15] mb-6 animate-fade-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>{title}</h1>
         <div className="animate-fade-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
-          <ArticleByline authorName={article.author} publishedAt={publishedAt} readTime={readTime} />
+          <ArticleByline
+            authorName={article.author}
+            publishedAt={publishedAt}
+            readTime={readTime}
+            coAuthors={(article as any).co_authors ?? []}
+          />
         </div>
 
         {keyPoints.length > 0 && (
@@ -281,6 +287,19 @@ const Article = () => {
 
         <ArticleGallery articleId={id!} />
 
+        {companyTags.length > 0 && (
+          <div className="mb-12">
+            <h2 className="font-headline text-xl font-bold text-headline mb-5">
+              {language === "no" ? "Omtalte selskaper" : "Featured Companies"}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {companyTags.map((tag) => (
+                <CompanyMiniProfile key={tag.orgnr} orgnr={tag.orgnr} companyName={tag.company_name} />
+              ))}
+            </div>
+          </div>
+        )}
+
         {!showPaywall && (
           <ArticleEngagementBar
             articleId={id!}
@@ -295,19 +314,6 @@ const Article = () => {
           <span className="text-muted-foreground/40 text-lg">✦</span>
           <div className="flex-1 h-px bg-border" />
         </div>
-
-        {companyTags.length > 0 && (
-          <div className="mb-12">
-            <h2 className="font-headline text-xl font-bold text-headline mb-5">
-              {language === "no" ? "Omtalte selskaper" : "Featured Companies"}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {companyTags.map((tag) => (
-                <CompanyMiniProfile key={tag.orgnr} orgnr={tag.orgnr} companyName={tag.company_name} />
-              ))}
-            </div>
-          </div>
-        )}
 
         <TagChips articleId={id!} className="mb-6" />
 

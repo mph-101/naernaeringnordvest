@@ -92,12 +92,20 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
 
   const handleMascotToggle = async (next: boolean) => {
     setMascotEnabled(next);
+    // When re-enabling, also clear the completed-tour flag so the guide
+    // can show again right away.
+    const updates: Record<string, unknown> = { mascot_enabled: next };
+    if (next) updates.tour_completed_at = null;
     const { error } = await supabase
       .from("profiles")
-      .update({ mascot_enabled: next } as any)
+      .update(updates as any)
       .eq("user_id", userId);
     if (error) { toast.error(error.message); return; }
     window.dispatchEvent(new CustomEvent("nn:mascot-toggle", { detail: { enabled: next } }));
+    if (next) {
+      // Restart the tour from the beginning immediately
+      window.dispatchEvent(new CustomEvent("nn:mascot-start"));
+    }
     toast.success(t.saved);
   };
 

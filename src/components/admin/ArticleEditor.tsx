@@ -1841,6 +1841,48 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               />
             </div>
 
+            <div className="md:col-span-2 lg:col-span-3">
+              <Label htmlFor="co_authors">Ekstra bylines (kommaseparert)</Label>
+              <Input
+                id="co_authors"
+                value={(form.co_authors ?? []).join(", ")}
+                onChange={(e) =>
+                  updateForm({
+                    co_authors: e.target.value
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  })
+                }
+                placeholder="F.eks. Foto: Kari Nordmann, Bidrag: Ola Hansen"
+                className="mt-1.5"
+              />
+              {form.co_authors && form.co_authors.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {form.co_authors.map((name, i) => (
+                    <span
+                      key={`${name}-${i}`}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary text-xs font-subhead"
+                    >
+                      {name}
+                      <button
+                        type="button"
+                        aria-label={`Fjern ${name}`}
+                        onClick={() =>
+                          updateForm({
+                            co_authors: form.co_authors.filter((_, idx) => idx !== i),
+                          })
+                        }
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div>
               <Label htmlFor="type">Type</Label>
               <select id="type" value={form.type} onChange={(e) => updateForm({ type: e.target.value as any })} className="mt-1.5 w-full h-10 px-3 rounded-md border border-input bg-background">

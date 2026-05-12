@@ -281,6 +281,19 @@ const Article = () => {
 
         <ArticleGallery articleId={id!} />
 
+        {companyTags.length > 0 && (
+          <div className="mb-12">
+            <h2 className="font-headline text-xl font-bold text-headline mb-5">
+              {language === "no" ? "Omtalte selskaper" : "Featured Companies"}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {companyTags.map((tag) => (
+                <CompanyMiniProfile key={tag.orgnr} orgnr={tag.orgnr} companyName={tag.company_name} />
+              ))}
+            </div>
+          </div>
+        )}
+
         {!showPaywall && (
           <ArticleEngagementBar
             articleId={id!}
@@ -295,19 +308,6 @@ const Article = () => {
           <span className="text-muted-foreground/40 text-lg">✦</span>
           <div className="flex-1 h-px bg-border" />
         </div>
-
-        {companyTags.length > 0 && (
-          <div className="mb-12">
-            <h2 className="font-headline text-xl font-bold text-headline mb-5">
-              {language === "no" ? "Omtalte selskaper" : "Featured Companies"}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {companyTags.map((tag) => (
-                <CompanyMiniProfile key={tag.orgnr} orgnr={tag.orgnr} companyName={tag.company_name} />
-              ))}
-            </div>
-          </div>
-        )}
 
         <TagChips articleId={id!} className="mb-6" />
 

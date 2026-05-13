@@ -109,11 +109,11 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
               <Brain className="w-4 h-4 text-foreground/70" />
             </button>
 
-            <button onClick={() => navigate("/grupper")} className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Grupper" : "Groups"}>
+            <button data-tour="nav-groups" onClick={() => navigate("/grupper")} className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Grupper" : "Groups"}>
               <Users className="w-4 h-4 text-foreground/70" />
             </button>
 
-            <button onClick={() => navigate("/stillinger")} className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Stillinger" : "Jobs"}>
+            <button data-tour="nav-jobs" onClick={() => navigate("/stillinger")} className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Stillinger" : "Jobs"}>
               <Briefcase className="w-4 h-4 text-foreground/70" />
             </button>
 

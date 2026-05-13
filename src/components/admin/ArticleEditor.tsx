@@ -491,6 +491,44 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       if (idForUpdate) {
         const { error } = await supabase.from("articles").update(articleData).eq("id", idForUpdate);
         if (error) throw error;
+        // Write a revision row when this save publishes the article AND the body
+        // changed since the last published version. This gives readers a
+        // transparent changelog and only fires on real publishes.
+        if (form.status === "published" && form.body && form.body !== lastPublishedBody) {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const { data: latest } = await supabase
+              .from("article_revisions" as any)
+              .select("revision_number")
+              .eq("article_id", idForUpdate)
+              .order("revision_number", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            const nextNum = ((latest as any)?.revision_number ?? 0) + 1;
+            const wc = stripHtml(form.body).split(/\s+/).filter(Boolean).length;
+            const prevWc = stripHtml(lastPublishedBody).split(/\s+/).filter(Boolean).length;
+            const delta = wc - prevWc;
+            const summary = lastPublishedBody
+              ? `${delta >= 0 ? "+" : ""}${delta} ord (${wc} totalt)`
+              : `${wc} ord`;
+            await supabase.from("article_revisions" as any).insert({
+              article_id: idForUpdate,
+              revision_number: nextNum,
+              title: form.title,
+              body: form.body,
+              body_diff_summary: summary,
+              change_note: changeNote.trim() || null,
+              word_count: wc,
+              changed_by: user?.id ?? null,
+              changed_by_name: form.author || null,
+            });
+            setLastPublishedBody(form.body);
+            setChangeNote("");
+          } catch (revErr) {
+            // Non-fatal — the article still saved.
+            console.warn("Could not write revision", revErr);
+          }
+        }
         await supabase.from("article_company_tags").delete().eq("article_id", idForUpdate);
         if (companyTags.length > 0) {
           await supabase.from("article_company_tags").insert(

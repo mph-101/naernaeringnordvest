@@ -405,6 +405,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         status: ((data as any).status as ArticleStatus) || (data.published ? "published" : "draft"),
         region_slug: ((data as any).region_slug as string | null) ?? null,
       });
+      // Remember the body that's currently live so we can detect real edits
+      // on the next publish.
+      setLastPublishedBody(data.published ? (data.body || "") : "");
       setForkedFromArticleId(((data as any).forked_from_article_id as string | null) ?? null);
       const { data: tags } = await supabase.from("article_company_tags").select("orgnr, company_name").eq("article_id", articleId);
       setCompanyTags(tags || []);

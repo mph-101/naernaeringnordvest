@@ -16,7 +16,11 @@ interface Poll {
 }
 interface PollResult { option_id: string; votes: number; percent: number }
 
-export function FrontpagePoll() {
+interface FrontpagePollProps {
+  variant?: "page" | "inline";
+}
+
+export function FrontpagePoll({ variant = "page" }: FrontpagePollProps = {}) {
   const { userId } = useAuth();
   const { language } = useTheme();
   const isNo = language === "no";
@@ -90,8 +94,12 @@ export function FrontpagePoll() {
 
   const totalVotes = results.reduce((sum, r) => sum + Number(r.votes || 0), 0);
 
+  const wrapperClass = variant === "inline"
+    ? "w-full"
+    : "max-w-3xl mx-auto px-6 pt-2 pb-10";
+
   return (
-    <section data-tour="frontpage-poll" className="max-w-3xl mx-auto px-6 pt-2 pb-10">
+    <section data-tour="frontpage-poll" className={wrapperClass}>
       <div className="bg-card border border-border rounded-3xl shadow-soft p-6 md:p-8">
         <div className="flex items-center gap-2 mb-4">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 text-accent text-[11px] font-subhead font-semibold uppercase tracking-wider">

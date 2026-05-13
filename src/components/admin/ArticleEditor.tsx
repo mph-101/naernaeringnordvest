@@ -1334,6 +1334,22 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Change note for the public revision log — only relevant when an
+            already-published article is being re-published with body edits. */}
+        {form.status === "published" && lastPublishedBody && form.body !== lastPublishedBody && (
+          <div className="rounded-2xl border border-accent/40 bg-accent/5 p-4">
+            <Label htmlFor="change-note" className="text-xs font-subhead font-semibold uppercase tracking-wider text-accent">
+              Endringsnotat (vises i åpenhetsloggen)
+            </Label>
+            <Input
+              id="change-note"
+              value={changeNote}
+              onChange={(e) => setChangeNote(e.target.value)}
+              placeholder="F.eks. «La til kommentar fra ordfører» eller «Korrigerte tall i tabell»"
+              className="mt-2"
+            />
+          </div>
+        )}
         {/* Pre-publish checklist — surfaced when not yet published so editors
             can see exactly what's missing without hunting through fields. */}
         {form.status !== "published" && !canPublish && (

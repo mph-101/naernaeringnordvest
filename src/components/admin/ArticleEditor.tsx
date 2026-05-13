@@ -145,6 +145,10 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [sharedRegions, setSharedRegions] = useState<string[]>([]);
+  // Track the body that was last published so we can write a revision diff
+  // (and only on actual changes) when the editor publishes again.
+  const [lastPublishedBody, setLastPublishedBody] = useState<string>("");
+  const [changeNote, setChangeNote] = useState<string>("");
   const [forkedFromArticleId, setForkedFromArticleId] = useState<string | null>(null);
   const [forkedFromTitle, setForkedFromTitle] = useState<string | null>(null);
   const [allRegions, setAllRegions] = useState<EditorialRegion[]>([]);
@@ -401,6 +405,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         status: ((data as any).status as ArticleStatus) || (data.published ? "published" : "draft"),
         region_slug: ((data as any).region_slug as string | null) ?? null,
       });
+      // Remember the body that's currently live so we can detect real edits
+      // on the next publish.
+      setLastPublishedBody(data.published ? (data.body || "") : "");
       setForkedFromArticleId(((data as any).forked_from_article_id as string | null) ?? null);
       const { data: tags } = await supabase.from("article_company_tags").select("orgnr, company_name").eq("article_id", articleId);
       setCompanyTags(tags || []);
@@ -484,6 +491,44 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       if (idForUpdate) {
         const { error } = await supabase.from("articles").update(articleData).eq("id", idForUpdate);
         if (error) throw error;
+        // Write a revision row when this save publishes the article AND the body
+        // changed since the last published version. This gives readers a
+        // transparent changelog and only fires on real publishes.
+        if (form.status === "published" && form.body && form.body !== lastPublishedBody) {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const { data: latest } = await supabase
+              .from("article_revisions" as any)
+              .select("revision_number")
+              .eq("article_id", idForUpdate)
+              .order("revision_number", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            const nextNum = ((latest as any)?.revision_number ?? 0) + 1;
+            const wc = stripHtml(form.body).split(/\s+/).filter(Boolean).length;
+            const prevWc = stripHtml(lastPublishedBody).split(/\s+/).filter(Boolean).length;
+            const delta = wc - prevWc;
+            const summary = lastPublishedBody
+              ? `${delta >= 0 ? "+" : ""}${delta} ord (${wc} totalt)`
+              : `${wc} ord`;
+            await supabase.from("article_revisions" as any).insert({
+              article_id: idForUpdate,
+              revision_number: nextNum,
+              title: form.title,
+              body: form.body,
+              body_diff_summary: summary,
+              change_note: changeNote.trim() || null,
+              word_count: wc,
+              changed_by: user?.id ?? null,
+              changed_by_name: form.author || null,
+            });
+            setLastPublishedBody(form.body);
+            setChangeNote("");
+          } catch (revErr) {
+            // Non-fatal — the article still saved.
+            console.warn("Could not write revision", revErr);
+          }
+        }
         await supabase.from("article_company_tags").delete().eq("article_id", idForUpdate);
         if (companyTags.length > 0) {
           await supabase.from("article_company_tags").insert(
@@ -1289,6 +1334,22 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Change note for the public revision log — only relevant when an
+            already-published article is being re-published with body edits. */}
+        {form.status === "published" && lastPublishedBody && form.body !== lastPublishedBody && (
+          <div className="rounded-2xl border border-accent/40 bg-accent/5 p-4">
+            <Label htmlFor="change-note" className="text-xs font-subhead font-semibold uppercase tracking-wider text-accent">
+              Endringsnotat (vises i åpenhetsloggen)
+            </Label>
+            <Input
+              id="change-note"
+              value={changeNote}
+              onChange={(e) => setChangeNote(e.target.value)}
+              placeholder="F.eks. «La til kommentar fra ordfører» eller «Korrigerte tall i tabell»"
+              className="mt-2"
+            />
+          </div>
+        )}
         {/* Pre-publish checklist — surfaced when not yet published so editors
             can see exactly what's missing without hunting through fields. */}
         {form.status !== "published" && !canPublish && (

@@ -236,6 +236,51 @@ export type Database = {
         }
         Relationships: []
       }
+      article_revisions: {
+        Row: {
+          article_id: string
+          body: string
+          body_diff_summary: string | null
+          change_note: string | null
+          changed_by: string | null
+          changed_by_name: string | null
+          created_at: string
+          id: string
+          published_at: string
+          revision_number: number
+          title: string
+          word_count: number
+        }
+        Insert: {
+          article_id: string
+          body: string
+          body_diff_summary?: string | null
+          change_note?: string | null
+          changed_by?: string | null
+          changed_by_name?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string
+          revision_number: number
+          title: string
+          word_count?: number
+        }
+        Update: {
+          article_id?: string
+          body?: string
+          body_diff_summary?: string | null
+          change_note?: string | null
+          changed_by?: string | null
+          changed_by_name?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string
+          revision_number?: number
+          title?: string
+          word_count?: number
+        }
+        Relationships: []
+      }
       article_shared_regions: {
         Row: {
           article_id: string

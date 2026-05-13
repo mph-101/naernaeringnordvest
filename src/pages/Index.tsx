@@ -91,7 +91,7 @@ const Index = () => {
             </div>
             <FrontpagePoll />
             {!hiddenElements.includes("job_changes") && (
-              <div className="max-w-5xl mx-auto px-6 pb-16">
+              <div data-tour="job-changes" className="max-w-5xl mx-auto px-6 pb-16">
                 <JobChangeFeed />
               </div>
             )}

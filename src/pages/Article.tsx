@@ -7,6 +7,8 @@ import { ArticleDiscussion } from "@/components/ArticleDiscussion";
 import { TagChips } from "@/components/TagChips";
 import { ArticleNotes } from "@/components/ArticleNotes";
 import { ArticleEngagementBar } from "@/components/ArticleEngagementBar";
+import { ArticleRevisionLog } from "@/components/ArticleRevisionLog";
+import { FrontpagePoll } from "@/components/FrontpagePoll";
 import { RelatedByTags } from "@/components/RelatedByTags";
 import { CompanyMiniProfile } from "@/components/CompanyMiniProfile";
 import { ArticleGallery } from "@/components/ArticleGallery";
@@ -308,6 +310,14 @@ const Article = () => {
             journalistId={article.created_by ?? null}
           />
         )}
+
+        {!showPaywall && (
+          <div className="mb-12">
+            <FrontpagePoll variant="inline" />
+          </div>
+        )}
+
+        <ArticleRevisionLog articleId={article.id} />
 
         <div className="flex items-center gap-4 mb-12">
           <div className="flex-1 h-px bg-border" />

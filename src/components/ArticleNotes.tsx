@@ -125,6 +125,7 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
     <>
       {/* FAB */}
       <button
+        data-tour="article-notes"
         onClick={() => setIsOpen(true)}
         className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-accent text-accent-foreground rounded-full shadow-elevated flex items-center justify-center hover:scale-105 transition-transform"
         aria-label={t.notes}

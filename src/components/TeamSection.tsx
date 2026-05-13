@@ -5,56 +5,19 @@ import { TipForm } from "./TipForm";
 
 const journalists = [
   {
-    id: "ingrid-solberg",
-    name: "Ingrid Solberg",
-    role: { no: "Sportsøkonomi", en: "Sports Economics" },
+    id: "magnus-peter-harnes",
+    name: "Magnus Peter Harnes",
+    role: { no: "Ansvarlig redaktør og daglig leder", en: "Editor-in-chief & CEO" },
     bio: {
-      no: "Tidligere finansanalytiker med fokus på idrettens økonomiske strukturer og pengestrømmer.",
-      en: "Former financial analyst focusing on sports economic structures and money flows."
+      no: "Grunnlegger og redaktør for Nær Næring. Følger lokalt næringsliv på Nordvestlandet med blikk for tall, mennesker og det som er i ferd med å skje.",
+      en: "Founder and editor of Nær Næring. Covers local business on Norway's Northwest coast with an eye for numbers, people, and what's about to happen.",
     },
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=face"
+    avatar: null,
   },
-  {
-    id: "erik-nordahl",
-    name: "Erik Nordahl",
-    role: { no: "Undersøkende journalist", en: "Investigative Journalist" },
-    bio: {
-      no: "15 års erfaring med å avdekke korrupsjon og maktmisbruk i norsk og internasjonal idrett.",
-      en: "15 years of experience exposing corruption and abuse of power in Norwegian and international sports."
-    },
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face"
-  },
-  {
-    id: "maria-henriksen",
-    name: "Maria Henriksen",
-    role: { no: "Datajournalist", en: "Data Journalist" },
-    bio: {
-      no: "Spesialist på dataanalyse og visualisering av komplekse økonomiske sammenhenger i idretten.",
-      en: "Specialist in data analysis and visualization of complex economic relationships in sports."
-    },
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face"
-  },
-  {
-    id: "anders-kristiansen",
-    name: "Anders Kristiansen",
-    role: { no: "Fotballøkonomi", en: "Football Economics" },
-    bio: {
-      no: "Ekspert på overgangsmarkedet og klubbøkonomi i europeisk og norsk fotball.",
-      en: "Expert on the transfer market and club economics in European and Norwegian football."
-    },
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face"
-  },
-  {
-    id: "karin-moe",
-    name: "Karin Moe",
-    role: { no: "Sponsormarkedet", en: "Sponsorship Market" },
-    bio: {
-      no: "Tidligere sponsorsjef i toppidrett, nå journalist med innsikt i kommersielle avtaler.",
-      en: "Former sponsorship director in elite sports, now journalist with insight into commercial deals."
-    },
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=face"
-  }
-];
+  { id: "tba-1", name: "TBA", role: { no: "Journalist", en: "Reporter" }, bio: { no: "Stilling under bemanning. Tips oss gjerne om hvem du mener bør sitte her.", en: "Role being staffed. Send us a tip on who should fill it." }, avatar: null, tba: true },
+  { id: "tba-2", name: "TBA", role: { no: "Datajournalist", en: "Data reporter" }, bio: { no: "Stilling under bemanning.", en: "Role being staffed." }, avatar: null, tba: true },
+  { id: "tba-3", name: "TBA", role: { no: "Næringsanalytiker", en: "Business analyst" }, bio: { no: "Stilling under bemanning.", en: "Role being staffed." }, avatar: null, tba: true },
+] as const;
 
 export const TeamSection = () => {
   const { language } = useTheme();
@@ -79,18 +42,24 @@ export const TeamSection = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {journalists.map((person, index) => (
               <div
                 key={person.id}
                 className="bg-card rounded-xl p-6 shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 text-center flex flex-col"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <img
-                  src={person.avatar}
-                  alt={person.name}
-                  className="w-20 h-20 rounded-full mx-auto mb-4 object-cover ring-2 ring-border"
-                />
+                {person.avatar ? (
+                  <img
+                    src={person.avatar}
+                    alt={person.name}
+                    className="w-20 h-20 rounded-full mx-auto mb-4 object-cover ring-2 ring-border"
+                  />
+                ) : (
+                  <div className={`w-20 h-20 rounded-full mx-auto mb-4 ring-2 ring-border flex items-center justify-center font-headline text-xl font-bold ${("tba" in person && (person as any).tba) ? "bg-muted text-muted-foreground" : "bg-accent/15 text-accent"}`}>
+                    {("tba" in person && (person as any).tba) ? "?" : person.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                  </div>
+                )}
                 <h3 className="font-headline text-lg font-medium text-headline mb-1">
                   {person.name}
                 </h3>
@@ -102,7 +71,8 @@ export const TeamSection = () => {
                 </p>
                 <button
                   onClick={() => setSelectedJournalist({ id: person.id, name: person.name })}
-                  className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-sm font-medium transition-colors"
+                  disabled={"tba" in person && (person as any).tba}
+                  className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Shield className="w-4 h-4" />
                   {tipButtonLabel}

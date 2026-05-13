@@ -15,15 +15,46 @@ interface Props {
 export function CompassMascot({ size = 96, pointTo = null, className = "", blink = true }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [angle, setAngle] = useState(0);
+  const [bob, setBob] = useState(0);
+  const [tilt, setTilt] = useState(0);
+  const [eyeBlink, setEyeBlink] = useState(false);
+  const [waving, setWaving] = useState(false);
+  const [mouth, setMouth] = useState(0); // 0..1 talking
+
+  // Idle eye blink + occasional wave + tiny bob
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const tick = (t: number) => {
+      const elapsed = (t - start) / 1000;
+      setBob(Math.sin(elapsed * 1.6) * 2.4);
+      setTilt(Math.sin(elapsed * 0.9) * 4);
+      setMouth(Math.max(0, Math.sin(elapsed * 6.5)));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    const blinkInt = setInterval(() => {
+      setEyeBlink(true);
+      setTimeout(() => setEyeBlink(false), 140);
+    }, 2600 + Math.random() * 1800);
+    const waveInt = setInterval(() => {
+      setWaving(true);
+      setTimeout(() => setWaving(false), 900);
+    }, 5200 + Math.random() * 2400);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearInterval(blinkInt);
+      clearInterval(waveInt);
+    };
+  }, []);
 
   useEffect(() => {
     if (!pointTo || !ref.current) {
-      // gentle idle wander
       let raf = 0;
       const start = performance.now();
       const tick = (t: number) => {
         const elapsed = (t - start) / 1000;
-        setAngle(Math.sin(elapsed * 0.7) * 18);
+        setAngle(Math.sin(elapsed * 0.7) * 22 + Math.sin(elapsed * 2.3) * 4);
         raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
@@ -42,7 +73,7 @@ export function CompassMascot({ size = 96, pointTo = null, className = "", blink
     <div
       ref={ref}
       className={`relative inline-block select-none ${className}`}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, transform: `translateY(${bob}px) rotate(${tilt * 0.4}deg)`, transition: "transform 0.15s linear" }}
       aria-hidden="true"
     >
       <div className="absolute inset-0 rounded-full" style={{
@@ -62,11 +93,34 @@ export function CompassMascot({ size = 96, pointTo = null, className = "", blink
           <polygon points="50,16 56,52 50,48 44,52" fill="hsl(var(--accent))" />
           <polygon points="50,84 56,52 50,56 44,52" fill="hsl(var(--muted-foreground))" opacity="0.55" />
         </g>
-        {/* Hub + face */}
-        <circle cx="50" cy="50" r="6" fill="hsl(var(--card))" stroke="hsl(var(--accent))" strokeWidth="1.5" />
-        <circle cx="48" cy="49" r="0.9" fill="hsl(var(--foreground))" />
-        <circle cx="52" cy="49" r="0.9" fill="hsl(var(--foreground))" />
-        <path d="M47.5 51.5 Q50 53.5 52.5 51.5" stroke="hsl(var(--foreground))" strokeWidth="0.7" fill="none" strokeLinecap="round" opacity="0.7" />
+        {/* Hub + lively face — Mr. DNA-inspired */}
+        <g style={{ transform: `translateY(${Math.sin(performance.now()/300)*0.15}px)` }}>
+          <circle cx="50" cy="50" r="9" fill="hsl(var(--card))" stroke="hsl(var(--accent))" strokeWidth="1.6" />
+          {/* Cheeks */}
+          <circle cx="44.5" cy="52.5" r="1.3" fill="hsl(var(--accent))" opacity="0.35" />
+          <circle cx="55.5" cy="52.5" r="1.3" fill="hsl(var(--accent))" opacity="0.35" />
+          {/* Eyes (white) */}
+          <ellipse cx="47" cy="48.5" rx="1.5" ry={eyeBlink ? 0.15 : 1.7} fill="hsl(var(--foreground))" />
+          <ellipse cx="53" cy="48.5" rx="1.5" ry={eyeBlink ? 0.15 : 1.7} fill="hsl(var(--foreground))" />
+          {/* Pupil sparkle */}
+          {!eyeBlink && (
+            <>
+              <circle cx="47.5" cy="48" r="0.4" fill="hsl(var(--card))" />
+              <circle cx="53.5" cy="48" r="0.4" fill="hsl(var(--card))" />
+            </>
+          )}
+          {/* Smile / talking mouth */}
+          <path
+            d={`M47 ${52.5 + mouth * 0.4} Q50 ${53.6 + mouth * 1.1} 53 ${52.5 + mouth * 0.4}`}
+            stroke="hsl(var(--foreground))" strokeWidth="0.85" fill="none" strokeLinecap="round"
+          />
+          {/* Tiny waving arm */}
+          <g style={{ transform: `rotate(${waving ? -35 : -10}deg)`, transformOrigin: "58px 50px", transition: "transform 0.25s ease-out" }}>
+            <line x1="58" y1="50" x2={waving ? 64 : 61} y2={waving ? 44 : 47}
+              stroke="hsl(var(--accent))" strokeWidth="1.2" strokeLinecap="round" />
+            <circle cx={waving ? 64 : 61} cy={waving ? 44 : 47} r="0.9" fill="hsl(var(--accent))" />
+          </g>
+        </g>
       </svg>
       <style>{`
         @keyframes mascot-breathe {

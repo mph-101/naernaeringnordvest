@@ -313,7 +313,7 @@ const Article = () => {
 
         {!showPaywall && (
           <div className="mb-12">
-            <FrontpagePoll />
+            <FrontpagePoll variant="inline" />
           </div>
         )}
 

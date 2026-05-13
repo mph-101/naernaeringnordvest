@@ -50,10 +50,13 @@ export const ArticleByline = ({ authorName, publishedAt, readTime, coAuthors }: 
           <img
             src={profile.avatar_url}
             alt={profile.name}
-            className="w-9 h-9 rounded-full object-cover ring-2 ring-accent/10"
+            width={32}
+            height={32}
+            style={{ width: 32, height: 32 }}
+            className="flex-shrink-0 rounded-full object-cover ring-2 ring-accent/10 !max-w-[32px] !max-h-[32px]"
           />
         ) : (
-          <span className="w-9 h-9 bg-accent/10 rounded-full flex items-center justify-center">
+          <span className="flex-shrink-0 w-8 h-8 bg-accent/10 rounded-full flex items-center justify-center">
             <User className="w-4 h-4 text-accent" />
           </span>
         )}

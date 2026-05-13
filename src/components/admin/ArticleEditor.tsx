@@ -145,6 +145,10 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [sharedRegions, setSharedRegions] = useState<string[]>([]);
+  // Track the body that was last published so we can write a revision diff
+  // (and only on actual changes) when the editor publishes again.
+  const [lastPublishedBody, setLastPublishedBody] = useState<string>("");
+  const [changeNote, setChangeNote] = useState<string>("");
   const [forkedFromArticleId, setForkedFromArticleId] = useState<string | null>(null);
   const [forkedFromTitle, setForkedFromTitle] = useState<string | null>(null);
   const [allRegions, setAllRegions] = useState<EditorialRegion[]>([]);

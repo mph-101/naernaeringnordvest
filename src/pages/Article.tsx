@@ -317,7 +317,7 @@ const Article = () => {
           </div>
         )}
 
-        <ArticleRevisionLog articleId={article.id} />
+        <ArticleRevisionLog articleId={article.id} originalPublishedAt={article.published_at} />
 
         <div className="flex items-center gap-4 mb-12">
           <div className="flex-1 h-px bg-border" />

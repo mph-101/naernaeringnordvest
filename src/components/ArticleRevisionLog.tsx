@@ -17,7 +17,13 @@ interface Revision {
  * Reader-facing transparency log: lists each publish + change note.
  * Hidden if there are no revisions yet.
  */
-export function ArticleRevisionLog({ articleId }: { articleId: string }) {
+export function ArticleRevisionLog({
+  articleId,
+  originalPublishedAt,
+}: {
+  articleId: string;
+  originalPublishedAt?: string | null;
+}) {
   const { language } = useTheme();
   const isNo = language === "no";
   const [items, setItems] = useState<Revision[]>([]);
@@ -36,26 +42,50 @@ export function ArticleRevisionLog({ articleId }: { articleId: string }) {
     return () => { active = false; };
   }, [articleId]);
 
-  if (items.length === 0) return null;
+  const hasRevisions = items.length > 0;
 
   return (
     <section className="mb-12 rounded-2xl border border-border bg-surface-subtle/60 px-5 py-4">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => hasRevisions && setOpen((o) => !o)}
         className="w-full flex items-center justify-between text-left"
         aria-expanded={open}
+        disabled={!hasRevisions}
       >
         <span className="flex items-center gap-2.5">
           <History className="w-4 h-4 text-accent" />
           <span className="font-subhead text-sm font-semibold text-foreground">
             {isNo ? "Endringer i saken" : "Changes to this story"}
           </span>
-          <span className="text-xs text-muted-foreground tabular-nums">{items.length}</span>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {hasRevisions
+              ? items.length
+              : isNo
+                ? "Ingen endringer"
+                : "No changes"}
+          </span>
         </span>
-        {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        {hasRevisions ? (
+          open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />
+        ) : null}
       </button>
-      {open && (
+      {!hasRevisions && (
+        <p className="mt-2 text-xs text-muted-foreground font-body">
+          {isNo
+            ? `Saken er uendret siden publisering${
+                originalPublishedAt
+                  ? ` ${new Date(originalPublishedAt).toLocaleDateString("nb-NO", { dateStyle: "medium" })}`
+                  : ""
+              }.`
+            : `This story is unchanged since publication${
+                originalPublishedAt
+                  ? ` on ${new Date(originalPublishedAt).toLocaleDateString("en-US", { dateStyle: "medium" })}`
+                  : ""
+              }.`}
+        </p>
+      )}
+      {hasRevisions && open && (
         <ol className="mt-4 space-y-3">
           {items.map((r) => (
             <li key={r.id} className="flex gap-3 text-sm font-body">

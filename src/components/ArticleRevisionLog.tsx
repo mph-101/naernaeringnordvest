@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { History, ChevronDown, ChevronUp } from "lucide-react";
+import { History, ChevronDown, ChevronUp, FileText, Pencil, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -20,9 +20,11 @@ interface Revision {
 export function ArticleRevisionLog({
   articleId,
   originalPublishedAt,
+  originalAuthor,
 }: {
   articleId: string;
   originalPublishedAt?: string | null;
+  originalAuthor?: string | null;
 }) {
   const { language } = useTheme();
   const isNo = language === "no";
@@ -43,6 +45,14 @@ export function ArticleRevisionLog({
   }, [articleId]);
 
   const hasRevisions = items.length > 0;
+  const latest = hasRevisions ? items[0] : null;
+  const fmtDateTime = (iso: string) =>
+    new Date(iso).toLocaleString(isNo ? "nb-NO" : "en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(isNo ? "nb-NO" : "en-US", { dateStyle: "medium" });
 
   return (
     <section className="mb-12 rounded-2xl border border-border bg-surface-subtle/60 px-5 py-4">
@@ -56,37 +66,53 @@ export function ArticleRevisionLog({
         <span className="flex items-center gap-2.5">
           <History className="w-4 h-4 text-accent" />
           <span className="font-subhead text-sm font-semibold text-foreground">
-            {isNo ? "Endringer i saken" : "Changes to this story"}
+            {isNo ? "Åpenhet om saken" : "Story transparency"}
           </span>
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {hasRevisions
-              ? items.length
-              : isNo
-                ? "Ingen endringer"
-                : "No changes"}
-          </span>
+          {hasRevisions && (
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {items.length} {isNo ? (items.length === 1 ? "endring" : "endringer") : items.length === 1 ? "edit" : "edits"}
+            </span>
+          )}
         </span>
         {hasRevisions ? (
           open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />
         ) : null}
       </button>
-      {!hasRevisions && (
-        <p className="mt-2 text-xs text-muted-foreground font-body">
-          {isNo
-            ? `Saken er uendret siden publisering${
-                originalPublishedAt
-                  ? ` ${new Date(originalPublishedAt).toLocaleDateString("nb-NO", { dateStyle: "medium" })}`
-                  : ""
-              }.`
-            : `This story is unchanged since publication${
-                originalPublishedAt
-                  ? ` on ${new Date(originalPublishedAt).toLocaleDateString("en-US", { dateStyle: "medium" })}`
-                  : ""
-              }.`}
-        </p>
-      )}
+
+      {/* Always-visible summary: published date, last edit, author */}
+      <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs font-body">
+        <div className="flex items-start gap-2">
+          <FileText className="w-3.5 h-3.5 text-accent/80 mt-0.5 shrink-0" />
+          <div className="min-w-0">
+            <dt className="text-muted-foreground">{isNo ? "Publisert" : "Published"}</dt>
+            <dd className="text-foreground/90 font-medium">
+              {originalPublishedAt ? fmtDateTime(originalPublishedAt) : isNo ? "Ukjent" : "Unknown"}
+              {originalAuthor ? ` · ${originalAuthor}` : ""}
+            </dd>
+          </div>
+        </div>
+        <div className="flex items-start gap-2">
+          <Pencil className="w-3.5 h-3.5 text-accent/80 mt-0.5 shrink-0" />
+          <div className="min-w-0">
+            <dt className="text-muted-foreground">{isNo ? "Sist redigert" : "Last edited"}</dt>
+            <dd className="text-foreground/90 font-medium">
+              {latest ? (
+                <>
+                  {fmtDateTime(latest.published_at)}
+                  {latest.changed_by_name ? ` · ${latest.changed_by_name}` : ""}
+                </>
+              ) : (
+                <span className="text-muted-foreground italic font-normal">
+                  {isNo ? "Ikke redigert etter publisering" : "Not edited since publication"}
+                </span>
+              )}
+            </dd>
+          </div>
+        </div>
+      </dl>
+
       {hasRevisions && open && (
-        <ol className="mt-4 space-y-3">
+        <ol className="mt-4 pt-4 border-t border-border/60 space-y-3">
           {items.map((r) => (
             <li key={r.id} className="flex gap-3 text-sm font-body">
               <span className="mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full bg-accent/10 text-accent text-[11px] font-subhead font-bold tabular-nums shrink-0">
@@ -96,14 +122,39 @@ export function ArticleRevisionLog({
                 <div className="text-foreground/90">
                   {r.change_note?.trim() || (isNo ? "Publisert oppdatering" : "Published update")}
                 </div>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  {new Date(r.published_at).toLocaleString(isNo ? "nb-NO" : "en-US", { dateStyle: "medium", timeStyle: "short" })}
-                  {r.changed_by_name ? ` · ${r.changed_by_name}` : ""}
-                  {r.body_diff_summary ? ` · ${r.body_diff_summary}` : ""}
+                <div className="text-xs text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  <span>{fmtDateTime(r.published_at)}</span>
+                  {r.changed_by_name && (
+                    <span className="inline-flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      {r.changed_by_name}
+                    </span>
+                  )}
+                  {r.body_diff_summary && (
+                    <span className="px-1.5 py-0.5 rounded bg-muted text-foreground/70 tabular-nums">
+                      {r.body_diff_summary}
+                    </span>
+                  )}
                 </div>
               </div>
             </li>
           ))}
+          {originalPublishedAt && (
+            <li className="flex gap-3 text-sm font-body opacity-80">
+              <span className="mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground text-[11px] font-subhead font-bold tabular-nums shrink-0">
+                v0
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-foreground/90">
+                  {isNo ? "Opprinnelig publisering" : "Original publication"}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {fmtDate(originalPublishedAt)}
+                  {originalAuthor ? ` · ${originalAuthor}` : ""}
+                </div>
+              </div>
+            </li>
+          )}
         </ol>
       )}
     </section>

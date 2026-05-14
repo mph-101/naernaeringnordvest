@@ -25,34 +25,37 @@ export const SourceCard = ({ data, className = "" }: SourceCardProps) => {
       data-nn-source-card="true"
       className={`not-prose my-6 rounded-xl border border-border bg-card/60 backdrop-blur-sm overflow-hidden ${className}`}
     >
-      <div className="flex items-center gap-4 p-4 sm:p-5">
+      <div className="flex items-center gap-3 p-3 sm:p-4">
         <div className="shrink-0">
           {image_url ? (
             <img
               src={image_url}
               alt={name}
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover ring-1 ring-border"
+              width={48}
+              height={48}
+              style={{ width: 48, height: 48 }}
+              className="flex-shrink-0 rounded-lg object-cover ring-1 ring-border !max-w-[48px] !max-h-[48px]"
               loading="lazy"
             />
           ) : (
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
-              <User className="w-7 h-7" />
+            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+              <User className="w-5 h-5" />
             </div>
           )}
         </div>
         <div className="min-w-0">
-          <p className="font-headline font-bold text-headline text-base sm:text-lg leading-tight">
+          <p className="font-headline font-bold text-headline text-sm sm:text-base leading-tight">
             {name}
           </p>
           {role && (
-            <p className="font-body text-sm sm:text-base text-accent mt-0.5 leading-snug">
+            <p className="font-body text-xs sm:text-sm text-accent mt-0.5 leading-snug">
               {role}
             </p>
           )}
         </div>
       </div>
       {quote && (
-        <blockquote className="px-4 sm:px-5 pb-4 sm:pb-5 -mt-1 font-body text-sm sm:text-base text-foreground/80 italic border-l-2 border-accent/40 ml-4 sm:ml-5 pl-3">
+        <blockquote className="px-3 sm:px-4 pb-3 sm:pb-4 -mt-1 font-body text-sm text-foreground/80 italic border-l-2 border-accent/40 ml-3 sm:ml-4 pl-3">
           «{quote}»
         </blockquote>
       )}

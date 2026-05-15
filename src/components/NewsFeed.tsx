@@ -222,7 +222,22 @@ export const NewsFeed = () => {
     : ["All", ...categories.map(c => c.name_en || c.name)];
   const allTopic = topics[0];
 
-  const articles = dbArticles.map((a, index) => ({
+  // Reorder so that pinned articles land at their requested 1-based slot in
+  // the feed. Position 1 effectively becomes the featured article.
+  const orderedDbArticles = (() => {
+    const unpinned = dbArticles.filter((a) => a.pinned_position == null);
+    const pinned = dbArticles
+      .filter((a) => typeof a.pinned_position === "number" && a.pinned_position! > 0)
+      .sort((a, b) => (a.pinned_position! - b.pinned_position!));
+    const result = [...unpinned];
+    pinned.forEach((a) => {
+      const target = Math.min(Math.max(0, a.pinned_position! - 1), result.length);
+      result.splice(target, 0, a);
+    });
+    return result;
+  })();
+
+  const articles = orderedDbArticles.map((a, index) => ({
     id: a.id,
     title: language === "en" && a.title_en ? a.title_en : a.title,
     excerpt: language === "en" && a.excerpt_en ? a.excerpt_en : a.excerpt,

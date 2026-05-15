@@ -11,7 +11,9 @@ export type FooterPageSlug =
   | "personvern"
   | "vilkar"
   | "innholdsmerking"
-  | "eierskap";
+  | "eierskap"
+  | "cookies"
+  | "tilgjengelighet";
 
 export interface FooterPage {
   slug: FooterPageSlug;
@@ -22,6 +24,8 @@ export interface FooterPage {
   description: string;
   /** Markdown body */
   body: string;
+  /** Render as a minimal "kommer snart" placeholder instead of full article */
+  placeholder?: boolean;
 }
 
 const omOss = `**Næringslivet i regionen — slik det faktisk er.**
@@ -421,6 +425,24 @@ export const FOOTER_PAGES: Record<FooterPageSlug, FooterPage> = {
       "Hvem som eier Compass Media og Nær Næring-avisene, og hvordan virksomheten er finansiert.",
     body: eierskap,
   },
+  cookies: {
+    slug: "cookies",
+    title: "Cookie-erklæring",
+    shortLabel: "Cookies",
+    description:
+      "Oversikt over cookies og sporingsteknologier Nær Næring bruker. Kommer snart.",
+    body: "",
+    placeholder: true,
+  },
+  tilgjengelighet: {
+    slug: "tilgjengelighet",
+    title: "Tilgjengelighetserklæring",
+    shortLabel: "Tilgjengelighet",
+    description:
+      "Status for universell utforming på naernaering.no etter WCAG 2.1. Kommer snart.",
+    body: "",
+    placeholder: true,
+  },
 };
 
 export const FOOTER_PAGE_LINKS: { slug: FooterPageSlug; label: string }[] = [
@@ -431,4 +453,6 @@ export const FOOTER_PAGE_LINKS: { slug: FooterPageSlug; label: string }[] = [
   { slug: "eierskap", label: "Eierskap" },
   { slug: "personvern", label: "Personvern" },
   { slug: "vilkar", label: "Vilkår" },
+  { slug: "cookies", label: "Cookies" },
+  { slug: "tilgjengelighet", label: "Tilgjengelighet" },
 ];

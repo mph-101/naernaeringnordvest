@@ -114,13 +114,18 @@ async function fetchBrreg(queries: Array<{ label: string; params: Record<string,
         if (v) params.set(k, String(v));
       }
       if (!params.has("size")) params.set("size", "5");
+      const cacheKey = params.toString();
+      const cached = brregCache.get(cacheKey);
+      if (cached && Date.now() - cached.at < BRREG_TTL_MS) {
+        return { ...cached.value, label: q.label, cached: true };
+      }
       try {
         const res = await fetch(`${BRREG_BASE}/enhetsregisteret/api/enheter?${params}`, {
           headers: { Accept: "application/json" },
         });
         const data = await res.json();
         const enheter = data?._embedded?.enheter || [];
-        return {
+        const result = {
           label: q.label,
           total: data?.page?.totalElements || 0,
           companies: enheter.slice(0, 10).map((e: any) => ({
@@ -133,6 +138,13 @@ async function fetchBrreg(queries: Array<{ label: string; params: Record<string,
             konkurs: e.konkurs || false,
           })),
         };
+        brregCache.set(cacheKey, { at: Date.now(), value: result });
+        if (brregCache.size > BRREG_CACHE_MAX) {
+          // Evict oldest entry
+          const oldestKey = brregCache.keys().next().value;
+          if (oldestKey) brregCache.delete(oldestKey);
+        }
+        return result;
       } catch {
         return { label: q.label, total: 0, companies: [] };
       }

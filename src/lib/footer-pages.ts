@@ -430,7 +430,7 @@ export const FOOTER_PAGES: Record<FooterPageSlug, FooterPage> = {
     title: "Cookie-erklæring",
     shortLabel: "Cookies",
     description:
-      "Oversikt over cookies og sporingsteknologier Nær Næring bruker. Kommer snart.",
+      "Slik bruker Nær Næring informasjonskapsler og sporingsteknologi for å levere og forbedre nyhetstjenesten.",
     body: "",
     placeholder: true,
   },
@@ -439,7 +439,7 @@ export const FOOTER_PAGES: Record<FooterPageSlug, FooterPage> = {
     title: "Tilgjengelighetserklæring",
     shortLabel: "Tilgjengelighet",
     description:
-      "Status for universell utforming på naernaering.no etter WCAG 2.1. Kommer snart.",
+      "Nær Nærings status for universell utforming etter WCAG 2.1 og hvordan vi jobber for tilgjengelig innhold for alle.",
     body: "",
     placeholder: true,
   },

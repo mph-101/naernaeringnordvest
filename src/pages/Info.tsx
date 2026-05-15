@@ -33,6 +33,26 @@ const Info = () => {
           <h1 className="font-headline text-3xl md:text-4xl font-semibold text-headline mb-6 leading-tight">
             {page.title}
           </h1>
+          {page.placeholder ? (
+            <div className="rounded-2xl border border-border bg-card/60 p-8 text-center">
+              <p className="font-body text-base text-foreground/90 mb-2">
+                Denne siden kommer snart.
+              </p>
+              <p className="font-body text-sm text-muted-foreground mb-6">
+                Vi jobber med fullstendig innhold. I mellomtiden kan du{" "}
+                <Link to="/kontakt" className="text-primary hover:underline">
+                  kontakte oss
+                </Link>{" "}
+                hvis du har spørsmål.
+              </p>
+              <Link
+                to="/"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-body hover:opacity-90 transition-opacity"
+              >
+                Til forsiden
+              </Link>
+            </div>
+          ) : (
           <div className="prose prose-neutral dark:prose-invert max-w-none font-body
             prose-headings:font-headline prose-headings:text-headline
             prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-2
@@ -42,6 +62,7 @@ const Info = () => {
             prose-strong:text-foreground">
             <ReactMarkdown>{page.body}</ReactMarkdown>
           </div>
+          )}
         </article>
       </main>
       <SiteFooter />

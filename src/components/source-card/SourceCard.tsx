@@ -25,8 +25,8 @@ export const SourceCard = ({ data, className = "" }: SourceCardProps) => {
       data-nn-source-card="true"
       className={`not-prose my-6 rounded-xl border border-border bg-card/60 backdrop-blur-sm overflow-hidden ${className}`}
     >
-      <div className="flex items-center gap-3.5 p-3 sm:p-4">
-        <div className="shrink-0">
+      <div className="flex items-stretch gap-3.5 p-3 sm:p-4">
+        <div className="shrink-0 self-center">
           {image_url ? (
             <img
               src={image_url}
@@ -43,7 +43,7 @@ export const SourceCard = ({ data, className = "" }: SourceCardProps) => {
             </div>
           )}
         </div>
-        <div className="min-w-0 flex flex-col justify-center self-stretch py-0.5">
+        <div className="min-w-0 flex flex-col justify-center self-center">
           <p className="font-headline font-bold text-headline text-[1.0625rem] sm:text-xl leading-[1.15] tracking-[-0.01em] m-0">
             {name}
           </p>

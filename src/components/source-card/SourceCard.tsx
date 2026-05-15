@@ -43,12 +43,12 @@ export const SourceCard = ({ data, className = "" }: SourceCardProps) => {
             </div>
           )}
         </div>
-        <div className="min-w-0 flex flex-col">
-          <p className="font-headline font-bold text-headline text-[1.0625rem] sm:text-xl leading-[1.1] tracking-[-0.01em] m-0">
+        <div className="min-w-0 flex flex-col justify-center self-stretch py-0.5">
+          <p className="font-headline font-bold text-headline text-[1.0625rem] sm:text-xl leading-[1.15] tracking-[-0.01em] m-0">
             {name}
           </p>
           {role && (
-            <p className="font-body font-medium text-[0.78125rem] sm:text-[0.875rem] uppercase tracking-[0.06em] text-accent leading-[1.25] mt-1">
+            <p className="font-body font-medium text-[0.78125rem] sm:text-[0.875rem] uppercase tracking-[0.06em] text-accent leading-[1.2] mt-[2px] sm:mt-[3px]">
               {role}
             </p>
           )}

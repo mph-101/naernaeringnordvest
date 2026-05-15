@@ -408,6 +408,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         status: ((data as any).status as ArticleStatus) || (data.published ? "published" : "draft"),
         region_slug: ((data as any).region_slug as string | null) ?? null,
         media_url: ((data as any).media_url as string | null) ?? "",
+        pinned_position: ((data as any).pinned_position as number | null) ?? null,
       });
       // Remember the body that's currently live so we can detect real edits
       // on the next publish.

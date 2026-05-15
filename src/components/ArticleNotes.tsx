@@ -299,6 +299,63 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
                     </button>
                   </div>
                 )}
+
+                {content.trim() && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        disabled={sharing}
+                        className="w-full py-2.5 bg-card border border-border rounded-full font-subhead text-xs font-medium text-foreground hover:bg-secondary transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      >
+                        {sharing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5" />}
+                        {t.share}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-64 z-[60]">
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                          <Users className="w-4 h-4 mr-2" />
+                          {t.inGroup}
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
+                            {groups.length === 0 ? (
+                              <DropdownMenuItem disabled>{t.noGroups}</DropdownMenuItem>
+                            ) : (
+                              groups.map((g) => (
+                                <DropdownMenuItem
+                                  key={g.id}
+                                  onSelect={(e) => {
+                                    e.preventDefault();
+                                    shareToGroup(g.id, g.name);
+                                  }}
+                                >
+                                  <Check className="w-3.5 h-3.5 mr-2 opacity-0 group-data-[state=checked]:opacity-100" />
+                                  {g.name}
+                                </DropdownMenuItem>
+                              ))
+                            )}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuSub>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>{t.socialShare}</DropdownMenuLabel>
+                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); shareLinkedIn(); }}>
+                        <Linkedin className="w-4 h-4 mr-2" /> LinkedIn
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); shareTwitter(); }}>
+                        <Twitter className="w-4 h-4 mr-2" /> X / Twitter
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); shareFacebook(); }}>
+                        <Facebook className="w-4 h-4 mr-2" /> Facebook
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); copyShareText(); }}>
+                        <LinkIcon className="w-4 h-4 mr-2" /> {t.copyLink}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             )}
           </div>

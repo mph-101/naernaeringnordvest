@@ -444,6 +444,44 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
               <pre className="bg-surface-subtle border border-border rounded-xl p-4 text-sm font-body text-foreground whitespace-pre-wrap break-words max-h-64 overflow-auto">
                 {buildShareText()}
               </pre>
+              {pendingShare?.kind === "group" && (
+                <div className="space-y-2">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-subhead">
+                    {t.visibility}
+                  </p>
+                  <div className="grid gap-2">
+                    {([
+                      { key: "members" as GroupVisibility, icon: Users, label: t.visMembers, desc: t.visMembersDesc },
+                      { key: "admins" as GroupVisibility, icon: Shield, label: t.visAdmins, desc: t.visAdminsDesc },
+                      { key: "author" as GroupVisibility, icon: Lock, label: t.visAuthor, desc: t.visAuthorDesc },
+                    ]).map((opt) => {
+                      const active = groupVisibility === opt.key;
+                      const Icon = opt.icon;
+                      return (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => setGroupVisibility(opt.key)}
+                          className={`flex items-start gap-3 text-left p-3 rounded-xl border transition-all ${
+                            active
+                              ? "bg-accent/5 border-accent/40 ring-2 ring-accent/30"
+                              : "bg-card border-border hover:bg-secondary"
+                          }`}
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${active ? "bg-accent/15 text-accent" : "bg-secondary text-muted-foreground"}`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-subhead text-sm font-semibold text-headline">{opt.label}</p>
+                            <p className="text-xs text-muted-foreground font-body leading-snug">{opt.desc}</p>
+                          </div>
+                          {active && <Check className="w-4 h-4 text-accent flex-shrink-0 mt-1" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <div>
                 <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-subhead mb-1">
                   {t.linkLabel}

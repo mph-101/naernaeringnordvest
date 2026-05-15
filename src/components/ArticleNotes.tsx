@@ -30,13 +30,21 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
   const [userId, setUserId] = useState<string | null>(null);
   const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
   const [sharing, setSharing] = useState(false);
+  const [pendingShare, setPendingShare] = useState<
+    | { kind: "group"; groupId: string; groupName: string }
+    | { kind: "linkedin" }
+    | { kind: "twitter" }
+    | { kind: "facebook" }
+    | { kind: "copy" }
+    | null
+  >(null);
   const navigate = useNavigate();
   const { language } = useTheme();
   const isNo = language === "no";
 
   const t = isNo
-    ? { notes: "Mine notater", placeholder: "Skriv notater om denne artikkelen...", save: "Lagre", saved: "Lagret!", login: "Logg inn for å bruke notater", share: "Del notat", inGroup: "Del i gruppe", noGroups: "Du er ikke med i noen grupper", socialShare: "Del på sosiale medier", copyLink: "Kopier lenke", copied: "Kopiert!", shared: "Notat delt i gruppen", emptyShare: "Skriv et notat før du deler" }
-    : { notes: "My Notes", placeholder: "Write notes about this article...", save: "Save", saved: "Saved!", login: "Log in to use notes", share: "Share note", inGroup: "Share to group", noGroups: "You are not in any groups", socialShare: "Share on social media", copyLink: "Copy link", copied: "Copied!", shared: "Note shared to group", emptyShare: "Write a note before sharing" };
+    ? { notes: "Mine notater", placeholder: "Skriv notater om denne artikkelen...", save: "Lagre", saved: "Lagret!", login: "Logg inn for å bruke notater", share: "Del notat", inGroup: "Del i gruppe", noGroups: "Du er ikke med i noen grupper", socialShare: "Del på sosiale medier", copyLink: "Kopier lenke", copied: "Kopiert!", shared: "Notat delt i gruppen", emptyShare: "Skriv et notat før du deler", previewTitle: "Forhåndsvisning", previewIntro: "Slik blir delingen seende ut:", linkLabel: "Lenke", confirm: "Del nå", cancel: "Avbryt", target: "Mål" }
+    : { notes: "My Notes", placeholder: "Write notes about this article...", save: "Save", saved: "Saved!", login: "Log in to use notes", share: "Share note", inGroup: "Share to group", noGroups: "You are not in any groups", socialShare: "Share on social media", copyLink: "Copy link", copied: "Copied!", shared: "Note shared to group", emptyShare: "Write a note before sharing", previewTitle: "Preview", previewIntro: "Here is how the share will look:", linkLabel: "Link", confirm: "Share now", cancel: "Cancel", target: "Target" };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -116,7 +124,7 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
     return `${header}\n\n${content.trim()}\n\n${articleUrl}`;
   };
 
-  const shareToGroup = async (groupId: string, groupName: string) => {
+  const doShareToGroup = async (groupId: string, groupName: string) => {
     if (!userId || !content.trim()) {
       toast.error(t.emptyShare);
       return;
@@ -137,28 +145,28 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
     window.open(url, "_blank", "noopener,noreferrer,width=600,height=600");
   };
 
-  const shareLinkedIn = () => {
+  const doShareLinkedIn = () => {
     if (!content.trim()) return toast.error(t.emptyShare);
     openShareWindow(
       `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(articleUrl)}`,
     );
   };
 
-  const shareTwitter = () => {
+  const doShareTwitter = () => {
     if (!content.trim()) return toast.error(t.emptyShare);
     openShareWindow(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(buildShareText())}`,
     );
   };
 
-  const shareFacebook = () => {
+  const doShareFacebook = () => {
     if (!content.trim()) return toast.error(t.emptyShare);
     openShareWindow(
       `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(articleUrl)}&quote=${encodeURIComponent(buildShareText())}`,
     );
   };
 
-  const copyShareText = async () => {
+  const doCopyShareText = async () => {
     if (!content.trim()) return toast.error(t.emptyShare);
     try {
       await navigator.clipboard.writeText(buildShareText());
@@ -167,6 +175,36 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
       toast.error("Clipboard unavailable");
     }
   };
+
+  const requestShare = (target: NonNullable<typeof pendingShare>) => {
+    if (!content.trim()) {
+      toast.error(t.emptyShare);
+      return;
+    }
+    setPendingShare(target);
+  };
+
+  const confirmPendingShare = async () => {
+    if (!pendingShare) return;
+    const target = pendingShare;
+    setPendingShare(null);
+    if (target.kind === "group") await doShareToGroup(target.groupId, target.groupName);
+    else if (target.kind === "linkedin") doShareLinkedIn();
+    else if (target.kind === "twitter") doShareTwitter();
+    else if (target.kind === "facebook") doShareFacebook();
+    else if (target.kind === "copy") await doCopyShareText();
+  };
+
+  const pendingTargetLabel = (() => {
+    if (!pendingShare) return "";
+    switch (pendingShare.kind) {
+      case "group": return `${t.inGroup}: ${pendingShare.groupName}`;
+      case "linkedin": return "LinkedIn";
+      case "twitter": return "X / Twitter";
+      case "facebook": return "Facebook";
+      case "copy": return t.copyLink;
+    }
+  })();
 
   const exportAsTxt = () => {
     if (!content.trim()) return;
@@ -327,7 +365,7 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
                                   key={g.id}
                                   onSelect={(e) => {
                                     e.preventDefault();
-                                    shareToGroup(g.id, g.name);
+                                    requestShare({ kind: "group", groupId: g.id, groupName: g.name });
                                   }}
                                 >
                                   <Check className="w-3.5 h-3.5 mr-2 opacity-0 group-data-[state=checked]:opacity-100" />
@@ -340,17 +378,17 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
                       </DropdownMenuSub>
                       <DropdownMenuSeparator />
                       <DropdownMenuLabel>{t.socialShare}</DropdownMenuLabel>
-                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); shareLinkedIn(); }}>
+                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); requestShare({ kind: "linkedin" }); }}>
                         <Linkedin className="w-4 h-4 mr-2" /> LinkedIn
                       </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); shareTwitter(); }}>
+                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); requestShare({ kind: "twitter" }); }}>
                         <Twitter className="w-4 h-4 mr-2" /> X / Twitter
                       </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); shareFacebook(); }}>
+                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); requestShare({ kind: "facebook" }); }}>
                         <Facebook className="w-4 h-4 mr-2" /> Facebook
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); copyShareText(); }}>
+                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); requestShare({ kind: "copy" }); }}>
                         <LinkIcon className="w-4 h-4 mr-2" /> {t.copyLink}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -358,6 +396,71 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
                 )}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Share preview dialog */}
+      {pendingShare && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-foreground/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-card rounded-2xl shadow-elevated w-full max-w-md animate-scale-in flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 bg-accent/10 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Share2 className="w-4 h-4 text-accent" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-headline text-lg font-bold text-headline truncate">{t.previewTitle}</h3>
+                  <p className="text-xs text-muted-foreground font-body truncate">
+                    {t.target}: {pendingTargetLabel}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setPendingShare(null)}
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-full transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 flex-1 overflow-auto space-y-4">
+              <p className="text-sm text-muted-foreground font-body">{t.previewIntro}</p>
+              <pre className="bg-surface-subtle border border-border rounded-xl p-4 text-sm font-body text-foreground whitespace-pre-wrap break-words max-h-64 overflow-auto">
+                {buildShareText()}
+              </pre>
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-subhead mb-1">
+                  {t.linkLabel}
+                </p>
+                <a
+                  href={articleUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-body text-accent hover:underline break-all inline-flex items-center gap-1"
+                >
+                  <LinkIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                  {articleUrl}
+                </a>
+              </div>
+            </div>
+
+            <div className="p-5 border-t border-border flex gap-2">
+              <button
+                onClick={() => setPendingShare(null)}
+                className="flex-1 py-2.5 bg-card border border-border rounded-full font-subhead text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+              >
+                {t.cancel}
+              </button>
+              <button
+                onClick={confirmPendingShare}
+                disabled={sharing}
+                className="flex-1 py-2.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                {sharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                {t.confirm}
+              </button>
+            </div>
           </div>
         </div>
       )}

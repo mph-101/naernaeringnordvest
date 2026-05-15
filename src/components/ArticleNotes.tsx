@@ -1,9 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { StickyNote, X, Save, Loader2, FileText, FileDown } from "lucide-react";
+import { StickyNote, X, Save, Loader2, FileText, FileDown, Share2, Users, Linkedin, Twitter, Facebook, Link as LinkIcon, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
+} from "@/components/ui/dropdown-menu";
 
 interface ArticleNotesProps {
   articleId: string;
@@ -16,13 +28,15 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
+  const [sharing, setSharing] = useState(false);
   const navigate = useNavigate();
   const { language } = useTheme();
   const isNo = language === "no";
 
   const t = isNo
-    ? { notes: "Mine notater", placeholder: "Skriv notater om denne artikkelen...", save: "Lagre", saved: "Lagret!", login: "Logg inn for å bruke notater" }
-    : { notes: "My Notes", placeholder: "Write notes about this article...", save: "Save", saved: "Saved!", login: "Log in to use notes" };
+    ? { notes: "Mine notater", placeholder: "Skriv notater om denne artikkelen...", save: "Lagre", saved: "Lagret!", login: "Logg inn for å bruke notater", share: "Del notat", inGroup: "Del i gruppe", noGroups: "Du er ikke med i noen grupper", socialShare: "Del på sosiale medier", copyLink: "Kopier lenke", copied: "Kopiert!", shared: "Notat delt i gruppen", emptyShare: "Skriv et notat før du deler" }
+    : { notes: "My Notes", placeholder: "Write notes about this article...", save: "Save", saved: "Saved!", login: "Log in to use notes", share: "Share note", inGroup: "Share to group", noGroups: "You are not in any groups", socialShare: "Share on social media", copyLink: "Copy link", copied: "Copied!", shared: "Note shared to group", emptyShare: "Write a note before sharing" };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -55,6 +69,28 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
       });
   }, [isOpen, userId, articleId]);
 
+  // Load groups the user is a member of so they can share notes there.
+  useEffect(() => {
+    if (!isOpen || !userId) return;
+    (async () => {
+      const { data: memberships } = await supabase
+        .from("group_members")
+        .select("group_id")
+        .eq("user_id", userId);
+      const ids = (memberships ?? []).map((m: any) => m.group_id);
+      if (ids.length === 0) {
+        setGroups([]);
+        return;
+      }
+      const { data: gs } = await supabase
+        .from("groups")
+        .select("id, name")
+        .in("id", ids)
+        .order("name", { ascending: true });
+      setGroups((gs ?? []) as { id: string; name: string }[]);
+    })();
+  }, [isOpen, userId]);
+
   const handleSave = useCallback(async () => {
     if (!userId) return;
     setSaving(true);
@@ -71,6 +107,66 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
 
   const title = articleTitle || `Artikkel #${articleId}`;
   const dateStr = new Date().toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "long", year: "numeric" });
+  const articleUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/article/${articleId}`
+    : `https://naernaeringnordvest.lovable.app/article/${articleId}`;
+
+  const buildShareText = () => {
+    const header = isNo ? `📝 Mitt notat om «${title}»` : `📝 My note on "${title}"`;
+    return `${header}\n\n${content.trim()}\n\n${articleUrl}`;
+  };
+
+  const shareToGroup = async (groupId: string, groupName: string) => {
+    if (!userId || !content.trim()) {
+      toast.error(t.emptyShare);
+      return;
+    }
+    setSharing(true);
+    const { error } = await supabase
+      .from("group_messages")
+      .insert({ group_id: groupId, user_id: userId, content: buildShareText() });
+    setSharing(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`${t.shared}: ${groupName}`);
+  };
+
+  const openShareWindow = (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer,width=600,height=600");
+  };
+
+  const shareLinkedIn = () => {
+    if (!content.trim()) return toast.error(t.emptyShare);
+    openShareWindow(
+      `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(articleUrl)}`,
+    );
+  };
+
+  const shareTwitter = () => {
+    if (!content.trim()) return toast.error(t.emptyShare);
+    openShareWindow(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(buildShareText())}`,
+    );
+  };
+
+  const shareFacebook = () => {
+    if (!content.trim()) return toast.error(t.emptyShare);
+    openShareWindow(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(articleUrl)}&quote=${encodeURIComponent(buildShareText())}`,
+    );
+  };
+
+  const copyShareText = async () => {
+    if (!content.trim()) return toast.error(t.emptyShare);
+    try {
+      await navigator.clipboard.writeText(buildShareText());
+      toast.success(t.copied);
+    } catch {
+      toast.error("Clipboard unavailable");
+    }
+  };
 
   const exportAsTxt = () => {
     if (!content.trim()) return;

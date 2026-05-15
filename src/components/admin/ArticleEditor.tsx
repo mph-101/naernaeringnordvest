@@ -143,6 +143,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     status: "draft" as ArticleStatus,
     region_slug: null as string | null,
     media_url: "",
+    pinned_position: null as number | null,
   });
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);

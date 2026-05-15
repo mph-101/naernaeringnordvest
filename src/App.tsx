@@ -16,6 +16,7 @@ import KlubbProfil from "./pages/KlubbProfil";
 import Sammenlign from "./pages/Sammenlign";
 import Groups from "./pages/Groups";
 import GroupDetail from "./pages/GroupDetail";
+import MineDelteNotater from "./pages/MineDelteNotater";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
@@ -58,6 +59,7 @@ const App = () => (
               <Route path="/idrett/sammenlign" element={<Sammenlign />} />
               <Route path="/grupper" element={<Groups />} />
               <Route path="/grupper/:id" element={<GroupDetail />} />
+              <Route path="/mine-delte-notater" element={<MineDelteNotater />} />
               <Route path="/login" element={<Login />} />
               <Route path="/profil" element={<Profile />} />
               <Route path="/reset-password" element={<ResetPassword />} />

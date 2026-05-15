@@ -155,7 +155,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
       )}
 
       {/* Main content */}
-      <main className="flex-1 p-6 md:p-8 md:ml-0 ml-0 pt-16 md:pt-8">
+      <main className="flex-1 min-w-0 p-4 sm:p-6 md:p-8 pt-16 md:pt-8 overflow-x-hidden">
         {view === "dashboard" && (
           <div>
             <h2 className="font-headline text-2xl font-semibold text-headline mb-6">

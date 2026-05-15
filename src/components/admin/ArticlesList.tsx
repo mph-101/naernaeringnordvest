@@ -170,13 +170,13 @@ export const ArticlesList = ({ onEdit }: ArticlesListProps) => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="font-headline text-2xl font-semibold text-headline">
+      <div className="flex flex-wrap items-center gap-3 justify-between mb-6">
+        <h2 className="font-headline text-xl sm:text-2xl font-semibold text-headline">
           Artikler
         </h2>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-            <SelectTrigger className="w-[160px] h-9 text-sm">
+            <SelectTrigger className="w-[150px] sm:w-[160px] h-9 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -186,7 +186,7 @@ export const ArticlesList = ({ onEdit }: ArticlesListProps) => {
               <SelectItem value="published">Publisert ({articles.filter((a) => a.status === "published").length})</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={() => onEdit(null)}>
+          <Button size="sm" onClick={() => onEdit(null)} className="h-9">
             <Plus className="w-4 h-4 mr-2" />
             Ny artikkel
           </Button>

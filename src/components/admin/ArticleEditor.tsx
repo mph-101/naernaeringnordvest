@@ -1263,77 +1263,82 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   }
 
   return (
-    <div>
-      {/* Header with status */}
-      <div className="flex items-center gap-4 mb-6">
-        <button onClick={onBack} className="p-2 hover:bg-muted rounded-lg transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div className="flex-1">
-          <h2 className="font-headline text-2xl font-semibold text-headline">
+    <div className="min-w-0">
+      {/* Header with status — wraps cleanly on mobile so nothing overflows */}
+      <div className="mb-6 space-y-3 md:space-y-0 md:flex md:items-center md:gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            onClick={onBack}
+            className="p-2 hover:bg-muted rounded-lg transition-colors shrink-0"
+            aria-label="Tilbake"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h2 className="font-headline text-xl sm:text-2xl font-semibold text-headline truncate flex-1 min-w-0">
             {articleId ? "Rediger artikkel" : "Ny artikkel"}
           </h2>
+          {(articleId || currentArticleId) && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+              {autoSaveStatus === "saved" && <><Cloud className="w-3.5 h-3.5 text-green-500" /> <span className="hidden sm:inline">Lagret</span></>}
+              {autoSaveStatus === "saving" && <><Loader2 className="w-3.5 h-3.5 animate-spin" /> <span className="hidden sm:inline">Lagrer...</span></>}
+              {autoSaveStatus === "unsaved" && <><CloudOff className="w-3.5 h-3.5 text-amber-500" /> <span className="hidden sm:inline">Ulagret</span></>}
+            </div>
+          )}
         </div>
 
-        {(articleId || currentArticleId) && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            {autoSaveStatus === "saved" && <><Cloud className="w-3.5 h-3.5 text-green-500" /> Lagret</>}
-            {autoSaveStatus === "saving" && <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Lagrer...</>}
-            {autoSaveStatus === "unsaved" && <><CloudOff className="w-3.5 h-3.5 text-amber-500" /> Ulagret</>}
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => setPreviewDialogOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-subhead font-medium text-foreground bg-card hover:bg-muted border border-border rounded-full transition-colors"
-          title="Live forhåndsvisning av usav nede endringer"
-        >
-          <Eye className="w-3.5 h-3.5" />
-          Live preview
-        </button>
-
-        {(articleId || currentArticleId) && (
-          <a
-            href={`/article/${articleId || currentArticleId}`}
-            target="_blank"
-            rel="noopener noreferrer"
+        <div className="flex flex-wrap items-center gap-2 md:ml-auto">
+          <button
+            type="button"
+            onClick={() => setPreviewDialogOpen(true)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-subhead font-medium text-foreground bg-card hover:bg-muted border border-border rounded-full transition-colors"
-            title={form.status === "published" ? "Åpne publisert artikkel i ny fane" : "Åpne lagret kladd i ny fane"}
+            title="Live forhåndsvisning av usav nede endringer"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
-            {form.status === "published" ? "Gå til artikkel" : "Åpne lagret"}
-          </a>
-        )}
+            <Eye className="w-3.5 h-3.5" />
+            <span>Live preview</span>
+          </button>
 
-        <div className="flex items-center gap-2">
-          {(["draft", "review", "published"] as ArticleStatus[]).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => {
-                if (s === "published" && !canPublish) {
-                  toast({
-                    title: "Kan ikke publisere ennå",
-                    description: "Fullfør publiseringskravene under for å aktivere publisering.",
-                    variant: "destructive",
-                  });
-                  return;
-                }
-                updateForm({ status: s });
-              }}
-              disabled={s === "published" && !canPublish}
-              title={s === "published" && !canPublish ? "Fullfør publiseringskravene først" : undefined}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                form.status === s
-                  ? `${STATUS_CONFIG[s].bg} ${STATUS_CONFIG[s].color}`
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted"
-              } ${s === "published" && !canPublish ? "opacity-50 cursor-not-allowed" : ""}`}
+          {(articleId || currentArticleId) && (
+            <a
+              href={`/article/${articleId || currentArticleId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-subhead font-medium text-foreground bg-card hover:bg-muted border border-border rounded-full transition-colors"
+              title={form.status === "published" ? "Åpne publisert artikkel i ny fane" : "Åpne lagret kladd i ny fane"}
             >
-              {STATUS_CONFIG[s].label}
-            </button>
-          ))}
-          <PrePublishChecklist items={publishChecklist} variant="compact" />
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>{form.status === "published" ? "Gå til artikkel" : "Åpne lagret"}</span>
+            </a>
+          )}
+
+          <div className="flex items-center gap-1.5">
+            {(["draft", "review", "published"] as ArticleStatus[]).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => {
+                  if (s === "published" && !canPublish) {
+                    toast({
+                      title: "Kan ikke publisere ennå",
+                      description: "Fullfør publiseringskravene under for å aktivere publisering.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  updateForm({ status: s });
+                }}
+                disabled={s === "published" && !canPublish}
+                title={s === "published" && !canPublish ? "Fullfør publiseringskravene først" : undefined}
+                className={`px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  form.status === s
+                    ? `${STATUS_CONFIG[s].bg} ${STATUS_CONFIG[s].color}`
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                } ${s === "published" && !canPublish ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                {STATUS_CONFIG[s].label}
+              </button>
+            ))}
+            <PrePublishChecklist items={publishChecklist} variant="compact" />
+          </div>
         </div>
       </div>
 

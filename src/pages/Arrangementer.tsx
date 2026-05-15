@@ -610,4 +610,50 @@ const Field = ({ label, required, children }: { label: string; required?: boolea
   </label>
 );
 
+const PromoteDialog = ({ t, eventId, onClose }: { t: any; eventId: string; onClose: () => void }) => {
+  const [showCheckout, setShowCheckout] = useState(false);
+  const returnUrl = `${window.location.origin}/arrangementer?promoted=1`;
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()}
+        className="bg-card rounded-2xl shadow-elevated w-full max-w-lg p-6 my-8">
+        {!showCheckout ? (
+          <>
+            <div className="flex items-center gap-2 mb-2">
+              <Megaphone className="w-5 h-5 text-primary" />
+              <h2 className="font-headline text-xl text-headline">{t.promoteTitle}</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">{t.promoteDesc}</p>
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-5">
+              <div className="flex items-baseline justify-between">
+                <span className="font-medium">{t.promote}</span>
+                <span className="font-headline text-2xl text-headline">{FEATURED_PRICE_NOK} kr</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{t.promotePrice}</p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={onClose} className="px-4 py-2 rounded-lg text-muted-foreground hover:bg-muted">{t.promoteSkip}</button>
+              <button onClick={() => setShowCheckout(true)}
+                className="px-5 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 inline-flex items-center gap-2">
+                <Sparkles className="w-4 h-4" /> {t.promote}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-headline text-lg text-headline">{t.promoteCheckoutTitle}</h2>
+              <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1"><X className="w-5 h-5" /></button>
+            </div>
+            <PaymentTestModeBanner />
+            <div className="mt-3">
+              <EventFeaturedCheckout eventId={eventId} returnUrl={returnUrl} />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default Arrangementer;

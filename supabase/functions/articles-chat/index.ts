@@ -120,7 +120,7 @@ async function fetchBrreg(queries: Array<{ label: string; params: Record<string,
       const cacheKey = params.toString();
       const cached = brregCache.get(cacheKey);
       if (cached && Date.now() - cached.at < BRREG_TTL_MS) {
-        return { ...cached.value, label: q.label, cached: true };
+        return { ...cached.value, label: q.label, cached: true, queryParams: q.params };
       }
       try {
         const res = await fetch(`${BRREG_BASE}/enhetsregisteret/api/enheter?${params}`, {
@@ -147,9 +147,9 @@ async function fetchBrreg(queries: Array<{ label: string; params: Record<string,
           const oldestKey = brregCache.keys().next().value;
           if (oldestKey) brregCache.delete(oldestKey);
         }
-        return result;
+        return { ...result, queryParams: q.params };
       } catch {
-        return { label: q.label, total: 0, companies: [] };
+        return { label: q.label, total: 0, companies: [], queryParams: q.params };
       }
     }),
   );

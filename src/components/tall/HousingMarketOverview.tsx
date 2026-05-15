@@ -140,7 +140,7 @@ export function HousingMarketOverview() {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h2 className="font-headline text-2xl font-bold text-headline">
-            {isNo ? "Boligmarkedet" : "Housing market"} — {regionName}
+            {isNo ? "Boligmarkedet" : "Housing market"}
           </h2>
           <p className="text-sm text-muted-foreground font-body mt-1">
             {isNo

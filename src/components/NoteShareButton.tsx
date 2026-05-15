@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Share2, Loader2, Users, Linkedin, Twitter, Facebook, Link as LinkIcon, X, Check, Shield, Lock } from "lucide-react";
+import { Share2, Loader2, Users, Linkedin, Twitter, Facebook, Link as LinkIcon, X, Check, Shield, Lock, LogIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
@@ -42,10 +42,15 @@ export function NoteShareButton({ articleId, articleTitle, content, variant = "c
   const [sharing, setSharing] = useState(false);
   const [pending, setPending] = useState<Pending>(null);
   const [groupVisibility, setGroupVisibility] = useState<GroupVisibility>("members");
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const t = isNo
     ? { share: "Del", inGroup: "Del i gruppe", noGroups: "Du er ikke med i noen grupper", socialShare: "Del på sosiale medier", copyLink: "Kopier lenke", copied: "Kopiert!", shared: "Notat delt i gruppen", emptyShare: "Notatet er tomt", previewTitle: "Forhåndsvisning", previewIntro: "Slik blir delingen seende ut:", linkLabel: "Lenke", confirm: "Del nå", cancel: "Avbryt", target: "Mål", visibility: "Synlighet", visMembers: "Alle medlemmer", visMembersDesc: "Synlig for alle i gruppen", visAdmins: "Kun gruppe-admins", visAdminsDesc: "Bare administratorer ser notatet", visAuthor: "Bare meg", visAuthorDesc: "Lagres i gruppen, men kun synlig for deg" }
     : { share: "Share", inGroup: "Share to group", noGroups: "You are not in any groups", socialShare: "Share on social media", copyLink: "Copy link", copied: "Copied!", shared: "Note shared to group", emptyShare: "Note is empty", previewTitle: "Preview", previewIntro: "Here is how the share will look:", linkLabel: "Link", confirm: "Share now", cancel: "Cancel", target: "Target", visibility: "Visibility", visMembers: "All members", visMembersDesc: "Visible to everyone in the group", visAdmins: "Group admins only", visAdminsDesc: "Only group administrators can see it", visAuthor: "Only me", visAuthorDesc: "Stored in the group but visible only to you" };
+
+  const tLogin = isNo
+    ? { title: "Logg inn for å dele", body: "Du må være innlogget for å dele notater i grupper eller på sosiale medier.", login: "Logg inn", cancel: "Avbryt" }
+    : { title: "Log in to share", body: "You need to be logged in to share notes in groups or on social media.", login: "Log in", cancel: "Cancel" };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user?.id ?? null));
@@ -140,7 +145,8 @@ export function NoteShareButton({ articleId, articleTitle, content, variant = "c
 
   return (
     <>
-      <DropdownMenu>
+      {userId ? (
+        <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button disabled={sharing} className={triggerCls} title={t.share} aria-label={t.share}>
             {sharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
@@ -186,7 +192,43 @@ export function NoteShareButton({ articleId, articleTitle, content, variant = "c
             <LinkIcon className="w-4 h-4 mr-2" /> {t.copyLink}
           </DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
+        </DropdownMenu>
+      ) : (
+        <button
+          onClick={() => setShowLoginPrompt(true)}
+          className={triggerCls}
+          title={t.share}
+          aria-label={t.share}
+        >
+          <Share2 className="w-4 h-4" />
+          {variant === "full" && <span>{t.share}</span>}
+        </button>
+      )}
+
+      {showLoginPrompt && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-foreground/50 backdrop-blur-sm animate-fade-in" onClick={() => setShowLoginPrompt(false)}>
+          <div className="bg-card rounded-2xl shadow-elevated w-full max-w-sm animate-scale-in p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <LogIn className="w-5 h-5 text-accent" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-headline text-lg font-bold text-headline">{tLogin.title}</h3>
+                <p className="text-sm text-muted-foreground font-body mt-1">{tLogin.body}</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-5">
+              <button onClick={() => setShowLoginPrompt(false)} className="flex-1 py-2.5 bg-card border border-border rounded-full font-subhead text-sm font-medium text-foreground hover:bg-secondary transition-colors">{tLogin.cancel}</button>
+              <button
+                onClick={() => { setShowLoginPrompt(false); navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`); }}
+                className="flex-1 py-2.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft inline-flex items-center justify-center gap-1.5"
+              >
+                <LogIn className="w-4 h-4" /> {tLogin.login}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {pending && (
         <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-foreground/50 backdrop-blur-sm animate-fade-in">

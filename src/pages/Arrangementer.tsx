@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
-import { Calendar, MapPin, Plus, ExternalLink, Clock, Loader2, CheckCircle2, AlertCircle, Trash2, ImagePlus, X } from "lucide-react";
+import { Calendar, MapPin, Plus, ExternalLink, Clock, Loader2, CheckCircle2, AlertCircle, Trash2, ImagePlus, X, Sparkles, Megaphone } from "lucide-react";
 import { Header } from "@/components/Header";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { EventFeaturedCheckout } from "@/components/EventFeaturedCheckout";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -24,15 +25,18 @@ interface EventItem {
   status: string;
   submitted_by: string;
   moderation_note: string | null;
+  is_featured?: boolean;
+  featured_until?: string | null;
 }
+
+const FEATURED_PRICE_NOK = 1990;
 
 const Arrangementer = () => {
   const { language } = useTheme();
   const { userId, isAuthenticated, hasRole } = useAuth();
-  const { isActive: hasSubscription } = useSubscription();
   const navigate = useNavigate();
   const isStaff = hasRole("admin") || hasRole("editor");
-  const canSubmit = isAuthenticated && (hasSubscription || isStaff);
+  const canSubmit = isAuthenticated;
 
   const [events, setEvents] = useState<EventItem[]>([]);
   const [myEvents, setMyEvents] = useState<EventItem[]>([]);
@@ -41,6 +45,7 @@ const Arrangementer = () => {
   const [submitting, setSubmitting] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [promoteEventId, setPromoteEventId] = useState<string | null>(null);
 
   const t = language === "no"
     ? {
@@ -48,7 +53,7 @@ const Arrangementer = () => {
         subtitle: "Næringslivsarrangementer i regionen",
         submit: "Foreslå arrangement",
         loginToSubmit: "Logg inn for å foreslå",
-        subRequired: "Krever abonnement",
+        freeToCreate: "Gratis å foreslå",
         upcoming: "Kommende",
         past: "Tidligere",
         empty: "Ingen godkjente arrangementer ennå.",
@@ -81,13 +86,22 @@ const Arrangementer = () => {
         imageTooLarge: "Bildet er for stort (maks 5 MB).",
         imageWrongType: "Kun JPG, PNG eller WebP er tillatt.",
         uploadingImage: "Laster opp bilde...",
+        featured: "Fremhevet",
+        promote: "Fremhev arrangementet",
+        promoteAgain: "Fremhev",
+        alreadyFeatured: "Allerede fremhevet",
+        promoteTitle: "Få mer oppmerksomhet rundt arrangementet",
+        promoteDesc: "Profilering gir badge og topp-plassering i feeden, og inkludering i nyhetsbrev frem til arrangementet starter.",
+        promotePrice: `Engangsbeløp ${FEATURED_PRICE_NOK} kr`,
+        promoteSkip: "Ikke nå",
+        promoteCheckoutTitle: "Betal for fremhevet arrangement",
       }
     : {
         title: "Events",
         subtitle: "Business events in the region",
         submit: "Suggest event",
         loginToSubmit: "Log in to suggest",
-        subRequired: "Subscription required",
+        freeToCreate: "Free to submit",
         upcoming: "Upcoming",
         past: "Past",
         empty: "No approved events yet.",
@@ -120,6 +134,15 @@ const Arrangementer = () => {
         imageTooLarge: "Image is too large (max 5 MB).",
         imageWrongType: "Only JPG, PNG or WebP allowed.",
         uploadingImage: "Uploading image...",
+        featured: "Featured",
+        promote: "Promote this event",
+        promoteAgain: "Promote",
+        alreadyFeatured: "Already featured",
+        promoteTitle: "Boost reach for your event",
+        promoteDesc: "Promotion gives a badge and top placement in the feed, plus inclusion in the newsletter until the event starts.",
+        promotePrice: `One-time ${FEATURED_PRICE_NOK} NOK`,
+        promoteSkip: "Not now",
+        promoteCheckoutTitle: "Pay to feature this event",
       };
 
   const load = async () => {
@@ -128,6 +151,7 @@ const Arrangementer = () => {
       .from("events")
       .select("*")
       .eq("status", "approved")
+      .order("is_featured", { ascending: false })
       .order("start_at", { ascending: true });
     setEvents((data ?? []) as EventItem[]);
 
@@ -136,7 +160,6 @@ const Arrangementer = () => {
         .from("events")
         .select("*")
         .eq("submitted_by", userId)
-        .neq("status", "approved")
         .order("created_at", { ascending: false });
       setMyEvents((mine ?? []) as EventItem[]);
     } else {
@@ -226,21 +249,20 @@ const Arrangementer = () => {
           </div>
           <div>
             {canSubmit ? (
-              <button
-                onClick={() => setShowForm(true)}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-medium"
-              >
-                <Plus className="w-4 h-4" /> {t.submit}
-              </button>
+              <div className="flex flex-col items-end gap-1">
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-medium"
+                >
+                  <Plus className="w-4 h-4" /> {t.submit}
+                </button>
+                <span className="text-[11px] text-muted-foreground">{t.freeToCreate}</span>
+              </div>
             ) : !isAuthenticated ? (
               <button onClick={() => navigate("/login")} className="text-sm text-muted-foreground hover:text-foreground underline">
                 {t.loginToSubmit}
               </button>
-            ) : (
-              <button onClick={() => navigate("/abonnement")} className="text-sm text-muted-foreground hover:text-foreground underline">
-                {t.subRequired}
-              </button>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -263,17 +285,33 @@ const Arrangementer = () => {
                         {e.status === "approved" && <CheckCircle2 className="w-3 h-3" />}
                         {e.status === "pending" ? t.statusPending : e.status === "rejected" ? t.statusRejected : t.statusApproved}
                       </span>
+                      {e.is_featured && (
+                        <span className="text-xs px-2 py-0.5 rounded-full inline-flex items-center gap-1 bg-primary/15 text-primary">
+                          <Sparkles className="w-3 h-3" /> {t.featured}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">{formatDate(e.start_at)}</p>
                     {e.moderation_note && (
                       <p className="text-xs text-muted-foreground mt-2"><span className="font-medium">{t.moderatorNote}:</span> {e.moderation_note}</p>
                     )}
                   </div>
-                  {e.status === "pending" && (
-                    <button onClick={() => handleDelete(e.id)} className="text-muted-foreground hover:text-destructive p-2 rounded-lg" title={t.delete}>
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {!e.is_featured && e.status !== "rejected" && new Date(e.start_at) > new Date() && (
+                      <button
+                        onClick={() => setPromoteEventId(e.id)}
+                        className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20"
+                        title={t.promote}
+                      >
+                        <Megaphone className="w-3.5 h-3.5" /> {t.promoteAgain}
+                      </button>
+                    )}
+                    {e.status === "pending" && (
+                      <button onClick={() => handleDelete(e.id)} className="text-muted-foreground hover:text-destructive p-2 rounded-lg" title={t.delete}>
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -333,10 +371,17 @@ const Arrangementer = () => {
                 <div className="grid sm:grid-cols-2 gap-4">
                   {upcoming.map((e) => (
                     <article key={e.id} onClick={() => navigate(`/arrangementer/${e.id}`)}
-                      className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-soft transition-shadow flex flex-col cursor-pointer">
+                      className={`bg-card border rounded-2xl overflow-hidden hover:shadow-soft transition-shadow flex flex-col cursor-pointer ${e.is_featured ? "border-primary/60 ring-1 ring-primary/30" : "border-border"}`}>
                       {e.image_url && <img src={e.image_url} alt="" className="w-full h-40 object-cover" loading="lazy" />}
                       <div className="p-5 flex-1 flex flex-col">
-                        {e.category && <span className="text-xs text-primary font-medium mb-1 uppercase tracking-wide">{e.category}</span>}
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          {e.is_featured && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full inline-flex items-center gap-1 bg-primary text-primary-foreground uppercase tracking-wide font-bold">
+                              <Sparkles className="w-3 h-3" /> {t.featured}
+                            </span>
+                          )}
+                          {e.category && <span className="text-xs text-primary font-medium uppercase tracking-wide">{e.category}</span>}
+                        </div>
                         <h3 className="font-headline text-lg text-headline leading-snug">{e.title}</h3>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                           <Calendar className="w-4 h-4" /> {formatDate(e.start_at)}
@@ -397,7 +442,14 @@ const Arrangementer = () => {
           submitting={submitting}
           setSubmitting={setSubmitting}
           userId={userId}
-          onCreated={() => { setShowForm(false); load(); }}
+          onCreated={(newId) => { setShowForm(false); load(); if (newId) setPromoteEventId(newId); }}
+        />
+      )}
+      {promoteEventId && (
+        <PromoteDialog
+          t={t}
+          eventId={promoteEventId}
+          onClose={() => { setPromoteEventId(null); load(); }}
         />
       )}
     </div>
@@ -410,7 +462,7 @@ interface FormProps {
   submitting: boolean;
   setSubmitting: (b: boolean) => void;
   userId: string | null;
-  onCreated: () => void;
+  onCreated: (createdId?: string) => void;
 }
 
 const EventForm = ({ t, onClose, submitting, setSubmitting, userId, onCreated }: FormProps) => {
@@ -464,7 +516,7 @@ const EventForm = ({ t, onClose, submitting, setSubmitting, userId, onCreated }:
       image_url = pub.publicUrl;
     }
 
-    const { error } = await supabase.from("events").insert({
+    const { data: created, error } = await supabase.from("events").insert({
       title: form.title.trim(),
       description: form.description.trim() || null,
       start_at: new Date(form.start_at).toISOString(),
@@ -476,12 +528,12 @@ const EventForm = ({ t, onClose, submitting, setSubmitting, userId, onCreated }:
       image_url,
       submitted_by: userId,
       status: "pending",
-    });
+    }).select("id").single();
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
     toast.success(t.moderationInfo);
     clearImage();
-    onCreated();
+    onCreated(created?.id);
   };
 
   return (
@@ -557,5 +609,51 @@ const Field = ({ label, required, children }: { label: string; required?: boolea
     {children}
   </label>
 );
+
+const PromoteDialog = ({ t, eventId, onClose }: { t: any; eventId: string; onClose: () => void }) => {
+  const [showCheckout, setShowCheckout] = useState(false);
+  const returnUrl = `${window.location.origin}/arrangementer?promoted=1`;
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()}
+        className="bg-card rounded-2xl shadow-elevated w-full max-w-lg p-6 my-8">
+        {!showCheckout ? (
+          <>
+            <div className="flex items-center gap-2 mb-2">
+              <Megaphone className="w-5 h-5 text-primary" />
+              <h2 className="font-headline text-xl text-headline">{t.promoteTitle}</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">{t.promoteDesc}</p>
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-5">
+              <div className="flex items-baseline justify-between">
+                <span className="font-medium">{t.promote}</span>
+                <span className="font-headline text-2xl text-headline">{FEATURED_PRICE_NOK} kr</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{t.promotePrice}</p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={onClose} className="px-4 py-2 rounded-lg text-muted-foreground hover:bg-muted">{t.promoteSkip}</button>
+              <button onClick={() => setShowCheckout(true)}
+                className="px-5 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 inline-flex items-center gap-2">
+                <Sparkles className="w-4 h-4" /> {t.promote}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-headline text-lg text-headline">{t.promoteCheckoutTitle}</h2>
+              <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1"><X className="w-5 h-5" /></button>
+            </div>
+            <PaymentTestModeBanner />
+            <div className="mt-3">
+              <EventFeaturedCheckout eventId={eventId} returnUrl={returnUrl} />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default Arrangementer;

@@ -1,0 +1,2 @@
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS pinned_position integer;
+CREATE INDEX IF NOT EXISTS idx_articles_pinned_position ON public.articles(pinned_position) WHERE pinned_position IS NOT NULL;

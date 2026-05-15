@@ -143,6 +143,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     status: "draft" as ArticleStatus,
     region_slug: null as string | null,
     media_url: "",
+    pinned_position: null as number | null,
   });
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
@@ -254,6 +255,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       published: currentForm.status === "published",
       published_at: currentForm.status === "published" ? new Date().toISOString() : null,
       region_slug: currentForm.region_slug || null,
+      pinned_position: currentForm.pinned_position ?? null,
     } as any;
     try {
       if (currentArticleId) {
@@ -407,6 +409,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         status: ((data as any).status as ArticleStatus) || (data.published ? "published" : "draft"),
         region_slug: ((data as any).region_slug as string | null) ?? null,
         media_url: ((data as any).media_url as string | null) ?? "",
+        pinned_position: ((data as any).pinned_position as number | null) ?? null,
       });
       // Remember the body that's currently live so we can detect real edits
       // on the next publish.
@@ -477,6 +480,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         published_at: form.status === "published" ? new Date().toISOString() : null,
         region_slug: form.region_slug || null,
         media_url: form.media_url?.trim() ? form.media_url.trim() : null,
+        pinned_position: form.pinned_position ?? null,
       } as any;
 
       const syncSharedRegions = async (id: string) => {
@@ -2000,6 +2004,35 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             <div className="flex items-center gap-3 pt-6">
               <Switch id="premium" checked={form.premium} onCheckedChange={(checked) => updateForm({ premium: checked })} />
               <Label htmlFor="premium" className="cursor-pointer">Premium-artikkel</Label>
+            </div>
+
+            <div className="pt-2">
+              <Label htmlFor="pinned_position">Fest til posisjon i nyhetsflyten</Label>
+              <div className="flex items-center gap-2 mt-1.5">
+                <Input
+                  id="pinned_position"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={form.pinned_position ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value.trim();
+                    if (v === "") return updateForm({ pinned_position: null });
+                    const n = parseInt(v, 10);
+                    updateForm({ pinned_position: Number.isFinite(n) && n > 0 ? n : null });
+                  }}
+                  placeholder="Ikke festet"
+                  className="w-32"
+                />
+                {form.pinned_position != null && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => updateForm({ pinned_position: null })}>
+                    Fjern festing
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                1 = øverst (hovedsak), 2 = neste kort, osv. La stå tom for kronologisk plassering.
+              </p>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Calendar, MapPin, ArrowRight } from "lucide-react";
+import { Calendar, MapPin, ArrowRight, CalendarPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
@@ -8,9 +8,11 @@ interface EventItem {
   id: string;
   title: string;
   start_at: string;
+  end_at?: string | null;
   location: string | null;
   category: string | null;
   image_url: string | null;
+  description?: string | null;
 }
 
 export const EventsFeed = () => {
@@ -23,7 +25,7 @@ export const EventsFeed = () => {
     const fetchData = async () => {
       const { data } = await supabase
         .from("events")
-        .select("id, title, start_at, location, category, image_url")
+        .select("id, title, start_at, end_at, location, category, image_url, description")
         .eq("status", "approved")
         .gte("start_at", new Date().toISOString())
         .order("start_at", { ascending: true })
@@ -40,6 +42,47 @@ export const EventsFeed = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
+
+  const toIcsDate = (iso: string) =>
+    new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+
+  const escapeIcs = (s: string) =>
+    s.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+
+  const downloadIcs = (e: React.MouseEvent, item: EventItem) => {
+    e.stopPropagation();
+    const start = toIcsDate(item.start_at);
+    const end = toIcsDate(
+      item.end_at || new Date(new Date(item.start_at).getTime() + 60 * 60 * 1000).toISOString(),
+    );
+    const uid = `${item.id}@naernaering`;
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Naer Naering//Events//NO",
+      "BEGIN:VEVENT",
+      `UID:${uid}`,
+      `DTSTAMP:${toIcsDate(new Date().toISOString())}`,
+      `DTSTART:${start}`,
+      `DTEND:${end}`,
+      `SUMMARY:${escapeIcs(item.title)}`,
+      item.location ? `LOCATION:${escapeIcs(item.location)}` : "",
+      item.description ? `DESCRIPTION:${escapeIcs(item.description)}` : "",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ]
+      .filter(Boolean)
+      .join("\r\n");
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${item.title.replace(/[^a-z0-9æøå]+/gi, "-").toLowerCase()}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <section className="bg-card border border-border rounded-2xl p-6">
@@ -103,6 +146,22 @@ export const EventsFeed = () => {
                     {item.category}
                   </span>
                 )}
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => downloadIcs(e, item)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      downloadIcs(e as any, item);
+                    }
+                  }}
+                  title={isNo ? "Legg til i kalender" : "Add to calendar"}
+                  aria-label={isNo ? "Legg til i kalender" : "Add to calendar"}
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
+                >
+                  <CalendarPlus className="w-4 h-4" />
+                </span>
               </button>
             </li>
           ))}

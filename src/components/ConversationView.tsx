@@ -1,10 +1,10 @@
 import { Children, isValidElement, useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Search, ArrowRight, ArrowLeft, User, Bot, Copy, Check, Share2, ExternalLink, Rss, Database, FileText as FileTextIcon, Globe, MessageSquare, BarChart3 } from "lucide-react";
+import { Search, ArrowRight, ArrowLeft, User, Bot, Copy, Check, Share2, ExternalLink, Rss, Database, FileText as FileTextIcon, Globe, MessageSquare, BarChart3, Building2, Users as UsersIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-import { streamArticlesChat, type ArticleSource, type TrustedSource } from "@/lib/articles-chat";
+import { streamArticlesChat, type ArticleSource, type TrustedSource, type BrregResult } from "@/lib/articles-chat";
 import { toast } from "@/hooks/use-toast";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { SourceVerificationLog } from "@/components/SourceVerificationLog";
@@ -16,6 +16,7 @@ interface Message {
   content: string;
   sources?: ArticleSource[];
   trustedSources?: TrustedSource[];
+  brregResults?: BrregResult[];
 }
 
 interface ConversationViewProps {
@@ -193,6 +194,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
     let assistantContent = "";
     let assistantSources: ArticleSource[] | undefined;
     let assistantTrustedSources: TrustedSource[] | undefined;
+    let assistantBrreg: BrregResult[] | undefined;
 
     setMessages(nextMessages);
     setInput("");
@@ -202,10 +204,12 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
       chunk: string,
       sources?: ArticleSource[],
       trustedSources?: TrustedSource[],
+      brregResults?: BrregResult[],
     ) => {
       if (chunk) assistantContent += chunk;
       if (sources) assistantSources = sources;
       if (trustedSources) assistantTrustedSources = trustedSources;
+      if (brregResults) assistantBrreg = brregResults;
 
       setMessages((prev) => {
         const assistantMessage: Message = {
@@ -214,6 +218,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
           content: assistantContent,
           sources: assistantSources,
           trustedSources: assistantTrustedSources,
+          brregResults: assistantBrreg,
         };
         const existingIndex = prev.findIndex((message) => message.id === assistantId);
         if (existingIndex >= 0) {
@@ -227,7 +232,8 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
       await streamArticlesChat({
         messages: nextMessages.map(({ role, content }) => ({ role, content })),
         onContent: (chunk) => upsertAssistant(chunk),
-        onSources: (sources, trustedSources) => upsertAssistant("", sources, trustedSources),
+        onSources: (sources, trustedSources, brregResults) =>
+          upsertAssistant("", sources, trustedSources, brregResults),
       });
     } catch (error) {
       upsertAssistant(error instanceof Error ? error.message : "Noe gikk galt, prøv igjen.");

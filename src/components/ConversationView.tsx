@@ -4,7 +4,7 @@ import { Search, ArrowRight, ArrowLeft, User, Bot, Copy, Check, Share2, External
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-import { streamArticlesChat, type ArticleSource, type TrustedSource, type BrregResult } from "@/lib/articles-chat";
+import { streamArticlesChat, type ArticleSource, type TrustedSource, type BrregResult, type BrregDisambiguation } from "@/lib/articles-chat";
 import { toast } from "@/hooks/use-toast";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { SourceVerificationLog } from "@/components/SourceVerificationLog";
@@ -17,6 +17,7 @@ interface Message {
   sources?: ArticleSource[];
   trustedSources?: TrustedSource[];
   brregResults?: BrregResult[];
+  disambiguation?: BrregDisambiguation;
 }
 
 interface ConversationViewProps {

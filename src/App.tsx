@@ -82,6 +82,8 @@ const App = () => (
               <Route path="/vilkar" element={<Info />} />
               <Route path="/innholdsmerking" element={<Info />} />
               <Route path="/eierskap" element={<Info />} />
+              <Route path="/cookies" element={<Info />} />
+              <Route path="/tilgjengelighet" element={<Info />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

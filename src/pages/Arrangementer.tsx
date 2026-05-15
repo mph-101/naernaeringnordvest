@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Calendar, MapPin, Plus, ExternalLink, Clock, Loader2, CheckCircle2, AlertCircle, Trash2 } from "lucide-react";
+import { Calendar, MapPin, Plus, ExternalLink, Clock, Loader2, CheckCircle2, AlertCircle, Trash2, ImagePlus, X } from "lucide-react";
 import { Header } from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
@@ -74,6 +74,13 @@ const Arrangementer = () => {
         all: "Alle",
         searchPlaceholder: "Søk i arrangementer...",
         noMatch: "Ingen arrangementer matcher filteret.",
+        image: "Bilde (valgfritt)",
+        imageHint: "Maks 5 MB. JPG, PNG eller WebP.",
+        chooseImage: "Velg bilde",
+        removeImage: "Fjern bilde",
+        imageTooLarge: "Bildet er for stort (maks 5 MB).",
+        imageWrongType: "Kun JPG, PNG eller WebP er tillatt.",
+        uploadingImage: "Laster opp bilde...",
       }
     : {
         title: "Events",
@@ -106,6 +113,13 @@ const Arrangementer = () => {
         all: "All",
         searchPlaceholder: "Search events...",
         noMatch: "No events match the filter.",
+        image: "Image (optional)",
+        imageHint: "Max 5 MB. JPG, PNG or WebP.",
+        chooseImage: "Choose image",
+        removeImage: "Remove image",
+        imageTooLarge: "Image is too large (max 5 MB).",
+        imageWrongType: "Only JPG, PNG or WebP allowed.",
+        uploadingImage: "Uploading image...",
       };
 
   const load = async () => {
@@ -404,12 +418,52 @@ const EventForm = ({ t, onClose, submitting, setSubmitting, userId, onCreated }:
     title: "", description: "", start_at: "", end_at: "",
     location: "", url: "", organizer: "", category: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) {
+      toast.error(t.imageWrongType);
+      return;
+    }
+    if (f.size > 5 * 1024 * 1024) {
+      toast.error(t.imageTooLarge);
+      return;
+    }
+    setImageFile(f);
+    setImagePreview(URL.createObjectURL(f));
+  };
+
+  const clearImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
     if (!form.title.trim() || !form.start_at) return;
     setSubmitting(true);
+
+    let image_url: string | null = null;
+    if (imageFile) {
+      const ext = imageFile.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const up = await supabase.storage.from("event-images").upload(path, imageFile, {
+        cacheControl: "3600", upsert: false, contentType: imageFile.type,
+      });
+      if (up.error) {
+        setSubmitting(false);
+        toast.error(up.error.message);
+        return;
+      }
+      const { data: pub } = supabase.storage.from("event-images").getPublicUrl(path);
+      image_url = pub.publicUrl;
+    }
+
     const { error } = await supabase.from("events").insert({
       title: form.title.trim(),
       description: form.description.trim() || null,
@@ -419,12 +473,14 @@ const EventForm = ({ t, onClose, submitting, setSubmitting, userId, onCreated }:
       url: form.url.trim() || null,
       organizer: form.organizer.trim() || null,
       category: form.category.trim() || null,
+      image_url,
       submitted_by: userId,
       status: "pending",
     });
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
     toast.success(t.moderationInfo);
+    clearImage();
     onCreated();
   };
 
@@ -463,6 +519,24 @@ const EventForm = ({ t, onClose, submitting, setSubmitting, userId, onCreated }:
               <input className="form-input" placeholder="Frokostmøte, konferanse..." value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
             </Field>
           </div>
+          <Field label={t.image}>
+            {imagePreview ? (
+              <div className="relative rounded-lg overflow-hidden border border-border">
+                <img src={imagePreview} alt="" className="w-full h-40 object-cover" />
+                <button type="button" onClick={clearImage}
+                  className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 hover:bg-black/80"
+                  aria-label={t.removeImage}>
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <label className="flex items-center justify-center gap-2 px-4 py-6 rounded-lg border-2 border-dashed border-border bg-background hover:bg-muted cursor-pointer text-sm text-muted-foreground">
+                <ImagePlus className="w-4 h-4" /> {t.chooseImage}
+                <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImageSelect} />
+              </label>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">{t.imageHint}</p>
+          </Field>
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-muted-foreground hover:bg-muted">{t.cancel}</button>

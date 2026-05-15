@@ -202,6 +202,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
     let assistantSources: ArticleSource[] | undefined;
     let assistantTrustedSources: TrustedSource[] | undefined;
     let assistantBrreg: BrregResult[] | undefined;
+    let assistantDisambig: BrregDisambiguation | undefined;
 
     setMessages(nextMessages);
     setInput("");
@@ -212,11 +213,13 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
       sources?: ArticleSource[],
       trustedSources?: TrustedSource[],
       brregResults?: BrregResult[],
+      disambiguation?: BrregDisambiguation,
     ) => {
       if (chunk) assistantContent += chunk;
       if (sources) assistantSources = sources;
       if (trustedSources) assistantTrustedSources = trustedSources;
       if (brregResults) assistantBrreg = brregResults;
+      if (disambiguation) assistantDisambig = disambiguation;
 
       setMessages((prev) => {
         const assistantMessage: Message = {
@@ -226,6 +229,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
           sources: assistantSources,
           trustedSources: assistantTrustedSources,
           brregResults: assistantBrreg,
+          disambiguation: assistantDisambig,
         };
         const existingIndex = prev.findIndex((message) => message.id === assistantId);
         if (existingIndex >= 0) {
@@ -241,6 +245,18 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
         onContent: (chunk) => upsertAssistant(chunk),
         onSources: (sources, trustedSources, brregResults) =>
           upsertAssistant("", sources, trustedSources, brregResults),
+        onDisambiguation: (data) => {
+          // Render a friendly prompt instead of leaving the bubble empty.
+          upsertAssistant(
+            language === "no"
+              ? `Jeg fant flere selskaper med dette navnet. Hvilket mener du?`
+              : `I found several companies with this name. Which one do you mean?`,
+            undefined,
+            undefined,
+            undefined,
+            data,
+          );
+        },
       });
     } catch (error) {
       upsertAssistant(error instanceof Error ? error.message : "Noe gikk galt, prøv igjen.");

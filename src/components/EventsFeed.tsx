@@ -173,9 +173,54 @@ export const EventsFeed = () => {
       </div>
 
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground font-body py-4 text-center">
-          {isNo ? "Ingen kommende arrangementer" : "No upcoming events"}
-        </p>
+        <div className="py-6 px-4 rounded-xl bg-muted/40 border border-dashed border-border text-center">
+          <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-background flex items-center justify-center">
+            <Calendar className="w-5 h-5 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-subhead font-semibold text-headline">
+            {range === "30d"
+              ? isNo
+                ? "Ingen arrangementer de neste 30 dagene"
+                : "No events in the next 30 days"
+              : isNo
+              ? "Ingen kommende arrangementer ennå"
+              : "No upcoming events yet"}
+          </p>
+          <p className="text-xs text-muted-foreground font-body mt-1 max-w-xs mx-auto">
+            {range === "30d"
+              ? isNo
+                ? "Kalenderen er rolig akkurat nå. Utvid søket for å se hva som planlegges lenger fram."
+                : "The calendar is quiet right now. Expand the range to see what's planned further out."
+              : isNo
+              ? "Vi har ingen godkjente arrangementer på listen. Tips redaksjonen om noe vi bør dekke."
+              : "We have no approved events on the list. Tip the editors about something worth covering."}
+          </p>
+          <div className="flex items-center justify-center gap-2 mt-4">
+            {range === "30d" ? (
+              <button
+                onClick={() => setRange("all")}
+                className="px-3 py-1.5 rounded-full text-xs font-subhead font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity inline-flex items-center gap-1.5"
+              >
+                {isNo ? "Vis alle kommende" : "Show all upcoming"}
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/tips")}
+                className="px-3 py-1.5 rounded-full text-xs font-subhead font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              >
+                {isNo ? "Tips redaksjonen" : "Tip the editors"}
+              </button>
+            )}
+            <button
+              onClick={() => navigate("/arrangementer")}
+              className="px-3 py-1.5 rounded-full text-xs font-subhead font-medium text-foreground hover:bg-secondary transition-colors inline-flex items-center gap-1"
+            >
+              {isNo ? "Se alle" : "See all"}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
       ) : (
         <ul className="-my-3">
           {items.map((item) => (

@@ -255,6 +255,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       published: currentForm.status === "published",
       published_at: currentForm.status === "published" ? new Date().toISOString() : null,
       region_slug: currentForm.region_slug || null,
+      pinned_position: currentForm.pinned_position ?? null,
     } as any;
     try {
       if (currentArticleId) {
@@ -479,6 +480,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         published_at: form.status === "published" ? new Date().toISOString() : null,
         region_slug: form.region_slug || null,
         media_url: form.media_url?.trim() ? form.media_url.trim() : null,
+        pinned_position: form.pinned_position ?? null,
       } as any;
 
       const syncSharedRegions = async (id: string) => {

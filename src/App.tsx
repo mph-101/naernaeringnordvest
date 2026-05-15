@@ -33,6 +33,7 @@ import Stillinger from "./pages/Stillinger";
 import StillingDetail from "./pages/StillingDetail";
 import StillingNy from "./pages/StillingNy";
 import StillingNyTakk from "./pages/StillingNyTakk";
+import Info from "./pages/Info";
 import { MascotTour } from "./components/mascot/MascotTour";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,13 @@ const App = () => (
               <Route path="/stillinger/ny" element={<StillingNy />} />
               <Route path="/stillinger/ny/takk" element={<StillingNyTakk />} />
               <Route path="/stillinger/:slug" element={<StillingDetail />} />
+              <Route path="/om-oss" element={<Info />} />
+              <Route path="/kontakt" element={<Info />} />
+              <Route path="/redaksjonelle-prinsipper" element={<Info />} />
+              <Route path="/personvern" element={<Info />} />
+              <Route path="/vilkar" element={<Info />} />
+              <Route path="/innholdsmerking" element={<Info />} />
+              <Route path="/eierskap" element={<Info />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

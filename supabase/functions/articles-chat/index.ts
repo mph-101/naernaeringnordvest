@@ -18,6 +18,9 @@ const QUERY_REWRITE_MODEL = "google/gemini-2.5-flash-lite";
 const MATCH_COUNT = 6;
 const TRUSTED_MATCH_COUNT = 4;
 const BRREG_BASE = "https://data.brreg.no";
+const BRREG_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
+const BRREG_CACHE_MAX = 500;
+const brregCache = new Map<string, { at: number; value: { label: string; total: number; companies: any[] } }>();
 
 function stripHtml(html: string): string {
   return html

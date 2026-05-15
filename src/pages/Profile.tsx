@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { ApiKeysSection } from "@/components/ApiKeysSection";
 import { SubscriptionSection } from "@/components/SubscriptionSection";
+import { NoteShareButton } from "@/components/NoteShareButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme, HideableElement } from "@/hooks/useTheme";
 import { toast } from "sonner";
@@ -384,6 +385,11 @@ const Profile = () => {
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
+                    <NoteShareButton
+                      articleId={note.article_id}
+                      articleTitle={articleTitles.get(note.article_id)}
+                      content={note.content}
+                    />
                   </div>
                 </div>
               ))

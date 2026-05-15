@@ -91,13 +91,19 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
     sources?: ArticleSource[],
     trustedSources?: TrustedSource[],
     assistantId?: string,
+    brregResults?: BrregResult[],
   ) => {
     if (!content) return content;
     const validNumbers = new Set<number>([
       ...(sources ?? []).map((s) => s.n),
       ...(trustedSources ?? []).map((s) => s.n),
     ]);
-    return content.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, group: string) => {
+    const hasBrreg = (brregResults?.length ?? 0) > 0;
+    let out = content;
+    if (hasBrreg) {
+      out = out.replace(/\[B\]/g, () => `[\\[B\\]](#brreg-${assistantId})`);
+    }
+    return out.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, group: string) => {
       const nums = group.split(",").map((n) => n.trim());
       const parts = nums.map((n) => {
         const num = Number(n);

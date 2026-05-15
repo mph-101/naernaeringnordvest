@@ -248,7 +248,8 @@ const Arrangementer = () => {
               ) : (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {upcoming.map((e) => (
-                    <article key={e.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-soft transition-shadow flex flex-col">
+                    <article key={e.id} onClick={() => navigate(`/arrangementer/${e.id}`)}
+                      className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-soft transition-shadow flex flex-col cursor-pointer">
                       {e.image_url && <img src={e.image_url} alt="" className="w-full h-40 object-cover" loading="lazy" />}
                       <div className="p-5 flex-1 flex flex-col">
                         {e.category && <span className="text-xs text-primary font-medium mb-1 uppercase tracking-wide">{e.category}</span>}
@@ -262,7 +263,7 @@ const Arrangementer = () => {
                           </div>
                         )}
                         {e.description && <p className="text-sm text-foreground/80 mt-3 line-clamp-3">{e.description}</p>}
-                        <div className="mt-auto pt-4 flex items-center gap-3 flex-wrap">
+                        <div className="mt-auto pt-4 flex items-center gap-3 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
                           {e.url && (
                             <a href={e.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
                               {language === "no" ? "Mer info" : "More info"} <ExternalLink className="w-3 h-3" />
@@ -285,13 +286,14 @@ const Arrangementer = () => {
                 <h2 className="font-headline text-xl text-headline mb-4">{t.past}</h2>
                 <div className="space-y-2">
                   {past.map((e) => (
-                    <div key={e.id} className="bg-card border border-border rounded-lg p-3 flex items-center justify-between gap-3">
+                    <div key={e.id} onClick={() => navigate(`/arrangementer/${e.id}`)}
+                      className="bg-card border border-border rounded-lg p-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-muted/50 transition-colors">
                       <div className="min-w-0">
                         <h3 className="text-sm font-medium truncate">{e.title}</h3>
                         <p className="text-xs text-muted-foreground">{formatDate(e.start_at)}{e.location ? ` · ${e.location}` : ""}</p>
                       </div>
                       {e.url && (
-                        <a href={e.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline shrink-0">
+                        <a href={e.url} target="_blank" rel="noopener noreferrer" onClick={(ev) => ev.stopPropagation()} className="text-xs text-primary hover:underline shrink-0">
                           <ExternalLink className="w-3 h-3 inline" />
                         </a>
                       )}

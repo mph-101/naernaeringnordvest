@@ -7,6 +7,7 @@ import { RelatedArticles } from "@/components/RelatedArticles";
 import { NewsFeed } from "@/components/NewsFeed";
 import { ViewToggle } from "@/components/ViewToggle";
 import { JobChangeFeed } from "@/components/JobChangeFeed";
+import { EventsFeed } from "@/components/EventsFeed";
 import { TrendingSection } from "@/components/TrendingSection";
 import { MarketTicker } from "@/components/MarketTicker";
 import { FrontpagePoll } from "@/components/FrontpagePoll";
@@ -96,6 +97,9 @@ const Index = () => {
                 <JobChangeFeed />
               </div>
             )}
+            <div className="max-w-5xl mx-auto px-6 pb-16">
+              <EventsFeed />
+            </div>
           </>
         )}
       </main>

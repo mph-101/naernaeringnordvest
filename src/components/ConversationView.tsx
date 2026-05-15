@@ -579,6 +579,77 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                       </div>
                     </div>
                   )}
+                  {message.role === "assistant" && message.disambiguation && (
+                    <div className="mt-5 rounded-2xl border-2 border-primary/40 bg-primary/5 overflow-hidden">
+                      <div className="px-4 py-3 border-b border-primary/20">
+                        <p className="font-subhead font-semibold text-sm text-headline">
+                          {language === "no"
+                            ? `Flere selskaper heter «${message.disambiguation.label}»`
+                            : `Several companies are called "${message.disambiguation.label}"`}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-body mt-0.5">
+                          {language === "no"
+                            ? `Velg hvilket du mener — så svarer jeg på «${message.disambiguation.question}» basert på det.`
+                            : `Pick the one you mean — I'll answer "${message.disambiguation.question}" using that company.`}
+                        </p>
+                      </div>
+                      <ul className="divide-y divide-primary/15">
+                        {message.disambiguation.candidates.map((c) => {
+                          const disabled = isLoading;
+                          return (
+                            <li key={c.orgnr}>
+                              <button
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => {
+                                  const followUp =
+                                    language === "no"
+                                      ? `Jeg mener ${c.navn} (org.nr ${c.orgnr}). ${message.disambiguation!.question}`
+                                      : `I mean ${c.navn} (org.nr ${c.orgnr}). ${message.disambiguation!.question}`;
+                                  void sendMessage(followUp, messages);
+                                }}
+                                className="w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-subhead font-semibold text-sm text-headline truncate">
+                                    {c.navn}
+                                    {c.konkurs && (
+                                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-destructive/15 text-destructive text-[10px] font-semibold align-middle">
+                                        {language === "no" ? "Konkurs" : "Bankrupt"}
+                                      </span>
+                                    )}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground font-body mt-0.5 truncate">
+                                    {[c.kommune, c.bransje].filter(Boolean).join(" · ")}
+                                  </p>
+                                  <p className="text-[11px] text-muted-foreground/80 font-body mt-1">
+                                    org.nr {c.orgnr}
+                                    {c.stiftet && <> · {language === "no" ? "stiftet" : "founded"} {c.stiftet.slice(0, 4)}</>}
+                                  </p>
+                                </div>
+                                <div className="flex flex-col items-end flex-shrink-0">
+                                  <div className="flex items-center gap-1 font-headline text-lg font-bold text-primary leading-none">
+                                    <UsersIcon className="w-3.5 h-3.5 opacity-60" />
+                                    {c.ansatte.toLocaleString(language === "no" ? "nb-NO" : "en-US")}
+                                  </div>
+                                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-subhead mt-1">
+                                    {language === "no" ? "ansatte" : "employees"}
+                                  </span>
+                                </div>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                      {message.disambiguation.total > message.disambiguation.candidates.length && (
+                        <div className="px-4 py-2 text-[11px] text-muted-foreground font-body bg-muted/30 border-t border-primary/15">
+                          {language === "no"
+                            ? `Viser ${message.disambiguation.candidates.length} av ${message.disambiguation.total} treff. Skriv organisasjonsnummer for å velge et annet selskap.`
+                            : `Showing ${message.disambiguation.candidates.length} of ${message.disambiguation.total} hits. Type an org. number to pick a different company.`}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <SourceVerificationLog
                     content={message.content}
                     sources={message.sources}

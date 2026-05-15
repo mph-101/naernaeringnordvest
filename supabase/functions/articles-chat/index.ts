@@ -17,6 +17,7 @@ const CHAT_MODEL = "google/gemini-3-flash-preview";
 const QUERY_REWRITE_MODEL = "google/gemini-2.5-flash-lite";
 const MATCH_COUNT = 6;
 const TRUSTED_MATCH_COUNT = 4;
+const BRREG_BASE = "https://data.brreg.no";
 
 function stripHtml(html: string): string {
   return html
@@ -57,6 +58,86 @@ async function extractSearchTerms(question: string, apiKey: string): Promise<str
   } catch {
     return question;
   }
+}
+
+/**
+ * Ask a small LLM whether the question would benefit from a Brønnøysund
+ * (BRREG) company lookup, and if so produce search parameters. Returns
+ * `null` when no company context is useful.
+ */
+async function planBrregQueries(
+  question: string,
+  apiKey: string,
+): Promise<Array<{ label: string; params: Record<string, string> }> | null> {
+  try {
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: QUERY_REWRITE_MODEL,
+        messages: [
+          {
+            role: "system",
+            content: `Du planlegger oppslag i Brønnøysundregistrene (enhetsregisteret) for å berike svar fra en norsk lokalavis. Returner ETT JSON-objekt: {"queries":[...]} hvor hver query er {"label":"...","params":{...}}.
+
+Bruk parametere: navn, kommunenummer, organisasjonsform (default AS,ASA), naeringskode, sort (f.eks "antallAnsatte,desc"), size (maks 10), konkurs.
+
+Viktige kommunenumre: Oslo 0301, Bergen 4601, Trondheim 5001, Stavanger 1103, Molde 1506, Ålesund 1507, Kristiansund 1505, Tromsø 5501, Bodø 1804.
+
+Hvis spørsmålet handler om et NAVNGITT selskap, en bransje eller "største/nyeste/konkurs" i et sted: lag 1–3 queries.
+Hvis spørsmålet IKKE handler om selskapsdata (politikk, kultur, generelle nyheter osv.): returner {"queries":[]}.
+Returner BARE JSON.`,
+          },
+          { role: "user", content: question },
+        ],
+      }),
+    });
+    if (!resp.ok) return null;
+    const json = await resp.json();
+    const content = (json?.choices?.[0]?.message?.content || "").trim();
+    const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+    const queries = Array.isArray(parsed?.queries) ? parsed.queries : [];
+    return queries.length ? queries.slice(0, 3) : null;
+  } catch (e) {
+    console.error("planBrregQueries failed:", e);
+    return null;
+  }
+}
+
+async function fetchBrreg(queries: Array<{ label: string; params: Record<string, string> }>) {
+  return Promise.all(
+    queries.map(async (q) => {
+      const params = new URLSearchParams();
+      if (!q.params.organisasjonsform) params.set("organisasjonsform", "AS,ASA");
+      for (const [k, v] of Object.entries(q.params)) {
+        if (v) params.set(k, String(v));
+      }
+      if (!params.has("size")) params.set("size", "5");
+      try {
+        const res = await fetch(`${BRREG_BASE}/enhetsregisteret/api/enheter?${params}`, {
+          headers: { Accept: "application/json" },
+        });
+        const data = await res.json();
+        const enheter = data?._embedded?.enheter || [];
+        return {
+          label: q.label,
+          total: data?.page?.totalElements || 0,
+          companies: enheter.slice(0, 10).map((e: any) => ({
+            navn: e.navn,
+            orgnr: e.organisasjonsnummer,
+            ansatte: e.antallAnsatte || 0,
+            kommune: e.forretningsadresse?.kommune || "",
+            bransje: e.naeringskode1?.beskrivelse || "",
+            stiftet: e.stiftelsesdato || "",
+            konkurs: e.konkurs || false,
+          })),
+        };
+      } catch {
+        return { label: q.label, total: 0, companies: [] };
+      }
+    }),
+  );
 }
 
 serve(async (req) => {
@@ -104,6 +185,8 @@ serve(async (req) => {
     }> = [];
     let contextBlock = "";
     let trustedBlock = "";
+    let brregBlock = "";
+    let brregResults: any[] = [];
 
     if (queryText.trim().length > 2) {
       try {
@@ -112,12 +195,30 @@ serve(async (req) => {
         const [
           { data: matches, error: matchErr },
           { data: trusted, error: trustedErr },
+          brregPlan,
         ] = await Promise.all([
           supabase.rpc("search_articles", { query_text: searchTerms, match_count: MATCH_COUNT }),
           supabase.rpc("search_trusted_sources", { query_text: searchTerms, match_count: TRUSTED_MATCH_COUNT }),
+          planBrregQueries(queryText, LOVABLE_API_KEY),
         ]);
         if (matchErr) console.error("search_articles error:", matchErr);
         if (trustedErr) console.error("search_trusted_sources error:", trustedErr);
+
+        if (brregPlan && brregPlan.length) {
+          brregResults = await fetchBrreg(brregPlan);
+          brregBlock = brregResults
+            .map((r) => {
+              if (!r.companies.length) return `• ${r.label}: ingen treff`;
+              const rows = r.companies
+                .map(
+                  (c: any) =>
+                    `   - ${c.navn} (org.nr ${c.orgnr}) — ${c.ansatte} ansatte, ${c.kommune}${c.bransje ? `, ${c.bransje}` : ""}${c.konkurs ? " [KONKURS]" : ""}${c.stiftet ? `, stiftet ${c.stiftet}` : ""}`,
+                )
+                .join("\n");
+              return `• ${r.label} (totalt ${r.total} treff):\n${rows}`;
+            })
+            .join("\n\n");
+        }
 
         sources = (matches || []).map((m: any, i: number) => ({
           n: i + 1,
@@ -159,16 +260,17 @@ serve(async (req) => {
       }
     }
 
-    const systemPrompt = `Du er Spør, en kunnskapsrik redaksjonsassistent for nettavisen Nær Næring. Svar utelukkende basert på de oppgitte artikkelutdragene under. Hver gang du bruker informasjon fra en kilde, siter den inline med [1], [2] osv. som tilsvarer kildelisten.
+    const systemPrompt = `Du er Spør, en kunnskapsrik redaksjonsassistent for nettavisen Nær Næring. Svar basert på de oppgitte artikkelutdragene og bedriftsdataene under. Hver gang du bruker informasjon fra en artikkel- eller betrodd kilde, siter den inline med [1], [2] osv. Bedriftsdata fra Brønnøysundregistrene siteres som "(Brønnøysundregistrene)".
 
 Regler:
 - Svar alltid på norsk (bokmål eller nynorsk slik kildene er skrevet).
 - Vær konkret, presis og nøktern — som en god lokalavisjournalist.
-- Hvis kildene ikke gir grunnlag for å svare, si tydelig "Jeg fant ingen artikler i arkivet om dette" og foreslå et omformulert spørsmål.
+- Bruk gjerne BRREG-data til å berike svaret med tall (ansatte, bransje, kommune, status).
+- Hvis verken artikler eller BRREG gir grunnlag for å svare, si det tydelig og foreslå et omformulert spørsmål.
 - Aldri dikt opp tall, navn eller hendelser som ikke står i kildene.
 - Skriv kort: gjerne en oppsummerende setning, deretter kulepunkter eller en kort tabell hvis det passer.
 
-${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}\n\n` : ""}${trustedSources.length > 0 ? `BETRODDE EKSTERNE KILDER (kuratert av redaksjonen):\n\n${trustedBlock}` : ""}${sources.length === 0 && trustedSources.length === 0 ? "Ingen relevante artikler eller betrodde kilder ble funnet for dette spørsmålet." : ""}`;
+${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}\n\n` : ""}${trustedSources.length > 0 ? `BETRODDE EKSTERNE KILDER (kuratert av redaksjonen):\n\n${trustedBlock}\n\n` : ""}${brregBlock ? `BEDRIFTSDATA (Brønnøysundregistrene, sanntid):\n\n${brregBlock}\n` : ""}${sources.length === 0 && trustedSources.length === 0 && !brregBlock ? "Ingen relevante artikler, betrodde kilder eller bedriftsdata ble funnet for dette spørsmålet." : ""}`;
 
     const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

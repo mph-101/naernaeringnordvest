@@ -229,6 +229,12 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 icon={Megaphone}
                 onClick={() => setView("native-ads")}
               />
+              <DashboardCard
+                title="Meningsmåling"
+                description="Lag og publiser meningsmålinger på forsiden"
+                icon={Vote}
+                onClick={() => setView("polls")}
+              />
               {isAdmin && (
                 <DashboardCard
                   title="Brukere"

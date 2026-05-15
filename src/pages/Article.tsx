@@ -4,6 +4,7 @@ import { ArrowLeft, Lock, BookOpen } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ArticleByline } from "@/components/ArticleByline";
 import { ArticleDiscussion } from "@/components/ArticleDiscussion";
+import { ArticleMediaEmbed } from "@/components/ArticleMediaEmbed";
 import { TagChips } from "@/components/TagChips";
 import { ArticleNotes } from "@/components/ArticleNotes";
 import { ArticleEngagementBar } from "@/components/ArticleEngagementBar";
@@ -43,6 +44,7 @@ interface ArticleData {
   key_points_en: any;
   created_by?: string | null;
   co_authors?: string[] | null;
+  media_url?: string | null;
 }
 
 function timeAgo(dateStr: string, lang: "no" | "en"): string {
@@ -228,6 +230,12 @@ const Article = () => {
             coAuthors={(article as any).co_authors ?? []}
           />
         </div>
+
+        {(article.type === "video" || article.type === "podcast") && article.media_url && (
+          <div className="mb-8 animate-fade-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
+            <ArticleMediaEmbed url={article.media_url} type={article.type as "video" | "podcast"} title={title} />
+          </div>
+        )}
 
         {keyPoints.length > 0 && (
           <div className="bg-card rounded-2xl p-7 mb-12 border border-border shadow-soft animate-fade-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>

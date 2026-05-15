@@ -537,6 +537,7 @@ export type Database = {
           image_url: string | null
           key_points: Json | null
           key_points_en: Json | null
+          media_url: string | null
           premium: boolean
           published: boolean
           published_at: string | null
@@ -566,6 +567,7 @@ export type Database = {
           image_url?: string | null
           key_points?: Json | null
           key_points_en?: Json | null
+          media_url?: string | null
           premium?: boolean
           published?: boolean
           published_at?: string | null
@@ -595,6 +597,7 @@ export type Database = {
           image_url?: string | null
           key_points?: Json | null
           key_points_en?: Json | null
+          media_url?: string | null
           premium?: boolean
           published?: boolean
           published_at?: string | null

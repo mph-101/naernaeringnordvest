@@ -538,6 +538,7 @@ export type Database = {
           key_points: Json | null
           key_points_en: Json | null
           media_url: string | null
+          pinned_position: number | null
           premium: boolean
           published: boolean
           published_at: string | null
@@ -568,6 +569,7 @@ export type Database = {
           key_points?: Json | null
           key_points_en?: Json | null
           media_url?: string | null
+          pinned_position?: number | null
           premium?: boolean
           published?: boolean
           published_at?: string | null
@@ -598,6 +600,7 @@ export type Database = {
           key_points?: Json | null
           key_points_en?: Json | null
           media_url?: string | null
+          pinned_position?: number | null
           premium?: boolean
           published?: boolean
           published_at?: string | null

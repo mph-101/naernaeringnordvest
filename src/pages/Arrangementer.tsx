@@ -39,6 +39,8 @@ const Arrangementer = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [search, setSearch] = useState("");
 
   const t = language === "no"
     ? {
@@ -69,6 +71,9 @@ const Arrangementer = () => {
         delete: "Slett",
         addToCal: "Legg til i kalender",
         moderatorNote: "Tilbakemelding fra redaksjonen",
+        all: "Alle",
+        searchPlaceholder: "Søk i arrangementer...",
+        noMatch: "Ingen arrangementer matcher filteret.",
       }
     : {
         title: "Events",
@@ -98,6 +103,9 @@ const Arrangementer = () => {
         delete: "Delete",
         addToCal: "Add to calendar",
         moderatorNote: "Feedback from editors",
+        all: "All",
+        searchPlaceholder: "Search events...",
+        noMatch: "No events match the filter.",
       };
 
   const load = async () => {
@@ -131,12 +139,33 @@ const Arrangementer = () => {
     const now = new Date();
     const up: EventItem[] = [];
     const pa: EventItem[] = [];
-    for (const e of events) {
+    const q = search.trim().toLowerCase();
+    const filtered = events.filter((e) => {
+      if (activeCategory !== "all" && (e.category || "").toLowerCase() !== activeCategory.toLowerCase()) return false;
+      if (!q) return true;
+      return (
+        e.title.toLowerCase().includes(q) ||
+        (e.description || "").toLowerCase().includes(q) ||
+        (e.location || "").toLowerCase().includes(q) ||
+        (e.organizer || "").toLowerCase().includes(q)
+      );
+    });
+    for (const e of filtered) {
       const ref = new Date(e.end_at || e.start_at);
       if (ref >= now) up.push(e); else pa.push(e);
     }
     pa.reverse();
     return { upcoming: up, past: pa };
+  }, [events, activeCategory, search]);
+
+  const categories = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const e of events) {
+      const c = (e.category || "").trim();
+      if (!c) continue;
+      counts.set(c, (counts.get(c) || 0) + 1);
+    }
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
   }, [events]);
 
   const formatDate = (s: string) => {
@@ -241,10 +270,51 @@ const Arrangementer = () => {
           <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
         ) : (
           <>
+            {(categories.length > 0 || events.length > 0) && (
+              <div className="mb-6 space-y-3">
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t.searchPlaceholder}
+                  className="w-full sm:max-w-md px-4 py-2.5 rounded-full bg-card border border-border text-sm focus:outline-none focus:border-primary"
+                />
+                {categories.length > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => setActiveCategory("all")}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                        activeCategory === "all"
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card text-foreground border-border hover:bg-muted"
+                      }`}
+                    >
+                      {t.all} <span className="opacity-70 ml-1">{events.length}</span>
+                    </button>
+                    {categories.map(([cat, count]) => (
+                      <button
+                        key={cat}
+                        onClick={() => setActiveCategory(cat)}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                          activeCategory.toLowerCase() === cat.toLowerCase()
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-card text-foreground border-border hover:bg-muted"
+                        }`}
+                      >
+                        {cat} <span className="opacity-70 ml-1">{count}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <section className="mb-12">
               <h2 className="font-headline text-xl text-headline mb-4">{t.upcoming}</h2>
               {upcoming.length === 0 ? (
-                <p className="text-muted-foreground py-8 text-center bg-card rounded-xl border border-border">{t.empty}</p>
+                <p className="text-muted-foreground py-8 text-center bg-card rounded-xl border border-border">
+                  {activeCategory !== "all" || search ? t.noMatch : t.empty}
+                </p>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {upcoming.map((e) => (

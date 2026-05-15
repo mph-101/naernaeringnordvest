@@ -120,7 +120,7 @@ async function fetchBrreg(queries: Array<{ label: string; params: Record<string,
       const cacheKey = params.toString();
       const cached = brregCache.get(cacheKey);
       if (cached && Date.now() - cached.at < BRREG_TTL_MS) {
-        return { ...cached.value, label: q.label, cached: true };
+        return { ...cached.value, label: q.label, cached: true, queryParams: q.params };
       }
       try {
         const res = await fetch(`${BRREG_BASE}/enhetsregisteret/api/enheter?${params}`, {
@@ -147,9 +147,9 @@ async function fetchBrreg(queries: Array<{ label: string; params: Record<string,
           const oldestKey = brregCache.keys().next().value;
           if (oldestKey) brregCache.delete(oldestKey);
         }
-        return result;
+        return { ...result, queryParams: q.params };
       } catch {
-        return { label: q.label, total: 0, companies: [] };
+        return { label: q.label, total: 0, companies: [], queryParams: q.params };
       }
     }),
   );
@@ -273,6 +273,46 @@ serve(async (req) => {
       } catch (e) {
         console.error("retrieval failed:", e);
       }
+    }
+
+    // ---- Disambiguation gate ----------------------------------------------
+    // If BRREG returned several plausible matches for a NAME-only lookup and
+    // the user did not specify an org.nr, ask the user to pick the company
+    // before we burn LLM tokens on the wrong one.
+    const userMentionsOrgnr = /\b\d{9}\b/.test(queryText);
+    const ambiguous = !userMentionsOrgnr
+      ? brregResults.find((r: any) => {
+          const p = r.queryParams || {};
+          const isNameOnly =
+            p.navn &&
+            !p.kommunenummer &&
+            !p.naeringskode &&
+            !p.konkurs &&
+            !p.sort;
+          return isNameOnly && Array.isArray(r.companies) && r.companies.length >= 2;
+        })
+      : null;
+
+    if (ambiguous) {
+      const candidates = ambiguous.companies.slice(0, 8);
+      const payload = {
+        label: ambiguous.label,
+        total: ambiguous.total,
+        candidates,
+        question: queryText,
+      };
+      const stream = new ReadableStream({
+        start(controller) {
+          const encoder = new TextEncoder();
+          controller.enqueue(
+            encoder.encode(`event: disambiguation\ndata: ${JSON.stringify(payload)}\n\n`),
+          );
+          controller.close();
+        },
+      });
+      return new Response(stream, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      });
     }
 
     const systemPrompt = `Du er Spør, en kunnskapsrik redaksjonsassistent for nettavisen Nær Næring. Svar basert på de oppgitte artikkelutdragene og bedriftsdataene under. Hver gang du bruker informasjon fra en artikkel- eller betrodd kilde, siter den inline med [1], [2] osv. Bedriftsdata fra Brønnøysundregistrene siteres inline som [B].

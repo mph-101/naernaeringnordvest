@@ -39,6 +39,13 @@ export interface ChatMessage {
   content: string;
 }
 
+export interface BrregDisambiguation {
+  label: string;
+  total: number;
+  question: string;
+  candidates: BrregCompany[];
+}
+
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/articles-chat`;
 
 interface StreamArticlesChatOptions {
@@ -49,12 +56,14 @@ interface StreamArticlesChatOptions {
     trustedSources?: TrustedSource[],
     brregResults?: BrregResult[],
   ) => void;
+  onDisambiguation?: (data: BrregDisambiguation) => void;
 }
 
 export async function streamArticlesChat({
   messages,
   onContent,
   onSources,
+  onDisambiguation,
 }: StreamArticlesChatOptions) {
   const resp = await fetch(CHAT_URL, {
     method: "POST",
@@ -119,6 +128,10 @@ export async function streamArticlesChat({
             (parsed.trustedSources as TrustedSource[]) || [],
             (parsed.brregResults as BrregResult[]) || [],
           );
+          continue;
+        }
+        if (currentEvent === "disambiguation" && Array.isArray(parsed.candidates)) {
+          onDisambiguation?.(parsed as BrregDisambiguation);
           continue;
         }
 

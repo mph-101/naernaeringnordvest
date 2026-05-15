@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import logoImg from "@/assets/logo.png";
-import { Menu, X, Search, Moon, Sun, Globe, Users, LogIn, LogOut, UserCircle, Shield, Brain, Briefcase } from "lucide-react";
+import { Menu, X, Search, Moon, Sun, Globe, Users, LogIn, LogOut, UserCircle, Shield, Brain, Briefcase, CalendarDays } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -117,6 +117,10 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
               <Briefcase className="w-4 h-4 text-foreground/70" />
             </button>
 
+            <button onClick={() => navigate("/arrangementer")} className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Arrangementer" : "Events"}>
+              <CalendarDays className="w-4 h-4 text-foreground/70" />
+            </button>
+
             {userId ? (
               <div className="hidden md:flex items-center gap-1">
                 <SubscriptionStatusBadge />
@@ -184,6 +188,10 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
               <button onClick={() => { navigate("/grupper"); setIsMobileMenuOpen(false); }} className="w-full px-4 py-3 text-left rounded-xl hover:bg-secondary transition-colors flex items-center gap-3 font-subhead text-sm">
                 <Users className="w-4 h-4 text-foreground/70" />
                 {language === "no" ? "Grupper" : "Groups"}
+              </button>
+              <button onClick={() => { navigate("/arrangementer"); setIsMobileMenuOpen(false); }} className="w-full px-4 py-3 text-left rounded-xl hover:bg-secondary transition-colors flex items-center gap-3 font-subhead text-sm">
+                <CalendarDays className="w-4 h-4 text-foreground/70" />
+                {language === "no" ? "Arrangementer" : "Events"}
               </button>
               <button onClick={() => { navigate("/hjernetrim"); setIsMobileMenuOpen(false); }} className="w-full px-4 py-3 text-left rounded-xl hover:bg-secondary transition-colors flex items-center gap-3 font-subhead text-sm">
                 <Brain className="w-4 h-4 text-foreground/70" />

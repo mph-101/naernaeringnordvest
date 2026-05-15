@@ -20,7 +20,8 @@ import {
   Briefcase,
   Receipt,
   Megaphone,
-  Vote
+  Vote,
+  CalendarDays
 } from "lucide-react";
 import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
@@ -38,6 +39,7 @@ import { UsersManager } from "./UsersManager";
 import { MediaArchive } from "./MediaArchive";
 import { AuthorsManager } from "./AuthorsManager";
 import { PollsManager } from "./PollsManager";
+import { EventsReview } from "./EventsReview";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -46,7 +48,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "job-listings" | "job-invoices" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media" | "authors" | "native-ads" | "polls";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "job-listings" | "job-invoices" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media" | "authors" | "native-ads" | "polls" | "events";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const { hasRole } = useAuth();
@@ -81,6 +83,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "job-invoices" as View, label: "Faktura-forespørsler", icon: Receipt },
     { id: "native-ads" as View, label: "Native-annonser", icon: Megaphone },
     { id: "polls" as View, label: "Meningsmåling", icon: Vote },
+    { id: "events" as View, label: "Arrangementer", icon: CalendarDays },
     ...(isAdmin ? [{ id: "users" as View, label: "Brukere", icon: UserCog }] : []),
   ];
 
@@ -235,6 +238,12 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 icon={Vote}
                 onClick={() => setView("polls")}
               />
+              <DashboardCard
+                title="Arrangementer"
+                description="Godkjenn næringslivsarrangementer fra abonnenter"
+                icon={CalendarDays}
+                onClick={() => setView("events")}
+              />
               {isAdmin && (
                 <DashboardCard
                   title="Brukere"
@@ -312,6 +321,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "polls" && (
           <PollsManager />
+        )}
+
+        {view === "events" && (
+          <EventsReview />
         )}
       </main>
     </div>

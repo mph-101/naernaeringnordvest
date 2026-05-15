@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, Users, Newspaper, MessageCircle } from "lucide-react";
+import { ArrowLeft, Loader2, Users, Newspaper, MessageCircle, Shield, Lock } from "lucide-react";
 import { Header } from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
@@ -13,6 +13,7 @@ interface SharedNote {
   article_id: string | null;
   article_title: string | null;
   created_at: string;
+  visibility: string;
 }
 
 const NOTE_PREFIXES = ["📝 Mitt notat om", "📝 My note on"];
@@ -34,6 +35,9 @@ const MineDelteNotater = () => {
         openInGroup: "Åpne i gruppe",
         readArticle: "Les artikkelen",
         loginRequired: "Logg inn for å se dine delte notater.",
+        visMembers: "Alle medlemmer",
+        visAdmins: "Kun admins",
+        visAuthor: "Kun meg",
       }
     : {
         title: "My shared notes",
@@ -43,6 +47,9 @@ const MineDelteNotater = () => {
         openInGroup: "Open in group",
         readArticle: "Read article",
         loginRequired: "Log in to see your shared notes.",
+        visMembers: "All members",
+        visAdmins: "Admins only",
+        visAuthor: "Only me",
       };
 
   useEffect(() => {
@@ -62,7 +69,7 @@ const MineDelteNotater = () => {
       setLoading(true);
       const { data: msgs } = await supabase
         .from("group_messages")
-        .select("id, group_id, content, article_id, created_at")
+        .select("id, group_id, content, article_id, created_at, visibility")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(200);
@@ -95,6 +102,7 @@ const MineDelteNotater = () => {
           article_id: m.article_id,
           article_title: m.article_id ? articleMap.get(m.article_id) ?? null : null,
           created_at: m.created_at,
+          visibility: m.visibility ?? "members",
         })),
       );
       setLoading(false);
@@ -130,7 +138,14 @@ const MineDelteNotater = () => {
         )}
 
         <div className="space-y-4">
-          {notes.map((n) => (
+          {notes.map((n) => {
+            const vis = n.visibility === "admins"
+              ? { label: t.visAdmins, Icon: Shield, cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400" }
+              : n.visibility === "author"
+              ? { label: t.visAuthor, Icon: Lock, cls: "bg-muted text-muted-foreground" }
+              : { label: t.visMembers, Icon: Users, cls: "bg-accent/10 text-accent" };
+            const VisIcon = vis.Icon;
+            return (
             <article
               key={n.id}
               className="bg-card border border-border rounded-2xl p-5 shadow-soft"
@@ -149,6 +164,9 @@ const MineDelteNotater = () => {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
+                </span>
+                <span className={`ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-subhead font-medium ${vis.cls}`}>
+                  <VisIcon className="w-3 h-3" /> {vis.label}
                 </span>
               </div>
               <pre className="whitespace-pre-wrap font-body text-foreground leading-relaxed text-sm">
@@ -172,7 +190,8 @@ const MineDelteNotater = () => {
                 )}
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

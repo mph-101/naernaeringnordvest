@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Send, Users, Lock, Globe, Settings, UserPlus, Loader2, Newspaper } from "lucide-react";
+import { ArrowLeft, Send, Users, Lock, Globe, Settings, UserPlus, Loader2, Newspaper, Shield, Eye } from "lucide-react";
 import { Header } from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
@@ -11,6 +11,7 @@ interface Message {
   user_id: string;
   content: string;
   article_id: string | null;
+  visibility?: string | null;
   created_at: string;
   profile?: { display_name: string | null };
 }
@@ -49,6 +50,7 @@ const GroupDetail = () => {
         cancel: "Avbryt", sendInvite: "Send invitasjon", invited: "Invitasjon sendt!",
         notFound: "Gruppe ikke funnet", noMessages: "Ingen meldinger ennå. Start samtalen!",
         articleRef: "Om artikkel",
+        visAdmins: "Kun admins", visAuthor: "Kun deg",
       }
     : {
         back: "Back", members: "members", join: "Join", send: "Send",
@@ -57,6 +59,7 @@ const GroupDetail = () => {
         cancel: "Cancel", sendInvite: "Send invite", invited: "Invitation sent!",
         notFound: "Group not found", noMessages: "No messages yet. Start the conversation!",
         articleRef: "About article",
+        visAdmins: "Admins only", visAuthor: "Only you",
       };
 
   useEffect(() => {
@@ -222,6 +225,12 @@ const GroupDetail = () => {
                   </span>
                 </div>
                 <p className="text-foreground font-body leading-relaxed">{msg.content}</p>
+                {msg.visibility && msg.visibility !== "members" && (
+                  <span className="inline-flex items-center gap-1 mt-2 mr-2 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-subhead font-semibold uppercase tracking-wider">
+                    {msg.visibility === "admins" ? <Shield className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    {msg.visibility === "admins" ? t.visAdmins : t.visAuthor}
+                  </span>
+                )}
                 {msg.article_id && (
                   <Link to={`/article/${msg.article_id}`} className="inline-flex items-center gap-1 mt-2 text-xs text-accent hover:underline font-body">
                     <Newspaper className="w-3 h-3" /> {t.articleRef}

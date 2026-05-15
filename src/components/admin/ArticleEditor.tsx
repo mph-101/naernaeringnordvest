@@ -38,6 +38,7 @@ import { AuthorSelect } from "./AuthorSelect";
 import { SocialPostsDialog } from "./SocialPostsDialog";
 import { fetchRegions, type EditorialRegion } from "@/lib/regions";
 import type { Tag as ArticleTag } from "@/lib/tag-utils";
+import { ArticleMediaEmbed } from "@/components/ArticleMediaEmbed";
 
 interface ArticleEditorProps {
   articleId: string | null;
@@ -1971,6 +1972,18 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 <p className="text-xs text-muted-foreground mt-1.5">
                   Limes inn fra leverandøren. Spilleren vises øverst i artikkelen.
                 </p>
+                {form.media_url.trim() && (
+                  <div className="mt-3">
+                    <p className="text-xs font-subhead font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                      Forhåndsvisning
+                    </p>
+                    <ArticleMediaEmbed
+                      url={form.media_url}
+                      type={form.type as "video" | "podcast"}
+                      title={form.title}
+                    />
+                  </div>
+                )}
               </div>
             )}
 

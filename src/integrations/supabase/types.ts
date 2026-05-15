@@ -999,8 +999,13 @@ export type Database = {
           created_at: string
           description: string | null
           end_at: string | null
+          featured_amount_nok: number | null
+          featured_paid_at: string | null
+          featured_stripe_session_id: string | null
+          featured_until: string | null
           id: string
           image_url: string | null
+          is_featured: boolean
           location: string | null
           location_url: string | null
           moderated_at: string | null
@@ -1020,8 +1025,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_at?: string | null
+          featured_amount_nok?: number | null
+          featured_paid_at?: string | null
+          featured_stripe_session_id?: string | null
+          featured_until?: string | null
           id?: string
           image_url?: string | null
+          is_featured?: boolean
           location?: string | null
           location_url?: string | null
           moderated_at?: string | null
@@ -1041,8 +1051,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_at?: string | null
+          featured_amount_nok?: number | null
+          featured_paid_at?: string | null
+          featured_stripe_session_id?: string | null
+          featured_until?: string | null
           id?: string
           image_url?: string | null
+          is_featured?: boolean
           location?: string | null
           location_url?: string | null
           moderated_at?: string | null

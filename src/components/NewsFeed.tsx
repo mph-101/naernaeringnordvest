@@ -31,6 +31,7 @@ interface DbArticle {
   published_at: string | null;
   key_points: any;
   region_slug: string | null;
+  pinned_position: number | null;
 }
 
 interface NativeAd {
@@ -131,7 +132,7 @@ export const NewsFeed = () => {
     const fetchArticles = async () => {
       const { data } = await supabase
         .from("articles")
-        .select("id, title, title_en, excerpt, excerpt_en, body, category, author, type, premium, read_time, image_url, image_crop, image_focal, published_at, key_points, region_slug")
+        .select("id, title, title_en, excerpt, excerpt_en, body, category, author, type, premium, read_time, image_url, image_crop, image_focal, published_at, key_points, region_slug, pinned_position")
         .eq("published", true)
         .order("published_at", { ascending: false })
         .limit(40);

@@ -48,6 +48,35 @@ export const EventsFeed = () => {
       minute: "2-digit",
     });
 
+  const getStatus = (iso: string): "today" | "soon" | "later" => {
+    const start = new Date(iso);
+    const now = new Date();
+    const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const days = Math.round((startDay.getTime() - today.getTime()) / 86400000);
+    if (days <= 0) return "today";
+    if (days <= 7) return "soon";
+    return "later";
+  };
+
+  const statusStyles: Record<"today" | "soon" | "later", { label: string; cls: string; dot: string }> = {
+    today: {
+      label: isNo ? "I dag" : "Today",
+      cls: "bg-destructive/15 text-destructive ring-1 ring-destructive/30",
+      dot: "bg-destructive animate-pulse",
+    },
+    soon: {
+      label: isNo ? "Snart" : "Soon",
+      cls: "bg-primary/15 text-primary ring-1 ring-primary/30",
+      dot: "bg-primary",
+    },
+    later: {
+      label: isNo ? "Senere" : "Later",
+      cls: "bg-muted text-muted-foreground",
+      dot: "bg-muted-foreground/50",
+    },
+  };
+
   const toIcsDate = (iso: string) =>
     new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 
@@ -155,6 +184,17 @@ export const EventsFeed = () => {
                   <p className="font-subhead font-semibold text-sm text-headline truncate">
                     {item.title}
                   </p>
+                  {(() => {
+                    const s = statusStyles[getStatus(item.start_at)];
+                    return (
+                      <span
+                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 mt-1 rounded-full text-[10px] font-subhead font-semibold ${s.cls}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                        {s.label}
+                      </span>
+                    );
+                  })()}
                   <p className="text-xs text-muted-foreground font-body mt-0.5">
                     {fmtDate(item.start_at)}
                   </p>

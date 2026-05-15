@@ -130,15 +130,27 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
       return;
     }
     setSharing(true);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(articleId);
     const { error } = await supabase
       .from("group_messages")
-      .insert({ group_id: groupId, user_id: userId, content: buildShareText() });
+      .insert({
+        group_id: groupId,
+        user_id: userId,
+        content: buildShareText(),
+        article_id: isUuid ? articleId : null,
+      });
     setSharing(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success(`${t.shared}: ${groupName}`);
+    toast.success(`${t.shared}: ${groupName}`, {
+      action: {
+        label: isNo ? "Åpne" : "Open",
+        onClick: () => navigate(`/grupper/${groupId}`),
+      },
+      duration: 6000,
+    });
   };
 
   const openShareWindow = (url: string) => {

@@ -170,6 +170,35 @@ async function handleJobPremiumCheckout(session: any, env: StripeEnv) {
   console.log("Marked job as premium:", jobListingId, "env:", env);
 }
 
+async function handleEventFeaturedCheckout(session: any, env: StripeEnv) {
+  const purpose = session.metadata?.purpose;
+  if (purpose !== "event_featured") return;
+  const eventId = session.metadata?.eventId;
+  if (!eventId) {
+    console.error("event_featured checkout missing eventId", session.id);
+    return;
+  }
+  const sb = getSupabase();
+  const { data: ev } = await sb
+    .from("events")
+    .select("start_at")
+    .eq("id", eventId)
+    .maybeSingle();
+  const featuredUntil = ev?.start_at ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  await sb
+    .from("events")
+    .update({
+      is_featured: true,
+      featured_paid_at: new Date().toISOString(),
+      featured_amount_nok: Math.round((session.amount_total ?? 0) / 100),
+      featured_stripe_session_id: session.id,
+      featured_until: featuredUntil,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", eventId);
+  console.log("Marked event as featured:", eventId, "env:", env);
+}
+
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
 
@@ -183,6 +212,7 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       break;
     case "checkout.session.completed":
       await handleJobPremiumCheckout(event.data.object, env);
+      await handleEventFeaturedCheckout(event.data.object, env);
       break;
     default:
       console.log("Unhandled event:", event.type);

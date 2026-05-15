@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Calendar, MapPin, ArrowRight, CalendarPlus, Clock } from "lucide-react";
+import { Calendar, MapPin, ArrowRight, CalendarPlus, Clock, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
@@ -13,6 +13,7 @@ interface EventItem {
   category: string | null;
   image_url: string | null;
   description?: string | null;
+  is_featured?: boolean;
 }
 
 export const EventsFeed = () => {
@@ -26,7 +27,7 @@ export const EventsFeed = () => {
     const fetchData = async () => {
       let q = supabase
         .from("events")
-        .select("id, title, start_at, end_at, location, category, image_url, description")
+        .select("id, title, start_at, end_at, location, category, image_url, description, is_featured")
         .eq("status", "approved")
         .gte("start_at", new Date().toISOString());
       if (range === "30d") {
@@ -34,7 +35,10 @@ export const EventsFeed = () => {
         in30.setDate(in30.getDate() + 30);
         q = q.lte("start_at", in30.toISOString());
       }
-      const { data } = await q.order("start_at", { ascending: true }).limit(5);
+      const { data } = await q
+        .order("is_featured", { ascending: false })
+        .order("start_at", { ascending: true })
+        .limit(5);
       setItems((data as any[]) || []);
     };
     fetchData();
@@ -228,7 +232,7 @@ export const EventsFeed = () => {
               <button
                 type="button"
                 onClick={() => navigate(`/arrangementer/${item.id}`)}
-                className="w-full flex items-stretch gap-3 py-3 text-left hover:bg-muted/30 cursor-pointer transition-colors"
+                className={`w-full flex items-stretch gap-3 py-3 text-left hover:bg-muted/30 cursor-pointer transition-colors ${item.is_featured ? "px-2 -mx-2 rounded-lg bg-primary/5" : ""}`}
               >
                 {(() => {
                   const status = getStatus(item.start_at);
@@ -259,6 +263,11 @@ export const EventsFeed = () => {
                 })()}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
+                    {item.is_featured && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-subhead font-bold uppercase tracking-wider bg-primary text-primary-foreground">
+                        <Sparkles className="w-3 h-3" /> {isNo ? "Fremhevet" : "Featured"}
+                      </span>
+                    )}
                     {(() => {
                       const s = statusStyles[getStatus(item.start_at)];
                       return (

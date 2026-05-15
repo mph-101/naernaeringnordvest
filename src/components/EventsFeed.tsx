@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Calendar, MapPin, ArrowRight, CalendarPlus } from "lucide-react";
+import { Calendar, MapPin, ArrowRight, CalendarPlus, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
@@ -44,6 +44,22 @@ export const EventsFeed = () => {
     new Date(iso).toLocaleDateString(isNo ? "nb-NO" : "en-US", {
       day: "numeric",
       month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  const fmtDay = (iso: string) =>
+    new Date(iso).toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric" });
+  const fmtMonth = (iso: string) =>
+    new Date(iso)
+      .toLocaleDateString(isNo ? "nb-NO" : "en-US", { month: "short" })
+      .replace(".", "");
+  const fmtWeekday = (iso: string) =>
+    new Date(iso)
+      .toLocaleDateString(isNo ? "nb-NO" : "en-US", { weekday: "short" })
+      .replace(".", "");
+  const fmtTime = (iso: string) =>
+    new Date(iso).toLocaleTimeString(isNo ? "nb-NO" : "en-US", {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -167,36 +183,55 @@ export const EventsFeed = () => {
               <button
                 type="button"
                 onClick={() => navigate(`/arrangementer/${item.id}`)}
-                className="w-full flex items-start gap-3 py-3 text-left hover:bg-muted/30 cursor-pointer transition-colors"
+                className="w-full flex items-stretch gap-3 py-3 text-left hover:bg-muted/30 cursor-pointer transition-colors"
               >
-                {item.image_url ? (
-                  <img
-                    src={item.image_url}
-                    alt=""
-                    className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="font-subhead font-semibold text-sm text-headline truncate">
-                    {item.title}
-                  </p>
-                  {(() => {
-                    const s = statusStyles[getStatus(item.start_at)];
-                    return (
-                      <span
-                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 mt-1 rounded-full text-[10px] font-subhead font-semibold ${s.cls}`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-                        {s.label}
+                {(() => {
+                  const status = getStatus(item.start_at);
+                  const s = statusStyles[status];
+                  const isToday = status === "today";
+                  return (
+                    <div
+                      className={`w-14 flex-shrink-0 rounded-lg border flex flex-col items-center justify-center py-1 leading-none ${
+                        isToday
+                          ? "bg-destructive/10 border-destructive/30 text-destructive"
+                          : status === "soon"
+                          ? "bg-primary/10 border-primary/30 text-primary"
+                          : "bg-secondary border-border text-foreground"
+                      }`}
+                      aria-hidden
+                    >
+                      <span className="text-[10px] uppercase tracking-wider font-subhead font-semibold opacity-80">
+                        {fmtWeekday(item.start_at)}
                       </span>
-                    );
-                  })()}
-                  <p className="text-xs text-muted-foreground font-body mt-0.5">
-                    {fmtDate(item.start_at)}
+                      <span className="font-headline text-xl font-bold tabular-nums">
+                        {fmtDay(item.start_at)}
+                      </span>
+                      <span className="text-[10px] uppercase tracking-wider font-subhead font-semibold opacity-80">
+                        {fmtMonth(item.start_at)}
+                      </span>
+                    </div>
+                  );
+                })()}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {(() => {
+                      const s = statusStyles[getStatus(item.start_at)];
+                      return (
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-subhead font-bold uppercase tracking-wider ${s.cls}`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                          {s.label}
+                        </span>
+                      );
+                    })()}
+                    <span className="inline-flex items-center gap-1 text-xs font-subhead font-semibold text-headline tabular-nums">
+                      <Clock className="w-3 h-3 text-muted-foreground" />
+                      {fmtTime(item.start_at)}
+                    </span>
+                  </div>
+                  <p className="font-subhead font-semibold text-sm text-headline truncate mt-1">
+                    {item.title}
                   </p>
                   {item.location && (
                     <p className="text-xs text-muted-foreground font-body mt-0.5 flex items-center gap-1 truncate">

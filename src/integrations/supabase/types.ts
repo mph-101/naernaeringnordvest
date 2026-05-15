@@ -993,6 +993,72 @@ export type Database = {
           },
         ]
       }
+      events: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          end_at: string | null
+          id: string
+          image_url: string | null
+          location: string | null
+          location_url: string | null
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_note: string | null
+          organizer: string | null
+          region_slug: string | null
+          start_at: string
+          status: string
+          submitted_by: string
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          end_at?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          location_url?: string | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_note?: string | null
+          organizer?: string | null
+          region_slug?: string | null
+          start_at: string
+          status?: string
+          submitted_by: string
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          end_at?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          location_url?: string | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_note?: string | null
+          organizer?: string | null
+          region_slug?: string | null
+          start_at?: string
+          status?: string
+          submitted_by?: string
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       fact_boxes: {
         Row: {
           body: string | null

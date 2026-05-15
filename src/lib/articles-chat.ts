@@ -18,6 +18,22 @@ export interface TrustedSource {
   published_at: string | null;
 }
 
+export interface BrregCompany {
+  navn: string;
+  orgnr: string;
+  ansatte: number;
+  kommune: string;
+  bransje: string;
+  stiftet: string;
+  konkurs: boolean;
+}
+
+export interface BrregResult {
+  label: string;
+  total: number;
+  companies: BrregCompany[];
+}
+
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
@@ -28,7 +44,11 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/articles-cha
 interface StreamArticlesChatOptions {
   messages: ChatMessage[];
   onContent: (chunk: string) => void;
-  onSources?: (sources: ArticleSource[], trustedSources?: TrustedSource[]) => void;
+  onSources?: (
+    sources: ArticleSource[],
+    trustedSources?: TrustedSource[],
+    brregResults?: BrregResult[],
+  ) => void;
 }
 
 export async function streamArticlesChat({
@@ -97,6 +117,7 @@ export async function streamArticlesChat({
           onSources?.(
             parsed.sources as ArticleSource[],
             (parsed.trustedSources as TrustedSource[]) || [],
+            (parsed.brregResults as BrregResult[]) || [],
           );
           continue;
         }

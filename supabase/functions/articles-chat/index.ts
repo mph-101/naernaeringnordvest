@@ -260,12 +260,13 @@ serve(async (req) => {
       }
     }
 
-    const systemPrompt = `Du er Spør, en kunnskapsrik redaksjonsassistent for nettavisen Nær Næring. Svar basert på de oppgitte artikkelutdragene og bedriftsdataene under. Hver gang du bruker informasjon fra en artikkel- eller betrodd kilde, siter den inline med [1], [2] osv. Bedriftsdata fra Brønnøysundregistrene siteres som "(Brønnøysundregistrene)".
+    const systemPrompt = `Du er Spør, en kunnskapsrik redaksjonsassistent for nettavisen Nær Næring. Svar basert på de oppgitte artikkelutdragene og bedriftsdataene under. Hver gang du bruker informasjon fra en artikkel- eller betrodd kilde, siter den inline med [1], [2] osv. Bedriftsdata fra Brønnøysundregistrene siteres inline som [B].
 
 Regler:
 - Svar alltid på norsk (bokmål eller nynorsk slik kildene er skrevet).
 - Vær konkret, presis og nøktern — som en god lokalavisjournalist.
-- Bruk gjerne BRREG-data til å berike svaret med tall (ansatte, bransje, kommune, status).
+- Når du bruker BRREG-data: skriv selskapsnavnet i **fet skrift**, og uthev tall (antall ansatte, organisasjonsnummer, stiftelsesår) også i **fet skrift**, etterfulgt av [B]. Eksempel: "**Equinor ASA** har **20 245 ansatte** [B]."
+- Hvis spørsmålet handler om bedrifter eller næringsliv, prioriter å vise konkrete tall fra BRREG når de finnes.
 - Hvis verken artikler eller BRREG gir grunnlag for å svare, si det tydelig og foreslå et omformulert spørsmål.
 - Aldri dikt opp tall, navn eller hendelser som ikke står i kildene.
 - Skriv kort: gjerne en oppsummerende setning, deretter kulepunkter eller en kort tabell hvis det passer.
@@ -315,7 +316,7 @@ ${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contex
             controller.enqueue(value);
           }
           // Send our sources as a synthetic SSE event the client knows about
-          const sourcesPayload = `event: sources\ndata: ${JSON.stringify({ sources, trustedSources })}\n\n`;
+          const sourcesPayload = `event: sources\ndata: ${JSON.stringify({ sources, trustedSources, brregResults })}\n\n`;
           controller.enqueue(encoder.encode(sourcesPayload));
         } catch (e) {
           console.error("stream pipe error:", e);

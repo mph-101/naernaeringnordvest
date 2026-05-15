@@ -1,10 +1,10 @@
 import { Children, isValidElement, useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Search, ArrowRight, ArrowLeft, User, Bot, Copy, Check, Share2, ExternalLink, Rss, Database, FileText as FileTextIcon, Globe, MessageSquare, BarChart3 } from "lucide-react";
+import { Search, ArrowRight, ArrowLeft, User, Bot, Copy, Check, Share2, ExternalLink, Rss, Database, FileText as FileTextIcon, Globe, MessageSquare, BarChart3, Building2, Users as UsersIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-import { streamArticlesChat, type ArticleSource, type TrustedSource } from "@/lib/articles-chat";
+import { streamArticlesChat, type ArticleSource, type TrustedSource, type BrregResult } from "@/lib/articles-chat";
 import { toast } from "@/hooks/use-toast";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { SourceVerificationLog } from "@/components/SourceVerificationLog";
@@ -16,6 +16,7 @@ interface Message {
   content: string;
   sources?: ArticleSource[];
   trustedSources?: TrustedSource[];
+  brregResults?: BrregResult[];
 }
 
 interface ConversationViewProps {
@@ -90,13 +91,19 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
     sources?: ArticleSource[],
     trustedSources?: TrustedSource[],
     assistantId?: string,
+    brregResults?: BrregResult[],
   ) => {
     if (!content) return content;
     const validNumbers = new Set<number>([
       ...(sources ?? []).map((s) => s.n),
       ...(trustedSources ?? []).map((s) => s.n),
     ]);
-    return content.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, group: string) => {
+    const hasBrreg = (brregResults?.length ?? 0) > 0;
+    let out = content;
+    if (hasBrreg) {
+      out = out.replace(/\[B\]/g, () => `[\\[B\\]](#brreg-${assistantId})`);
+    }
+    return out.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, group: string) => {
       const nums = group.split(",").map((n) => n.trim());
       const parts = nums.map((n) => {
         const num = Number(n);
@@ -193,6 +200,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
     let assistantContent = "";
     let assistantSources: ArticleSource[] | undefined;
     let assistantTrustedSources: TrustedSource[] | undefined;
+    let assistantBrreg: BrregResult[] | undefined;
 
     setMessages(nextMessages);
     setInput("");
@@ -202,10 +210,12 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
       chunk: string,
       sources?: ArticleSource[],
       trustedSources?: TrustedSource[],
+      brregResults?: BrregResult[],
     ) => {
       if (chunk) assistantContent += chunk;
       if (sources) assistantSources = sources;
       if (trustedSources) assistantTrustedSources = trustedSources;
+      if (brregResults) assistantBrreg = brregResults;
 
       setMessages((prev) => {
         const assistantMessage: Message = {
@@ -214,6 +224,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
           content: assistantContent,
           sources: assistantSources,
           trustedSources: assistantTrustedSources,
+          brregResults: assistantBrreg,
         };
         const existingIndex = prev.findIndex((message) => message.id === assistantId);
         if (existingIndex >= 0) {
@@ -227,7 +238,8 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
       await streamArticlesChat({
         messages: nextMessages.map(({ role, content }) => ({ role, content })),
         onContent: (chunk) => upsertAssistant(chunk),
-        onSources: (sources, trustedSources) => upsertAssistant("", sources, trustedSources),
+        onSources: (sources, trustedSources, brregResults) =>
+          upsertAssistant("", sources, trustedSources, brregResults),
       });
     } catch (error) {
       upsertAssistant(error instanceof Error ? error.message : "Noe gikk galt, prøv igjen.");
@@ -470,8 +482,84 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                           },
                         }}
                       >
-                        {linkifyCitations(message.content, message.sources, message.trustedSources, message.id)}
+                        {linkifyCitations(message.content, message.sources, message.trustedSources, message.id, message.brregResults)}
                       </ReactMarkdown>
+                    </div>
+                  )}
+                  {message.role === "assistant" && (message.brregResults?.length ?? 0) > 0 && (
+                    <div id={`brreg-${message.id}`} className="mt-5 rounded-2xl border border-border bg-card overflow-hidden">
+                      <div className="flex items-center gap-2 px-4 py-3 bg-primary/5 border-b border-border">
+                        <Building2 className="w-4 h-4 text-primary" />
+                        <span className="font-subhead font-semibold text-sm text-headline">
+                          {language === "no" ? "Brønnøysundregistrene" : "Brønnøysund Register"}
+                        </span>
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-subhead ml-auto">
+                          {language === "no" ? "Sanntidsdata" : "Live data"}
+                        </span>
+                      </div>
+                      <div className="divide-y divide-border">
+                        {message.brregResults!.map((r, ri) => (
+                          <div key={ri} className="p-4">
+                            <div className="flex items-baseline justify-between gap-3 mb-3">
+                              <p className="font-subhead text-sm font-semibold text-headline">{r.label}</p>
+                              <span className="text-xs font-body text-muted-foreground whitespace-nowrap">
+                                {r.total.toLocaleString(language === "no" ? "nb-NO" : "en-US")}{" "}
+                                {language === "no" ? "treff totalt" : "total hits"}
+                              </span>
+                            </div>
+                            {r.companies.length === 0 ? (
+                              <p className="text-xs text-muted-foreground font-body italic">
+                                {language === "no" ? "Ingen treff" : "No matches"}
+                              </p>
+                            ) : (
+                              <ul className="space-y-2">
+                                {r.companies.map((c) => (
+                                  <li key={c.orgnr} className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/40">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-subhead font-semibold text-sm text-headline truncate">
+                                        {c.navn}
+                                        {c.konkurs && (
+                                          <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-destructive/15 text-destructive text-[10px] font-semibold align-middle">
+                                            {language === "no" ? "Konkurs" : "Bankrupt"}
+                                          </span>
+                                        )}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground font-body mt-0.5 truncate">
+                                        {[c.kommune, c.bransje].filter(Boolean).join(" · ")}
+                                      </p>
+                                      <p className="text-[11px] text-muted-foreground/80 font-body mt-1">
+                                        <a
+                                          href={`https://virksomhet.brreg.no/nb/oppslag/enheter/${c.orgnr}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="hover:text-primary hover:underline"
+                                        >
+                                          org.nr {c.orgnr}
+                                        </a>
+                                        {c.stiftet && <> · {language === "no" ? "stiftet" : "founded"} {c.stiftet.slice(0, 4)}</>}
+                                      </p>
+                                    </div>
+                                    <div className="flex flex-col items-end flex-shrink-0">
+                                      <div className="flex items-center gap-1 font-headline text-xl font-bold text-primary leading-none">
+                                        <UsersIcon className="w-3.5 h-3.5 opacity-60" />
+                                        {c.ansatte.toLocaleString(language === "no" ? "nb-NO" : "en-US")}
+                                      </div>
+                                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-subhead mt-1">
+                                        {language === "no" ? "ansatte" : "employees"}
+                                      </span>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="px-4 py-2 text-[11px] text-muted-foreground font-body bg-muted/30 border-t border-border">
+                        {language === "no"
+                          ? "Kilde: data.brreg.no — Brønnøysundregistrene (enhetsregisteret)"
+                          : "Source: data.brreg.no — Brønnøysund Register Centre"}
+                      </div>
                     </div>
                   )}
                   <SourceVerificationLog

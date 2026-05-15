@@ -141,6 +141,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     key_points_en: [] as string[],
     status: "draft" as ArticleStatus,
     region_slug: null as string | null,
+    media_url: "",
   });
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
@@ -404,6 +405,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         key_points_en: (data.key_points_en as string[]) || [],
         status: ((data as any).status as ArticleStatus) || (data.published ? "published" : "draft"),
         region_slug: ((data as any).region_slug as string | null) ?? null,
+        media_url: ((data as any).media_url as string | null) ?? "",
       });
       // Remember the body that's currently live so we can detect real edits
       // on the next publish.
@@ -473,6 +475,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         published: form.status === "published",
         published_at: form.status === "published" ? new Date().toISOString() : null,
         region_slug: form.region_slug || null,
+        media_url: form.media_url?.trim() ? form.media_url.trim() : null,
       } as any;
 
       const syncSharedRegions = async (id: string) => {
@@ -1952,6 +1955,24 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 <option value="podcast">Podcast</option>
               </select>
             </div>
+
+            {(form.type === "video" || form.type === "podcast") && (
+              <div className="md:col-span-2">
+                <Label htmlFor="media_url">
+                  {form.type === "video" ? "Video-URL (YouTube, Vimeo eller .mp4)" : "Lyd-URL (Spotify, SoundCloud, Apple Podcasts eller .mp3)"}
+                </Label>
+                <Input
+                  id="media_url"
+                  value={form.media_url}
+                  onChange={(e) => updateForm({ media_url: e.target.value })}
+                  placeholder={form.type === "video" ? "https://www.youtube.com/watch?v=..." : "https://open.spotify.com/episode/..."}
+                  className="mt-1.5"
+                />
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Limes inn fra leverandøren. Spilleren vises øverst i artikkelen.
+                </p>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="read_time">Lesetid (auto)</Label>

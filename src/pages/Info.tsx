@@ -1,13 +1,14 @@
 import { useEffect } from "react";
-import { useParams, Navigate, Link } from "react-router-dom";
+import { useLocation, Navigate, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { Header } from "@/components/Header";
 import { FOOTER_PAGES, FooterPageSlug } from "@/lib/footer-pages";
 import { SiteFooter } from "@/components/SiteFooter";
 
 const Info = () => {
-  const { slug } = useParams<{ slug: string }>();
-  const page = slug ? FOOTER_PAGES[slug as FooterPageSlug] : undefined;
+  const { pathname } = useLocation();
+  const slug = pathname.replace(/^\//, "").replace(/\/$/, "") as FooterPageSlug;
+  const page = FOOTER_PAGES[slug];
 
   useEffect(() => {
     if (!page) return;

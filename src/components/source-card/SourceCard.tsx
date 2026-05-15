@@ -25,30 +25,30 @@ export const SourceCard = ({ data, className = "" }: SourceCardProps) => {
       data-nn-source-card="true"
       className={`not-prose my-6 rounded-xl border border-border bg-card/60 backdrop-blur-sm overflow-hidden ${className}`}
     >
-      <div className="flex items-center gap-3 p-3 sm:p-4">
+      <div className="flex items-center gap-3.5 p-3 sm:p-4">
         <div className="shrink-0">
           {image_url ? (
             <img
               src={image_url}
               alt={name}
-              width={48}
-              height={48}
-              style={{ width: 48, height: 48 }}
-              className="flex-shrink-0 rounded-lg object-cover ring-1 ring-border !max-w-[48px] !max-h-[48px]"
+              width={64}
+              height={64}
+              style={{ width: 64, height: 64 }}
+              className="flex-shrink-0 rounded-lg object-cover ring-1 ring-border !max-w-[64px] !max-h-[64px]"
               loading="lazy"
             />
           ) : (
-            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
-              <User className="w-5 h-5" />
+            <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+              <User className="w-6 h-6" />
             </div>
           )}
         </div>
-        <div className="min-w-0">
-          <p className="font-headline font-bold text-headline text-sm sm:text-base leading-tight">
+        <div className="min-w-0 leading-tight">
+          <p className="font-headline font-bold text-headline text-base sm:text-lg leading-[1.15]">
             {name}
           </p>
           {role && (
-            <p className="font-body text-xs sm:text-sm text-accent mt-0.5 leading-snug">
+            <p className="font-body text-xs sm:text-sm text-accent leading-[1.2]">
               {role}
             </p>
           )}

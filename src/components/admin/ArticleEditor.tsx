@@ -2005,6 +2005,35 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               <Switch id="premium" checked={form.premium} onCheckedChange={(checked) => updateForm({ premium: checked })} />
               <Label htmlFor="premium" className="cursor-pointer">Premium-artikkel</Label>
             </div>
+
+            <div className="pt-2">
+              <Label htmlFor="pinned_position">Fest til posisjon i nyhetsflyten</Label>
+              <div className="flex items-center gap-2 mt-1.5">
+                <Input
+                  id="pinned_position"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={form.pinned_position ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value.trim();
+                    if (v === "") return updateForm({ pinned_position: null });
+                    const n = parseInt(v, 10);
+                    updateForm({ pinned_position: Number.isFinite(n) && n > 0 ? n : null });
+                  }}
+                  placeholder="Ikke festet"
+                  className="w-32"
+                />
+                {form.pinned_position != null && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => updateForm({ pinned_position: null })}>
+                    Fjern festing
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                1 = øverst (hovedsak), 2 = neste kort, osv. La stå tom for kronologisk plassering.
+              </p>
+            </div>
           </div>
         </div>
 

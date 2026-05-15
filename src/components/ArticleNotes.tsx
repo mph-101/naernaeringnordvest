@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { StickyNote, X, Save, Loader2, FileText, FileDown, Share2, Users, Linkedin, Twitter, Facebook, Link as LinkIcon, Check } from "lucide-react";
+import { StickyNote, X, Save, Loader2, FileText, FileDown, Share2, Users, Linkedin, Twitter, Facebook, Link as LinkIcon, Check, Eye, Shield, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
@@ -38,13 +38,15 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
     | { kind: "copy" }
     | null
   >(null);
+  type GroupVisibility = "members" | "admins" | "author";
+  const [groupVisibility, setGroupVisibility] = useState<GroupVisibility>("members");
   const navigate = useNavigate();
   const { language } = useTheme();
   const isNo = language === "no";
 
   const t = isNo
-    ? { notes: "Mine notater", placeholder: "Skriv notater om denne artikkelen...", save: "Lagre", saved: "Lagret!", login: "Logg inn for å bruke notater", share: "Del notat", inGroup: "Del i gruppe", noGroups: "Du er ikke med i noen grupper", socialShare: "Del på sosiale medier", copyLink: "Kopier lenke", copied: "Kopiert!", shared: "Notat delt i gruppen", emptyShare: "Skriv et notat før du deler", previewTitle: "Forhåndsvisning", previewIntro: "Slik blir delingen seende ut:", linkLabel: "Lenke", confirm: "Del nå", cancel: "Avbryt", target: "Mål" }
-    : { notes: "My Notes", placeholder: "Write notes about this article...", save: "Save", saved: "Saved!", login: "Log in to use notes", share: "Share note", inGroup: "Share to group", noGroups: "You are not in any groups", socialShare: "Share on social media", copyLink: "Copy link", copied: "Copied!", shared: "Note shared to group", emptyShare: "Write a note before sharing", previewTitle: "Preview", previewIntro: "Here is how the share will look:", linkLabel: "Link", confirm: "Share now", cancel: "Cancel", target: "Target" };
+    ? { notes: "Mine notater", placeholder: "Skriv notater om denne artikkelen...", save: "Lagre", saved: "Lagret!", login: "Logg inn for å bruke notater", share: "Del notat", inGroup: "Del i gruppe", noGroups: "Du er ikke med i noen grupper", socialShare: "Del på sosiale medier", copyLink: "Kopier lenke", copied: "Kopiert!", shared: "Notat delt i gruppen", emptyShare: "Skriv et notat før du deler", previewTitle: "Forhåndsvisning", previewIntro: "Slik blir delingen seende ut:", linkLabel: "Lenke", confirm: "Del nå", cancel: "Avbryt", target: "Mål", visibility: "Synlighet", visMembers: "Alle medlemmer", visMembersDesc: "Synlig for alle i gruppen", visAdmins: "Kun gruppe-admins", visAdminsDesc: "Bare administratorer ser notatet", visAuthor: "Bare meg", visAuthorDesc: "Lagres i gruppen, men kun synlig for deg" }
+    : { notes: "My Notes", placeholder: "Write notes about this article...", save: "Save", saved: "Saved!", login: "Log in to use notes", share: "Share note", inGroup: "Share to group", noGroups: "You are not in any groups", socialShare: "Share on social media", copyLink: "Copy link", copied: "Copied!", shared: "Note shared to group", emptyShare: "Write a note before sharing", previewTitle: "Preview", previewIntro: "Here is how the share will look:", linkLabel: "Link", confirm: "Share now", cancel: "Cancel", target: "Target", visibility: "Visibility", visMembers: "All members", visMembersDesc: "Visible to everyone in the group", visAdmins: "Group admins only", visAdminsDesc: "Only group administrators can see it", visAuthor: "Only me", visAuthorDesc: "Stored in the group but visible only to you" };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -138,6 +140,7 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
         user_id: userId,
         content: buildShareText(),
         article_id: isUuid ? articleId : null,
+        visibility: groupVisibility,
       });
     setSharing(false);
     if (error) {

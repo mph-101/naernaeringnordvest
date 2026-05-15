@@ -1116,6 +1116,7 @@ export type Database = {
           group_id: string
           id: string
           user_id: string
+          visibility: string
         }
         Insert: {
           article_id?: string | null
@@ -1124,6 +1125,7 @@ export type Database = {
           group_id: string
           id?: string
           user_id: string
+          visibility?: string
         }
         Update: {
           article_id?: string | null
@@ -1132,6 +1134,7 @@ export type Database = {
           group_id?: string
           id?: string
           user_id?: string
+          visibility?: string
         }
         Relationships: [
           {

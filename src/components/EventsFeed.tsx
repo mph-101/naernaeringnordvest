@@ -20,20 +20,25 @@ export const EventsFeed = () => {
   const isNo = language === "no";
   const navigate = useNavigate();
   const [items, setItems] = useState<EventItem[]>([]);
+  const [range, setRange] = useState<"30d" | "all">("30d");
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data } = await supabase
+      let q = supabase
         .from("events")
         .select("id, title, start_at, end_at, location, category, image_url, description")
         .eq("status", "approved")
-        .gte("start_at", new Date().toISOString())
-        .order("start_at", { ascending: true })
-        .limit(5);
+        .gte("start_at", new Date().toISOString());
+      if (range === "30d") {
+        const in30 = new Date();
+        in30.setDate(in30.getDate() + 30);
+        q = q.lte("start_at", in30.toISOString());
+      }
+      const { data } = await q.order("start_at", { ascending: true }).limit(5);
       setItems((data as any[]) || []);
     };
     fetchData();
-  }, []);
+  }, [range]);
 
   const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString(isNo ? "nb-NO" : "en-US", {
@@ -101,6 +106,25 @@ export const EventsFeed = () => {
         >
           {isNo ? "Se alle" : "See all"} <ArrowRight className="w-3.5 h-3.5" />
         </button>
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        {([
+          { id: "30d", label: isNo ? "Neste 30 dager" : "Next 30 days" },
+          { id: "all", label: isNo ? "Alle kommende" : "All upcoming" },
+        ] as const).map((opt) => (
+          <button
+            key={opt.id}
+            onClick={() => setRange(opt.id)}
+            className={`px-3 py-1 rounded-full text-xs font-subhead font-medium transition-colors ${
+              range === opt.id
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-foreground hover:bg-secondary/80"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       {items.length === 0 ? (

@@ -146,8 +146,8 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
     }
     toast.success(`${t.shared}: ${groupName}`, {
       action: {
-        label: isNo ? "Åpne" : "Open",
-        onClick: () => navigate(`/grupper/${groupId}`),
+        label: isNo ? "Se delte notater" : "View shared notes",
+        onClick: () => navigate("/mine-delte-notater"),
       },
       duration: 6000,
     });

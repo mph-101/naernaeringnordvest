@@ -630,6 +630,15 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   </span>
                                 )}
                               </p>
+                              <TallParamRow
+                                language={language}
+                                period={message.tallResults.days ? (language === "no" ? `Siste ${message.tallResults.days} dager` : `Last ${message.tallResults.days} days`) : null}
+                                area={message.tallResults.kommunenummer ? `Kommune ${message.tallResults.kommunenummer}` : (language === "no" ? "Hele Norge" : "All of Norway")}
+                                indicator={language === "no" ? "Stiftelsesdato — alle bransjer" : "Founding date — all sectors"}
+                                sourceLabel="Brønnøysundregistrene (enhetsregisteret)"
+                                sourceUrl="https://data.brreg.no/enhetsregisteret/api/enheter"
+                                internalUrl="/tall?view=etablering"
+                              />
                               <ul className="space-y-1.5">
                                 {message.tallResults.establishments.companies.slice(0, 8).map((c: any) => (
                                   <li key={c.orgnr} className="text-xs font-body p-2 rounded-lg bg-muted/40 flex justify-between gap-3">
@@ -659,6 +668,15 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   {language === "no" ? "totalt" : "total"}
                                 </span>
                               </p>
+                              <TallParamRow
+                                language={language}
+                                period={message.tallResults.days ? (language === "no" ? `Siste ${message.tallResults.days} dager` : `Last ${message.tallResults.days} days`) : null}
+                                area={message.tallResults.kommunenummer ? `Kommune ${message.tallResults.kommunenummer}` : (language === "no" ? "Hele Norge" : "All of Norway")}
+                                indicator={language === "no" ? "Konkursåpning" : "Bankruptcy opening"}
+                                sourceLabel="Brønnøysundregistrene (konkursregisteret)"
+                                sourceUrl="https://data.brreg.no/enhetsregisteret/api/enheter"
+                                internalUrl="/tall?view=konkurs"
+                              />
                               <ul className="space-y-1.5">
                                 {message.tallResults.bankruptcies.companies.slice(0, 8).map((c: any) => (
                                   <li key={c.orgnr} className="text-xs font-body p-2 rounded-lg bg-muted/40 flex justify-between gap-3">
@@ -688,6 +706,24 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                 {language === "no" ? "Arbeidsmarked" : "Labor market"}
                                 <span className="ml-2 text-xs font-body text-muted-foreground">SSB</span>
                               </p>
+                              <TallParamRow
+                                language={language}
+                                period={(() => {
+                                  const periods = Object.values(message.tallResults.labor || {})
+                                    .map((p: any) => p?.period)
+                                    .filter(Boolean) as string[];
+                                  return periods.length ? `${periods[0]}` : null;
+                                })()}
+                                area={language === "no" ? "Hele Norge" : "All of Norway"}
+                                indicator={language === "no" ? "AKU, sykefravær, lønn" : "LFS, sick leave, wages"}
+                                sourceLabel="SSB · tabell 13760, 12442, 11418"
+                                sourceUrl="https://www.ssb.no/statbank/table/13760"
+                                extraSources={[
+                                  { label: "SSB · 12442 (sykefravær)", url: "https://www.ssb.no/statbank/table/12442" },
+                                  { label: "SSB · 11418 (lønn)", url: "https://www.ssb.no/statbank/table/11418" },
+                                ]}
+                                internalUrl="/tall?view=arbeidsmarked"
+                              />
                               <dl className="grid grid-cols-2 gap-2 text-xs font-body">
                                 {[
                                   { k: "unemployment", lbl: language === "no" ? "Arbeidsledighet" : "Unemployment", suffix: "%" },
@@ -716,6 +752,24 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                 {language === "no" ? "Boligmarked" : "Housing market"}
                                 <span className="ml-2 text-xs font-body text-muted-foreground">SSB</span>
                               </p>
+                              <TallParamRow
+                                language={language}
+                                period={(() => {
+                                  const periods = Object.values(message.tallResults.housing || {})
+                                    .map((p: any) => p?.period)
+                                    .filter(Boolean) as string[];
+                                  return periods.length ? `${periods[0]}` : null;
+                                })()}
+                                area={language === "no" ? "Hele Norge" : "All of Norway"}
+                                indicator={language === "no" ? "Boligprisindeks, igangsetting, kreditt" : "Price index, dwellings, credit"}
+                                sourceLabel="SSB · tabell 07221, 05940, 11597"
+                                sourceUrl="https://www.ssb.no/statbank/table/07221"
+                                extraSources={[
+                                  { label: "SSB · 05940 (igangsatte)", url: "https://www.ssb.no/statbank/table/05940" },
+                                  { label: "SSB · 11597 (kreditt)", url: "https://www.ssb.no/statbank/table/11597" },
+                                ]}
+                                internalUrl="/tall?view=bolig"
+                              />
                               <dl className="grid grid-cols-2 gap-2 text-xs font-body">
                                 {[
                                   { k: "priceIndex", lbl: language === "no" ? "Boligprisindeks" : "Price index", suffix: "" },

@@ -426,6 +426,28 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                           ol: ({ children }) => <ol className="mb-3 space-y-1 pl-5 list-decimal marker:text-primary/60">{children}</ol>,
                           strong: ({ children }) => <strong className="font-semibold text-headline">{children}</strong>,
                           a: ({ href, children }) => {
+                            const isTallRef = href?.startsWith("#tall-");
+                            const isBrregRef = href?.startsWith("#brreg-");
+                            if (isTallRef || isBrregRef) {
+                              const label = isTallRef
+                                ? (language === "no" ? "Se Tall-databasen" : "See Tall data")
+                                : (language === "no" ? "Se Brreg-data" : "See Brreg data");
+                              return (
+                                <a
+                                  href={href}
+                                  onClick={(e) => handleCitationClick(e, href)}
+                                  title={label}
+                                  className={`inline-flex items-center gap-0.5 align-super mx-0.5 px-1.5 py-px rounded-full text-[10px] font-subhead font-semibold no-underline transition-colors ${
+                                    isTallRef
+                                      ? "bg-primary/10 text-primary hover:bg-primary/20"
+                                      : "bg-accent/10 text-accent hover:bg-accent/20"
+                                  }`}
+                                >
+                                  <BarChart3 className="w-2.5 h-2.5" />
+                                  {children}
+                                </a>
+                              );
+                            }
                             const isCitation = href?.startsWith("#src-");
                             if (isCitation) {
                               const num = Number(href!.split("-").pop());

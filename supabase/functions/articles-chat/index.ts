@@ -223,7 +223,7 @@ async function fetchTallProxy(action: string, params: Record<string, string>): P
   const cached = tallCache.get(cacheKey);
   if (cached && Date.now() - cached.at < TALL_TTL_MS) return cached.value;
   try {
-    const url = `${BRREG_BASE.replace("https://data.brreg.no", `${Deno.env.get("SUPABASE_URL")}/functions/v1/brreg-proxy`)}?${qs}`;
+    const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/brreg-proxy?${qs}`;
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY") || ""}` },
     });

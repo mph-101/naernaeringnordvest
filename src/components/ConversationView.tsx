@@ -988,3 +988,84 @@ const TabButton = ({
     )}
   </button>
 );
+
+const TallParamRow = ({
+  language,
+  period,
+  area,
+  indicator,
+  sourceLabel,
+  sourceUrl,
+  extraSources,
+  internalUrl,
+}: {
+  language: "no" | "en";
+  period: string | null;
+  area: string | null;
+  indicator: string | null;
+  sourceLabel: string;
+  sourceUrl: string;
+  extraSources?: { label: string; url: string }[];
+  internalUrl?: string;
+}) => {
+  const isNo = language === "no";
+  return (
+    <div className="mb-3 rounded-lg border border-border/60 bg-background/60 p-2.5">
+      <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] font-body text-muted-foreground">
+        {period && (
+          <span className="inline-flex items-center gap-1">
+            <CalendarRange className="w-3 h-3 opacity-70" />
+            <span className="text-[10px] uppercase tracking-wider">{isNo ? "Periode" : "Period"}:</span>
+            <span className="text-foreground font-medium">{period}</span>
+          </span>
+        )}
+        {area && (
+          <span className="inline-flex items-center gap-1">
+            <MapPin className="w-3 h-3 opacity-70" />
+            <span className="text-[10px] uppercase tracking-wider">{isNo ? "Område" : "Area"}:</span>
+            <span className="text-foreground font-medium">{area}</span>
+          </span>
+        )}
+        {indicator && (
+          <span className="inline-flex items-center gap-1">
+            <Activity className="w-3 h-3 opacity-70" />
+            <span className="text-[10px] uppercase tracking-wider">{isNo ? "Indikator" : "Indicator"}:</span>
+            <span className="text-foreground font-medium">{indicator}</span>
+          </span>
+        )}
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-body">
+        <a
+          href={sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-primary hover:underline"
+        >
+          <ExternalLink className="w-3 h-3" />
+          {sourceLabel}
+        </a>
+        {extraSources?.map((s) => (
+          <a
+            key={s.url}
+            href={s.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-primary/80 hover:underline"
+          >
+            <ExternalLink className="w-3 h-3" />
+            {s.label}
+          </a>
+        ))}
+        {internalUrl && (
+          <Link
+            to={internalUrl}
+            className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground ml-auto"
+          >
+            <BarChart3 className="w-3 h-3" />
+            {isNo ? "Åpne i Tall" : "Open in Tall"}
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+};

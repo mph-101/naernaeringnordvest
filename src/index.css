@@ -462,3 +462,15 @@
 .article-body h4:first-child {
   margin-top: 0 !important;
 }
+
+/* Brukes når en [T]/[B]-referanse klikkes i samtalen — gir
+   en kort, tydelig pulse rundt paneldetaljen som er åpnet. */
+@keyframes nn-pulse-ring {
+  0%   { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.55); }
+  60%  { box-shadow: 0 0 0 10px hsl(var(--primary) / 0); }
+  100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+}
+.nn-pulse-ring {
+  animation: nn-pulse-ring 1.2s ease-out 2;
+  scroll-margin-top: 80px;
+}

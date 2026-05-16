@@ -391,6 +391,33 @@
 .article-body p {
   line-height: 1.6 !important;
 }
+/* Sørg for at kulepunkter og nummererte lister vises tydelig i
+   editoren og i publiserte artikler (Tailwind preflight nuller
+   ut list-style som standard, og @tailwindcss/typography er ikke
+   registrert som plugin). */
+.article-body ul {
+  list-style: disc outside !important;
+  padding-left: 1.6em !important;
+}
+.article-body ol {
+  list-style: decimal outside !important;
+  padding-left: 1.6em !important;
+}
+.article-body ul ul {
+  list-style: circle outside !important;
+}
+.article-body ul ul ul {
+  list-style: square outside !important;
+}
+.article-body li {
+  margin-top: 0.4em !important;
+  margin-bottom: 0.4em !important;
+  padding-left: 0.25em;
+}
+.article-body li > p {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
 /* Alle innebilder i artikkelbody bruker samme felles
    --nn-image-position-variabel og rører ALDRI zoom/scale.
    Dekker både rene <img>, <picture><img>, <figure><img>, og lazy

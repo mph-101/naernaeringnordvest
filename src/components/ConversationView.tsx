@@ -4,7 +4,7 @@ import { Search, ArrowRight, ArrowLeft, User, Bot, Copy, Check, Share2, External
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-import { streamArticlesChat, type ArticleSource, type TrustedSource, type BrregResult, type BrregDisambiguation } from "@/lib/articles-chat";
+import { streamArticlesChat, type ArticleSource, type TrustedSource, type BrregResult, type BrregDisambiguation, type TallResults } from "@/lib/articles-chat";
 import { toast } from "@/hooks/use-toast";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { SourceVerificationLog } from "@/components/SourceVerificationLog";
@@ -17,6 +17,7 @@ interface Message {
   sources?: ArticleSource[];
   trustedSources?: TrustedSource[];
   brregResults?: BrregResult[];
+  tallResults?: TallResults | null;
   disambiguation?: BrregDisambiguation;
 }
 
@@ -93,6 +94,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
     trustedSources?: TrustedSource[],
     assistantId?: string,
     brregResults?: BrregResult[],
+    tallResults?: TallResults | null,
   ) => {
     if (!content) return content;
     const validNumbers = new Set<number>([
@@ -100,9 +102,18 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
       ...(trustedSources ?? []).map((s) => s.n),
     ]);
     const hasBrreg = (brregResults?.length ?? 0) > 0;
+    const hasTall = !!tallResults && (
+      !!tallResults.establishments?.companies?.length ||
+      !!tallResults.bankruptcies?.companies?.length ||
+      !!tallResults.labor ||
+      !!tallResults.housing
+    );
     let out = content;
     if (hasBrreg) {
       out = out.replace(/\[B\]/g, () => `[\\[B\\]](#brreg-${assistantId})`);
+    }
+    if (hasTall) {
+      out = out.replace(/\[T\]/g, () => `[\\[T\\]](#tall-${assistantId})`);
     }
     return out.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, group: string) => {
       const nums = group.split(",").map((n) => n.trim());
@@ -202,6 +213,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
     let assistantSources: ArticleSource[] | undefined;
     let assistantTrustedSources: TrustedSource[] | undefined;
     let assistantBrreg: BrregResult[] | undefined;
+    let assistantTall: TallResults | null | undefined;
     let assistantDisambig: BrregDisambiguation | undefined;
 
     setMessages(nextMessages);
@@ -213,12 +225,14 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
       sources?: ArticleSource[],
       trustedSources?: TrustedSource[],
       brregResults?: BrregResult[],
+      tallResults?: TallResults | null,
       disambiguation?: BrregDisambiguation,
     ) => {
       if (chunk) assistantContent += chunk;
       if (sources) assistantSources = sources;
       if (trustedSources) assistantTrustedSources = trustedSources;
       if (brregResults) assistantBrreg = brregResults;
+      if (tallResults !== undefined) assistantTall = tallResults;
       if (disambiguation) assistantDisambig = disambiguation;
 
       setMessages((prev) => {
@@ -229,6 +243,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
           sources: assistantSources,
           trustedSources: assistantTrustedSources,
           brregResults: assistantBrreg,
+          tallResults: assistantTall,
           disambiguation: assistantDisambig,
         };
         const existingIndex = prev.findIndex((message) => message.id === assistantId);
@@ -243,14 +258,15 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
       await streamArticlesChat({
         messages: nextMessages.map(({ role, content }) => ({ role, content })),
         onContent: (chunk) => upsertAssistant(chunk),
-        onSources: (sources, trustedSources, brregResults) =>
-          upsertAssistant("", sources, trustedSources, brregResults),
+        onSources: (sources, trustedSources, brregResults, tallResults) =>
+          upsertAssistant("", sources, trustedSources, brregResults, tallResults),
         onDisambiguation: (data) => {
           // Render a friendly prompt instead of leaving the bubble empty.
           upsertAssistant(
             language === "no"
               ? `Jeg fant flere selskaper med dette navnet. Hvilket mener du?`
               : `I found several companies with this name. Which one do you mean?`,
+            undefined,
             undefined,
             undefined,
             undefined,
@@ -499,7 +515,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                           },
                         }}
                       >
-                        {linkifyCitations(message.content, message.sources, message.trustedSources, message.id, message.brregResults)}
+                        {linkifyCitations(message.content, message.sources, message.trustedSources, message.id, message.brregResults, message.tallResults)}
                       </ReactMarkdown>
                     </div>
                   )}
@@ -578,6 +594,157 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                           : "Source: data.brreg.no — Brønnøysund Register Centre"}
                       </div>
                     </div>
+                  )}
+                  {message.role === "assistant" && message.tallResults && (
+                    (message.tallResults.establishments?.companies?.length ||
+                      message.tallResults.bankruptcies?.companies?.length ||
+                      message.tallResults.labor ||
+                      message.tallResults.housing) ? (
+                      <details
+                        id={`tall-${message.id}`}
+                        className="mt-5 rounded-2xl border border-border bg-card overflow-hidden group"
+                      >
+                        <summary className="flex items-center gap-2 px-4 py-3 bg-primary/5 border-b border-border cursor-pointer list-none">
+                          <BarChart3 className="w-4 h-4 text-primary" />
+                          <span className="font-subhead font-semibold text-sm text-headline">
+                            {language === "no" ? "Tall-databasen" : "Tall database"}
+                          </span>
+                          <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-subhead ml-auto group-open:hidden">
+                            {language === "no" ? "Vis tall" : "Show data"}
+                          </span>
+                          <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-subhead ml-auto hidden group-open:inline">
+                            {language === "no" ? "Skjul" : "Hide"}
+                          </span>
+                        </summary>
+                        <div className="divide-y divide-border">
+                          {message.tallResults.establishments?.companies?.length ? (
+                            <div className="p-4">
+                              <p className="font-subhead text-sm font-semibold text-headline mb-2">
+                                {language === "no" ? "Nyetableringer" : "New establishments"}
+                                {message.tallResults.days && (
+                                  <span className="ml-2 text-xs font-body text-muted-foreground">
+                                    {language === "no" ? `siste ${message.tallResults.days} dager` : `last ${message.tallResults.days} days`}
+                                    {" · "}
+                                    {message.tallResults.establishments.total?.toLocaleString(language === "no" ? "nb-NO" : "en-US")}{" "}
+                                    {language === "no" ? "totalt" : "total"}
+                                  </span>
+                                )}
+                              </p>
+                              <ul className="space-y-1.5">
+                                {message.tallResults.establishments.companies.slice(0, 8).map((c: any) => (
+                                  <li key={c.orgnr} className="text-xs font-body p-2 rounded-lg bg-muted/40 flex justify-between gap-3">
+                                    <span className="truncate">
+                                      <a
+                                        href={`https://virksomhet.brreg.no/nb/oppslag/enheter/${c.orgnr}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-subhead font-semibold text-headline hover:text-primary hover:underline"
+                                      >
+                                        {c.navn}
+                                      </a>
+                                      {c.kommune && <span className="text-muted-foreground"> · {c.kommune}</span>}
+                                    </span>
+                                    <span className="text-muted-foreground whitespace-nowrap">{c.stiftelsesdato}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
+                          {message.tallResults.bankruptcies?.companies?.length ? (
+                            <div className="p-4">
+                              <p className="font-subhead text-sm font-semibold text-headline mb-2">
+                                {language === "no" ? "Konkurser" : "Bankruptcies"}
+                                <span className="ml-2 text-xs font-body text-muted-foreground">
+                                  {message.tallResults.bankruptcies.total?.toLocaleString(language === "no" ? "nb-NO" : "en-US")}{" "}
+                                  {language === "no" ? "totalt" : "total"}
+                                </span>
+                              </p>
+                              <ul className="space-y-1.5">
+                                {message.tallResults.bankruptcies.companies.slice(0, 8).map((c: any) => (
+                                  <li key={c.orgnr} className="text-xs font-body p-2 rounded-lg bg-muted/40 flex justify-between gap-3">
+                                    <span className="truncate">
+                                      <a
+                                        href={`https://virksomhet.brreg.no/nb/oppslag/enheter/${c.orgnr}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-subhead font-semibold text-headline hover:text-primary hover:underline"
+                                      >
+                                        {c.navn}
+                                      </a>
+                                      {c.kommune && <span className="text-muted-foreground"> · {c.kommune}</span>}
+                                      {c.antallAnsatte ? (
+                                        <span className="text-muted-foreground"> · {c.antallAnsatte} {language === "no" ? "ansatte" : "employees"}</span>
+                                      ) : null}
+                                    </span>
+                                    <span className="text-muted-foreground whitespace-nowrap">{c.registreringsdato}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
+                          {message.tallResults.labor ? (
+                            <div className="p-4">
+                              <p className="font-subhead text-sm font-semibold text-headline mb-2">
+                                {language === "no" ? "Arbeidsmarked" : "Labor market"}
+                                <span className="ml-2 text-xs font-body text-muted-foreground">SSB</span>
+                              </p>
+                              <dl className="grid grid-cols-2 gap-2 text-xs font-body">
+                                {[
+                                  { k: "unemployment", lbl: language === "no" ? "Arbeidsledighet" : "Unemployment", suffix: "%" },
+                                  { k: "employed", lbl: language === "no" ? "Sysselsatte" : "Employed", suffix: "" },
+                                  { k: "laborForce", lbl: language === "no" ? "Arbeidsstyrken" : "Labor force", suffix: "" },
+                                  { k: "sickLeave", lbl: language === "no" ? "Sykefravær" : "Sick leave", suffix: "%" },
+                                  { k: "wage", lbl: language === "no" ? "Snittlønn/mnd" : "Avg. monthly wage", suffix: " kr" },
+                                ].map(({ k, lbl, suffix }) => {
+                                  const p = (message.tallResults!.labor as any)?.[k];
+                                  if (!p) return null;
+                                  const v = typeof p.value === "number" ? p.value.toLocaleString(language === "no" ? "nb-NO" : "en-US") : p.value;
+                                  return (
+                                    <div key={k} className="p-2 rounded-lg bg-muted/40">
+                                      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{lbl}</dt>
+                                      <dd className="font-subhead font-semibold text-headline mt-0.5">{v}{suffix}</dd>
+                                      <dd className="text-[10px] text-muted-foreground">{p.period}</dd>
+                                    </div>
+                                  );
+                                })}
+                              </dl>
+                            </div>
+                          ) : null}
+                          {message.tallResults.housing ? (
+                            <div className="p-4">
+                              <p className="font-subhead text-sm font-semibold text-headline mb-2">
+                                {language === "no" ? "Boligmarked" : "Housing market"}
+                                <span className="ml-2 text-xs font-body text-muted-foreground">SSB</span>
+                              </p>
+                              <dl className="grid grid-cols-2 gap-2 text-xs font-body">
+                                {[
+                                  { k: "priceIndex", lbl: language === "no" ? "Boligprisindeks" : "Price index", suffix: "" },
+                                  { k: "priceChange", lbl: language === "no" ? "Prisendring" : "Price change", suffix: "%" },
+                                  { k: "startedDwellings", lbl: language === "no" ? "Igangsatte boliger" : "Started dwellings", suffix: "" },
+                                  { k: "householdDebt", lbl: language === "no" ? "Lånegjeld (12 mnd)" : "Household debt (12m)", suffix: "%" },
+                                ].map(({ k, lbl, suffix }) => {
+                                  const p = (message.tallResults!.housing as any)?.[k];
+                                  if (!p) return null;
+                                  const v = typeof p.value === "number" ? p.value.toLocaleString(language === "no" ? "nb-NO" : "en-US") : p.value;
+                                  return (
+                                    <div key={k} className="p-2 rounded-lg bg-muted/40">
+                                      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{lbl}</dt>
+                                      <dd className="font-subhead font-semibold text-headline mt-0.5">{v}{suffix}</dd>
+                                      <dd className="text-[10px] text-muted-foreground">{p.period}</dd>
+                                    </div>
+                                  );
+                                })}
+                              </dl>
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="px-4 py-2 text-[11px] text-muted-foreground font-body bg-muted/30 border-t border-border">
+                          {language === "no"
+                            ? "Kilder: data.brreg.no og data.ssb.no"
+                            : "Sources: data.brreg.no and data.ssb.no"}
+                        </div>
+                      </details>
+                    ) : null
                   )}
                   {message.role === "assistant" && message.disambiguation && (
                     <div className="mt-5 rounded-2xl border-2 border-primary/40 bg-primary/5 overflow-hidden">

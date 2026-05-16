@@ -34,6 +34,31 @@ export interface BrregResult {
   companies: BrregCompany[];
 }
 
+export interface TallSeriesPoint {
+  value: number | string;
+  period: string;
+}
+
+export interface TallResults {
+  establishments?: { companies: any[]; total: number } | null;
+  bankruptcies?: { companies: any[]; total: number } | null;
+  labor?: {
+    unemployment?: TallSeriesPoint;
+    employed?: TallSeriesPoint;
+    laborForce?: TallSeriesPoint;
+    sickLeave?: TallSeriesPoint;
+    wage?: TallSeriesPoint;
+  } | null;
+  housing?: {
+    priceIndex?: TallSeriesPoint;
+    priceChange?: TallSeriesPoint;
+    startedDwellings?: TallSeriesPoint;
+    householdDebt?: TallSeriesPoint;
+  } | null;
+  days?: number;
+  kommunenummer?: string;
+}
+
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
@@ -55,6 +80,7 @@ interface StreamArticlesChatOptions {
     sources: ArticleSource[],
     trustedSources?: TrustedSource[],
     brregResults?: BrregResult[],
+    tallResults?: TallResults | null,
   ) => void;
   onDisambiguation?: (data: BrregDisambiguation) => void;
 }
@@ -127,6 +153,7 @@ export async function streamArticlesChat({
             parsed.sources as ArticleSource[],
             (parsed.trustedSources as TrustedSource[]) || [],
             (parsed.brregResults as BrregResult[]) || [],
+            (parsed.tallResults as TallResults) ?? null,
           );
           continue;
         }

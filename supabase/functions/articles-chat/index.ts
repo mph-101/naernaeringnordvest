@@ -21,6 +21,8 @@ const BRREG_BASE = "https://data.brreg.no";
 const BRREG_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
 const BRREG_CACHE_MAX = 500;
 const brregCache = new Map<string, { at: number; value: { label: string; total: number; companies: any[] } }>();
+const tallCache = new Map<string, { at: number; value: any }>();
+const TALL_TTL_MS = 1000 * 60 * 60 * 6;
 
 function stripHtml(html: string): string {
   return html
@@ -155,6 +157,158 @@ async function fetchBrreg(queries: Array<{ label: string; params: Record<string,
   );
 }
 
+/**
+ * Decide whether the question would benefit from "Tall"-data (etablering,
+ * konkurs, arbeidsmarked, boligmarked) and return a small plan.
+ */
+async function planTallQueries(
+  question: string,
+  apiKey: string,
+): Promise<{
+  establishments: boolean;
+  bankruptcies: boolean;
+  labor: boolean;
+  housing: boolean;
+  kommunenummer?: string;
+  days?: number;
+} | null> {
+  try {
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: QUERY_REWRITE_MODEL,
+        messages: [
+          {
+            role: "system",
+            content: `Du planlegger oppslag i offentlige datakilder for Nær Nærings "Tall"-database. Returner ETT JSON-objekt:
+{"establishments":bool,"bankruptcies":bool,"labor":bool,"housing":bool,"kommunenummer":"....","days":N}
+
+- establishments=true hvis spørsmålet handler om nye selskaper/etableringer/oppstart.
+- bankruptcies=true hvis spørsmålet handler om konkurser.
+- labor=true hvis spørsmålet handler om arbeidsledighet, sysselsetting, sykefravær, lønn eller arbeidsmarked.
+- housing=true hvis spørsmålet handler om boligpriser, boligbygging, boliglån eller boligmarked.
+- kommunenummer: fyll inn 4-sifret nummer hvis et bestemt sted nevnes (Oslo 0301, Bergen 4601, Trondheim 5001, Stavanger 1103, Molde 1506, Ålesund 1507, Kristiansund 1505, Tromsø 5501, Bodø 1804). Ellers tom streng.
+- days: hvor mange dager tilbake skal vi se på etableringer/konkurser (default 90, maks 365).
+
+Hvis ingen av kategoriene passer: returner alle false. Returner BARE JSON.`,
+          },
+          { role: "user", content: question },
+        ],
+      }),
+    });
+    if (!resp.ok) return null;
+    const json = await resp.json();
+    const content = (json?.choices?.[0]?.message?.content || "").trim();
+    const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+    if (!parsed.establishments && !parsed.bankruptcies && !parsed.labor && !parsed.housing) return null;
+    return {
+      establishments: !!parsed.establishments,
+      bankruptcies: !!parsed.bankruptcies,
+      labor: !!parsed.labor,
+      housing: !!parsed.housing,
+      kommunenummer: typeof parsed.kommunenummer === "string" ? parsed.kommunenummer : "",
+      days: Math.min(365, Math.max(7, Number(parsed.days) || 90)),
+    };
+  } catch (e) {
+    console.error("planTallQueries failed:", e);
+    return null;
+  }
+}
+
+async function fetchTallProxy(action: string, params: Record<string, string>): Promise<any> {
+  const qs = new URLSearchParams({ action, ...params }).toString();
+  const cacheKey = qs;
+  const cached = tallCache.get(cacheKey);
+  if (cached && Date.now() - cached.at < TALL_TTL_MS) return cached.value;
+  try {
+    const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/brreg-proxy?${qs}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY") || ""}` },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    tallCache.set(cacheKey, { at: Date.now(), value: data });
+    if (tallCache.size > 200) {
+      const k = tallCache.keys().next().value;
+      if (k) tallCache.delete(k);
+    }
+    return data;
+  } catch (e) {
+    console.error(`fetchTallProxy ${action} failed:`, e);
+    return null;
+  }
+}
+
+async function fetchSsb(fn: "ssb-labor" | "ssb-housing"): Promise<any> {
+  const cacheKey = fn;
+  const cached = tallCache.get(cacheKey);
+  if (cached && Date.now() - cached.at < TALL_TTL_MS) return cached.value;
+  try {
+    const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/${fn}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY") || ""}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    tallCache.set(cacheKey, { at: Date.now(), value: data });
+    return data;
+  } catch (e) {
+    console.error(`fetchSsb ${fn} failed:`, e);
+    return null;
+  }
+}
+
+function formatTallBlock(tall: {
+  establishments?: any;
+  bankruptcies?: any;
+  labor?: any;
+  housing?: any;
+  days?: number;
+  kommunenummer?: string;
+}): string {
+  const parts: string[] = [];
+  const geo = tall.kommunenummer ? ` (kommune ${tall.kommunenummer})` : " (hele landet)";
+  if (tall.establishments?.companies?.length) {
+    const list = tall.establishments.companies.slice(0, 10).map((c: any) =>
+      `   - ${c.navn} (org.nr ${c.orgnr}) — stiftet ${c.stiftelsesdato || "?"}, ${c.kommune || "?"}${c.naeringsbeskriv ? `, ${c.naeringsbeskriv}` : ""}`,
+    ).join("\n");
+    parts.push(`• Nyetableringer siste ${tall.days || 90} dager${geo} — ${tall.establishments.total || 0} totalt:\n${list}`);
+  }
+  if (tall.bankruptcies?.companies?.length) {
+    const list = tall.bankruptcies.companies.slice(0, 10).map((c: any) =>
+      `   - ${c.navn} (org.nr ${c.orgnr}) — konkurs ${c.registreringsdato || "?"}, ${c.kommune || "?"}${c.naeringsbeskriv ? `, ${c.naeringsbeskriv}` : ""}, ${c.antallAnsatte || 0} ansatte`,
+    ).join("\n");
+    parts.push(`• Konkurser siste ${tall.days || 90} dager${geo} — ${tall.bankruptcies.total || 0} totalt:\n${list}`);
+  }
+  if (tall.labor) {
+    const l = tall.labor;
+    const bits: string[] = [];
+    if (l.unemployment) bits.push(`Arbeidsledighet (AKU): ${l.unemployment.value}% (${l.unemployment.period})`);
+    if (l.employed) bits.push(`Sysselsatte: ${l.employed.value?.toLocaleString?.("nb-NO") || l.employed.value} (${l.employed.period})`);
+    if (l.laborForce) bits.push(`Arbeidsstyrken: ${l.laborForce.value?.toLocaleString?.("nb-NO") || l.laborForce.value} (${l.laborForce.period})`);
+    if (l.sickLeave) bits.push(`Sykefravær: ${l.sickLeave.value}% (${l.sickLeave.period})`);
+    if (l.wage) bits.push(`Gjennomsnittlig månedslønn: ${l.wage.value?.toLocaleString?.("nb-NO") || l.wage.value} kr (${l.wage.period})`);
+    if (bits.length) parts.push(`• Arbeidsmarked (SSB, nasjonalt):\n   - ${bits.join("\n   - ")}`);
+  }
+  if (tall.housing) {
+    const h = tall.housing;
+    const bits: string[] = [];
+    if (h.priceIndex) bits.push(`Boligprisindeks: ${h.priceIndex.value} (${h.priceIndex.period})`);
+    if (h.priceChange) bits.push(`Prisendring: ${h.priceChange.value}% (${h.priceChange.period})`);
+    if (h.startedDwellings) bits.push(`Igangsatte boliger: ${h.startedDwellings.value?.toLocaleString?.("nb-NO") || h.startedDwellings.value} (${h.startedDwellings.period})`);
+    if (h.householdDebt) bits.push(`Husholdningenes lånegjeld (12-mnd vekst): ${h.householdDebt.value}% (${h.householdDebt.period})`);
+    if (bits.length) parts.push(`• Boligmarked (SSB):\n   - ${bits.join("\n   - ")}`);
+  }
+  return parts.join("\n\n");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -202,6 +356,8 @@ serve(async (req) => {
     let trustedBlock = "";
     let brregBlock = "";
     let brregResults: any[] = [];
+    let tallBlock = "";
+    let tallResults: any = null;
 
     if (queryText.trim().length > 2) {
       try {
@@ -211,10 +367,12 @@ serve(async (req) => {
           { data: matches, error: matchErr },
           { data: trusted, error: trustedErr },
           brregPlan,
+          tallPlan,
         ] = await Promise.all([
           supabase.rpc("search_articles", { query_text: searchTerms, match_count: MATCH_COUNT }),
           supabase.rpc("search_trusted_sources", { query_text: searchTerms, match_count: TRUSTED_MATCH_COUNT }),
           planBrregQueries(queryText, LOVABLE_API_KEY),
+          planTallQueries(queryText, LOVABLE_API_KEY),
         ]);
         if (matchErr) console.error("search_articles error:", matchErr);
         if (trustedErr) console.error("search_trusted_sources error:", trustedErr);
@@ -233,6 +391,30 @@ serve(async (req) => {
               return `• ${r.label} (totalt ${r.total} treff):\n${rows}`;
             })
             .join("\n\n");
+        }
+
+        if (tallPlan) {
+          const days = tallPlan.days || 90;
+          const tilDate = new Date().toISOString().slice(0, 10);
+          const fraDate = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+          const geoParams: Record<string, string> = { fra: fraDate, til: tilDate };
+          if (tallPlan.kommunenummer) geoParams.kommune = tallPlan.kommunenummer;
+
+          const [estab, bank, labor, housing] = await Promise.all([
+            tallPlan.establishments ? fetchTallProxy("new_establishments", geoParams) : Promise.resolve(null),
+            tallPlan.bankruptcies ? fetchTallProxy("bankruptcies", geoParams) : Promise.resolve(null),
+            tallPlan.labor ? fetchSsb("ssb-labor") : Promise.resolve(null),
+            tallPlan.housing ? fetchSsb("ssb-housing") : Promise.resolve(null),
+          ]);
+          tallResults = {
+            establishments: estab,
+            bankruptcies: bank,
+            labor,
+            housing,
+            days,
+            kommunenummer: tallPlan.kommunenummer || "",
+          };
+          tallBlock = formatTallBlock(tallResults);
         }
 
         sources = (matches || []).map((m: any, i: number) => ({
@@ -321,12 +503,13 @@ Regler:
 - Svar alltid på norsk (bokmål eller nynorsk slik kildene er skrevet).
 - Vær konkret, presis og nøktern — som en god lokalavisjournalist.
 - Når du bruker BRREG-data: skriv selskapsnavnet i **fet skrift**, og uthev tall (antall ansatte, organisasjonsnummer, stiftelsesår) også i **fet skrift**, etterfulgt av [B]. Eksempel: "**Equinor ASA** har **20 245 ansatte** [B]."
+- Når du bruker statistikk fra Tall-databasen (etablering, konkurs, arbeidsmarked, boligmarked): siter med [T] og uthev tall i **fet skrift**. Eksempel: "Det ble registrert **47 konkurser** i Molde siste 90 dager [T]."
 - Hvis spørsmålet handler om bedrifter eller næringsliv, prioriter å vise konkrete tall fra BRREG når de finnes.
 - Hvis verken artikler eller BRREG gir grunnlag for å svare, si det tydelig og foreslå et omformulert spørsmål.
 - Aldri dikt opp tall, navn eller hendelser som ikke står i kildene.
 - Skriv kort: gjerne en oppsummerende setning, deretter kulepunkter eller en kort tabell hvis det passer.
 
-${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}\n\n` : ""}${trustedSources.length > 0 ? `BETRODDE EKSTERNE KILDER (kuratert av redaksjonen):\n\n${trustedBlock}\n\n` : ""}${brregBlock ? `BEDRIFTSDATA (Brønnøysundregistrene, sanntid):\n\n${brregBlock}\n` : ""}${sources.length === 0 && trustedSources.length === 0 && !brregBlock ? "Ingen relevante artikler, betrodde kilder eller bedriftsdata ble funnet for dette spørsmålet." : ""}`;
+${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}\n\n` : ""}${trustedSources.length > 0 ? `BETRODDE EKSTERNE KILDER (kuratert av redaksjonen):\n\n${trustedBlock}\n\n` : ""}${brregBlock ? `BEDRIFTSDATA (Brønnøysundregistrene, sanntid):\n\n${brregBlock}\n\n` : ""}${tallBlock ? `TALL-DATABASEN (etablering, konkurs, arbeidsmarked, boligmarked):\n\n${tallBlock}\n` : ""}${sources.length === 0 && trustedSources.length === 0 && !brregBlock && !tallBlock ? "Ingen relevante artikler, betrodde kilder, bedriftsdata eller statistikk ble funnet for dette spørsmålet." : ""}`;
 
     const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -371,7 +554,7 @@ ${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contex
             controller.enqueue(value);
           }
           // Send our sources as a synthetic SSE event the client knows about
-          const sourcesPayload = `event: sources\ndata: ${JSON.stringify({ sources, trustedSources, brregResults })}\n\n`;
+          const sourcesPayload = `event: sources\ndata: ${JSON.stringify({ sources, trustedSources, brregResults, tallResults })}\n\n`;
           controller.enqueue(encoder.encode(sourcesPayload));
         } catch (e) {
           console.error("stream pipe error:", e);

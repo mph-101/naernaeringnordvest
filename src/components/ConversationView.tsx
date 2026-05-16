@@ -127,14 +127,33 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
   };
 
   const handleCitationClick = (e: React.MouseEvent<HTMLAnchorElement>, href?: string) => {
-    if (!href || !href.startsWith("#src-")) return;
+    if (!href) return;
+    const isInternalAnchor =
+      href.startsWith("#src-") || href.startsWith("#tall-") || href.startsWith("#brreg-");
+    if (!isInternalAnchor) return;
     e.preventDefault();
     const el = document.getElementById(href.slice(1));
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("ring-2", "ring-accent", "rounded");
-      setTimeout(() => el.classList.remove("ring-2", "ring-accent", "rounded"), 1500);
+    if (!el) return;
+
+    // Auto-open <details> panels (Tall / Brreg) so the user lands on visible
+    // content rather than a collapsed summary.
+    if (el instanceof HTMLDetailsElement) {
+      el.open = true;
     }
+
+    // Slight delay so the just-opened panel has measured layout before scroll.
+    window.requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
+    // Pulse highlight — stronger for the dedicated data panels so the user
+    // can immediately see which block the [T]/[B] reference came from.
+    const isPanel = href.startsWith("#tall-") || href.startsWith("#brreg-");
+    const cls = isPanel
+      ? ["ring-2", "ring-primary", "shadow-lg", "shadow-primary/20", "nn-pulse-ring"]
+      : ["ring-2", "ring-accent", "rounded"];
+    el.classList.add(...cls);
+    window.setTimeout(() => el.classList.remove(...cls), isPanel ? 2200 : 1500);
   };
 
   /**
@@ -407,6 +426,28 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                           ol: ({ children }) => <ol className="mb-3 space-y-1 pl-5 list-decimal marker:text-primary/60">{children}</ol>,
                           strong: ({ children }) => <strong className="font-semibold text-headline">{children}</strong>,
                           a: ({ href, children }) => {
+                            const isTallRef = href?.startsWith("#tall-");
+                            const isBrregRef = href?.startsWith("#brreg-");
+                            if (isTallRef || isBrregRef) {
+                              const label = isTallRef
+                                ? (language === "no" ? "Se Tall-databasen" : "See Tall data")
+                                : (language === "no" ? "Se Brreg-data" : "See Brreg data");
+                              return (
+                                <a
+                                  href={href}
+                                  onClick={(e) => handleCitationClick(e, href)}
+                                  title={label}
+                                  className={`inline-flex items-center gap-0.5 align-super mx-0.5 px-1.5 py-px rounded-full text-[10px] font-subhead font-semibold no-underline transition-colors ${
+                                    isTallRef
+                                      ? "bg-primary/10 text-primary hover:bg-primary/20"
+                                      : "bg-accent/10 text-accent hover:bg-accent/20"
+                                  }`}
+                                >
+                                  <BarChart3 className="w-2.5 h-2.5" />
+                                  {children}
+                                </a>
+                              );
+                            }
                             const isCitation = href?.startsWith("#src-");
                             if (isCitation) {
                               const num = Number(href!.split("-").pop());

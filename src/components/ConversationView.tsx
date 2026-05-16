@@ -4,7 +4,7 @@ import { Search, ArrowRight, ArrowLeft, User, Bot, Copy, Check, Share2, External
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-import { streamArticlesChat, type ArticleSource, type TrustedSource, type BrregResult, type BrregDisambiguation } from "@/lib/articles-chat";
+import { streamArticlesChat, type ArticleSource, type TrustedSource, type BrregResult, type BrregDisambiguation, type TallResults } from "@/lib/articles-chat";
 import { toast } from "@/hooks/use-toast";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { SourceVerificationLog } from "@/components/SourceVerificationLog";
@@ -17,6 +17,7 @@ interface Message {
   sources?: ArticleSource[];
   trustedSources?: TrustedSource[];
   brregResults?: BrregResult[];
+  tallResults?: TallResults | null;
   disambiguation?: BrregDisambiguation;
 }
 
@@ -93,6 +94,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
     trustedSources?: TrustedSource[],
     assistantId?: string,
     brregResults?: BrregResult[],
+    tallResults?: TallResults | null,
   ) => {
     if (!content) return content;
     const validNumbers = new Set<number>([
@@ -100,9 +102,18 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
       ...(trustedSources ?? []).map((s) => s.n),
     ]);
     const hasBrreg = (brregResults?.length ?? 0) > 0;
+    const hasTall = !!tallResults && (
+      !!tallResults.establishments?.companies?.length ||
+      !!tallResults.bankruptcies?.companies?.length ||
+      !!tallResults.labor ||
+      !!tallResults.housing
+    );
     let out = content;
     if (hasBrreg) {
       out = out.replace(/\[B\]/g, () => `[\\[B\\]](#brreg-${assistantId})`);
+    }
+    if (hasTall) {
+      out = out.replace(/\[T\]/g, () => `[\\[T\\]](#tall-${assistantId})`);
     }
     return out.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, group: string) => {
       const nums = group.split(",").map((n) => n.trim());
@@ -202,6 +213,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
     let assistantSources: ArticleSource[] | undefined;
     let assistantTrustedSources: TrustedSource[] | undefined;
     let assistantBrreg: BrregResult[] | undefined;
+    let assistantTall: TallResults | null | undefined;
     let assistantDisambig: BrregDisambiguation | undefined;
 
     setMessages(nextMessages);
@@ -213,12 +225,14 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
       sources?: ArticleSource[],
       trustedSources?: TrustedSource[],
       brregResults?: BrregResult[],
+      tallResults?: TallResults | null,
       disambiguation?: BrregDisambiguation,
     ) => {
       if (chunk) assistantContent += chunk;
       if (sources) assistantSources = sources;
       if (trustedSources) assistantTrustedSources = trustedSources;
       if (brregResults) assistantBrreg = brregResults;
+      if (tallResults !== undefined) assistantTall = tallResults;
       if (disambiguation) assistantDisambig = disambiguation;
 
       setMessages((prev) => {
@@ -229,6 +243,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
           sources: assistantSources,
           trustedSources: assistantTrustedSources,
           brregResults: assistantBrreg,
+          tallResults: assistantTall,
           disambiguation: assistantDisambig,
         };
         const existingIndex = prev.findIndex((message) => message.id === assistantId);
@@ -243,14 +258,15 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
       await streamArticlesChat({
         messages: nextMessages.map(({ role, content }) => ({ role, content })),
         onContent: (chunk) => upsertAssistant(chunk),
-        onSources: (sources, trustedSources, brregResults) =>
-          upsertAssistant("", sources, trustedSources, brregResults),
+        onSources: (sources, trustedSources, brregResults, tallResults) =>
+          upsertAssistant("", sources, trustedSources, brregResults, tallResults),
         onDisambiguation: (data) => {
           // Render a friendly prompt instead of leaving the bubble empty.
           upsertAssistant(
             language === "no"
               ? `Jeg fant flere selskaper med dette navnet. Hvilket mener du?`
               : `I found several companies with this name. Which one do you mean?`,
+            undefined,
             undefined,
             undefined,
             undefined,
@@ -499,7 +515,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                           },
                         }}
                       >
-                        {linkifyCitations(message.content, message.sources, message.trustedSources, message.id, message.brregResults)}
+                        {linkifyCitations(message.content, message.sources, message.trustedSources, message.id, message.brregResults, message.tallResults)}
                       </ReactMarkdown>
                     </div>
                   )}

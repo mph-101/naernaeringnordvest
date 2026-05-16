@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { ApiKeysSection } from "@/components/ApiKeysSection";
 import { SubscriptionSection } from "@/components/SubscriptionSection";
+import { NotificationsSection } from "@/components/NotificationsSection";
 import { NoteShareButton } from "@/components/NoteShareButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme, HideableElement } from "@/hooks/useTheme";
@@ -453,6 +454,25 @@ const Profile = () => {
         {activeTab === "settings" && (
           <div className="space-y-6">
             <SubscriptionSection isNo={isNo} />
+
+            <NotificationsSection userId={userId} isNo={isNo} />
+
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h3 className="font-headline text-lg font-semibold text-headline mb-1">
+                {isNo ? "Nyhetsbrev" : "Newsletter"}
+              </h3>
+              <p className="text-sm text-muted-foreground font-body mb-4">
+                {isNo
+                  ? "Meld deg på morgenbrief, ukebrev eller sektorbrev."
+                  : "Sign up for the morning brief, weekly brief or sector brief."}
+              </p>
+              <button
+                onClick={() => navigate("/nyhetsbrev")}
+                className="px-5 py-2.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft"
+              >
+                {isNo ? "Administrer nyhetsbrev" : "Manage newsletters"}
+              </button>
+            </div>
 
             <div className="bg-card border border-border rounded-xl p-6">
               <h3 className="font-headline text-lg font-semibold text-headline mb-1">{t.visibilityTitle}</h3>

@@ -37,6 +37,7 @@ import StillingNyTakk from "./pages/StillingNyTakk";
 import Info from "./pages/Info";
 import Arrangementer from "./pages/Arrangementer";
 import ArrangementDetalj from "./pages/ArrangementDetalj";
+import Newsletter from "./pages/Newsletter";
 import { MascotTour } from "./components/mascot/MascotTour";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,7 @@ const App = () => (
               <Route path="/mine-delte-notater" element={<MineDelteNotater />} />
               <Route path="/arrangementer" element={<Arrangementer />} />
               <Route path="/arrangementer/:id" element={<ArrangementDetalj />} />
+              <Route path="/nyhetsbrev" element={<Newsletter />} />
               <Route path="/login" element={<Login />} />
               <Route path="/profil" element={<Profile />} />
               <Route path="/reset-password" element={<ResetPassword />} />

@@ -1,6 +1,6 @@
 import { Children, isValidElement, useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Search, ArrowRight, ArrowLeft, User, Bot, Copy, Check, Share2, ExternalLink, Rss, Database, FileText as FileTextIcon, Globe, MessageSquare, BarChart3, Building2, Users as UsersIcon } from "lucide-react";
+import { Search, ArrowRight, ArrowLeft, User, Bot, Copy, Check, Share2, ExternalLink, Rss, Database, FileText as FileTextIcon, Globe, MessageSquare, BarChart3, Building2, Users as UsersIcon, MapPin, CalendarRange, Activity } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -630,6 +630,15 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   </span>
                                 )}
                               </p>
+                              <TallParamRow
+                                language={language}
+                                period={message.tallResults.days ? (language === "no" ? `Siste ${message.tallResults.days} dager` : `Last ${message.tallResults.days} days`) : null}
+                                area={message.tallResults.kommunenummer ? `Kommune ${message.tallResults.kommunenummer}` : (language === "no" ? "Hele Norge" : "All of Norway")}
+                                indicator={language === "no" ? "Stiftelsesdato — alle bransjer" : "Founding date — all sectors"}
+                                sourceLabel="Brønnøysundregistrene (enhetsregisteret)"
+                                sourceUrl="https://data.brreg.no/enhetsregisteret/api/enheter"
+                                internalUrl="/tall?view=etablering"
+                              />
                               <ul className="space-y-1.5">
                                 {message.tallResults.establishments.companies.slice(0, 8).map((c: any) => (
                                   <li key={c.orgnr} className="text-xs font-body p-2 rounded-lg bg-muted/40 flex justify-between gap-3">
@@ -659,6 +668,15 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   {language === "no" ? "totalt" : "total"}
                                 </span>
                               </p>
+                              <TallParamRow
+                                language={language}
+                                period={message.tallResults.days ? (language === "no" ? `Siste ${message.tallResults.days} dager` : `Last ${message.tallResults.days} days`) : null}
+                                area={message.tallResults.kommunenummer ? `Kommune ${message.tallResults.kommunenummer}` : (language === "no" ? "Hele Norge" : "All of Norway")}
+                                indicator={language === "no" ? "Konkursåpning" : "Bankruptcy opening"}
+                                sourceLabel="Brønnøysundregistrene (konkursregisteret)"
+                                sourceUrl="https://data.brreg.no/enhetsregisteret/api/enheter"
+                                internalUrl="/tall?view=konkurs"
+                              />
                               <ul className="space-y-1.5">
                                 {message.tallResults.bankruptcies.companies.slice(0, 8).map((c: any) => (
                                   <li key={c.orgnr} className="text-xs font-body p-2 rounded-lg bg-muted/40 flex justify-between gap-3">
@@ -688,6 +706,24 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                 {language === "no" ? "Arbeidsmarked" : "Labor market"}
                                 <span className="ml-2 text-xs font-body text-muted-foreground">SSB</span>
                               </p>
+                              <TallParamRow
+                                language={language}
+                                period={(() => {
+                                  const periods = Object.values(message.tallResults.labor || {})
+                                    .map((p: any) => p?.period)
+                                    .filter(Boolean) as string[];
+                                  return periods.length ? `${periods[0]}` : null;
+                                })()}
+                                area={language === "no" ? "Hele Norge" : "All of Norway"}
+                                indicator={language === "no" ? "AKU, sykefravær, lønn" : "LFS, sick leave, wages"}
+                                sourceLabel="SSB · tabell 13760, 12442, 11418"
+                                sourceUrl="https://www.ssb.no/statbank/table/13760"
+                                extraSources={[
+                                  { label: "SSB · 12442 (sykefravær)", url: "https://www.ssb.no/statbank/table/12442" },
+                                  { label: "SSB · 11418 (lønn)", url: "https://www.ssb.no/statbank/table/11418" },
+                                ]}
+                                internalUrl="/tall?view=arbeidsmarked"
+                              />
                               <dl className="grid grid-cols-2 gap-2 text-xs font-body">
                                 {[
                                   { k: "unemployment", lbl: language === "no" ? "Arbeidsledighet" : "Unemployment", suffix: "%" },
@@ -716,6 +752,24 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                 {language === "no" ? "Boligmarked" : "Housing market"}
                                 <span className="ml-2 text-xs font-body text-muted-foreground">SSB</span>
                               </p>
+                              <TallParamRow
+                                language={language}
+                                period={(() => {
+                                  const periods = Object.values(message.tallResults.housing || {})
+                                    .map((p: any) => p?.period)
+                                    .filter(Boolean) as string[];
+                                  return periods.length ? `${periods[0]}` : null;
+                                })()}
+                                area={language === "no" ? "Hele Norge" : "All of Norway"}
+                                indicator={language === "no" ? "Boligprisindeks, igangsetting, kreditt" : "Price index, dwellings, credit"}
+                                sourceLabel="SSB · tabell 07221, 05940, 11597"
+                                sourceUrl="https://www.ssb.no/statbank/table/07221"
+                                extraSources={[
+                                  { label: "SSB · 05940 (igangsatte)", url: "https://www.ssb.no/statbank/table/05940" },
+                                  { label: "SSB · 11597 (kreditt)", url: "https://www.ssb.no/statbank/table/11597" },
+                                ]}
+                                internalUrl="/tall?view=bolig"
+                              />
                               <dl className="grid grid-cols-2 gap-2 text-xs font-body">
                                 {[
                                   { k: "priceIndex", lbl: language === "no" ? "Boligprisindeks" : "Price index", suffix: "" },
@@ -934,3 +988,84 @@ const TabButton = ({
     )}
   </button>
 );
+
+const TallParamRow = ({
+  language,
+  period,
+  area,
+  indicator,
+  sourceLabel,
+  sourceUrl,
+  extraSources,
+  internalUrl,
+}: {
+  language: "no" | "en";
+  period: string | null;
+  area: string | null;
+  indicator: string | null;
+  sourceLabel: string;
+  sourceUrl: string;
+  extraSources?: { label: string; url: string }[];
+  internalUrl?: string;
+}) => {
+  const isNo = language === "no";
+  return (
+    <div className="mb-3 rounded-lg border border-border/60 bg-background/60 p-2.5">
+      <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] font-body text-muted-foreground">
+        {period && (
+          <span className="inline-flex items-center gap-1">
+            <CalendarRange className="w-3 h-3 opacity-70" />
+            <span className="text-[10px] uppercase tracking-wider">{isNo ? "Periode" : "Period"}:</span>
+            <span className="text-foreground font-medium">{period}</span>
+          </span>
+        )}
+        {area && (
+          <span className="inline-flex items-center gap-1">
+            <MapPin className="w-3 h-3 opacity-70" />
+            <span className="text-[10px] uppercase tracking-wider">{isNo ? "Område" : "Area"}:</span>
+            <span className="text-foreground font-medium">{area}</span>
+          </span>
+        )}
+        {indicator && (
+          <span className="inline-flex items-center gap-1">
+            <Activity className="w-3 h-3 opacity-70" />
+            <span className="text-[10px] uppercase tracking-wider">{isNo ? "Indikator" : "Indicator"}:</span>
+            <span className="text-foreground font-medium">{indicator}</span>
+          </span>
+        )}
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-body">
+        <a
+          href={sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-primary hover:underline"
+        >
+          <ExternalLink className="w-3 h-3" />
+          {sourceLabel}
+        </a>
+        {extraSources?.map((s) => (
+          <a
+            key={s.url}
+            href={s.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-primary/80 hover:underline"
+          >
+            <ExternalLink className="w-3 h-3" />
+            {s.label}
+          </a>
+        ))}
+        {internalUrl && (
+          <Link
+            to={internalUrl}
+            className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground ml-auto"
+          >
+            <BarChart3 className="w-3 h-3" />
+            {isNo ? "Åpne i Tall" : "Open in Tall"}
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+};

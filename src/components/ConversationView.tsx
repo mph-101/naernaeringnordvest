@@ -127,14 +127,33 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
   };
 
   const handleCitationClick = (e: React.MouseEvent<HTMLAnchorElement>, href?: string) => {
-    if (!href || !href.startsWith("#src-")) return;
+    if (!href) return;
+    const isInternalAnchor =
+      href.startsWith("#src-") || href.startsWith("#tall-") || href.startsWith("#brreg-");
+    if (!isInternalAnchor) return;
     e.preventDefault();
     const el = document.getElementById(href.slice(1));
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("ring-2", "ring-accent", "rounded");
-      setTimeout(() => el.classList.remove("ring-2", "ring-accent", "rounded"), 1500);
+    if (!el) return;
+
+    // Auto-open <details> panels (Tall / Brreg) so the user lands on visible
+    // content rather than a collapsed summary.
+    if (el instanceof HTMLDetailsElement) {
+      el.open = true;
     }
+
+    // Slight delay so the just-opened panel has measured layout before scroll.
+    window.requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
+    // Pulse highlight — stronger for the dedicated data panels so the user
+    // can immediately see which block the [T]/[B] reference came from.
+    const isPanel = href.startsWith("#tall-") || href.startsWith("#brreg-");
+    const cls = isPanel
+      ? ["ring-2", "ring-primary", "shadow-lg", "shadow-primary/20", "nn-pulse-ring"]
+      : ["ring-2", "ring-accent", "rounded"];
+    el.classList.add(...cls);
+    window.setTimeout(() => el.classList.remove(...cls), isPanel ? 2200 : 1500);
   };
 
   /**

@@ -91,8 +91,8 @@ export const TeamSection = () => {
             </h3>
             <p className="text-muted-foreground font-body max-w-xl mx-auto mb-6">
               {language === "no"
-                ? "Har du informasjon om økonomisk misbruk i idretten? Send oss et anonymt tips. Alt er kryptert og kan ikke spores tilbake til deg."
-                : "Do you have information about financial misconduct in sports? Send us an anonymous tip. Everything is encrypted and cannot be traced back to you."
+                ? "Har du informasjon om næringslivet på Nordvestlandet som bør frem i lyset? Send oss et tips via sikker forbindelse. For sensitive saker, kontakt oss via Signal."
+                : "Do you have information about business in the Northwest region that should come to light? Send us a tip via secure connection. For sensitive matters, contact us via Signal."
               }
             </p>
             <button

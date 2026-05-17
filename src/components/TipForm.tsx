@@ -30,9 +30,9 @@ export const TipForm = ({ journalistId, journalistName, onClose }: TipFormProps)
 
   const labels = {
     title: language === "no" ? "Send et tips" : "Send a tip",
-    subtitle: language === "no" 
-      ? `Til ${journalistName} - helt anonymt og kryptert`
-      : `To ${journalistName} - completely anonymous and encrypted`,
+    subtitle: language === "no"
+      ? `Til ${journalistName} - via sikker forbindelse`
+      : `To ${journalistName} - via secure connection`,
     tipLabel: language === "no" ? "Ditt tips" : "Your tip",
     tipPlaceholder: language === "no" 
       ? "Beskriv tipset ditt her. Inkluder så mye detaljer som mulig..."
@@ -42,8 +42,11 @@ export const TipForm = ({ journalistId, journalistName, onClose }: TipFormProps)
       ? "din@epost.no (helt valgfritt)"
       : "your@email.com (completely optional)",
     securityNote: language === "no"
-      ? "Tips sendes kryptert og kan ikke spores tilbake til deg."
-      : "Tips are sent encrypted and cannot be traced back to you.",
+      ? "Tipset sendes over en sikker forbindelse (transportkryptering). For sensitive saker hvor full kildebeskyttelse er kritisk, kontakt redaksjonen via Signal: [Signal-nummer kommer] eller avtal et fysisk møte med en journalist."
+      : "Your tip is sent over a secure connection (transport encryption). For sensitive matters where full source protection is critical, contact the newsroom via Signal: [Signal number TBD] or arrange a physical meeting with a journalist.",
+    privacyNote: language === "no"
+      ? "Vi logger ikke IP-adressen din direkte, men infrastruktur-leverandører kan logge tilkoblingsdata. E-post for oppfølging lagres i klartekst. Dette er ikke ende-til-ende-kryptert."
+      : "We do not log your IP address directly, but infrastructure providers may log connection data. Follow-up email is stored in plaintext. This is not end-to-end encrypted.",
     submit: language === "no" ? "Send tips" : "Send tip",
     sending: language === "no" ? "Sender..." : "Sending...",
     successTitle: language === "no" ? "Takk for tipset!" : "Thank you for your tip!",
@@ -237,10 +240,15 @@ export const TipForm = ({ journalistId, journalistName, onClose }: TipFormProps)
             )}
           </div>
 
-          <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
-            <Shield className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-            <p className="text-xs text-muted-foreground font-body">
-              {labels.securityNote}
+          <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-start gap-2">
+              <Shield className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-xs text-muted-foreground font-body">
+                {labels.securityNote}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground/70 font-body pl-6">
+              {labels.privacyNote}
             </p>
           </div>
 

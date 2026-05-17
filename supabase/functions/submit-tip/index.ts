@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
         journalist_name: validation.parsed.journalist_name,
         content: validation.parsed.content,
         follow_up_email: validation.parsed.follow_up_email,
-        is_anonymous: true,
+        is_anonymous: !validation.parsed.follow_up_email,
       });
 
     if (insertError) {

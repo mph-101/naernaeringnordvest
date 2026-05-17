@@ -24,9 +24,9 @@ export const TeamSection = () => {
   const [selectedJournalist, setSelectedJournalist] = useState<{ id: string; name: string } | null>(null);
 
   const title = language === "no" ? "Vårt team" : "Our Team";
-  const subtitle = language === "no" 
-    ? "Journalistene som graver i idrettens pengestrømmer"
-    : "The journalists following the money in sports";
+  const subtitle = language === "no"
+    ? "Redaksjonen bak Nær Næring Nordvest"
+    : "The team behind Nær Næring Nordvest";
   const tipButtonLabel = language === "no" ? "Send tips" : "Send tip";
 
   return (

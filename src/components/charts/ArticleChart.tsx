@@ -365,7 +365,7 @@ export const ArticleChart = ({ data, className = "" }: ArticleChartProps) => {
       <div className="mt-3 flex items-center justify-between gap-3 pt-3 border-t border-border/60">
         <div className="flex items-center gap-2">
           <img
-            src={logoImg}
+            src={logoImg as unknown as string}
             alt="Nær Næring"
             className="w-5 h-5 object-contain dark:bg-white dark:rounded-full dark:p-0.5"
             width={20}

@@ -43,9 +43,9 @@ export function JobListingsReview() {
   }, [filter]);
 
   const updateStatus = async (id: string, status: "published" | "rejected" | "pending") => {
-    const patch: Record<string, unknown> = { status };
+    const patch: { status: string; published_at?: string } = { status };
     if (status === "published") patch.published_at = new Date().toISOString();
-    const { error } = await supabase.from("job_listings").update(patch).eq("id", id);
+    const { error } = await supabase.from("job_listings").update(patch as any).eq("id", id);
     if (error) {
       toast.error(error.message);
       return;

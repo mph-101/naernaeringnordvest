@@ -86,7 +86,7 @@ export const FactBox = ({ data, className = "" }: FactBoxProps) => {
 
         <div className="mt-4 flex items-center gap-2 pt-3 border-t border-border/60">
           <img
-            src={logoImg}
+            src={logoImg as unknown as string}
             alt="Nær Næring"
             className="w-4 h-4 object-contain dark:bg-white dark:rounded-full dark:p-0.5"
             width={16}

@@ -54,16 +54,6 @@ export default function Unsubscribe() {
     }
     (async () => {
       try {
-        const { data, error } = await supabase.functions.invoke("newsletter-manage", {
-          method: "GET" as never,
-          body: undefined,
-          // pass token via query param using the underlying fetch
-        } as never);
-        // Fallback: invoke doesn't easily support GET query; do direct fetch instead.
-        void data; void error;
-      } catch { /* ignore — use direct fetch below */ }
-
-      try {
         const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
         const url = `https://${projectId}.supabase.co/functions/v1/newsletter-manage?token=${encodeURIComponent(token)}`;
         const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;

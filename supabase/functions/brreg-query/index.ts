@@ -1,20 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 const BRREG_BASE = "https://data.brreg.no";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders(req) });
 
   try {
     const { question } = await req.json();
     if (!question || typeof question !== "string" || question.length > 500) {
       return new Response(JSON.stringify({ error: "Ugyldig spørsmål" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -140,12 +137,12 @@ Returner BARE JSON, ingen annen tekst.`
       const status = parseResponse.status;
       if (status === 429) {
         return new Response(JSON.stringify({ error: "For mange forespørsler, prøv igjen om litt." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
       if (status === 402) {
         return new Response(JSON.stringify({ error: "Kreditt oppbrukt." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
       throw new Error("AI parse error");
@@ -173,7 +170,7 @@ Returner BARE JSON, ingen annen tekst.`
         queries = JSON.parse(cleaned);
       } catch {
         return new Response(JSON.stringify({ error: "Kunne ikke tolke spørsmålet", answer: "Beklager, jeg forsto ikke spørsmålet. Prøv å omformulere." }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
     }
@@ -249,12 +246,12 @@ Formater svaret med Markdown:
       const status = answerResponse.status;
       if (status === 429) {
         return new Response(JSON.stringify({ error: "For mange forespørsler, prøv igjen om litt." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
       if (status === 402) {
         return new Response(JSON.stringify({ error: "Kreditt oppbrukt." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
       throw new Error("AI answer error");
@@ -264,12 +261,12 @@ Formater svaret med Markdown:
     const answer = answerData.choices?.[0]?.message?.content || "Beklager, kunne ikke generere svar.";
 
     return new Response(JSON.stringify({ answer, results }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("brreg-query error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

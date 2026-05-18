@@ -1,7 +1,4 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
@@ -14,13 +11,13 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
  * 4. Re-assemble with <h2> tags inserted at the right positions.
  */
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
 
   try {
     const { body } = await req.json();
     if (!body || typeof body !== "string" || body.length < 100) {
       return new Response(JSON.stringify({ error: "Brødteksten er for kort" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -55,7 +52,7 @@ Deno.serve(async (req) => {
     if (paragraphs.length < 4) {
       // Not enough paragraphs to need subheadings
       return new Response(JSON.stringify({ body: cleanedBody, inserted: 0 }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -74,7 +71,7 @@ Deno.serve(async (req) => {
 
     if (insertionPoints.length === 0) {
       return new Response(JSON.stringify({ body: cleanedBody, inserted: 0 }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -142,12 +139,12 @@ ${sections.map((s) => `[${s.id}]\n${s.text}`).join("\n\n")}`;
     if (!aiRes.ok) {
       if (aiRes.status === 429) {
         return new Response(JSON.stringify({ error: "AI-tjenesten er overbelastet. Prøv igjen om litt." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
       if (aiRes.status === 402) {
         return new Response(JSON.stringify({ error: "AI-kreditt er oppbrukt." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
       const errText = await aiRes.text();
@@ -180,11 +177,11 @@ ${sections.map((s) => `[${s.id}]\n${s.text}`).join("\n\n")}`;
     return new Response(JSON.stringify({
       body: finalParts.join("\n\n"),
       inserted: insertionMap.size,
-    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }), { headers: { ...corsHeaders(req), "Content-Type": "application/json" } });
   } catch (err) {
     console.error("generate-subheadings error:", err);
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

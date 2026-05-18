@@ -1,13 +1,10 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 const BRREG_BASE = "https://data.brreg.no";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   try {
@@ -117,7 +114,7 @@ Deno.serve(async (req) => {
       }));
 
       return new Response(JSON.stringify({ companies, totalElements, totalPages }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -125,7 +122,7 @@ Deno.serve(async (req) => {
       const orgnr = url.searchParams.get("orgnr");
       if (!orgnr) {
         return new Response(JSON.stringify({ error: "orgnr required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
 
@@ -150,7 +147,7 @@ Deno.serve(async (req) => {
 
       if (allRegnskaper.length === 0) {
         return new Response(JSON.stringify({ financials: [] }), {
-          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
 
@@ -179,7 +176,7 @@ Deno.serve(async (req) => {
         .sort((a: any, b: any) => b.year.localeCompare(a.year));
 
       return new Response(JSON.stringify({ financials: years }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -187,7 +184,7 @@ Deno.serve(async (req) => {
       const orgnr = url.searchParams.get("orgnr");
       if (!orgnr) {
         return new Response(JSON.stringify({ error: "orgnr required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
 
@@ -197,7 +194,7 @@ Deno.serve(async (req) => {
 
       if (!res.ok) {
         return new Response(JSON.stringify({ roles: [] }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
 
@@ -218,7 +215,7 @@ Deno.serve(async (req) => {
       );
 
       return new Response(JSON.stringify({ roles }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -249,7 +246,7 @@ Deno.serve(async (req) => {
       }));
 
       return new Response(JSON.stringify({ companies, total }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -292,7 +289,7 @@ Deno.serve(async (req) => {
       }));
 
       return new Response(JSON.stringify({ companies, total }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -301,7 +298,7 @@ Deno.serve(async (req) => {
       const orgnrList = orgnrs.split(",").filter(Boolean).slice(0, 50);
       if (!orgnrList.length) {
         return new Response(JSON.stringify({ financials: {} }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
 
@@ -331,7 +328,7 @@ Deno.serve(async (req) => {
       );
 
       return new Response(JSON.stringify({ financials: results }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -361,18 +358,18 @@ Deno.serve(async (req) => {
       }));
 
       return new Response(JSON.stringify({ companies, totalElements }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
 
     return new Response(JSON.stringify({ error: "Unknown action" }), {
-      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("brreg-proxy error:", err);
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

@@ -1,13 +1,10 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   try {
@@ -16,13 +13,13 @@ Deno.serve(async (req) => {
     if (!Array.isArray(headers) || headers.length < 2) {
       return new Response(JSON.stringify({ error: "Trenger minst 2 kolonner" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
     if (!Array.isArray(rows) || rows.length < 2) {
       return new Response(JSON.stringify({ error: "Trenger minst 2 datarader" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -91,13 +88,13 @@ Vurder dataformen (kategorisk vs tidsserie, antall serier, st\u00f8rrelsesforhol
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "For mange foresp\u00f8rsler, pr\u00f8v igjen om litt." }), {
           status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: "AI-kreditter er brukt opp." }), {
           status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
@@ -113,13 +110,13 @@ Vurder dataformen (kategorisk vs tidsserie, antall serier, st\u00f8rrelsesforhol
     const suggestion = JSON.parse(toolCall.function.arguments);
 
     return new Response(JSON.stringify({ suggestion }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err: any) {
     console.error("suggest-chart error:", err);
     return new Response(JSON.stringify({ error: err.message || "Ukjent feil" }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

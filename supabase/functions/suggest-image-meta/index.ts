@@ -2,14 +2,10 @@
 // Accepts: { imageBase64: string, mimeType: string, hint?: string }
 // Returns: { alt_text: string, caption: string, photographer?: string }
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders(req) });
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -23,13 +19,13 @@ Deno.serve(async (req) => {
     if (!imageBase64 || typeof imageBase64 !== "string" || imageBase64.length < 100) {
       return new Response(JSON.stringify({ error: "imageBase64 mangler eller er ugyldig" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
     if (imageBase64.length > 8_000_000) {
       return new Response(JSON.stringify({ error: "Bildet er for stort for analyse (maks ~6 MB)" }), {
         status: 413,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -95,20 +91,20 @@ Skriv på bokmål. Ikke spekuler om personer eller steder du ikke kan identifise
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit nådd, prøv igjen om litt." }), {
           status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
         return new Response(
           JSON.stringify({ error: "AI-kreditt tom. Legg til kreditt i Lovable Cloud." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          { status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" } },
         );
       }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
       return new Response(JSON.stringify({ error: "AI-tjenesten feilet" }), {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -118,7 +114,7 @@ Skriv på bokmål. Ikke spekuler om personer eller steder du ikke kan identifise
     if (!args) {
       return new Response(JSON.stringify({ error: "Ingen forslag generert" }), {
         status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -129,7 +125,7 @@ Skriv på bokmål. Ikke spekuler om personer eller steder du ikke kan identifise
       console.error("Failed to parse tool args", e);
       return new Response(JSON.stringify({ error: "Ugyldig svar fra AI" }), {
         status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -139,13 +135,13 @@ Skriv på bokmål. Ikke spekuler om personer eller steder du ikke kan identifise
         caption: (parsed.caption || "").trim().slice(0, 500),
         photographer: (parsed.photographer_hint || "").trim().slice(0, 120),
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { headers: { ...corsHeaders(req), "Content-Type": "application/json" } },
     );
   } catch (e) {
     console.error("suggest-image-meta error:", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Ukjent feil" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { status: 500, headers: { ...corsHeaders(req), "Content-Type": "application/json" } },
     );
   }
 });

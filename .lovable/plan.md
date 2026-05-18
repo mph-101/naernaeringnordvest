@@ -1,117 +1,78 @@
-## Mål
 
-Tre nye funksjoner for å øke engasjement:
-1. **Forside-meningsmåling** styrt fra CMS — gjennomsnitt vises etter eget svar
-2. **Artikkel-handlinger** under hver artikkel: Notat, Del, Kontakt journalist
-3. **Maskot-guide** ved første innlogging — animert kompass, kan skrus av/på
+# Lyd først — dagsutgave med klonede journaliststemmer
 
----
+En "podcast-modus" der hver artikkel introduseres av en AI-klonet versjon av forfatterens stemme. Brukeren får et 30–60 sek sammendrag per sak, kan trykke "les hele" for full opplesning, eller hoppe til neste sak. Spilleren ligger som flytende mini-bar i bunnen og kan skrus av i profil.
 
-## 1) Meningsmåling på front
+## Brukerflyt
 
-### Database
-Ny tabell `polls`:
-- `question` (text), `description` (text, valgfri)
-- `options` (jsonb: `[{ id, label }]`, 2–5 valg)
-- `active` (bool), `starts_at`, `ends_at` (timestamptz) — én aktiv om gangen via "siste publiserte mellom datoer"
-- `created_by` (uuid), standard timestamps
+1. På forsiden vises "🎧 Hør dagens utgave" CTA over feed.
+2. Klikk → henter dagens publiserte saker i brukerens region, viser køen og starter avspilling.
+3. For hver sak: kort jingle/innledning → sammendrag i forfatterens stemme → pause-prompt: "Les hele" / "Hopp over" / vent → neste.
+4. Mini-spiller (a la Spotify) følger brukeren rundt i appen med play/pause, neste sak, framdriftsbar, lukk-knapp.
+5. Egen `/lytt`-side med full kø-visning, kapittel-hopp, hastighet (1x/1.25x/1.5x/2x), artikkel-lenke per sak.
+6. Profil → Innstillinger: toggle "Vis lyd-modus" (på/av). Avslått → CTA og mini-spiller skjules helt.
 
-Ny tabell `poll_votes`:
-- `poll_id`, `option_id`, `user_id` (nullable), `session_id` (text — for utloggede)
-- Unik constraint per `(poll_id, user_id)` og `(poll_id, session_id)` slik at man ikke kan stemme to ganger
-- RLS: alle kan `INSERT`, kun egen `SELECT` — aggregater hentes via SQL-funksjon
+## Stemmekloning (admin)
 
-Ny SQL-funksjon `poll_results(_poll_id uuid)` (SECURITY DEFINER):
-- Returnerer `option_id, votes, percent` for alle valg
-- Også `current_user_choice(_poll_id uuid)` for å lese egen stemme
+- Ny seksjon i forfatter-admin (`AuthorsManager`): "Stemmeprofil"
+  - Last opp 1–3 min ren tale (eksisterende `audio-uploads`-bøtte)
+  - Knapp "Klon stemme" → edge function `clone-author-voice` → ElevenLabs Instant Voice Cloning API
+  - Lagrer `elevenlabs_voice_id`, `voice_cloned_at`, `voice_sample_path` på `authors`
+  - Preview-knapp tester stemmen med en standard frase
+- Hvis forfatter mangler klonet stemme → fall tilbake til en standard redaksjonsstemme (konfigurerbar i admin-settings)
 
-### Admin
-Nytt menypunkt "Meningsmåling" i `AdminDashboard` (`PollsManager.tsx`):
-- Liste over polls, opprett/rediger/arkiver
-- Felter: spørsmål, beskrivelse, 2–5 svaralternativ, aktiv-toggle, periode (forhåndsvalg "neste 7 dager")
-- Påminnelse: "Aktuelt spørsmål minst en gang i uken" — vis advarsel hvis ingen aktiv poll løper neste 7 dager
+## Lyd-generering (on-demand, cached)
 
-### Frontend
-Ny komponent `FrontpagePoll.tsx` plassert øverst på `/` (under hero, over feed):
-- Henter aktiv poll (`active=true` AND `now()` mellom `starts_at`/`ends_at`)
-- Før stemme: viser spørsmål + alternativer som klikkbare kort
-- Etter stemme: viser stolper med prosent + totalt antall stemmer, eget valg uthevet
-- Lokal `localStorage`-cache av session_id for utloggede + serversynk
+- Edge function `generate-article-audio` med input `{ article_id, mode: "summary" | "full" }`:
+  1. Sjekk cache i ny tabell `article_audio` (`article_id`, `mode`, `voice_id`, `storage_path`, `duration_seconds`, `generated_at`). Hvis fersk (artikkel ikke endret etter `generated_at`), returner signed URL.
+  2. Hvis `mode = summary`: kall Lovable AI (`google/gemini-3-flash-preview`) for å lage 60–90 ords muntlig sammendrag i nyhetsanker-tone, norsk.
+  3. Hent forfatterens `elevenlabs_voice_id` (eller fallback).
+  4. Kall ElevenLabs TTS (`eleven_multilingual_v2`, `mp3_44100_128`) → få MP3-buffer.
+  5. Last opp til ny privat bucket `article-audio` med path `{article_id}/{mode}-{voice_id}.mp3`.
+  6. Upsert rad i `article_audio`, returner signed URL (1 t gyldighet).
+- Edge function `daily-edition` returnerer ordnet kø `{ articles: [{ id, title, author, summary_url, full_url_pending: true }] }` for dagens publiseringer i regionen. Full-versjoner genereres lazy når bruker velger "les hele".
 
----
+## Frontend-komponenter
 
-## 2) Engasjements-handlinger under artikkel
+- `src/hooks/useAudioPlayer.tsx` — global player-context (kø, current, isPlaying, speed, skip, play/pause). Mountes i `App.tsx` rundt `Routes`.
+- `src/components/audio/MiniPlayer.tsx` — sticky bottom-bar, vises når `audio_mode_enabled && queue.length > 0 && !on /lytt page`.
+- `src/components/audio/DailyEditionCTA.tsx` — knapp på forside (i `Index.tsx` over `NewsFeed`).
+- `src/pages/Lytt.tsx` — full kø-side med kapittel-liste, hastighetskontroll, "Les artikkelen"-lenke, "Les hele"-toggle per sak.
+- Profil-innstilling: ny rad i `NotificationsSection.tsx` (eller egen `AudioSection.tsx`) som lagrer `audio_mode_enabled` på `profiles`.
 
-Ny komponent `ArticleEngagementBar.tsx` rendres i `Article.tsx` like under brødteksten (over "Relaterte artikler"):
-- Tre kort i grid (1 kol mobil, 3 kol desktop), Scandinavian rounded-2xl-stil:
-  1. **Skriv et notat** — åpner eksisterende `ArticleNotes` FAB-dialog direkte
-  2. **Del artikkelen** — Web Share API + fallback til kopier-lenke + LinkedIn/X knapper
-  3. **Kontakt journalisten** — åpner sheet/dialog med skjema (gjenbruker `TipForm`-mønster, men adressert til artikkelens `author`/`created_by`)
+## Database
 
-Hver handling logges til `user_events` for analyse (`event_type = 'engagement_*'`).
+Migrasjon legger til:
+- `authors.elevenlabs_voice_id text`, `authors.voice_cloned_at timestamptz`, `authors.voice_sample_path text`
+- `profiles.audio_mode_enabled boolean default true`
+- Ny tabell `article_audio (id, article_id text, mode text check in ('summary','full'), voice_id text, storage_path text, duration_seconds int, generated_at timestamptz, region_slug text)` med unique på `(article_id, mode, voice_id)`
+- Ny privat storage-bucket `article-audio` med RLS: SELECT for autentiserte brukere via signed URLs fra edge function (ingen direkte client read)
+- RLS på `article_audio`: kun service role skriver; lesing skjer via edge function
 
-For "Kontakt journalist": ny tabell `journalist_messages` med `article_id`, `journalist_id`, `from_user_id`, `from_email`, `body`, `created_at`. RLS: bruker ser egne; journalist+admin ser sine. Vises i admin under et nytt "Meldinger"-panel (kan ev. legges senere).
+## Avhengigheter / konfig
 
----
+- **ElevenLabs**: kobles via `standard_connectors--connect` (connector_id `elevenlabs`). Bruker `ELEVENLABS_API_KEY` server-side i edge functions.
+- **Kostnadsnotat til Magnus**: ElevenLabs Pro-plan (~$22/mnd) kreves for Instant Voice Cloning + 100k tegn/mnd. Logges i `docs/magnus-todo.md`.
+- Feature flag `FEATURE_AUDIO_FIRST` i `src/lib/features.ts` så modulen kan skrus av globalt (gradvis utrulling, jf. CLAUDE.md fase 3.7).
 
-## 3) Kompass-maskot guide
+## Tekniske detaljer
 
-### Maskot (visuell)
-Ny `CompassMascot.tsx` — SVG basert på eksisterende kompassikon:
-- Roterende nål med subtil "puste"-animasjon (CSS keyframes: `rotate` + `scale`)
-- Reagerer på hover/klikk (nålen peker mot markøren)
-- To størrelser: full (guide) og mini (floating-knapp)
-- Bruker semantic tokens (peach/dusty rose) — ingen hardkodede farger
+- Stream MP3 direkte til `<audio>`-elementet via signed URL (ingen base64-overføring).
+- "Hopp over"-knapp i mini-spiller og `/lytt` kaller `player.next()`; stopper full-generering hvis den var i kø.
+- Cache-invalidering: når artikkel oppdateres (`articles.updated_at` endres), slett tilhørende `article_audio`-rader via trigger i en senere iterasjon (fase 1: enkel sjekk `generated_at > articles.updated_at`).
+- Analytikk: logg `audio_play_started`, `audio_segment_completed`, `audio_skipped` i eksisterende `user_events`-tabell for senere innsikt.
 
-### Onboarding-tour
-Ny `MascotTour.tsx` — overlay som guider gjennom:
-1. Toppmeny (Spør / Utforsk / Tall)
-2. Søk på forsiden
-3. Meningsmåling
-4. Artikkel-handlinger (vises kun ved første artikkelbesøk)
-5. Profil-snarvei
+## Sikkerhet
 
-Bruker en lett egen-implementasjon (ingen ekstra lib): et fast positionert kort + en spotlight-overlay som peker mot et `data-tour="..."`-element. Maskoten "hopper" mellom stegene.
+- Edge functions validerer JWT (krever innlogget bruker for full lesning hvis artikkelen er gated; sammendrag følger samme gating-regel som teksten).
+- Signed URLs kort gyldighet (1 t).
+- Stemme-sample-opplasting kun for admin/editor-roller (RLS-sjekk i `clone-author-voice`).
 
-### Av/på
-- `profiles.mascot_enabled` (bool, default true) — migrering legger kolonnen til
-- Floating mini-maskot nederst-høyre når aktiv; klikk → restarter tour
-- Kan skrus av i `ProfileEditor` under "UI-innstillinger" (eksisterende seksjon)
-- Ved første pålogging: tour starter automatisk hvis `mascot_enabled = true` AND `profiles.tour_completed_at IS NULL`
-- "Skip tour"-knapp setter `tour_completed_at = now()`
+## Leveranseplan
 
----
-
-## Filer
-
-### Database (én migrasjon)
-- Tabeller: `polls`, `poll_votes`, `journalist_messages`
-- Kolonner: `profiles.mascot_enabled`, `profiles.tour_completed_at`
-- Funksjoner: `poll_results`, `poll_user_choice`
-- RLS-policyer på alle nye tabeller
-
-### Nye komponenter
-- `src/components/FrontpagePoll.tsx`
-- `src/components/ArticleEngagementBar.tsx`
-- `src/components/JournalistContactDialog.tsx`
-- `src/components/mascot/CompassMascot.tsx`
-- `src/components/mascot/MascotTour.tsx`
-- `src/components/mascot/useMascotTour.tsx` (hook for state + steg)
-- `src/components/admin/PollsManager.tsx`
-
-### Endrede filer
-- `src/pages/Index.tsx` — montere `FrontpagePoll` + `data-tour`-attributter
-- `src/pages/Article.tsx` — montere `ArticleEngagementBar`
-- `src/components/admin/AdminDashboard.tsx` — nytt menypunkt "Meningsmåling"
-- `src/components/ProfileEditor.tsx` — av/på-bryter for maskot
-- `src/App.tsx` — global `MascotTour`-mount
-
----
-
-## Spørsmål før implementering
-
-1. **Maskot-stil**: Vil du at maskoten skal ha "ansikt" (øyne på kompasshuset) eller bare en abstrakt animert nål?
-2. **Kontakt-journalist**: Skal meldingen sendes som e-post (krever Resend), lagres i DB for journalist å lese inne i appen, eller begge?
-3. **Poll-stemmer for utloggede**: Tillatt eller krever innlogging? (Anonymt gir flere svar, men kan manipuleres.)
-
-Jeg implementerer alle tre i én leveranse når du svarer.
+1. Migrasjon + ElevenLabs-tilkobling + feature flag
+2. Edge functions `clone-author-voice`, `generate-article-audio`, `daily-edition`
+3. Admin UI for stemmekloning i `AuthorsManager`
+4. Global player-hook + `MiniPlayer` + profil-toggle
+5. `/lytt`-side + forside-CTA
+6. QA med Magnus (én ekte journaliststemme + 3 testartikler) før vi ruller ut bredere

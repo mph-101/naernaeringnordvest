@@ -74,10 +74,7 @@ export async function verifyWebhook(req: Request, env: StripeEnv): Promise<{ typ
   return JSON.parse(body);
 }
 
-export const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+export { corsHeaders } from "./cors.ts";
 
 /**
  * Plan -> price ID mapping for the personal subscriptions.

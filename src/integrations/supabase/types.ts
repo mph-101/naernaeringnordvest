@@ -53,6 +53,42 @@ export type Database = {
         }
         Relationships: []
       }
+      article_audio: {
+        Row: {
+          article_id: string
+          duration_seconds: number | null
+          generated_at: string
+          id: string
+          mode: string
+          region_slug: string | null
+          storage_path: string
+          summary_text: string | null
+          voice_id: string
+        }
+        Insert: {
+          article_id: string
+          duration_seconds?: number | null
+          generated_at?: string
+          id?: string
+          mode: string
+          region_slug?: string | null
+          storage_path: string
+          summary_text?: string | null
+          voice_id: string
+        }
+        Update: {
+          article_id?: string
+          duration_seconds?: number | null
+          generated_at?: string
+          id?: string
+          mode?: string
+          region_slug?: string | null
+          storage_path?: string
+          summary_text?: string | null
+          voice_id?: string
+        }
+        Relationships: []
+      }
       article_comment_reports: {
         Row: {
           comment_id: string
@@ -637,12 +673,15 @@ export type Database = {
           bio: string | null
           created_at: string
           created_by: string | null
+          elevenlabs_voice_id: string | null
           email: string | null
           id: string
           name: string
           slug: string
           title: string | null
           updated_at: string
+          voice_cloned_at: string | null
+          voice_sample_path: string | null
         }
         Insert: {
           active?: boolean
@@ -650,12 +689,15 @@ export type Database = {
           bio?: string | null
           created_at?: string
           created_by?: string | null
+          elevenlabs_voice_id?: string | null
           email?: string | null
           id?: string
           name: string
           slug: string
           title?: string | null
           updated_at?: string
+          voice_cloned_at?: string | null
+          voice_sample_path?: string | null
         }
         Update: {
           active?: boolean
@@ -663,12 +705,15 @@ export type Database = {
           bio?: string | null
           created_at?: string
           created_by?: string | null
+          elevenlabs_voice_id?: string | null
           email?: string | null
           id?: string
           name?: string
           slug?: string
           title?: string | null
           updated_at?: string
+          voice_cloned_at?: string | null
+          voice_sample_path?: string | null
         }
         Relationships: []
       }
@@ -2195,6 +2240,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          audio_mode_enabled: boolean
           avatar_url: string | null
           created_at: string
           display_name: string | null
@@ -2210,6 +2256,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          audio_mode_enabled?: boolean
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
@@ -2225,6 +2272,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          audio_mode_enabled?: boolean
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null

@@ -1,10 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import sodium from "npm:libsodium-wrappers-sumo@0.7.15";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 // Rate limit configuration
 const MAX_SUBMISSIONS_PER_HOUR = 5;
@@ -94,14 +91,14 @@ function validateInput(data: unknown): {
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders(req) });
   }
 
   // Only allow POST
   if (req.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed" }),
-      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 405, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 
@@ -142,7 +139,7 @@ Deno.serve(async (req) => {
               error: "Rate limit exceeded. Please try again later.",
               retry_after_seconds: Math.ceil((RATE_LIMIT_WINDOW_MS - windowElapsed) / 1000)
             }),
-            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            { status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
           );
         }
       }
@@ -155,7 +152,7 @@ Deno.serve(async (req) => {
     } catch {
       return new Response(
         JSON.stringify({ error: "Invalid JSON body" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -163,7 +160,7 @@ Deno.serve(async (req) => {
     if (!validation.valid || !validation.parsed) {
       return new Response(
         JSON.stringify({ error: validation.error }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -195,14 +192,14 @@ Deno.serve(async (req) => {
         content: validation.parsed.content,
         follow_up_email: null,
         follow_up_email_encrypted: encryptedEmail ? `\\x${Array.from(encryptedEmail).map(b => b.toString(16).padStart(2, "0")).join("")}` : null,
-        is_anonymous: true,
+        is_anonymous: !validation.parsed.follow_up_email,
       });
 
     if (insertError) {
       console.error("Tip insert error:", insertError);
       return new Response(
         JSON.stringify({ error: "Failed to submit tip" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -233,13 +230,14 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Unexpected error:", error);
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 });
+

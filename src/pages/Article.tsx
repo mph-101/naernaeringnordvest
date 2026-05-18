@@ -22,6 +22,8 @@ import { getArticleImage } from "@/lib/articles";
 import { supabase } from "@/integrations/supabase/client";
 import { useArticleTracking } from "@/hooks/useArticleTracking";
 import { useArticleVariant, logVariantCompleted } from "@/hooks/useArticleVariant";
+import { ListenToArticleButton } from "@/components/audio/ListenToArticleButton";
+import { useAudioModeEnabled } from "@/hooks/useAudioModeEnabled";
 
 interface ArticleData {
   id: string;
@@ -61,6 +63,7 @@ const Article = () => {
   const navigate = useNavigate();
   const { language } = useTheme();
   const t = translations[language];
+  const audioModeEnabled = useAudioModeEnabled();
   const [companyTags, setCompanyTags] = useState<{ orgnr: string; company_name: string }[]>([]);
   const [readProgress, setReadProgress] = useState(0);
   const [article, setArticle] = useState<ArticleData | null>(null);
@@ -230,6 +233,20 @@ const Article = () => {
             coAuthors={(article as any).co_authors ?? []}
           />
         </div>
+
+        {audioModeEnabled && (
+          <ListenToArticleButton
+            article={{
+              id: article.id,
+              title,
+              excerpt: article.excerpt,
+              author: article.author,
+              image_url: article.image_url,
+              premium: article.premium,
+              region_slug: null,
+            }}
+          />
+        )}
 
         {(article.type === "video" || article.type === "podcast") && article.media_url && (
           <div className="mb-8 animate-fade-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>

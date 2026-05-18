@@ -1,9 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
@@ -48,7 +45,7 @@ function validatePublicUrl(rawUrl: string): URL {
 
 // Extract text from an uploaded source: document (PDF/DOCX/TXT), audio, image (OCR), or URL
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
 
   try {
     const { sourceType, storagePath, url, mimeType } = await req.json();
@@ -56,7 +53,7 @@ Deno.serve(async (req) => {
     if (!sourceType) {
       return new Response(JSON.stringify({ error: "sourceType required" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -69,7 +66,7 @@ Deno.serve(async (req) => {
     if (!jwt) {
       return new Response(JSON.stringify({ error: "Authentication required" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
     {
@@ -82,7 +79,7 @@ Deno.serve(async (req) => {
       if (userErr || !userData?.user) {
         return new Response(JSON.stringify({ error: "Invalid session" }), {
           status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
     }
@@ -188,13 +185,13 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ text: extractedText, title }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("extract-source error:", err);
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

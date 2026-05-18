@@ -1,5 +1,8 @@
 # Magnus-todo
 
+## Etter merge av 1.5
+- [ ] Vurder å rotere `VITE_SUPABASE_PUBLISHABLE_KEY` i Supabase dashboard (ikke hemmelig, men god praksis)
+
 ## Lyd-først-modus (lagt til 2026-05-18)
 
 - [ ] Aktivér ElevenLabs-abonnement (Pro-plan ~$22/mnd for Instant Voice Cloning + 100k tegn/mnd)

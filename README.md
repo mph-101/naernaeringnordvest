@@ -1,73 +1,42 @@
-# Welcome to your Lovable project
+# Nær Næring Nordvest
 
-## Project info
+Regional næringslivsavis for Møre og Romsdal. Første utgivelse i en planlagt kjede av regionale aviser.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Stack
 
-## How can I edit this code?
+- **Frontend:** Vite + React + TypeScript + Tailwind CSS + shadcn/ui
+- **Redaktør:** tiptap
+- **Backend:** Supabase (Postgres, Auth, Storage, Edge Functions)
+- **Betaling:** Stripe
+- **Deploy:** Vercel (planlagt)
 
-There are several ways of editing your application.
+## Lokal utvikling
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Krav: Node.js 18+ og npm.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone <repo-url>
+cd naernaeringnordvest
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Sett opp miljøvariabler
+cp .env.example .env.local
+# Fyll inn verdier fra Supabase og Stripe dashboard (se .env.example for detaljer)
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Appen kjører på `http://localhost:5173`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Miljøvariabler
 
-**Use GitHub Codespaces**
+Se [`.env.example`](.env.example) for alle nødvendige variabler med beskrivelser. Kopier til `.env.local` — denne filen ignoreres av git.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Supabase
 
-## What technologies are used for this project?
+- **Migrasjoner:** `supabase/migrations/` — kjøres i alfabetisk rekkefølge. Aldri rediger kjørte migrasjoner, skriv nye.
+- **Edge Functions:** `supabase/functions/` — bruker Deno runtime.
 
-This project is built with:
+## PR-krav
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Se [`CLAUDE.md`](CLAUDE.md) for detaljerte retningslinjer. Kort oppsummert: én oppgave per PR, 200–500 linjer, tester for sikkerhetskritisk kode.

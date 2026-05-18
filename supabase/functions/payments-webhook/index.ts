@@ -201,6 +201,23 @@ async function handleEventFeaturedCheckout(session: any, env: StripeEnv) {
 
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
+  const sb = getSupabase();
+
+  const { error: insertError } = await sb
+    .from("stripe_events")
+    .insert({
+      event_id: event.id,
+      type: event.type,
+      payload: event,
+    });
+
+  if (insertError) {
+    if (insertError.code === "23505") {
+      console.log("Duplicate webhook, skipping:", event.id);
+      return;
+    }
+    console.error("Failed to record stripe event:", insertError);
+  }
 
   switch (event.type) {
     case "customer.subscription.created":
@@ -217,6 +234,11 @@ async function handleWebhook(req: Request, env: StripeEnv) {
     default:
       console.log("Unhandled event:", event.type);
   }
+
+  await sb
+    .from("stripe_events")
+    .update({ processed_at: new Date().toISOString() })
+    .eq("event_id", event.id);
 }
 
 Deno.serve(async (req) => {

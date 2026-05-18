@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
-import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
 import { Mail, Sunrise, CalendarDays, Briefcase, Check, Loader2, MailX } from "lucide-react";

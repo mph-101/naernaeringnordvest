@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import sodium from "npm:libsodium-wrappers-sumo@0.7.15";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -166,6 +167,25 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Encrypt follow-up email with sealed box if provided
+    let encryptedEmail: Uint8Array | null = null;
+    if (validation.parsed.follow_up_email) {
+      const publicKeyB64 = Deno.env.get("TIP_ENCRYPTION_PUBLIC_KEY");
+      if (!publicKeyB64) {
+        console.error("TIP_ENCRYPTION_PUBLIC_KEY not configured");
+        return new Response(
+          JSON.stringify({ error: "Server misconfiguration" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      await sodium.ready;
+      const publicKey = sodium.from_base64(publicKeyB64, sodium.base64_variants.ORIGINAL);
+      encryptedEmail = sodium.crypto_box_seal(
+        sodium.from_string(validation.parsed.follow_up_email),
+        publicKey
+      );
+    }
+
     // Insert the tip
     const { error: insertError } = await supabase
       .from("tips")
@@ -173,7 +193,8 @@ Deno.serve(async (req) => {
         journalist_id: validation.parsed.journalist_id,
         journalist_name: validation.parsed.journalist_name,
         content: validation.parsed.content,
-        follow_up_email: validation.parsed.follow_up_email,
+        follow_up_email: null,
+        follow_up_email_encrypted: encryptedEmail ? `\\x${Array.from(encryptedEmail).map(b => b.toString(16).padStart(2, "0")).join("")}` : null,
         is_anonymous: true,
       });
 

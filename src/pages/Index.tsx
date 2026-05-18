@@ -13,6 +13,8 @@ import { MarketTicker } from "@/components/MarketTicker";
 import { FrontpagePoll } from "@/components/FrontpagePoll";
 import { SiteFooter } from "@/components/SiteFooter";
 import type { ArticleSource } from "@/lib/articles-chat";
+import { DailyEditionCTA } from "@/components/audio/DailyEditionCTA";
+import { useAudioModeEnabled } from "@/hooks/useAudioModeEnabled";
 
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -20,6 +22,7 @@ import { translations } from "@/lib/translations";
 const Index = () => {
   const { language, defaultView, hasOnboarded, hiddenElements } = useTheme();
   const t = translations[language];
+  const audioModeEnabled = useAudioModeEnabled();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -87,6 +90,7 @@ const Index = () => {
         {view === "search" ? <SearchHero onSearch={handleSearch} /> : (
           <>
             <MarketTicker />
+            {audioModeEnabled && <DailyEditionCTA />}
             <TrendingSection />
             <div data-tour="news-feed">
               <NewsFeed />

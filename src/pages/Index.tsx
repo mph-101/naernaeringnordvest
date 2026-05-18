@@ -90,8 +90,8 @@ const Index = () => {
         {view === "search" ? <SearchHero onSearch={handleSearch} /> : (
           <>
             <MarketTicker />
-            {audioModeEnabled && <DailyEditionCTA />}
             <TrendingSection />
+            {audioModeEnabled && <DailyEditionCTA />}
             <div data-tour="news-feed">
               <NewsFeed />
             </div>

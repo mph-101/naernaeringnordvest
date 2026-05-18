@@ -6,6 +6,7 @@ import { ProfileEditor } from "@/components/ProfileEditor";
 import { ApiKeysSection } from "@/components/ApiKeysSection";
 import { SubscriptionSection } from "@/components/SubscriptionSection";
 import { NotificationsSection } from "@/components/NotificationsSection";
+import { AudioModeSection } from "@/components/AudioModeSection";
 import { NoteShareButton } from "@/components/NoteShareButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme, HideableElement } from "@/hooks/useTheme";
@@ -456,6 +457,8 @@ const Profile = () => {
             <SubscriptionSection isNo={isNo} />
 
             <NotificationsSection userId={userId} isNo={isNo} />
+
+            <AudioModeSection userId={userId} isNo={isNo} />
 
             <div className="bg-card border border-border rounded-xl p-6">
               <h3 className="font-headline text-lg font-semibold text-headline mb-1">

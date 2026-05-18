@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2, Plus, Pencil, Trash2, Upload, UserCircle2, Crop } from "lucide-react";
 import { AvatarCropDialog } from "./AvatarCropDialog";
+import { AuthorVoiceSection } from "./AuthorVoiceSection";
 
 interface Author {
   id: string;
@@ -26,6 +27,8 @@ interface Author {
   avatar_url: string | null;
   active: boolean;
   created_at: string;
+  elevenlabs_voice_id?: string | null;
+  voice_cloned_at?: string | null;
 }
 
 const slugify = (s: string) =>
@@ -424,6 +427,16 @@ export const AuthorsManager = () => {
                 Aktiv (vises i forfatter-velgeren)
               </Label>
             </div>
+
+            {form.id && (
+              <AuthorVoiceSection
+                authorId={form.id}
+                authorName={form.name}
+                currentVoiceId={authors.find((a) => a.id === form.id)?.elevenlabs_voice_id ?? null}
+                clonedAt={authors.find((a) => a.id === form.id)?.voice_cloned_at ?? null}
+                onCloned={fetchAuthors}
+              />
+            )}
           </div>
 
           <DialogFooter>

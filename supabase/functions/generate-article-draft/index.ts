@@ -1,22 +1,19 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
 // Generate an article draft from selected sources, following editorial guidelines for the chosen article type.
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
 
   try {
     const { sourceIds, articleType = "news", extraInstructions = "" } = await req.json();
 
     if (!Array.isArray(sourceIds) || sourceIds.length === 0) {
       return new Response(JSON.stringify({ error: "sourceIds required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -124,12 +121,12 @@ Returner svaret som JSON med følgende felt:
       const errText = await aiRes.text();
       if (aiRes.status === 429) {
         return new Response(JSON.stringify({ error: "AI-tjenesten er overbelastet. Prøv igjen om litt." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
       if (aiRes.status === 402) {
         return new Response(JSON.stringify({ error: "AI-kreditt er oppbrukt. Legg til kreditter i workspace-innstillinger." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
       throw new Error(`AI gateway error: ${errText}`);
@@ -141,12 +138,12 @@ Returner svaret som JSON med følgende felt:
     const draft = JSON.parse(toolCall.function.arguments);
 
     return new Response(JSON.stringify({ draft }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("generate-article-draft error:", err);
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

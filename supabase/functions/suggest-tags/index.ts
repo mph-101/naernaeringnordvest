@@ -1,13 +1,10 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   try {
@@ -17,7 +14,7 @@ Deno.serve(async (req) => {
 
     if (plain.length < 50) {
       return new Response(JSON.stringify({ tags: [] }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -52,13 +49,13 @@ ${plain.slice(0, 6000)}`;
     if (response.status === 429) {
       return new Response(JSON.stringify({ error: "Rate limit nådd. Prøv igjen om litt." }), {
         status: 429,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
     if (response.status === 402) {
       return new Response(JSON.stringify({ error: "AI-kreditt er brukt opp." }), {
         status: 402,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
     if (!response.ok) {
@@ -83,13 +80,13 @@ ${plain.slice(0, 6000)}`;
       .slice(0, 5);
 
     return new Response(JSON.stringify({ tags }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("suggest-tags error:", err);
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

@@ -4,11 +4,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 const CHUNK_SIZE = 1500;
 const MAX_CHUNKS_PER_SOURCE = 40;
@@ -69,7 +65,7 @@ async function fetchWithTimeout(url: string, ms = 15000): Promise<Response> {
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders(req) });
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -80,7 +76,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
     const userClient = createClient(SUPABASE_URL, ANON_KEY, {
@@ -89,7 +85,7 @@ serve(async (req) => {
     const { data: claims, error: claimsErr } = await userClient.auth.getClaims(authHeader.replace("Bearer ", ""));
     if (claimsErr || !claims?.claims) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
     const userId = claims.claims.sub;
@@ -105,14 +101,14 @@ serve(async (req) => {
     const isStaff = (roles || []).some((r: any) => r.role === "admin" || r.role === "editor");
     if (!isStaff) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
     const { source_id } = await req.json();
     if (!source_id) {
       return new Response(JSON.stringify({ error: "source_id påkrevd" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -123,7 +119,7 @@ serve(async (req) => {
       .single();
     if (srcErr || !source) {
       return new Response(JSON.stringify({ error: "Kilde ikke funnet" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -216,12 +212,12 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ inserted, error: errorMsg }), {
       status: errorMsg ? 500 : 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("index-trusted-source error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Ukjent feil" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

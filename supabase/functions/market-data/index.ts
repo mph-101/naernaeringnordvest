@@ -3,17 +3,12 @@
 // free open APIs. Cached in-memory for 5 minutes per instance to limit
 // upstream load. No authentication required (verify_jwt is off via default).
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
-const json = (body: unknown, status = 200) =>
+const json = (body: unknown, status = 200, req?: Request) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeaders(req), "Content-Type": "application/json" },
   });
 
 // 5 minute cache (per cold instance)
@@ -203,15 +198,15 @@ async function fetchCpi() {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders(req) });
   }
   if (req.method !== "GET" && req.method !== "POST") {
-    return json({ error: "Method not allowed" }, 405);
+    return json({ error: "Method not allowed" }, 405, req);
   }
 
   // Serve from cache if fresh
   if (cache && Date.now() - cache.ts < CACHE_TTL_MS) {
-    return json({ ...cache.payload, cached: true });
+    return json({ ...cache.payload, cached: true }, 200, req);
   }
 
   const [power, fx, policyRate, brent, btc, cpi] = await Promise.all([
@@ -235,5 +230,5 @@ Deno.serve(async (req) => {
   };
 
   cache = { ts: Date.now(), payload };
-  return json(payload);
+  return json(payload, 200, req);
 });

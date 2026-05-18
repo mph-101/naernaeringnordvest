@@ -9,17 +9,12 @@
 // national figures regardless of region selection (the regional UI selector
 // is kept for future extension). 6-hour in-memory cache per cold instance.
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
-const json = (body: unknown, status = 200) =>
+const json = (body: unknown, status = 200, req?: Request) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeaders(req), "Content-Type": "application/json" },
   });
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
@@ -137,10 +132,10 @@ async function fetchWages() {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
   if (req.method !== "GET" && req.method !== "POST") {
-    return json({ error: "Method not allowed" }, 405);
+    return json({ error: "Method not allowed" }, 405, req);
   }
 
   let regionSlug = "nasjonal";
@@ -159,7 +154,7 @@ Deno.serve(async (req) => {
   const cacheKey = "national";
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
-    return json({ ...(cached.payload as object), region: regionSlug });
+    return json({ ...(cached.payload as object), region: regionSlug }, 200, req);
   }
 
   try {
@@ -196,9 +191,9 @@ Deno.serve(async (req) => {
     };
 
     cache.set(cacheKey, { ts: Date.now(), payload });
-    return json(payload);
+    return json(payload, 200, req);
   } catch (e) {
     console.error("ssb-labor failed:", e);
-    return json({ error: "Kunne ikke hente arbeidsmarkedsdata" }, 500);
+    return json({ error: "Kunne ikke hente arbeidsmarkedsdata" }, 500, req);
   }
 });

@@ -38,7 +38,10 @@ import Info from "./pages/Info";
 import Arrangementer from "./pages/Arrangementer";
 import ArrangementDetalj from "./pages/ArrangementDetalj";
 import Newsletter from "./pages/Newsletter";
+import Lytt from "./pages/Lytt";
 import { MascotTour } from "./components/mascot/MascotTour";
+import { AudioPlayerProvider } from "./hooks/useAudioPlayer";
+import { MiniPlayer } from "./components/audio/MiniPlayer";
 
 const queryClient = new QueryClient();
 
@@ -46,12 +49,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <MascotTour />
-            <Routes>
+        <AudioPlayerProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <MascotTour />
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/article/:id" element={<Article />} />
               <Route path="/team" element={<Team />} />
@@ -66,6 +70,7 @@ const App = () => (
               <Route path="/arrangementer" element={<Arrangementer />} />
               <Route path="/arrangementer/:id" element={<ArrangementDetalj />} />
               <Route path="/nyhetsbrev" element={<Newsletter />} />
+              <Route path="/lytt" element={<Lytt />} />
               <Route path="/login" element={<Login />} />
               <Route path="/profil" element={<Profile />} />
               <Route path="/reset-password" element={<ResetPassword />} />
@@ -94,9 +99,11 @@ const App = () => (
               <Route path="/tilgjengelighet" element={<Info />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+              </Routes>
+              <MiniPlayer />
+            </BrowserRouter>
+          </TooltipProvider>
+        </AudioPlayerProvider>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>

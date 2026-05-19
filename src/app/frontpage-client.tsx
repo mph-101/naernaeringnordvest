@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate, Navigate } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { SearchHero } from "@/components/SearchHero";
 import { ConversationView } from "@/components/ConversationView";
@@ -45,12 +45,13 @@ export function FrontpageClient() {
 
   useEffect(() => {
     if (defaultView === "tall" && !searchParams.get("view")) {
-      navigate("/idrett", { replace: true });
+      window.location.replace("/idrett");
     }
   }, []);
 
   if (!hasOnboarded && !searchParams.get("view")) {
-    return <Navigate to="/velkommen" replace />;
+    if (typeof window !== "undefined") window.location.replace("/velkommen");
+    return null;
   }
 
   const handleSearch = (query: string) => {

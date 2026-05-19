@@ -6,6 +6,8 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RegionProvider } from "@/hooks/useRegion";
 import { AuthProvider } from "@/hooks/useAuth";
+import { AudioPlayerProvider } from "@/hooks/useAudioPlayer";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 
@@ -66,9 +68,13 @@ export function NextProviders({ children }: { children: React.ReactNode }) {
           <AuthProvider>
             <ThemeProvider>
               <RegionProvider>
-                {children}
-                <Toaster />
-                <Sonner />
+                <AudioPlayerProvider>
+                  <TooltipProvider>
+                    {children}
+                    <Toaster />
+                    <Sonner />
+                  </TooltipProvider>
+                </AudioPlayerProvider>
               </RegionProvider>
             </ThemeProvider>
           </AuthProvider>

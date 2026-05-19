@@ -40,7 +40,7 @@ const views = [
     titleEn: "Numbers",
     descNo: "Utforsk data og statistikk fra lokalt næringsliv",
     descEn: "Explore data and statistics from local business",
-    route: "/idrett",
+    route: "/tall",
   },
 ];
 

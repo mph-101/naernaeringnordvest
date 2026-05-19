@@ -5,6 +5,9 @@ import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RegionProvider } from "@/hooks/useRegion";
+import { AuthProvider } from "@/hooks/useAuth";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 
 const queryClient = new QueryClient();
 
@@ -19,11 +22,15 @@ export function NextProviders({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <ThemeProvider>
-          <RegionProvider>
-            {children}
-          </RegionProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <RegionProvider>
+              {children}
+              <Toaster />
+              <Sonner />
+            </RegionProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );

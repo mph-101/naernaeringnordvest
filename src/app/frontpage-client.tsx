@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { SearchHero } from "@/components/SearchHero";
 import { ConversationView } from "@/components/ConversationView";
@@ -24,11 +23,13 @@ export function FrontpageClient() {
   const { language, defaultView, hasOnboarded, hiddenElements } = useTheme();
   const t = translations[language];
   const audioModeEnabled = useAudioModeEnabled();
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+
+  // Read query params directly from browser URL (react-router's useSearchParams
+  // doesn't sync with Next.js routing)
+  const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const urlView = urlParams?.get("view");
 
   const getInitialView = (): "search" | "feed" => {
-    const urlView = searchParams.get("view");
     if (urlView === "feed" || urlView === "search") return urlView;
     if (defaultView === "feed") return "feed";
     return "search";
@@ -39,17 +40,12 @@ export function FrontpageClient() {
   const [conversationSources, setConversationSources] = useState<ArticleSource[]>([]);
 
   useEffect(() => {
-    const v = searchParams.get("view");
-    if (v === "feed" || v === "search") setView(v);
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (defaultView === "tall" && !searchParams.get("view")) {
-      window.location.replace("/idrett");
+    if (defaultView === "tall" && !urlView) {
+      window.location.replace("/tall");
     }
   }, []);
 
-  if (!hasOnboarded && !searchParams.get("view")) {
+  if (!hasOnboarded && !urlView) {
     if (typeof window !== "undefined") window.location.replace("/velkommen");
     return null;
   }

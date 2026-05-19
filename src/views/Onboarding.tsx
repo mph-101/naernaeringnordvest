@@ -68,7 +68,7 @@ export default function Onboarding() {
     setDefaultView(view.id);
     completeOnboarding();
     trackEvent("onboarding_completed", { region: selectedRegion, default_view: view.id });
-    navigate(view.route, { replace: true });
+    window.location.replace(view.route);
   };
 
   return (

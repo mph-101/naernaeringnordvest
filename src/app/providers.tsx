@@ -13,7 +13,15 @@ export function NextProviders({ children }: { children: React.ReactNode }) {
   useEffect(() => setMounted(true), []);
 
   if (!mounted) {
-    return null;
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <RegionProvider>
+            <div />
+          </RegionProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    );
   }
 
   return (

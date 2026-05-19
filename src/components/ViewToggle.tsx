@@ -1,5 +1,5 @@
 import { MessageSquare, Newspaper, BarChart2, Star, Sparkles } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+// Using <a> instead of react-router Link for Next.js compatibility
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import {
@@ -19,11 +19,10 @@ type TabId = "search" | "feed" | "tall" | "hjernevelvet";
 export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   const { language, defaultView, setDefaultView, hiddenElements } = useTheme();
   const t = translations[language];
-  const location = useLocation();
-  const navigate = useNavigate();
-  const isIdrett = location.pathname.startsWith("/idrett");
-  const isTall = location.pathname.startsWith("/tall");
-  const isHjernevelvet = location.pathname.startsWith("/hjernevelvet");
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+  const isIdrett = pathname.startsWith("/idrett");
+  const isTall = pathname.startsWith("/tall");
+  const isHjernevelvet = pathname.startsWith("/hjernevelvet");
 
   const allTabs: { id: TabId; label: string; icon: typeof MessageSquare; to?: string }[] = [
     { id: "search", label: t.ask, icon: MessageSquare },
@@ -37,10 +36,13 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   const handleClick = (tabId: TabId) => {
     if (tabId === "tall" || tabId === "hjernevelvet") {
       const target = tabId === "tall" ? "/tall" : "/hjernevelvet";
-      if (location.pathname !== target) navigate(target);
+      if (pathname !== target) window.location.href = target;
       return;
     }
-    if (isTall || isIdrett || isHjernevelvet) navigate(`/?view=${tabId}`);
+    if (isTall || isIdrett || isHjernevelvet) {
+      window.location.href = `/?view=${tabId}`;
+      return;
+    }
     onViewChange(tabId);
   };
 
@@ -66,13 +68,13 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
 
           if (tab.to) {
             return (
-              <Link key={tab.id} to={tab.to} className={className} title={tab.label}>
+              <a key={tab.id} href={tab.to} className={className} title={tab.label}>
                 <Icon className="w-4 h-4 shrink-0" />
                 <span className={labelClass}>{tab.label}</span>
                 {defaultView === tab.id && (
                   <Star className="w-3 h-3 fill-primary text-primary shrink-0" />
                 )}
-              </Link>
+              </a>
             );
           }
 

@@ -6,10 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/analytics";
 
 const regions = [
-  { id: "more_og_romsdal", labelNo: "Møre og Romsdal", labelEn: "Møre og Romsdal" },
+  { id: "more_og_romsdal", labelNo: "Nordvestlandet", labelEn: "Northwestern Norway" },
   { id: "vestlandet", labelNo: "Vestlandet", labelEn: "Western Norway" },
   { id: "nord_norge", labelNo: "Nord-Norge", labelEn: "Northern Norway" },
-  { id: "trondelag", labelNo: "Trøndelag", labelEn: "Trøndelag" },
+  { id: "trondelag", labelNo: "Midt-Norge", labelEn: "Central Norway" },
   { id: "ostlandet", labelNo: "Østlandet", labelEn: "Eastern Norway" },
   { id: "sorlandet", labelNo: "Sørlandet", labelEn: "Southern Norway" },
 ];

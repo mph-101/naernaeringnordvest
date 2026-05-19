@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createSupabaseServer } from "@/lib/supabase-next/server";
-import { ArticlePageClient } from "./client";
+import { PageClient } from "./_loader";
 
 export const dynamic = "force-dynamic";
 
@@ -42,5 +42,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ArticlePage({ params }: Props) {
   const { id } = await params;
-  return <ArticlePageClient id={id} />;
+  return <PageClient id={id} />;
 }

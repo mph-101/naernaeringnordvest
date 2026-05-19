@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrangementDetaljClient } from "./client";
+import { PageClient } from "./_loader";
 
 export const dynamic = "force-dynamic";
 
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <ArrangementDetaljClient />;
+  return <PageClient />;
 }

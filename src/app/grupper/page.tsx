@@ -1,5 +1,5 @@
-﻿import type { Metadata } from "next";
-import { GroupsClient } from "./client";
+import type { Metadata } from "next";
+import { PageClient } from "./_loader";
 
 export const dynamic = "force-dynamic";
 
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <GroupsClient />;
+  return <PageClient />;
 }

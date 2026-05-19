@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SUPABASE_URL } from "@/lib/env";
 import { Key, Copy, Trash2, Loader2, Plus, AlertCircle, Check, Code } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,7 +19,7 @@ interface Props {
   isNo: boolean;
 }
 
-const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/feed-api`;
+const FUNCTION_URL = `${SUPABASE_URL}/functions/v1/feed-api`;
 
 // Generate a strong key: prefix + 32 url-safe random chars
 function generateKey(): { full: string; prefix: string } {

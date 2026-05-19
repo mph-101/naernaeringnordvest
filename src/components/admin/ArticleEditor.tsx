@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/env";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1054,7 +1055,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
   const lookupAndAddCompany = async (name: string) => {
     try {
-      const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
+      const baseUrl = `${SUPABASE_URL}/functions/v1/brreg-proxy`;
       // Strip legal suffix so Brreg's AND-search returns a broader candidate pool.
       // The proxy ranks results and prefers exact "X AS"/"X ASA" matches.
       const stripped = name.trim().replace(/\s+(AS|ASA|SA|ANS|DA|BA)$/i, "").trim();
@@ -1065,7 +1066,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       let c: any = null;
       for (const q of queries) {
         const res = await fetch(`${baseUrl}?action=search&q=${encodeURIComponent(q)}&size=8`, {
-          headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+          headers: { Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         });
         const d = await res.json();
         c = d.companies?.[0];
@@ -2132,9 +2133,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                   setShowResults(true);
                   debounceRef.current = setTimeout(() => {
                     setSearchingCompanies(true);
-                    const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
+                    const baseUrl = `${SUPABASE_URL}/functions/v1/brreg-proxy`;
                     fetch(`${baseUrl}?action=search&q=${encodeURIComponent(val)}&size=8`, {
-                      headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+                      headers: { Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
                     })
                       .then((r) => r.json())
                       .then((d) => setSearchResults(d.companies?.map((c: any) => ({ orgnr: c.organisasjonsnummer, navn: c.navn })) || []))

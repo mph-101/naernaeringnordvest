@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { SUPABASE_PROJECT_ID, SUPABASE_ANON_KEY } from "@/lib/env";
 import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { useTheme } from "@/hooks/useTheme";
@@ -53,9 +54,9 @@ export default function Unsubscribe() {
     }
     (async () => {
       try {
-        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const projectId = SUPABASE_PROJECT_ID;
         const url = `https://${projectId}.supabase.co/functions/v1/newsletter-manage?token=${encodeURIComponent(token)}`;
-        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const anonKey = SUPABASE_ANON_KEY;
         const res = await fetch(url, { headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` } });
         const json = await res.json();
         if (!res.ok) {
@@ -81,8 +82,8 @@ export default function Unsubscribe() {
     setSectors((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
 
   const callManage = async (body: object) => {
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const projectId = SUPABASE_PROJECT_ID;
+    const anonKey = SUPABASE_ANON_KEY;
     const res = await fetch(`https://${projectId}.supabase.co/functions/v1/newsletter-manage`, {
       method: "POST",
       headers: { "Content-Type": "application/json", apikey: anonKey, Authorization: `Bearer ${anonKey}` },

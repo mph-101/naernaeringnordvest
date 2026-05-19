@@ -1,4 +1,5 @@
 import { useState, useRef, forwardRef, useImperativeHandle } from "react";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/env";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Mic, Loader2 } from "lucide-react";
@@ -51,13 +52,13 @@ export const AudioTranscriber = forwardRef<AudioTranscriberHandle, AudioTranscri
         if (!session) throw new Error("Ikke innlogget");
 
         const storagePath = `${session.user.id}/${Date.now()}_${file.name}`;
-        const uploadUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/audio-uploads/${storagePath}`;
+        const uploadUrl = `${SUPABASE_URL}/storage/v1/object/audio-uploads/${storagePath}`;
 
         await new Promise<void>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.open("POST", uploadUrl);
           xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
-          xhr.setRequestHeader("apikey", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+          xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
           xhr.setRequestHeader("x-upsert", "true");
 
           xhr.upload.onprogress = (e) => {

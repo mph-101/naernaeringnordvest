@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/env";
 import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -105,12 +106,12 @@ export const TipForm = ({ journalistId, journalistName, onClose }: TipFormProps)
       const { data: { session } } = await supabase.auth.getSession();
       
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-tip`,
+        `${SUPABASE_URL}/functions/v1/submit-tip`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            "apikey": SUPABASE_ANON_KEY,
             ...(session?.access_token && { "Authorization": `Bearer ${session.access_token}` }),
           },
           body: JSON.stringify({

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/env";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "@/hooks/use-toast";
@@ -29,8 +30,8 @@ export function CompanyLists({ session }: { session: any }) {
   const [selectedOrgnr, setSelectedOrgnr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
-  const headers = { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` };
+  const baseUrl = `${SUPABASE_URL}/functions/v1/brreg-proxy`;
+  const headers = { Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
 
   useEffect(() => {
     if (session) loadLists();

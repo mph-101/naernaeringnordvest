@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/env";
 import { useTheme } from "@/hooks/useTheme";
 import { ArrowUpDown, ArrowUp, ArrowDown, Building2, Users, ChevronRight, TrendingUp, TrendingDown, Loader2 } from "lucide-react";
 import { CompanyDetail } from "./CompanyDetail";
@@ -51,8 +52,8 @@ export function CompanyTable({ session, selectedFylker, selectedKommuner, onFylk
   const [selectedOrgnr, setSelectedOrgnr] = useState<string | null>(null);
   const [selectedName, setSelectedName] = useState("");
 
-  const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
-  const headers = { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` };
+  const baseUrl = `${SUPABASE_URL}/functions/v1/brreg-proxy`;
+  const headers = { Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
   const PAGE_SIZE = 30;
 
   // Server-side sortable fields (BRREG API supports these)

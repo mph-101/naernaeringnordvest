@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/env";
 import { useSearchParams } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { Search, Building2, Users, Plus } from "lucide-react";
@@ -45,8 +46,8 @@ export function CompanySearch({ session, selectedFylker, selectedKommuner, onFyl
     const selskapParam = searchParams.get("selskap");
     if (selskapParam && !selectedCompany) {
       // Fetch company info by orgnr and auto-select it
-      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy?action=search&q=${selskapParam}&size=1`, {
-        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+      fetch(`${SUPABASE_URL}/functions/v1/brreg-proxy?action=search&q=${selskapParam}&size=1`, {
+        headers: { Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
       })
         .then((r) => r.json())
         .then((data) => {
@@ -61,12 +62,12 @@ export function CompanySearch({ session, selectedFylker, selectedKommuner, onFyl
     setLoading(true);
     setSearched(true);
     try {
-      let url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy?action=search&q=${encodeURIComponent(query)}&page=${p}&size=20`;
+      let url = `${SUPABASE_URL}/functions/v1/brreg-proxy?action=search&q=${encodeURIComponent(query)}&page=${p}&size=20`;
       const kommune = getKommuneParam(selectedFylker, selectedKommuner);
       if (kommune) url += `&kommune=${kommune}`;
       const res = await fetch(url, {
         headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         },
       });
       if (!res.ok) {

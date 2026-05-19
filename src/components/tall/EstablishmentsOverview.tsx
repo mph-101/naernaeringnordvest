@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/env";
 import { useTheme } from "@/hooks/useTheme";
 import { Building2, AlertTriangle, TrendingUp, Users, Calendar } from "lucide-react";
 import { GeoFilter, getKommuneParam } from "./GeoFilter";
@@ -64,8 +65,8 @@ export function EstablishmentsOverview({ selectedFylker, selectedKommuner, onFyl
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState("");
 
-  const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
-  const headers = { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` };
+  const baseUrl = `${SUPABASE_URL}/functions/v1/brreg-proxy`;
+  const headers = { Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
   const monthOptions = getMonthOptions(isNo);
 
   const fetchData = async () => {

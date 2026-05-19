@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/env";
 import { useTheme } from "@/hooks/useTheme";
 import { Building2, Users, TrendingUp, TrendingDown, User, ChevronDown, ChevronUp, ExternalLink, FileText, Megaphone } from "lucide-react";
 import { AddToListDialog } from "./AddToListDialog";
@@ -59,8 +60,8 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
   const [chartMetric, setChartMetric] = useState<ChartMetric>("omsetning");
   const [showAllYears, setShowAllYears] = useState(false);
 
-  const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
-  const headers = { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` };
+  const baseUrl = `${SUPABASE_URL}/functions/v1/brreg-proxy`;
+  const headers = { Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
 
   const brregEnhetUrl = `https://data.brreg.no/enhetsregisteret/api/enheter/${orgnr}`;
   const brregRegnskapUrl = `https://data.brreg.no/regnskapsregisteret/regnskap/${orgnr}`;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/env";
 import { Link } from "react-router-dom";
 import { Building2, Users, TrendingUp, Banknote, ExternalLink } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
@@ -43,8 +44,8 @@ export function CompanyMiniProfile({ orgnr, companyName }: { orgnr: string; comp
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const base = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brreg-proxy`;
-    const headers = { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` };
+    const base = `${SUPABASE_URL}/functions/v1/brreg-proxy`;
+    const headers = { Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
 
     Promise.all([
       fetch(`${base}?action=search&q=${orgnr}&size=1`, { headers }).then((r) => r.json()),

@@ -1,3 +1,5 @@
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/env";
+
 export interface ArticleSource {
   n: number;
   id: string;
@@ -71,7 +73,7 @@ export interface BrregDisambiguation {
   candidates: BrregCompany[];
 }
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/articles-chat`;
+const CHAT_URL = `${SUPABASE_URL}/functions/v1/articles-chat`;
 
 interface StreamArticlesChatOptions {
   messages: ChatMessage[];
@@ -95,7 +97,7 @@ export async function streamArticlesChat({
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
     body: JSON.stringify({ messages }),
   });

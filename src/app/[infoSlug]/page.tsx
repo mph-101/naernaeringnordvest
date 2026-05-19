@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { FOOTER_PAGES, FooterPageSlug } from "@/lib/footer-pages";
-import { InfoPageClient } from "./client";
+import { PageClient } from "./_loader";
 
 export const dynamic = "force-dynamic";
 
@@ -31,5 +31,5 @@ export default async function InfoPage({ params }: Props) {
   const page = FOOTER_PAGES[infoSlug as FooterPageSlug];
   if (!page) notFound();
 
-  return <InfoPageClient page={page} />;
+  return <PageClient page={page} />;
 }

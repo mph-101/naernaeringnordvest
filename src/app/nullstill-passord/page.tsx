@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ResetPasswordClient } from "./client";
+import { PageClient } from "./_loader";
 
 export const dynamic = "force-dynamic";
 
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function ResetPasswordPage() {
-  return <ResetPasswordClient />;
+  return <PageClient />;
 }

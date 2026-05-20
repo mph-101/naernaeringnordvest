@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { getUrlParam } from "@/lib/params";
 import { ArrowLeft, Calendar, MapPin, Users, MessageSquare, Send, Check, X, Loader2, Video, Building } from "lucide-react";
 import { Header } from "@/components/Header";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,7 +18,7 @@ import {
 } from "@/lib/hjernevelv";
 
 const HjernevelvPanelPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const id = getUrlParam();
   const navigate = useNavigate();
   const { isAuthenticated, userId, loading: authLoading } = useAuth();
   const { language } = useTheme();

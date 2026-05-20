@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { getUrlParam } from "@/lib/params";
 import {
   ArrowLeft,
   Building2,
@@ -69,7 +70,7 @@ function formatDate(value: string | null): string {
 }
 
 export default function BusinessPanel() {
-  const { id } = useParams<{ id: string }>();
+  const id = getUrlParam();
   const navigate = useNavigate();
   const { userId, isAuthenticated, loading: authLoading } = useAuth();
 

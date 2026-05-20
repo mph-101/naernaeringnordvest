@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { getUrlParam } from "@/lib/params";
 import { ArrowLeft, Send, Users, Lock, Globe, Settings, UserPlus, Loader2, Newspaper, Shield, Eye } from "lucide-react";
 import { Header } from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,7 +26,7 @@ interface GroupData {
 }
 
 const GroupDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const id = getUrlParam();
   const navigate = useNavigate();
   const { language } = useTheme();
   const messagesEndRef = useRef<HTMLDivElement>(null);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { getUrlParam } from "@/lib/params";
 import { ArrowLeft, Tag as TagIcon, Clock } from "lucide-react";
 import { Header } from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +19,7 @@ interface ArticleSummary {
 }
 
 const Tag = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const slug = getUrlParam();
   const navigate = useNavigate();
   const { language } = useTheme();
   const [tag, setTag] = useState<TagType | null>(null);

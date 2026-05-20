@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { getUrlParam } from "@/lib/params";
 import { ArrowLeft, Loader2, Clock } from "lucide-react";
 import { Header } from "@/components/Header";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { HjernevelvArticle, HjernevelvWriter } from "@/lib/hjernevelv";
 
 const HjernevelvEssay = () => {
-  const { id } = useParams<{ id: string }>();
+  const id = getUrlParam();
   const navigate = useNavigate();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const { language } = useTheme();

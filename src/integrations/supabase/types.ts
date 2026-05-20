@@ -732,7 +732,6 @@ export type Database = {
           provider: string
           provider_customer_id: string | null
           provider_subscription_id: string | null
-          region_slug: string | null
           seat_count: number
           status: string
           trial_ends_at: string | null
@@ -752,7 +751,6 @@ export type Database = {
           provider?: string
           provider_customer_id?: string | null
           provider_subscription_id?: string | null
-          region_slug?: string | null
           seat_count?: number
           status?: string
           trial_ends_at?: string | null
@@ -772,7 +770,6 @@ export type Database = {
           provider?: string
           provider_customer_id?: string | null
           provider_subscription_id?: string | null
-          region_slug?: string | null
           seat_count?: number
           status?: string
           trial_ends_at?: string | null
@@ -951,51 +948,30 @@ export type Database = {
       }
       editorial_regions: {
         Row: {
-          contact_email: string | null
           created_at: string
           description: string | null
           id: string
-          is_active: boolean
-          logo_url: string | null
           name: string
-          primary_color: string | null
-          publisher_name: string | null
-          publisher_orgnr: string | null
           slug: string
           sort_order: number
-          subdomain: string | null
           updated_at: string
         }
         Insert: {
-          contact_email?: string | null
           created_at?: string
           description?: string | null
           id?: string
-          is_active?: boolean
-          logo_url?: string | null
           name: string
-          primary_color?: string | null
-          publisher_name?: string | null
-          publisher_orgnr?: string | null
           slug: string
           sort_order?: number
-          subdomain?: string | null
           updated_at?: string
         }
         Update: {
-          contact_email?: string | null
           created_at?: string
           description?: string | null
           id?: string
-          is_active?: boolean
-          logo_url?: string | null
           name?: string
-          primary_color?: string | null
-          publisher_name?: string | null
-          publisher_orgnr?: string | null
           slug?: string
           sort_order?: number
-          subdomain?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1310,7 +1286,6 @@ export type Database = {
           description: string | null
           id: string
           name: string
-          region_slug: string | null
           updated_at: string
           visibility: string
         }
@@ -1320,7 +1295,6 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
-          region_slug?: string | null
           updated_at?: string
           visibility?: string
         }
@@ -1330,7 +1304,6 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
-          region_slug?: string | null
           updated_at?: string
           visibility?: string
         }
@@ -1670,7 +1643,6 @@ export type Database = {
           person_name: string | null
           photo_credit: string | null
           published_at: string | null
-          region_slug: string | null
           reviewed_by: string | null
           source_text: string | null
           source_url: string | null
@@ -1691,7 +1663,6 @@ export type Database = {
           person_name?: string | null
           photo_credit?: string | null
           published_at?: string | null
-          region_slug?: string | null
           reviewed_by?: string | null
           source_text?: string | null
           source_url?: string | null
@@ -1712,7 +1683,6 @@ export type Database = {
           person_name?: string | null
           photo_credit?: string | null
           published_at?: string | null
-          region_slug?: string | null
           reviewed_by?: string | null
           source_text?: string | null
           source_url?: string | null
@@ -2019,7 +1989,6 @@ export type Database = {
           id: string
           image_url: string | null
           pinned_position: number
-          region_slug: string | null
           sponsor_logo_url: string | null
           sponsor_name: string
           start_at: string | null
@@ -2038,7 +2007,6 @@ export type Database = {
           id?: string
           image_url?: string | null
           pinned_position?: number
-          region_slug?: string | null
           sponsor_logo_url?: string | null
           sponsor_name: string
           start_at?: string | null
@@ -2057,7 +2025,6 @@ export type Database = {
           id?: string
           image_url?: string | null
           pinned_position?: number
-          region_slug?: string | null
           sponsor_logo_url?: string | null
           sponsor_name?: string
           start_at?: string | null
@@ -2242,7 +2209,6 @@ export type Database = {
           id: string
           options: Json
           question: string
-          region_slug: string | null
           starts_at: string
           updated_at: string
         }
@@ -2255,7 +2221,6 @@ export type Database = {
           id?: string
           options?: Json
           question: string
-          region_slug?: string | null
           starts_at?: string
           updated_at?: string
         }
@@ -2268,7 +2233,6 @@ export type Database = {
           id?: string
           options?: Json
           question?: string
-          region_slug?: string | null
           starts_at?: string
           updated_at?: string
         }
@@ -2333,42 +2297,6 @@ export type Database = {
           },
         ]
       }
-      region_hidden_articles: {
-        Row: {
-          article_id: string
-          created_at: string
-          hidden_by: string | null
-          region_slug: string
-        }
-        Insert: {
-          article_id: string
-          created_at?: string
-          hidden_by?: string | null
-          region_slug: string
-        }
-        Update: {
-          article_id?: string
-          created_at?: string
-          hidden_by?: string | null
-          region_slug?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "region_hidden_articles_region_slug_fkey"
-            columns: ["region_slug"]
-            isOneToOne: false
-            referencedRelation: "editorial_regions"
-            referencedColumns: ["slug"]
-          },
-          {
-            foreignKeyName: "region_hidden_articles_article_id_fkey"
-            columns: ["article_id"]
-            isOneToOne: false
-            referencedRelation: "articles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       snake_scores: {
         Row: {
           created_at: string
@@ -2410,7 +2338,6 @@ export type Database = {
           provider: string
           provider_customer_id: string
           provider_subscription_id: string
-          region_slug: string | null
           status: string
           trial_ends_at: string | null
           updated_at: string
@@ -2429,7 +2356,6 @@ export type Database = {
           provider?: string
           provider_customer_id: string
           provider_subscription_id: string
-          region_slug?: string | null
           status?: string
           trial_ends_at?: string | null
           updated_at?: string
@@ -2448,7 +2374,6 @@ export type Database = {
           provider?: string
           provider_customer_id?: string
           provider_subscription_id?: string
-          region_slug?: string | null
           status?: string
           trial_ends_at?: string | null
           updated_at?: string
@@ -2513,7 +2438,6 @@ export type Database = {
           is_anonymous: boolean
           journalist_id: string
           journalist_name: string
-          region_slug: string | null
         }
         Insert: {
           content: string
@@ -2523,7 +2447,6 @@ export type Database = {
           is_anonymous?: boolean
           journalist_id: string
           journalist_name: string
-          region_slug?: string | null
         }
         Update: {
           content?: string
@@ -2533,7 +2456,6 @@ export type Database = {
           is_anonymous?: boolean
           journalist_id?: string
           journalist_name?: string
-          region_slug?: string | null
         }
         Relationships: []
       }

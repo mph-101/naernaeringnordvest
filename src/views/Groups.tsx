@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Users, Plus, Lock, Globe, Search, Loader2 } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Users, Plus, Lock, Globe, Search, Loader2, LogIn } from "lucide-react";
 import { Header } from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
@@ -125,6 +125,21 @@ const Groups = () => {
           />
         </div>
 
+        {/* Login prompt */}
+        {!userId && !loading && filtered.length > 0 && (
+          <div className="mb-4 p-4 bg-accent/5 border border-accent/20 rounded-xl flex items-center gap-3">
+            <LogIn className="w-5 h-5 text-accent flex-shrink-0" />
+            <p className="text-sm font-body text-foreground flex-1">
+              {language === "no"
+                ? "Logg inn for å bli med i grupper og delta i samtaler."
+                : "Log in to join groups and participate in conversations."}
+            </p>
+            <Link to="/login" className="px-4 py-2 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors flex-shrink-0">
+              {language === "no" ? "Logg inn" : "Log in"}
+            </Link>
+          </div>
+        )}
+
         {/* Groups List */}
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
@@ -155,10 +170,10 @@ const Groups = () => {
                     </span>
                   </div>
                   <button
-                    onClick={() => userId ? navigate(`/grupper/${group.id}`) : handleJoin(group.id)}
+                    onClick={() => navigate(userId ? `/grupper/${group.id}` : "/login")}
                     className="ml-4 px-4 py-2 bg-secondary text-foreground rounded-full font-subhead text-sm font-medium hover:bg-secondary/80 transition-colors flex-shrink-0"
                   >
-                    {t.open}
+                    {userId ? t.open : (language === "no" ? "Logg inn" : "Log in")}
                   </button>
                 </div>
               </div>

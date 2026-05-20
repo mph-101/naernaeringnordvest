@@ -1,6 +1,14 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const BRREG_BASE = "https://data.brreg.no";
+
+function getSupabaseAdmin() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  );
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -126,7 +134,9 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Fetch all available years (paginated)
+      const sb = getSupabaseAdmin();
+
+      // 1. Fetch fresh data from BRREG (latest filing)
       let allRegnskaper: any[] = [];
       let page = 0;
       const size = 50;
@@ -145,35 +155,55 @@ Deno.serve(async (req) => {
         if (page >= totalPages) break;
       }
 
-      if (allRegnskaper.length === 0) {
-        return new Response(JSON.stringify({ financials: [] }), {
-          status: 200, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
+      // Parse fresh BRREG data
+      const freshRows = allRegnskaper.map((r: any) => {
+        const resultat = r.resultatregnskapResultat || {};
+        const driftsres = resultat.driftsresultat;
+        const eiendeler = r.eiendeler || {};
+        const egenkapitalGjeld = r.egenkapitalGjeld || {};
+        return {
+          orgnr,
+          year: r.regnskapsperiode?.fraDato?.substring(0, 4) || r.journalnr || "",
+          omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,
+          driftsresultat: typeof driftsres === "number" ? driftsres : (driftsres?.driftsresultat || 0),
+          arsresultat: resultat.ordinaertResultatFoerSkattekostnad || resultat.aarsresultat || 0,
+          egenkapital: egenkapitalGjeld.sumEgenkapitalGjeld || egenkapitalGjeld.egenkapital?.sumEgenkapital || 0,
+          sum_eiendeler: eiendeler.sumEiendeler || 0,
+        };
+      }).filter((r: any) => r.year);
+
+      // 2. Upsert fresh data into cache (ON CONFLICT DO UPDATE to refresh values)
+      if (freshRows.length > 0) {
+        await sb.from("company_financials").upsert(
+          freshRows.map((r: any) => ({
+            orgnr: r.orgnr,
+            year: r.year,
+            omsetning: r.omsetning,
+            driftsresultat: r.driftsresultat,
+            arsresultat: r.arsresultat,
+            egenkapital: r.egenkapital,
+            sum_eiendeler: r.sum_eiendeler,
+            fetched_at: new Date().toISOString(),
+          })),
+          { onConflict: "orgnr,year" }
+        );
       }
 
-      // Deduplicate by year (keep first = most recent filing per year)
-      const seenYears = new Set<string>();
-      const years = allRegnskaper
-        .map((r: any) => {
-          const resultat = r.resultatregnskapResultat || {};
-          const driftsres = resultat.driftsresultat;
-          const eiendeler = r.eiendeler || {};
-          const egenkapitalGjeld = r.egenkapitalGjeld || {};
-          return {
-            year: r.regnskapsperiode?.fraDato?.substring(0, 4) || r.journalnr,
-            omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,
-            driftsresultat: typeof driftsres === 'number' ? driftsres : (driftsres?.driftsresultat || 0),
-            arsresultat: resultat.ordinaertResultatFoerSkattekostnad || resultat.aarsresultat || 0,
-            egenkapital: egenkapitalGjeld.sumEgenkapitalGjeld || egenkapitalGjeld.egenkapital?.sumEgenkapital || 0,
-            sumEiendeler: eiendeler.sumEiendeler || 0,
-          };
-        })
-        .filter((y: any) => {
-          if (seenYears.has(y.year)) return false;
-          seenYears.add(y.year);
-          return true;
-        })
-        .sort((a: any, b: any) => b.year.localeCompare(a.year));
+      // 3. Return ALL cached years for this company (historical + fresh)
+      const { data: cached } = await sb
+        .from("company_financials")
+        .select("year, omsetning, driftsresultat, arsresultat, egenkapital, sum_eiendeler")
+        .eq("orgnr", orgnr)
+        .order("year", { ascending: false });
+
+      const years = (cached || []).map((r: any) => ({
+        year: r.year,
+        omsetning: r.omsetning,
+        driftsresultat: r.driftsresultat,
+        arsresultat: r.arsresultat,
+        egenkapital: r.egenkapital,
+        sumEiendeler: r.sum_eiendeler,
+      }));
 
       return new Response(JSON.stringify({ financials: years }), {
         headers: { ...corsHeaders(req), "Content-Type": "application/json" },
@@ -302,7 +332,10 @@ Deno.serve(async (req) => {
         });
       }
 
+      const sb = getSupabaseAdmin();
       const results: Record<string, any> = {};
+      const rowsToCache: any[] = [];
+
       await Promise.all(
         orgnrList.map(async (orgnr) => {
           try {
@@ -317,15 +350,36 @@ Deno.serve(async (req) => {
             const r = items[0];
             const resultat = r.resultatregnskapResultat || {};
             const driftsres = resultat.driftsresultat;
-            results[orgnr] = {
-              year: r.regnskapsperiode?.fraDato?.substring(0, 4) || "",
+            const egenkapitalGjeld = r.egenkapitalGjeld || {};
+            const eiendeler = r.eiendeler || {};
+            const year = r.regnskapsperiode?.fraDato?.substring(0, 4) || "";
+            const row = {
+              year,
               omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,
               driftsresultat: typeof driftsres === "number" ? driftsres : (driftsres?.driftsresultat || 0),
               arsresultat: resultat.ordinaertResultatFoerSkattekostnad || resultat.aarsresultat || 0,
             };
+            results[orgnr] = row;
+            if (year) {
+              rowsToCache.push({
+                orgnr,
+                year,
+                omsetning: row.omsetning,
+                driftsresultat: row.driftsresultat,
+                arsresultat: row.arsresultat,
+                egenkapital: egenkapitalGjeld.sumEgenkapitalGjeld || egenkapitalGjeld.egenkapital?.sumEgenkapital || 0,
+                sum_eiendeler: eiendeler.sumEiendeler || 0,
+                fetched_at: new Date().toISOString(),
+              });
+            }
           } catch { results[orgnr] = null; }
         })
       );
+
+      // Cache all fetched data
+      if (rowsToCache.length > 0) {
+        await sb.from("company_financials").upsert(rowsToCache, { onConflict: "orgnr,year" });
+      }
 
       return new Response(JSON.stringify({ financials: results }), {
         headers: { ...corsHeaders(req), "Content-Type": "application/json" },

@@ -32,7 +32,7 @@ export const translations = {
     // News Feed
     latestAnalysis: "Siste nyheter",
     topics: ["Alle", "Eiendom", "Handel", "Industri", "Teknologi", "Finans", "Reiseliv"],
-    sports: ["Alle regioner", "Møre og Romsdal", "Vestlandet", "Nord-Norge", "Trøndelag", "Østlandet", "Sørlandet"],
+    sports: ["Alle regioner", "Nordvestlandet", "Vestlandet", "Nord-Norge", "Midt-Norge", "Østlandet", "Sørlandet"],
     sportFilterLabel: "Region",
     premium: "Premium",
     loadMore: "Last flere artikler",
@@ -79,7 +79,7 @@ export const translations = {
         readTime: "6 min lesing",
         publishedAt: "2 timer siden",
         author: "Kristoffer Haugen",
-        sport: "Møre og Romsdal",
+        sport: "Nordvestlandet",
       },
       {
         id: "2",
@@ -109,7 +109,7 @@ export const translations = {
         readTime: "8 min lesing",
         publishedAt: "8 timer siden",
         author: "Sindre Bakke",
-        sport: "Trøndelag",
+        sport: "Midt-Norge",
       },
       {
         id: "5",
@@ -158,7 +158,7 @@ export const translations = {
         category: "Industri",
         readTime: "6 min lesing",
         author: "Ingrid Nybakk",
-        sport: "Møre og Romsdal",
+        sport: "Nordvestlandet",
       },
       {
         id: "4",
@@ -167,7 +167,7 @@ export const translations = {
         category: "Finans",
         readTime: "8 min lesing",
         author: "Hanne Dahl",
-        sport: "Trøndelag",
+        sport: "Midt-Norge",
       },
     ],
   },
@@ -204,7 +204,7 @@ export const translations = {
     // News Feed
     latestAnalysis: "Latest News",
     topics: ["All", "Real Estate", "Retail", "Industry", "Technology", "Finance", "Tourism"],
-    sports: ["All regions", "Møre og Romsdal", "Western Norway", "Northern Norway", "Trøndelag", "Eastern Norway", "Southern Norway"],
+    sports: ["All regions", "Northwestern Norway", "Western Norway", "Northern Norway", "Central Norway", "Eastern Norway", "Southern Norway"],
     sportFilterLabel: "Region",
     premium: "Premium",
     loadMore: "Load More Stories",
@@ -251,7 +251,7 @@ export const translations = {
         readTime: "6 min read",
         publishedAt: "2 hours ago",
         author: "Kristoffer Haugen",
-        sport: "Møre og Romsdal",
+        sport: "Nordvestlandet",
       },
       {
         id: "2",
@@ -281,7 +281,7 @@ export const translations = {
         readTime: "8 min read",
         publishedAt: "8 hours ago",
         author: "Sindre Bakke",
-        sport: "Trøndelag",
+        sport: "Midt-Norge",
       },
       {
         id: "5",
@@ -330,7 +330,7 @@ export const translations = {
         category: "Industry",
         readTime: "6 min read",
         author: "Ingrid Nybakk",
-        sport: "Møre og Romsdal",
+        sport: "Nordvestlandet",
       },
       {
         id: "4",
@@ -339,7 +339,7 @@ export const translations = {
         category: "Finance",
         readTime: "8 min read",
         author: "Hanne Dahl",
-        sport: "Trøndelag",
+        sport: "Midt-Norge",
       },
     ],
   },

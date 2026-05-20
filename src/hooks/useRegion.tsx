@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 export interface Region {
   slug: string;
   name: string;
-  subdomain: string | null;
-  is_active: boolean;
 }
 
 interface RegionContextValue {
@@ -22,15 +20,6 @@ const RegionContext = createContext<RegionContextValue>({
   switchRegion: () => {},
 });
 
-function detectRegionFromHost(): string | null {
-  const host = window.location.hostname;
-  const parts = host.split(".");
-  if (parts.length >= 3) {
-    return parts[0];
-  }
-  return null;
-}
-
 export function RegionProvider({ children }: { children: ReactNode }) {
   const [regions, setRegions] = useState<Region[]>([]);
   const [current, setCurrent] = useState<Region | null>(null);
@@ -38,57 +27,23 @@ export function RegionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      // Try new schema first (with is_active column), fall back to old schema
-      let active: Region[] = [];
       const { data, error } = await supabase
         .from("editorial_regions")
-        .select("slug, name, subdomain, is_active")
-        .eq("is_active", true)
+        .select("slug, name")
         .order("sort_order", { ascending: true });
 
-      if (!error && data && data.length > 0) {
-        active = data as Region[];
-      } else {
-        // Pre-migration fallback: fetch all regions without new columns
-        const { data: fallbackData } = await supabase
-          .from("editorial_regions")
-          .select("slug, name")
-          .order("sort_order", { ascending: true });
-        active = (fallbackData ?? []).map((r: any) => ({
-          ...r,
-          subdomain: null,
-          is_active: true,
-        }));
-      }
-
+      const active: Region[] = (data ?? []) as Region[];
       setRegions(active);
 
-      const sub = detectRegionFromHost();
-      const match = active.find((r) => r.subdomain === sub);
-
-      if (match) {
-        setCurrent(match);
-      } else {
-        const fallback = active.find((r) => r.slug !== "nasjonal") ?? active[0] ?? null;
-        setCurrent(fallback);
-      }
-
+      const fallback = active.find((r) => r.slug !== "nasjonal") ?? active[0] ?? null;
+      setCurrent(fallback);
       setLoading(false);
     })();
   }, []);
 
   function switchRegion(slug: string) {
     const target = regions.find((r) => r.slug === slug);
-    if (!target) return;
-
-    if (target.subdomain) {
-      const { protocol, port, pathname } = window.location;
-      const domain = window.location.hostname.split(".").slice(-2).join(".");
-      const newHost = `${target.subdomain}.${domain}${port ? `:${port}` : ""}`;
-      window.location.href = `${protocol}//${newHost}${pathname}`;
-    } else {
-      setCurrent(target);
-    }
+    if (target) setCurrent(target);
   }
 
   return (

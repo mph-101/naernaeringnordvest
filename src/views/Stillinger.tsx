@@ -22,7 +22,7 @@ export default function Stillinger() {
     meta.setAttribute(
       "content",
       isNo
-        ? "Gratis publisering av stillingsannonser. Finn jobb i Møre og Romsdal og resten av regionen."
+        ? "Gratis publisering av stillingsannonser. Finn jobb på Nordvestlandet og resten av regionen."
         : "Free job posting for local employers. Find jobs across the region.",
     );
   }, [isNo]);

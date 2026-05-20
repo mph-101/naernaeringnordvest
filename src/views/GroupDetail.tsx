@@ -212,7 +212,22 @@ const GroupDetail = () => {
       {/* Messages */}
       <div className="flex-1 overflow-auto">
         <div className="max-w-3xl mx-auto px-6 py-6 space-y-3">
-          {messages.length === 0 ? (
+          {!userId ? (
+            <div className="text-center py-16 space-y-4">
+              <Lock className="w-10 h-10 mx-auto text-muted-foreground/50" />
+              <p className="text-muted-foreground font-body">
+                {language === "no"
+                  ? "Du må være innlogget for å se meldinger i denne gruppen."
+                  : "You need to be logged in to view messages in this group."}
+              </p>
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft"
+              >
+                {language === "no" ? "Logg inn" : "Log in"}
+              </Link>
+            </div>
+          ) : messages.length === 0 ? (
             <p className="text-center text-muted-foreground font-body py-12">{t.noMessages}</p>
           ) : (
             messages.map(msg => (
@@ -262,14 +277,11 @@ const GroupDetail = () => {
         </div>
       )}
 
-      {!isMember && !userId && (
+      {!isMember && userId && (
         <div className="border-t border-border bg-card p-4 text-center">
-          <p className="text-muted-foreground font-body text-sm">
-            {t.loginJoin}{" "}
-            <Link to="/login" className="text-accent hover:underline font-semibold">
-              {language === "no" ? "Logg inn" : "Log in"}
-            </Link>
-          </p>
+          <button onClick={handleJoin} className="px-5 py-2.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
+            {t.join}
+          </button>
         </div>
       )}
 

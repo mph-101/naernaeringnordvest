@@ -5,8 +5,6 @@ export interface EditorialRegion {
   name: string;
   description: string | null;
   sort_order: number;
-  subdomain: string | null;
-  is_active: boolean;
 }
 
 let cache: EditorialRegion[] | null = null;
@@ -18,7 +16,7 @@ export async function fetchRegions(): Promise<EditorialRegion[]> {
   inflight = (async () => {
     const { data, error } = await supabase
       .from("editorial_regions" as any)
-      .select("slug, name, description, sort_order, subdomain, is_active")
+      .select("slug, name, description, sort_order")
       .order("sort_order", { ascending: true });
     if (error) {
       inflight = null;

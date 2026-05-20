@@ -70,8 +70,13 @@ export function useSubscription() {
 
     load();
 
+    const channelName = `subscription:${userId}`;
+    // Remove any stale channel with the same name (React strict mode double-mount)
+    const existing = supabase.getChannels().find((c) => c.topic === `realtime:${channelName}`);
+    if (existing) supabase.removeChannel(existing);
+
     const channel = supabase
-      .channel(`subscription:${userId}`)
+      .channel(channelName)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${userId}` },

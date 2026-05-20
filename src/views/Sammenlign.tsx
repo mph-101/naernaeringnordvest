@@ -95,7 +95,7 @@ export default function Sammenlign() {
 
       <div className="bg-gradient-warm py-10 px-6">
         <div className="max-w-6xl mx-auto">
-          <Link to="/idrett" className="inline-flex items-center gap-2 text-accent-foreground/70 hover:text-accent-foreground transition-colors font-subhead text-sm mb-4">
+          <Link to="/tall" className="inline-flex items-center gap-2 text-accent-foreground/70 hover:text-accent-foreground transition-colors font-subhead text-sm mb-4">
             <ArrowLeft className="w-4 h-4" />
             Alle klubber
           </Link>

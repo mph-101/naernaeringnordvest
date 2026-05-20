@@ -42,10 +42,10 @@ const Index = () => {
     if (v === "feed" || v === "search") setView(v);
   }, [searchParams]);
 
-  // Redirect to /idrett if default view is "tall" and no explicit view param
+  // Redirect to /tall if default view is "tall" and no explicit view param
   useEffect(() => {
     if (defaultView === "tall" && !searchParams.get("view")) {
-      navigate("/idrett", { replace: true });
+      navigate("/tall", { replace: true });
     }
   }, []);
 

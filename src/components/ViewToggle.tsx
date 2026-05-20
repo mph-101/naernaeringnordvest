@@ -20,7 +20,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   const { language, defaultView, setDefaultView, hiddenElements } = useTheme();
   const t = translations[language];
   const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
-  const isIdrett = pathname.startsWith("/idrett");
+  const isIdrett = false; // legacy, kept for safety
   const isTall = pathname.startsWith("/tall");
   const isHjernevelvet = pathname.startsWith("/hjernevelvet");
 

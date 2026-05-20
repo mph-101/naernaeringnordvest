@@ -42,7 +42,7 @@ export default function KlubbProfil() {
         <Header />
         <div className="max-w-4xl mx-auto px-6 py-20 text-center">
           <h1 className="font-headline text-3xl text-headline mb-4">Klubb ikke funnet</h1>
-          <Link to="/idrett" className="text-accent hover:underline font-subhead">← Tilbake til oversikten</Link>
+          <Link to="/tall" className="text-accent hover:underline font-subhead">← Tilbake til oversikten</Link>
         </div>
       </div>
     );
@@ -88,7 +88,7 @@ export default function KlubbProfil() {
       {/* Hero */}
       <div className="bg-gradient-warm py-10 px-6">
         <div className="max-w-5xl mx-auto">
-          <Link to="/idrett" className="inline-flex items-center gap-2 text-accent-foreground/70 hover:text-accent-foreground transition-colors font-subhead text-sm mb-6">
+          <Link to="/tall" className="inline-flex items-center gap-2 text-accent-foreground/70 hover:text-accent-foreground transition-colors font-subhead text-sm mb-6">
             <ArrowLeft className="w-4 h-4" />
             Alle klubber
           </Link>
@@ -238,10 +238,10 @@ export default function KlubbProfil() {
 
         {/* Lenker */}
         <div className="flex gap-3">
-          <Link to="/idrett" className="px-5 py-2.5 border border-border rounded-xl font-subhead text-sm hover:bg-secondary transition-colors text-foreground">
+          <Link to="/tall" className="px-5 py-2.5 border border-border rounded-xl font-subhead text-sm hover:bg-secondary transition-colors text-foreground">
             ← Alle klubber
           </Link>
-          <Link to="/idrett/sammenlign" className="px-5 py-2.5 bg-accent text-accent-foreground rounded-xl font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors">
+          <Link to="/tall/sammenlign" className="px-5 py-2.5 bg-accent text-accent-foreground rounded-xl font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors">
             Sammenlign med andre →
           </Link>
         </div>

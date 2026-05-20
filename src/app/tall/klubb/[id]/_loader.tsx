@@ -3,6 +3,6 @@
 import dynamic from "next/dynamic";
 
 export const PageClient = dynamic(
-  () => import("./client").then((m) => ({ default: m.IdrettClient })),
+  () => import("./client").then((m) => ({ default: m.KlubbProfilClient })),
   { ssr: false }
 );

@@ -227,7 +227,8 @@ Returner KUN JSON via tool call. Hvert objekt har:
                       const driftsres = resultat.driftsresultat;
                       const egenkapitalGjeld = r.egenkapitalGjeld || {};
                       const eiendeler = r.eiendeler || {};
-                      const year = r.regnskapsperiode?.fraDato?.substring(0, 4) || "";
+                      // Use tilDato for year label — Norwegian fiscal year convention.
+                      const year = r.regnskapsperiode?.tilDato?.substring(0, 4) || r.regnskapsperiode?.fraDato?.substring(0, 4) || "";
                       if (year) {
                         rowsToCache.push({
                           orgnr,

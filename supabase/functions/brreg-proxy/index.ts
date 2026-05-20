@@ -155,7 +155,9 @@ Deno.serve(async (req) => {
         if (page >= totalPages) break;
       }
 
-      // Parse fresh BRREG data
+      // Parse fresh BRREG data.
+      // Use tilDato (end of period) for year label — Norwegian fiscal year convention.
+      // e.g. period 2023-09-01 to 2024-08-31 = "2024" (fiscal year ending in 2024).
       const freshRows = allRegnskaper.map((r: any) => {
         const resultat = r.resultatregnskapResultat || {};
         const driftsres = resultat.driftsresultat;
@@ -163,7 +165,7 @@ Deno.serve(async (req) => {
         const egenkapitalGjeld = r.egenkapitalGjeld || {};
         return {
           orgnr,
-          year: r.regnskapsperiode?.fraDato?.substring(0, 4) || r.journalnr || "",
+          year: r.regnskapsperiode?.tilDato?.substring(0, 4) || r.regnskapsperiode?.fraDato?.substring(0, 4) || r.journalnr || "",
           omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,
           driftsresultat: typeof driftsres === "number" ? driftsres : (driftsres?.driftsresultat || 0),
           arsresultat: resultat.ordinaertResultatFoerSkattekostnad || resultat.aarsresultat || 0,
@@ -352,7 +354,8 @@ Deno.serve(async (req) => {
             const driftsres = resultat.driftsresultat;
             const egenkapitalGjeld = r.egenkapitalGjeld || {};
             const eiendeler = r.eiendeler || {};
-            const year = r.regnskapsperiode?.fraDato?.substring(0, 4) || "";
+            // Use tilDato for year label — Norwegian fiscal year convention.
+            const year = r.regnskapsperiode?.tilDato?.substring(0, 4) || r.regnskapsperiode?.fraDato?.substring(0, 4) || "";
             const row = {
               year,
               omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,

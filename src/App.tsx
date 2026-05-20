@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
 import { RegionProvider } from "@/hooks/useRegion";
@@ -63,10 +63,13 @@ const App = () => (
               <Route path="/article/:id" element={<Article />} />
               <Route path="/team" element={<Team />} />
               <Route path="/admin" element={<Admin />} />
-              <Route path="/idrett" element={<Tall />} />
               <Route path="/tall" element={<Tall />} />
-              <Route path="/idrett/klubb/:id" element={<KlubbProfil />} />
-              <Route path="/idrett/sammenlign" element={<Sammenlign />} />
+              <Route path="/tall/klubb/:id" element={<KlubbProfil />} />
+              <Route path="/tall/sammenlign" element={<Sammenlign />} />
+              {/* Legacy redirects */}
+              <Route path="/idrett" element={<Navigate to="/tall" replace />} />
+              <Route path="/idrett/klubb/:id" element={<Navigate to="/tall" replace />} />
+              <Route path="/idrett/sammenlign" element={<Navigate to="/tall/sammenlign" replace />} />
               <Route path="/grupper" element={<Groups />} />
               <Route path="/grupper/:id" element={<GroupDetail />} />
               <Route path="/mine-delte-notater" element={<MineDelteNotater />} />

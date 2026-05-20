@@ -114,7 +114,7 @@ export default function Idrett() {
             />
           </div>
           <Link
-            to="/idrett/sammenlign"
+            to="/tall/sammenlign"
             className="px-5 py-3 bg-accent text-accent-foreground rounded-xl font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft text-center whitespace-nowrap"
           >
             Sammenlign klubber →
@@ -138,7 +138,7 @@ export default function Idrett() {
             return (
               <Link
                 key={club.id}
-                to={`/idrett/klubb/${club.id}`}
+                to={`/tall/klubb/${club.id}`}
                 className="block bg-card border border-border rounded-2xl p-4 hover:border-accent/40 hover:shadow-elevated transition-all animate-fade-up group"
                 style={{ animationDelay: `${i * 30}ms` }}
               >

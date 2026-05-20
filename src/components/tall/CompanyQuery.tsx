@@ -12,16 +12,16 @@ interface QueryResult {
 
 const EXAMPLE_QUESTIONS_NO = [
   "Hvem er de fem største private arbeidsgiverne i Molde?",
-  "Hvor mange AS-selskaper finnes i Ålesund?",
-  "Vis de nyeste selskapene i Trondheim",
-  "Hvem er de største arbeidsgiverne i Nordland?",
+  "Hvilke selskaper har gått konkurs i Ålesund det siste året?",
+  "Hvor lønnsomt er Linjebygg Offshore AS?",
+  "Vis omsetning og resultat for de største selskapene i Kristiansund",
 ];
 
 const EXAMPLE_QUESTIONS_EN = [
   "Who are the five largest private employers in Molde?",
-  "How many AS companies are there in Ålesund?",
-  "Show the newest companies in Trondheim",
-  "Who are the largest employers in Nordland?",
+  "Which companies went bankrupt in Ålesund in the last year?",
+  "How profitable is Linjebygg Offshore AS?",
+  "Show revenue and profit for the largest companies in Kristiansund",
 ];
 
 export function CompanyQuery() {

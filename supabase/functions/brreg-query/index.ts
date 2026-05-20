@@ -1,8 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 import { corsHeaders } from "../_shared/cors.ts";
 
 const BRREG_BASE = "https://data.brreg.no";
+
+function getSupabaseAdmin() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  );
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders(req) });
@@ -195,35 +203,68 @@ Returner KUN JSON via tool call. Hvert objekt har:
           }));
 
           // Step 2b: If fetch_financials is requested, get financial data for top results
+          // Fetches fresh from BRREG, caches to Supabase, then returns all cached years (timeseries)
           let financials: Record<string, any> | undefined;
           if (q.fetch_financials && companies.length > 0) {
+            const sb = getSupabaseAdmin();
             const topOrgnrs = companies.slice(0, 5).map((c: any) => c.orgnr);
             financials = {};
+            const rowsToCache: any[] = [];
+
             await Promise.all(
               topOrgnrs.map(async (orgnr: string) => {
                 try {
+                  // Fetch fresh from BRREG
                   const fRes = await fetch(
                     `${BRREG_BASE}/regnskapsregisteret/regnskap/${orgnr}?size=5&page=0`,
                     { headers: { Accept: "application/json" } }
                   );
-                  if (!fRes.ok) { financials![orgnr] = null; return; }
-                  const fData = await fRes.json();
-                  const items = Array.isArray(fData) ? fData : fData?._embedded?.regnskaper || [];
-                  financials![orgnr] = items.slice(0, 5).map((r: any) => {
-                    const resultat = r.resultatregnskapResultat || {};
-                    const driftsres = resultat.driftsresultat;
-                    const egenkapitalGjeld = r.egenkapitalGjeld || {};
-                    return {
-                      year: r.regnskapsperiode?.fraDato?.substring(0, 4) || "",
-                      omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,
-                      driftsresultat: typeof driftsres === "number" ? driftsres : (driftsres?.driftsresultat || 0),
-                      arsresultat: resultat.ordinaertResultatFoerSkattekostnad || resultat.aarsresultat || 0,
-                      egenkapital: egenkapitalGjeld.sumEgenkapitalGjeld || egenkapitalGjeld.egenkapital?.sumEgenkapital || 0,
-                    };
-                  });
+                  if (fRes.ok) {
+                    const fData = await fRes.json();
+                    const items = Array.isArray(fData) ? fData : fData?._embedded?.regnskaper || [];
+                    for (const r of items) {
+                      const resultat = r.resultatregnskapResultat || {};
+                      const driftsres = resultat.driftsresultat;
+                      const egenkapitalGjeld = r.egenkapitalGjeld || {};
+                      const eiendeler = r.eiendeler || {};
+                      const year = r.regnskapsperiode?.fraDato?.substring(0, 4) || "";
+                      if (year) {
+                        rowsToCache.push({
+                          orgnr,
+                          year,
+                          omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,
+                          driftsresultat: typeof driftsres === "number" ? driftsres : (driftsres?.driftsresultat || 0),
+                          arsresultat: resultat.ordinaertResultatFoerSkattekostnad || resultat.aarsresultat || 0,
+                          egenkapital: egenkapitalGjeld.sumEgenkapitalGjeld || egenkapitalGjeld.egenkapital?.sumEgenkapital || 0,
+                          sum_eiendeler: eiendeler.sumEiendeler || 0,
+                          fetched_at: new Date().toISOString(),
+                        });
+                      }
+                    }
+                  }
+
+                  // Return all cached years (historical + fresh)
+                  const { data: cached } = await sb
+                    .from("company_financials")
+                    .select("year, omsetning, driftsresultat, arsresultat, egenkapital")
+                    .eq("orgnr", orgnr)
+                    .order("year", { ascending: false });
+
+                  financials![orgnr] = (cached || []).map((c: any) => ({
+                    year: c.year,
+                    omsetning: c.omsetning,
+                    driftsresultat: c.driftsresultat,
+                    arsresultat: c.arsresultat,
+                    egenkapital: c.egenkapital,
+                  }));
                 } catch { financials![orgnr] = null; }
               })
             );
+
+            // Batch upsert all fresh data to cache
+            if (rowsToCache.length > 0) {
+              await sb.from("company_financials").upsert(rowsToCache, { onConflict: "orgnr,year" });
+            }
           }
 
           return {
@@ -257,7 +298,9 @@ Formater svaret med Markdown:
 - Bruk **fet skrift** for selskapsnavn
 - Bruk tabeller der det er naturlig
 - Inkluder antall ansatte, kommune og bransje der relevant
-- Hvis regnskapsdata (financials) er inkludert, vis omsetning, driftsresultat og årsresultat i tabell
+- Hvis regnskapsdata (financials) er inkludert, vis omsetning, driftsresultat og årsresultat i tabell med alle tilgjengelige år
+- Hvis det finnes data for flere år, vis utviklingen over tid og kommenter trender (vekst/nedgang)
+- Beløp i hele tusen (del på 1000 og skriv "TNOK") for bedre lesbarhet
 - For konkurs-spørsmål: vis selskapsnavn, konkursdato, kommune og bransje
 - Vær presis og saklig
 - Avslutt alltid med: "Kilde: Brønnøysundregistrene (data.brreg.no)"

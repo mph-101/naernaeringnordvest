@@ -264,7 +264,12 @@ const GroupDetail = () => {
 
       {!isMember && !userId && (
         <div className="border-t border-border bg-card p-4 text-center">
-          <p className="text-muted-foreground font-body text-sm">{t.loginJoin}</p>
+          <p className="text-muted-foreground font-body text-sm">
+            {t.loginJoin}{" "}
+            <Link to="/login" className="text-accent hover:underline font-semibold">
+              {language === "no" ? "Logg inn" : "Log in"}
+            </Link>
+          </p>
         </div>
       )}
 

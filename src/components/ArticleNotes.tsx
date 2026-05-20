@@ -119,7 +119,7 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
   const dateStr = new Date().toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "long", year: "numeric" });
   const articleUrl = typeof window !== "undefined"
     ? `${window.location.origin}/article/${articleId}`
-    : `https://naernaeringnordvest.lovable.app/article/${articleId}`;
+    : `https://naernaeringnordvest.vercel.app/article/${articleId}`;
 
   const buildShareText = () => {
     const header = isNo ? `📝 Mitt notat om «${title}»` : `📝 My note on "${title}"`;

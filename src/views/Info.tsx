@@ -13,7 +13,7 @@ const Info = () => {
   useEffect(() => {
     if (!page) return;
     const fullTitle = `${page.title} – Nær Næring`;
-    const url = `https://naernaeringnordvest.lovable.app/${page.slug}`;
+    const url = `${window.location.origin}/${page.slug}`;
 
     document.title = fullTitle;
 

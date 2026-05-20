@@ -272,7 +272,7 @@ export const FYLKER: Fylke[] = [
     ],
   },
   {
-    navn: "Nordvestlandet",
+    navn: "Møre og Romsdal",
     kommuner: [
       { nummer: "1505", navn: "Kristiansund" },
       { nummer: "1506", navn: "Molde" },
@@ -304,7 +304,7 @@ export const FYLKER: Fylke[] = [
     ],
   },
   {
-    navn: "Midt-Norge",
+    navn: "Trøndelag",
     kommuner: [
       { nummer: "5001", navn: "Trondheim" },
       { nummer: "5006", navn: "Steinkjer" },

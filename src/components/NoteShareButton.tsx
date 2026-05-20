@@ -81,7 +81,7 @@ export function NoteShareButton({ articleId, articleTitle, content, variant = "c
   const title = articleTitle || `Artikkel #${articleId}`;
   const articleUrl = typeof window !== "undefined"
     ? `${window.location.origin}/article/${articleId}`
-    : `https://naernaeringnordvest.lovable.app/article/${articleId}`;
+    : `https://naernaeringnordvest.vercel.app/article/${articleId}`;
 
   const buildShareText = () => {
     const header = isNo ? `📝 Mitt notat om «${title}»` : `📝 My note on "${title}"`;

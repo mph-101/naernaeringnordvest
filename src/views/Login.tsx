@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Header } from "@/components/Header";
 import { useTheme } from "@/hooks/useTheme";
 import { Mail, Lock, ArrowLeft, User, Loader2 } from "lucide-react";
@@ -84,17 +83,17 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin,
+        },
       });
-      if (result.error) {
-        toast.error(result.error instanceof Error ? result.error.message : "Google login failed");
+      if (error) {
+        toast.error(error.message || "Google login failed");
         setGoogleLoading(false);
-        return;
       }
-      if (result.redirected) return;
-      toast.success(t.loginSuccess);
-      navigate("/");
+      // Supabase redirects to Google — page unloads from here
     } catch (e: any) {
       toast.error(e.message || "Google login failed");
       setGoogleLoading(false);

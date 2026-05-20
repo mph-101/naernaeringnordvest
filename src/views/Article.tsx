@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { getUrlParam } from "@/lib/params";
 import { ArrowLeft, Lock, BookOpen } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ArticleByline } from "@/components/ArticleByline";
@@ -59,7 +60,7 @@ function timeAgo(dateStr: string, lang: "no" | "en"): string {
 }
 
 const Article = () => {
-  const { id } = useParams<{ id: string }>();
+  const id = getUrlParam();
   const navigate = useNavigate();
   const { language } = useTheme();
   const t = translations[language];

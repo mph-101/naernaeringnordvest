@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { getUrlParam } from "@/lib/params";
 import { Calendar, MapPin, ExternalLink, ArrowLeft, Loader2, Building2, Tag, MapPinned, Download } from "lucide-react";
 import { Header } from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +23,7 @@ interface EventItem {
 }
 
 const ArrangementDetalj = () => {
-  const { id } = useParams<{ id: string }>();
+  const id = getUrlParam();
   const navigate = useNavigate();
   const { language } = useTheme();
   const [event, setEvent] = useState<EventItem | null>(null);

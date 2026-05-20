@@ -136,6 +136,16 @@
   }
 }
 
+@layer components {
+  /* Shared form input style used by StillingNy and other forms */
+  .input {
+    @apply w-full px-4 py-2.5 bg-background text-foreground border border-border rounded-xl font-body
+      placeholder:text-muted-foreground
+      focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent
+      transition-all;
+  }
+}
+
 @layer utilities {
   .font-headline {
     font-family: 'Lora', Georgia, serif;

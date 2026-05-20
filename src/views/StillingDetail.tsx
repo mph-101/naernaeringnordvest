@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { getUrlParam } from "@/lib/params";
 import { ArrowLeft, MapPin, Briefcase, Calendar, Building2, Mail, Phone, ExternalLink, Sparkles } from "lucide-react";
 import { Header } from "@/components/Header";
 import { useTheme } from "@/hooks/useTheme";
@@ -8,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchJobBySlug, jsonLdJobPosting, EMPLOYMENT_TYPES, type JobListing } from "@/lib/jobs";
 
 export default function StillingDetail() {
-  const { slug } = useParams<{ slug: string }>();
+  const slug = getUrlParam();
   const navigate = useNavigate();
   const { language } = useTheme();
   const { userId } = useAuth();

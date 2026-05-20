@@ -1,4 +1,5 @@
-import { useParams, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { getUrlParam } from "@/lib/params";
 import { Header } from "@/components/Header";
 import { getClubById, formatMNOK } from "@/data/clubs";
 import { IdrettAIChat } from "@/components/IdrettAIChat";
@@ -33,7 +34,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function KlubbProfil() {
-  const { id } = useParams<{ id: string }>();
+  const id = getUrlParam();
   const club = getClubById(id!);
 
   if (!club) {

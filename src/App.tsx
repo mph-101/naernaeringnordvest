@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,46 +7,59 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
 import { RegionProvider } from "@/hooks/useRegion";
-import Index from "./views/Index";
-import Article from "./views/Article";
-import Team from "./views/Team";
-import Admin from "./views/Admin";
-import NotFound from "./views/NotFound";
-import Idrett from "./views/Idrett";
-import Tall from "./views/Tall";
-import KlubbProfil from "./views/KlubbProfil";
-import Sammenlign from "./views/Sammenlign";
-import Groups from "./views/Groups";
-import GroupDetail from "./views/GroupDetail";
-import MineDelteNotater from "./views/MineDelteNotater";
-import Login from "./views/Login";
-import Profile from "./views/Profile";
-import ResetPassword from "./views/ResetPassword";
-import Onboarding from "./views/Onboarding";
-import Hjernetrim from "./views/Hjernetrim";
-import Hjernevelvet from "./views/Hjernevelvet";
-import HjernevelvPanel from "./views/HjernevelvPanel";
-import HjernevelvWriter from "./views/HjernevelvWriter";
-import HjernevelvEssay from "./views/HjernevelvEssay";
-import Tag from "./views/Tag";
-import Subscribe from "./views/Subscribe";
-import SubscribeReturn from "./views/SubscribeReturn";
-import BusinessPanel from "./views/BusinessPanel";
-import Stillinger from "./views/Stillinger";
-import StillingDetail from "./views/StillingDetail";
-import StillingNy from "./views/StillingNy";
-import StillingNyTakk from "./views/StillingNyTakk";
-import Info from "./views/Info";
-import Arrangementer from "./views/Arrangementer";
-import ArrangementDetalj from "./views/ArrangementDetalj";
-import Newsletter from "./views/Newsletter";
-import Unsubscribe from "./views/Unsubscribe";
-import Lytt from "./views/Lytt";
-import { MascotTour } from "./components/mascot/MascotTour";
 import { AudioPlayerProvider } from "./hooks/useAudioPlayer";
 import { MiniPlayer } from "./components/audio/MiniPlayer";
+import { MascotTour } from "./components/mascot/MascotTour";
+
+// Critical path — loaded eagerly
+import Index from "./views/Index";
+import NotFound from "./views/NotFound";
+
+// Everything else — lazy loaded
+const Article = lazy(() => import("./views/Article"));
+const Team = lazy(() => import("./views/Team"));
+const Admin = lazy(() => import("./views/Admin"));
+const Tall = lazy(() => import("./views/Tall"));
+const KlubbProfil = lazy(() => import("./views/KlubbProfil"));
+const Sammenlign = lazy(() => import("./views/Sammenlign"));
+const Groups = lazy(() => import("./views/Groups"));
+const GroupDetail = lazy(() => import("./views/GroupDetail"));
+const MineDelteNotater = lazy(() => import("./views/MineDelteNotater"));
+const Login = lazy(() => import("./views/Login"));
+const Profile = lazy(() => import("./views/Profile"));
+const ResetPassword = lazy(() => import("./views/ResetPassword"));
+const Onboarding = lazy(() => import("./views/Onboarding"));
+const Hjernetrim = lazy(() => import("./views/Hjernetrim"));
+const Hjernevelvet = lazy(() => import("./views/Hjernevelvet"));
+const HjernevelvPanel = lazy(() => import("./views/HjernevelvPanel"));
+const HjernevelvWriter = lazy(() => import("./views/HjernevelvWriter"));
+const HjernevelvEssay = lazy(() => import("./views/HjernevelvEssay"));
+const Tag = lazy(() => import("./views/Tag"));
+const Subscribe = lazy(() => import("./views/Subscribe"));
+const SubscribeReturn = lazy(() => import("./views/SubscribeReturn"));
+const BusinessPanel = lazy(() => import("./views/BusinessPanel"));
+const Stillinger = lazy(() => import("./views/Stillinger"));
+const StillingDetail = lazy(() => import("./views/StillingDetail"));
+const StillingNy = lazy(() => import("./views/StillingNy"));
+const StillingNyTakk = lazy(() => import("./views/StillingNyTakk"));
+const Info = lazy(() => import("./views/Info"));
+const Arrangementer = lazy(() => import("./views/Arrangementer"));
+const ArrangementDetalj = lazy(() => import("./views/ArrangementDetalj"));
+const Newsletter = lazy(() => import("./views/Newsletter"));
+const Unsubscribe = lazy(() => import("./views/Unsubscribe"));
+const Lytt = lazy(() => import("./views/Lytt"));
+
+// Idrett is only used for redirects — no need to lazy-load a redirect
+const Idrett = lazy(() => import("./views/Idrett"));
 
 const queryClient = new QueryClient();
+
+/** Minimal full-screen spinner shown while a lazy chunk loads */
+const PageLoader = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -58,6 +72,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <MascotTour />
+              <Suspense fallback={<PageLoader />}>
               <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/article/:id" element={<Article />} />
@@ -107,6 +122,7 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
               </Routes>
+              </Suspense>
               <MiniPlayer />
             </BrowserRouter>
           </TooltipProvider>

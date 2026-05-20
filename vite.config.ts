@@ -7,6 +7,38 @@ import { sentryVitePlugin } from "@sentry/vite-plugin";
 export default defineConfig(({ mode }) => ({
   build: {
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": [
+            "react",
+            "react-dom",
+            "react-router-dom",
+            "@tanstack/react-query",
+          ],
+          "vendor-supabase": [
+            "@supabase/supabase-js",
+          ],
+          "vendor-recharts": [
+            "recharts",
+          ],
+          "vendor-radix": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-popover",
+            "@radix-ui/react-select",
+            "@radix-ui/react-tooltip",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-accordion",
+          ],
+          "vendor-tiptap": [
+            "@tiptap/core",
+            "@tiptap/react",
+            "@tiptap/starter-kit",
+          ],
+        },
+      },
+    },
   },
   server: {
     host: "::",

@@ -168,7 +168,7 @@ Deno.serve(async (req) => {
           year: r.regnskapsperiode?.tilDato?.substring(0, 4) || r.regnskapsperiode?.fraDato?.substring(0, 4) || r.journalnr || "",
           omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,
           driftsresultat: typeof driftsres === "number" ? driftsres : (driftsres?.driftsresultat || 0),
-          arsresultat: resultat.ordinaertResultatFoerSkattekostnad || resultat.aarsresultat || 0,
+          arsresultat: resultat.aarsresultat || resultat.totalresultat || resultat.ordinaertResultatFoerSkattekostnad || 0,
           egenkapital: egenkapitalGjeld.sumEgenkapitalGjeld || egenkapitalGjeld.egenkapital?.sumEgenkapital || 0,
           sum_eiendeler: eiendeler.sumEiendeler || 0,
         };
@@ -360,7 +360,7 @@ Deno.serve(async (req) => {
               year,
               omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,
               driftsresultat: typeof driftsres === "number" ? driftsres : (driftsres?.driftsresultat || 0),
-              arsresultat: resultat.ordinaertResultatFoerSkattekostnad || resultat.aarsresultat || 0,
+              arsresultat: resultat.aarsresultat || resultat.totalresultat || resultat.ordinaertResultatFoerSkattekostnad || 0,
             };
             results[orgnr] = row;
             if (year) {

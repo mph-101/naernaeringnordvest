@@ -50,7 +50,17 @@ DU HAR TILGANG TIL TRE DATAKILDER:
 2. REGNSKAPSREGISTERET (regnskapsdata for et spesifikt selskap)
    Base: https://data.brreg.no/regnskapsregisteret/regnskap/{orgnr}
    Returner omsetning, driftsresultat, årsresultat, egenkapital, sum eiendeler per år.
-   Bruk dette når brukeren spør om økonomi, lønnsomhet, omsetning, vekst, regnskap for et navngitt selskap.
+   ALLTID sett fetch_financials=true når brukeren nevner et navngitt selskap OG bruker noen av disse ordene/begrepene:
+   - lønnsom, lønnsomhet, lønnsomme
+   - økonomi, økonomisk, finansiell, finansielt
+   - omsetning, salg, inntekter
+   - driftsresultat, resultat, overskudd, underskudd, tap
+   - regnskap, årsregnskap, regnskapstall, regnskapsdata, nøkkeltall
+   - vekst, utvikling, trend
+   - tjener, tjent, går det bra, går det dårlig, hvordan går det
+   - margin, marginer, EBIT, EBITDA
+   - egenkapital, soliditet
+   - "hvor stor", "hvor mye", "hva omsetter"
 
 3. KONKURSREGISTERET (via enhetsregisteret med konkurs=true)
    Bruk parameteren konkurs=true for å finne selskaper som er konkurs.
@@ -77,6 +87,8 @@ Viktige kommunenumre:
 - Fredrikstad: 3004, Kristiansand: 4204
 
 VIKTIG: For spørsmål om økonomi/regnskap for et spesifikt selskap, lag FØRST en enhetsregisteret-query for å finne orgnr, og sett fetch_financials=true.
+
+TVILTILFELLER: Hvis du er usikker på om brukeren spør om økonomi - sett fetch_financials=true. Bedre å ha regnskapsdata tilgjengelig og ikke trenge den, enn å mangle den.
 
 Returner KUN JSON via tool call. Hvert objekt har:
 {
@@ -234,7 +246,7 @@ Returner KUN JSON via tool call. Hvert objekt har:
                           year,
                           omsetning: driftsres?.driftsinntekter?.sumDriftsinntekter || resultat.driftsinntekter?.sumDriftsinntekter || 0,
                           driftsresultat: typeof driftsres === "number" ? driftsres : (driftsres?.driftsresultat || 0),
-                          arsresultat: resultat.ordinaertResultatFoerSkattekostnad || resultat.aarsresultat || 0,
+                          arsresultat: resultat.aarsresultat || resultat.totalresultat || resultat.ordinaertResultatFoerSkattekostnad || 0,
                           egenkapital: egenkapitalGjeld.sumEgenkapitalGjeld || egenkapitalGjeld.egenkapital?.sumEgenkapital || 0,
                           sum_eiendeler: eiendeler.sumEiendeler || 0,
                           fetched_at: new Date().toISOString(),
@@ -294,17 +306,30 @@ Returner KUN JSON via tool call. Hvert objekt har:
             role: "system",
             content: `Du er en norsk bedriftsanalytiker. Svar på brukerens spørsmål basert på dataene fra Brønnøysundregistrene.
 
-Formater svaret med Markdown:
+TERMINOLOGI (viktig - bruk presist):
+- "omsetning" = sumDriftsinntekter (driftsinntekter totalt)
+- "driftsresultat" = EBIT (resultat før finansposter og skatt)
+- "årsresultat" = resultat etter skatt (det selskapet sitter igjen med)
+- "ordinært resultat før skatt" = før skattekostnaden er trukket fra (typisk høyere enn årsresultat)
+- IKKE bland sammen disse begrepene - bruk dem riktig
+
+DATAFORMAT:
+- Alle tall i feltene omsetning/driftsresultat/årsresultat/egenkapital er i HELE KRONER fra BRREG
+- Når du presenterer dem som "TNOK" (tusen kroner), del på 1000 først
+- For større tall (>1 mrd) kan du også bruke "MNOK" (millioner)
+
+REGLER FOR SVARET:
 - Bruk **fet skrift** for selskapsnavn
-- Bruk tabeller der det er naturlig
+- Bruk Markdown-tabeller for tallpresentasjon
 - Inkluder antall ansatte, kommune og bransje der relevant
-- Hvis regnskapsdata (financials) er inkludert, vis omsetning, driftsresultat og årsresultat i tabell med alle tilgjengelige år
-- Hvis det finnes data for flere år, vis utviklingen over tid og kommenter trender (vekst/nedgang)
-- Beløp i hele tusen (del på 1000 og skriv "TNOK") for bedre lesbarhet
+- Hvis regnskapsdata (financials) er inkludert, vis omsetning, driftsresultat OG årsresultat i tabell med alle tilgjengelige år
+- Hvis det finnes data for flere år, vis utviklingen over tid og kommenter trender (vekst/nedgang i prosent)
+- Hvis kun ett år er tilgjengelig, IKKE finn på tall for tidligere år - oppgi kun det som faktisk er der
+- Beregn driftsmargin = driftsresultat / omsetning × 100 (vis med 1 desimal)
 - For konkurs-spørsmål: vis selskapsnavn, konkursdato, kommune og bransje
-- Vær presis og saklig
-- Avslutt alltid med: "Kilde: Brønnøysundregistrene (data.brreg.no)"
-- Hvis ingen data ble funnet, forklar det og foreslå alternative søk`
+- Vær presis og saklig - aldri finn på tall som ikke er i datagrunnlaget
+- Hvis financials-feltet mangler eller er null for et selskap, si tydelig at regnskapsdata ikke er tilgjengelig
+- Avslutt alltid med: "Kilde: Brønnøysundregistrene (data.brreg.no)"`
           },
           {
             role: "user",

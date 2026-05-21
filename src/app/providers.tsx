@@ -10,6 +10,7 @@ import { AudioPlayerProvider } from "@/hooks/useAudioPlayer";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { MascotTour } from "@/components/mascot/MascotTour";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,7 @@ export function NextProviders({ children }: { children: React.ReactNode }) {
                 <AudioPlayerProvider>
                   <TooltipProvider>
                     {children}
+                    <MascotTour />
                     <Toaster />
                     <Sonner />
                   </TooltipProvider>

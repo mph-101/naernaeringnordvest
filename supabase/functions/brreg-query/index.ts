@@ -188,6 +188,16 @@ Returner KUN JSON via tool call. Hvert objekt har:
     // Limit to max 20 queries
     queries = queries.slice(0, 20);
 
+    // Override: force fetch_financials=true when the question contains financial
+    // trigger words. AI planner is non-deterministic about this flag, so we
+    // backstop it deterministically based on the user's question.
+    const financialTriggers = /\b(l[øo]nnsom\w*|[øo]konom\w*|omsetning|salg|inntekt\w*|driftsresultat|[åa]rsresultat|resultat\w*|oversku\w*|undersku\w*|tap|regnskap\w*|n[øo]kkeltall|vekst|utvikling|trend|tjener|tjent|margin\w*|EBIT|EBITDA|egenkapital|soliditet|hvor (stor|mye)|hva omsetter)\b/i;
+    if (financialTriggers.test(question)) {
+      for (const q of queries) {
+        if (q.fetch_financials !== true) q.fetch_financials = true;
+      }
+    }
+
     // Step 2: Execute all BRREG queries in parallel
     const results = await Promise.all(
       queries.map(async (q: any) => {

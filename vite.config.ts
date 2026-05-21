@@ -50,13 +50,13 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    mode === "production" &&
-      process.env.SENTRY_AUTH_TOKEN &&
-      sentryVitePlugin({
+    mode === "production" && process.env.SENTRY_AUTH_TOKEN
+      ? sentryVitePlugin({
         org: process.env.SENTRY_ORG,
         project: process.env.SENTRY_PROJECT,
         authToken: process.env.SENTRY_AUTH_TOKEN,
-      }),
+      })
+      : undefined,
   ].filter(Boolean),
   resolve: {
     alias: {

@@ -854,6 +854,42 @@ export type Database = {
         }
         Relationships: []
       }
+      company_financials: {
+        Row: {
+          arsresultat: number
+          driftsresultat: number
+          egenkapital: number
+          fetched_at: string
+          id: number
+          omsetning: number
+          orgnr: string
+          sum_eiendeler: number
+          year: string
+        }
+        Insert: {
+          arsresultat?: number
+          driftsresultat?: number
+          egenkapital?: number
+          fetched_at?: string
+          id?: never
+          omsetning?: number
+          orgnr: string
+          sum_eiendeler?: number
+          year: string
+        }
+        Update: {
+          arsresultat?: number
+          driftsresultat?: number
+          egenkapital?: number
+          fetched_at?: string
+          id?: never
+          omsetning?: number
+          orgnr?: string
+          sum_eiendeler?: number
+          year?: string
+        }
+        Relationships: []
+      }
       company_list_items: {
         Row: {
           added_at: string

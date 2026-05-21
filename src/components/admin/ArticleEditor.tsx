@@ -115,7 +115,10 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [searchResults, setSearchResults] = useState<{ orgnr: string; navn: string }[]>([]);
   const [searchingCompanies, setSearchingCompanies] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [suggestedCompanyNames, setSuggestedCompanyNames] = useState<string[]>([]);
+  // Each suggested company carries the orgnr resolved by suggest-companies'
+  // BRREG-matching pass. orgnr is null when no clear winner could be picked,
+  // in which case we fall back to the manual lookupAndAddCompany flow.
+  const [suggestedCompanies, setSuggestedCompanies] = useState<{ name: string; orgnr: string | null }[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formRef = useRef<any>(null);
@@ -1041,8 +1044,14 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       });
       if (error) throw error;
       if (data?.companies?.length) {
-        setSuggestedCompanyNames(data.companies);
-        toast({ title: "Foreslått", description: `${data.companies.length} selskaper funnet i teksten` });
+        // Backward-compat: suggest-companies used to return string[]. The
+        // newer version returns { name, orgnr | null }[]. Normalize either
+        // shape into the new schema.
+        const normalized: { name: string; orgnr: string | null }[] = data.companies.map((c: any) =>
+          typeof c === "string" ? { name: c, orgnr: null } : { name: c.name, orgnr: c.orgnr ?? null }
+        );
+        setSuggestedCompanies(normalized);
+        toast({ title: "Foreslått", description: `${normalized.length} selskaper funnet i teksten` });
       } else {
         toast({ title: "Ingen funnet", description: "Ingen selskaper identifisert i teksten" });
       }
@@ -2049,10 +2058,28 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           </div>
 
           {/* AI Suggestions */}
-          {suggestedCompanyNames.length > 0 && (() => {
-            const remaining = suggestedCompanyNames.filter(
-              (name) => !companyTags.some((t) => t.company_name?.toLowerCase().trim() === name.toLowerCase().trim())
-            );
+          {suggestedCompanies.length > 0 && (() => {
+            // Helper: a suggestion is considered "added" when its orgnr is
+            // already in companyTags (preferred) or, as a fallback, when a
+            // tag with the same name exists (covers manual-added entries).
+            const isAdded = (s: { name: string; orgnr: string | null }) =>
+              (s.orgnr && companyTags.some((t) => t.orgnr === s.orgnr)) ||
+              companyTags.some((t) => t.company_name?.toLowerCase().trim() === s.name.toLowerCase().trim());
+
+            const remaining = suggestedCompanies.filter((s) => !isAdded(s));
+
+            const addOne = async (s: { name: string; orgnr: string | null }) => {
+              // Fast path: we already have orgnr from suggest-companies
+              if (s.orgnr) {
+                if (!companyTags.some((t) => t.orgnr === s.orgnr)) {
+                  setCompanyTags((prev) => [...prev, { orgnr: s.orgnr!, company_name: s.name }]);
+                }
+                return;
+              }
+              // Slow path: AI could not match orgnr — fall back to manual lookup
+              await lookupAndAddCompany(s.name);
+            };
+
             return (
             <div>
               <div className="flex items-center justify-between mb-2 gap-2">
@@ -2064,8 +2091,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                     size="sm"
                     className="h-7 px-2 text-xs gap-1"
                     onClick={async () => {
-                      for (const name of remaining) {
-                        await lookupAndAddCompany(name);
+                      for (const s of remaining) {
+                        await addOne(s);
                       }
                     }}
                   >
@@ -2075,29 +2102,30 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                {suggestedCompanyNames.map((name) => {
-                  const added = companyTags.some(
-                    (t) => t.company_name?.toLowerCase().trim() === name.toLowerCase().trim()
-                  );
+                {suggestedCompanies.map((s) => {
+                  const added = isAdded(s);
                   return (
                     <button
-                      key={name}
+                      key={`${s.name}-${s.orgnr ?? "none"}`}
                       type="button"
-                      onClick={() => !added && lookupAndAddCompany(name)}
+                      onClick={() => !added && addOne(s)}
                       disabled={added}
                       className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full transition-colors ${
                         added
                           ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 cursor-default"
                           : "bg-accent/10 text-accent hover:bg-accent/20"
                       }`}
-                      title={added ? "Allerede lagt til" : "Legg til som tag"}
+                      title={added ? "Allerede lagt til" : s.orgnr ? `Legg til (${s.orgnr})` : "Manuell BRREG-oppslag"}
                     >
                       <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full ${
                         added ? "bg-emerald-500/20" : "bg-accent/20"
                       }`}>
                         {added ? <Check className="w-2.5 h-2.5" /> : <Plus className="w-2.5 h-2.5" />}
                       </span>
-                      {name}
+                      {s.name}
+                      {!s.orgnr && !added && (
+                        <span className="text-[9px] text-muted-foreground ml-1">?</span>
+                      )}
                     </button>
                   );
                 })}

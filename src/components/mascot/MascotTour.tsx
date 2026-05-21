@@ -122,8 +122,24 @@ export function MascotTour() {
   }, [enabled, completed, active, location.pathname]);
 
   // Find a target for the current step (skipping ones not on current route)
+  const finish = useCallback(async () => {
+    setActive(false);
+    setCompleted(true);
+    writeLocal({ completed: true });
+    if (userId) {
+      await supabase.from("profiles").update({ tour_completed_at: new Date().toISOString() } as any).eq("user_id", userId);
+    }
+  }, [userId]);
+
   useEffect(() => {
     if (!active) { setRect(null); return; }
+    // If we've run past the last step (e.g. all remaining steps were
+    // skipped due to routeMatch), finish the tour so completed=true gets
+    // persisted and we don't auto-start again on the next refresh.
+    if (stepIdx >= STEPS.length) {
+      finish();
+      return;
+    }
     let attempts = 0;
     let raf = 0;
     const tick = () => {
@@ -157,16 +173,7 @@ export function MascotTour() {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onResize, true);
     };
-  }, [active, stepIdx, location.pathname]);
-
-  const finish = useCallback(async () => {
-    setActive(false);
-    setCompleted(true);
-    writeLocal({ completed: true });
-    if (userId) {
-      await supabase.from("profiles").update({ tour_completed_at: new Date().toISOString() } as any).eq("user_id", userId);
-    }
-  }, [userId]);
+  }, [active, stepIdx, location.pathname, finish]);
 
   const next = useCallback(() => {
     if (stepIdx >= STEPS.length - 1) {

@@ -115,8 +115,35 @@ Deno.serve(async (req) => {
             errors++;
           } else {
             rowsUpserted += freshRows.length;
-            for (const r of freshRows) {
-              if (!existingSet.has(r.year)) newYearsAdded++;
+            // Collect the years that are genuinely new for this orgnr - they
+            // become 'financials_new' notifications for followers below.
+            const newRowsForThisOrg = freshRows.filter((r: any) => !existingSet.has(r.year));
+            newYearsAdded += newRowsForThisOrg.length;
+
+            if (newRowsForThisOrg.length > 0) {
+              const { data: followers } = await sb
+                .from("company_follows")
+                .select("user_id, company_name")
+                .eq("orgnr", orgnr);
+
+              if (followers && followers.length > 0) {
+                const inserts = followers.flatMap((f: any) =>
+                  newRowsForThisOrg.map((r: any) => ({
+                    user_id: f.user_id,
+                    type: "financials_new",
+                    orgnr,
+                    company_name: f.company_name,
+                    payload: {
+                      year: r.year,
+                      omsetning: r.omsetning,
+                      driftsresultat: r.driftsresultat,
+                      arsresultat: r.arsresultat,
+                      egenkapital: r.egenkapital,
+                    },
+                  }))
+                );
+                await sb.from("notifications").insert(inserts);
+              }
             }
           }
         }

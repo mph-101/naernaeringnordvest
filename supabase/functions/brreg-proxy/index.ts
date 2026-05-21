@@ -251,6 +251,43 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "status") {
+      // Returns just the status flags from enheter-endpoint, used by
+      // refresh-roles-and-status to detect konkurs / avvikling transitions.
+      const orgnr = url.searchParams.get("orgnr");
+      if (!orgnr) {
+        return new Response(JSON.stringify({ error: "orgnr required" }), {
+          status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+        });
+      }
+
+      const res = await fetch(`${BRREG_BASE}/enhetsregisteret/api/enheter/${orgnr}`, {
+        headers: { Accept: "application/json" },
+      });
+
+      if (!res.ok) {
+        return new Response(JSON.stringify({ error: "Not found", orgnr }), {
+          status: res.status,
+          headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+        });
+      }
+
+      const data = await res.json();
+      const status = {
+        orgnr,
+        navn: data?.navn || null,
+        konkurs: !!data?.konkurs,
+        konkursdato: data?.konkursdato || null,
+        under_avvikling: !!data?.underAvvikling,
+        under_tvangsavvikling: !!data?.underTvangsavviklingEllerTvangsopplosning,
+        slettedato: data?.slettedato || null,
+      };
+
+      return new Response(JSON.stringify(status), {
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
     if (action === "new_establishments") {
       const kommune = url.searchParams.get("kommune") || "";
       const fraDate = url.searchParams.get("fra") || "";

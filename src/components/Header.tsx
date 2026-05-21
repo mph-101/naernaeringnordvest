@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SubscriptionStatusBadge } from "@/components/SubscriptionStatusBadge";
 import { SubscriptionTrialBanner } from "@/components/SubscriptionTrialBanner";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface HeaderProps {
   showSearch?: boolean;
@@ -153,6 +154,8 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
             <button onClick={() => navigate("/arrangementer")} className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Arrangementer" : "Events"}>
               <CalendarDays className="w-4 h-4 text-foreground/70" />
             </button>
+
+            {userId && <NotificationBell />}
 
             {userId ? (
               <div className="hidden md:flex items-center gap-1">

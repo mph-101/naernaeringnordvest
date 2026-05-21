@@ -4,6 +4,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Building2, Users, TrendingUp, TrendingDown, User, ChevronDown, ChevronUp, ExternalLink, FileText, Megaphone } from "lucide-react";
 import { AddToListDialog } from "./AddToListDialog";
 import { CompanyArticles } from "./CompanyArticles";
+import { FollowCompanyButton } from "@/components/FollowCompanyButton";
 
 interface FinancialYear {
   year: string;
@@ -129,12 +130,15 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
           </div>
         </div>
         {session && (
-          <button
-            onClick={() => setShowAddToList(true)}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-subhead hover:bg-primary/90 transition-colors"
-          >
-            + {isNo ? "Legg til i liste" : "Add to list"}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center flex-shrink-0">
+            <FollowCompanyButton orgnr={orgnr} companyName={companyName} />
+            <button
+              onClick={() => setShowAddToList(true)}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-subhead hover:bg-primary/90 transition-colors"
+            >
+              + {isNo ? "Legg til i liste" : "Add to list"}
+            </button>
+          </div>
         )}
       </div>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { User, StickyNote, Users, LogOut, Loader2, Trash2, Globe, Lock, Settings, Eye, EyeOff, Download, FileText, FileDown } from "lucide-react";
+import { User, StickyNote, Users, LogOut, Loader2, Trash2, Globe, Lock, Settings, Eye, EyeOff, Download, FileText, FileDown, Bell, Building2, X } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { ApiKeysSection } from "@/components/ApiKeysSection";
@@ -33,6 +33,13 @@ interface GroupMembership {
   };
 }
 
+interface FollowedCompany {
+  id: number;
+  orgnr: string;
+  company_name: string | null;
+  created_at: string;
+}
+
 const Profile = () => {
   const navigate = useNavigate();
   const { language, hiddenElements, toggleHiddenElement, resetAllSettings } = useTheme();
@@ -44,13 +51,16 @@ const Profile = () => {
   const [userRegion, setUserRegion] = useState<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [groups, setGroups] = useState<GroupMembership[]>([]);
+  const [follows, setFollows] = useState<FollowedCompany[]>([]);
   const [articleTitles, setArticleTitles] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"notes" | "groups" | "settings">("notes");
+  const [activeTab, setActiveTab] = useState<"notes" | "groups" | "follows" | "settings">("notes");
 
   const t = isNo
     ? {
         profile: "Min profil", notes: "Notater", groups: "Grupper", settings: "Innstillinger",
+        follows: "Følger", noFollows: "Du følger ingen selskaper ennå",
+        unfollow: "Slutt å følge", followedSince: "Følger siden",
         noNotes: "Ingen notater ennå", noGroups: "Ingen grupper ennå",
         article: "Artikkel", updated: "Oppdatert", joined: "Ble med",
         admin: "Admin", member: "Medlem", delete: "Slett",
@@ -59,9 +69,12 @@ const Profile = () => {
         deleteConfirm: "Er du sikker?", deleted: "Slettet!",
         visibilityTitle: "Synlige elementer",
         visibilityDesc: "Velg hvilke seksjoner du vil se i appen",
+        exploreCompanies: "Utforsk selskaper",
       }
     : {
         profile: "My Profile", notes: "Notes", groups: "Groups", settings: "Settings",
+        follows: "Following", noFollows: "You are not following any companies yet",
+        unfollow: "Unfollow", followedSince: "Following since",
         noNotes: "No notes yet", noGroups: "No groups yet",
         article: "Article", updated: "Updated", joined: "Joined",
         admin: "Admin", member: "Member", delete: "Delete",
@@ -70,6 +83,7 @@ const Profile = () => {
         deleteConfirm: "Are you sure?", deleted: "Deleted!",
         visibilityTitle: "Visible elements",
         visibilityDesc: "Choose which sections to show in the app",
+        exploreCompanies: "Explore companies",
       };
 
   const toggleItems: { id: HideableElement; labelNo: string; labelEn: string }[] = [
@@ -96,8 +110,8 @@ const Profile = () => {
       setAvatarUrl(profile?.avatar_url ?? null);
       setUserRegion((profile as any)?.region ?? null);
 
-      // Fetch notes and groups in parallel
-      const [notesRes, groupsRes] = await Promise.all([
+      // Fetch notes, groups, and follows in parallel
+      const [notesRes, groupsRes, followsRes] = await Promise.all([
         supabase
           .from("article_notes")
           .select("*")
@@ -108,7 +122,14 @@ const Profile = () => {
           .select("id, role, joined_at, group_id")
           .eq("user_id", session.user.id)
           .order("joined_at", { ascending: false }),
+        supabase
+          .from("company_follows")
+          .select("id, orgnr, company_name, created_at")
+          .eq("user_id", session.user.id)
+          .order("created_at", { ascending: false }),
       ]);
+
+      setFollows(((followsRes.data as FollowedCompany[]) || []));
 
       const fetchedNotes: Note[] = notesRes.data || [];
       setNotes(fetchedNotes);
@@ -182,6 +203,13 @@ const Profile = () => {
     const { error } = await supabase.from("group_members").delete().eq("id", membershipId);
     if (error) { toast.error(error.message); return; }
     setGroups(prev => prev.filter(g => g.id !== membershipId));
+    toast.success(t.deleted);
+  };
+
+  const handleUnfollow = async (followId: number) => {
+    const { error } = await supabase.from("company_follows").delete().eq("id", followId);
+    if (error) { toast.error(error.message); return; }
+    setFollows(prev => prev.filter(f => f.id !== followId));
     toast.success(t.deleted);
   };
 
@@ -324,6 +352,17 @@ const Profile = () => {
             {t.groups} ({groups.length})
           </button>
           <button
+            onClick={() => setActiveTab("follows")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-subhead font-medium transition-all ${
+              activeTab === "follows"
+                ? "bg-primary text-primary-foreground shadow-soft"
+                : "bg-card border border-border text-foreground hover:bg-secondary"
+            }`}
+          >
+            <Bell className="w-4 h-4" />
+            {t.follows} ({follows.length})
+          </button>
+          <button
             onClick={() => setActiveTab("settings")}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-subhead font-medium transition-all ${
               activeTab === "settings"
@@ -443,6 +482,54 @@ const Profile = () => {
                       title={t.delete}
                     >
                       <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Follows Tab */}
+        {activeTab === "follows" && (
+          <div className="space-y-3">
+            {follows.length === 0 ? (
+              <div className="text-center py-12">
+                <Bell className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="text-muted-foreground font-body mb-4">{t.noFollows}</p>
+                <button onClick={() => navigate("/tall")} className="px-5 py-2.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
+                  {t.exploreCompanies}
+                </button>
+              </div>
+            ) : (
+              follows.map((follow) => (
+                <div key={follow.id} className="bg-card border border-border rounded-xl p-5 hover:border-accent/30 transition-colors">
+                  <div className="flex items-start justify-between gap-3">
+                    <button
+                      onClick={() => navigate(`/tall?orgnr=${follow.orgnr}`)}
+                      className="flex-1 min-w-0 text-left"
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Building2 className="w-4 h-4 text-accent flex-shrink-0" />
+                        <h3 className="font-headline text-lg font-semibold text-headline truncate hover:text-accent transition-colors">
+                          {follow.company_name || follow.orgnr}
+                        </h3>
+                      </div>
+                      <p className="text-xs text-muted-foreground font-body">
+                        Org.nr {follow.orgnr} · {t.followedSince}{" "}
+                        {new Date(follow.created_at).toLocaleDateString(isNo ? "nb-NO" : "en-US", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => handleUnfollow(follow.id)}
+                      className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors flex-shrink-0"
+                      title={t.unfollow}
+                    >
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>

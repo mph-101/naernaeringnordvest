@@ -32,12 +32,6 @@ const STEPS: Step[] = [
     bodyNo: "Diskuter saker i åpne eller lukkede grupper med andre lesere.", bodyEn: "Discuss stories in open or invite-only groups with other readers." },
   { selector: '[data-tour="nav-jobs"]', titleNo: "Stillinger", titleEn: "Jobs",
     bodyNo: "Ledige stillinger i lokalt næringsliv — eller legg ut din egen.", bodyEn: "Open roles across local business — or post your own." },
-  { selector: '[data-tour="article-engagement"]', titleNo: "Gjør noe med saken", titleEn: "Act on the story",
-    bodyNo: "Skriv et notat, del videre eller skriv direkte til journalisten.", bodyEn: "Write a note, share it, or message the journalist directly.",
-    routeMatch: (p) => p.startsWith("/article/") },
-  { selector: '[data-tour="article-notes"]', titleNo: "Dine notater", titleEn: "Your notes",
-    bodyNo: "Knappen nede til høyre åpner private notater du kan eksportere senere.", bodyEn: "The button bottom-right opens private notes you can export later.",
-    routeMatch: (p) => p.startsWith("/article/") },
 ];
 
 const LOCAL_KEY = "nn_mascot_tour";

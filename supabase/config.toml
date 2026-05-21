@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.brreg-query]
 verify_jwt = false
 
+[functions.refresh-financials-cache]
+verify_jwt = false
+
 [functions.market-data]
 verify_jwt = false
 

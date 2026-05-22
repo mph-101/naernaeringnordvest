@@ -890,6 +890,30 @@ export type Database = {
         }
         Relationships: []
       }
+      company_follows: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          id: number
+          orgnr: string
+          user_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          id?: never
+          orgnr: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          id?: never
+          orgnr?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       company_list_items: {
         Row: {
           added_at: string
@@ -946,6 +970,51 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      company_roles_cache: {
+        Row: {
+          fetched_at: string
+          orgnr: string
+          roles: Json
+        }
+        Insert: {
+          fetched_at?: string
+          orgnr: string
+          roles?: Json
+        }
+        Update: {
+          fetched_at?: string
+          orgnr?: string
+          roles?: Json
+        }
+        Relationships: []
+      }
+      company_status_cache: {
+        Row: {
+          fetched_at: string
+          konkurs: boolean
+          konkursdato: string | null
+          orgnr: string
+          slettedato: string | null
+          under_avvikling: boolean
+        }
+        Insert: {
+          fetched_at?: string
+          konkurs?: boolean
+          konkursdato?: string | null
+          orgnr: string
+          slettedato?: string | null
+          under_avvikling?: boolean
+        }
+        Update: {
+          fetched_at?: string
+          konkurs?: boolean
+          konkursdato?: string | null
+          orgnr?: string
+          slettedato?: string | null
+          under_avvikling?: boolean
         }
         Relationships: []
       }
@@ -2196,6 +2265,39 @@ export type Database = {
           monthly_cap?: number
           push_important?: boolean
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          id: string
+          orgnr: string
+          payload: Json
+          read_at: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          orgnr: string
+          payload?: Json
+          read_at?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          orgnr?: string
+          payload?: Json
+          read_at?: string | null
+          type?: string
           user_id?: string
         }
         Relationships: []

@@ -240,7 +240,7 @@ const Arrangementer = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header showSearch={false} />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>

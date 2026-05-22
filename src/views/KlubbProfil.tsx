@@ -40,7 +40,7 @@ export default function KlubbProfil() {
   if (!club) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
+        <Header showSearch={false} />
         <div className="max-w-4xl mx-auto px-6 py-20 text-center">
           <h1 className="font-headline text-3xl text-headline mb-4">Klubb ikke funnet</h1>
           <Link to="/tall" className="text-accent hover:underline font-subhead">← Tilbake til oversikten</Link>
@@ -84,7 +84,7 @@ export default function KlubbProfil() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header showSearch={false} />
 
       {/* Hero */}
       <div className="bg-gradient-warm py-10 px-6">

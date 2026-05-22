@@ -30,6 +30,7 @@ const Profile = lazy(() => import("./views/Profile"));
 const ResetPassword = lazy(() => import("./views/ResetPassword"));
 const Onboarding = lazy(() => import("./views/Onboarding"));
 const Varsler = lazy(() => import("./views/Varsler"));
+const JournalistProfileWrapper = lazy(() => import("./views/JournalistProfileWrapper"));
 const Hjernetrim = lazy(() => import("./views/Hjernetrim"));
 const Hjernevelvet = lazy(() => import("./views/Hjernevelvet"));
 const HjernevelvPanel = lazy(() => import("./views/HjernevelvPanel"));
@@ -97,6 +98,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/profil" element={<Profile />} />
               <Route path="/varsler" element={<Varsler />} />
+              <Route path="/journalist/:username" element={<JournalistProfileWrapper />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/velkommen" element={<Onboarding />} />
               <Route path="/hjernetrim" element={<Hjernetrim />} />

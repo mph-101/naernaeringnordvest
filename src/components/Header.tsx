@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 // Logo served from public/ — works in both Vite and Next.js
 const logoImg = "/logo.png";
-import { Menu, X, Search, Moon, Sun, Globe, Users, LogIn, LogOut, UserCircle, Shield, Brain, Briefcase, CalendarDays, MapPin, ChevronDown } from "lucide-react";
+import { Menu, X, Search, Moon, Sun, Globe, Users, LogIn, LogOut, UserCircle, Shield, Brain, Briefcase, CalendarDays, MapPin, ChevronDown, AtSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { useRegion } from "@/hooks/useRegion";
@@ -27,6 +27,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [publicUsername, setPublicUsername] = useState<string | null>(null);
   const otherRegions = regions.filter((r) => r.slug !== "nasjonal" && r.slug !== currentRegion?.slug);
 
   useEffect(() => {
@@ -35,7 +36,20 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
         .from("user_roles")
         .select("role")
         .eq("user_id", uid);
-      setIsAdmin(!!data && data.length > 0);
+      const roles = (data || []).map((r: any) => r.role as string);
+      setIsAdmin(roles.length > 0);
+      // Public profile is available for journalists/contributors/editors
+      const hasPublicRole = roles.some((r) => ["journalist", "contributor", "editor"].includes(r));
+      if (hasPublicRole) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("user_id", uid)
+          .maybeSingle();
+        setPublicUsername((profile as any)?.username || null);
+      } else {
+        setPublicUsername(null);
+      }
     };
 
     supabase.auth.getSession().then(({ data }) => {
@@ -50,6 +64,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
         checkRole(session.user.id);
       } else {
         setIsAdmin(false);
+        setPublicUsername(null);
       }
     });
     return () => subscription.unsubscribe();
@@ -167,6 +182,15 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
                     title="Admin"
                   >
                     <Shield className="w-4 h-4 text-foreground/70" />
+                  </button>
+                )}
+                {publicUsername && (
+                  <button
+                    onClick={() => navigate(`/@${publicUsername}`)}
+                    className="p-2.5 hover:bg-secondary rounded-full transition-colors"
+                    title={language === "no" ? `Min offentlige profil (@${publicUsername})` : `My public profile (@${publicUsername})`}
+                  >
+                    <AtSign className="w-4 h-4 text-foreground/70" />
                   </button>
                 )}
                 <button

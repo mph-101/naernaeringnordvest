@@ -1,14 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Building2, FileText, TrendingUp, AlertTriangle, X } from "lucide-react";
+import { Bell, Building2, FileText, TrendingUp, AlertTriangle, X, User, MessageSquare, Radio } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
+
+type NotificationType =
+  | "article_mention"
+  | "financials_new"
+  | "roles_changed"
+  | "status_changed"
+  | "user_article"
+  | "user_group_message"
+  | "user_stream_start";
 
 interface NotificationRow {
   id: string;
   user_id: string;
-  type: "article_mention" | "financials_new" | "roles_changed" | "status_changed";
-  orgnr: string;
+  type: NotificationType;
+  orgnr: string | null;
   company_name: string | null;
   payload: any;
   read_at: string | null;
@@ -70,6 +79,27 @@ function NotificationLine({ n, isNo, onClick }: { n: NotificationRow; isNo: bool
           ? (isNo ? "Under avvikling" : "Under liquidation")
           : (isNo ? "Status endret" : "Status updated");
       break;
+    case "user_article": {
+      const author = n.payload?.by_display_name || (isNo ? "En du følger" : "Someone you follow");
+      icon = <User className="w-4 h-4 text-accent" />;
+      title = isNo ? `${author} publiserte en sak` : `${author} published a story`;
+      body = n.payload?.title || "";
+      break;
+    }
+    case "user_group_message": {
+      const author = n.payload?.by_display_name || (isNo ? "En du følger" : "Someone you follow");
+      icon = <MessageSquare className="w-4 h-4 text-primary" />;
+      title = isNo ? `${author} skrev i ${n.payload?.group_name || "en gruppe"}` : `${author} posted in ${n.payload?.group_name || "a group"}`;
+      body = n.payload?.snippet || "";
+      break;
+    }
+    case "user_stream_start": {
+      const author = n.payload?.by_display_name || (isNo ? "En du følger" : "Someone you follow");
+      icon = <Radio className="w-4 h-4 text-destructive" />;
+      title = isNo ? `${author} er LIVE nå` : `${author} is LIVE now`;
+      body = n.payload?.title || "";
+      break;
+    }
   }
 
   return (
@@ -182,12 +212,22 @@ export function NotificationBell() {
     }
     setOpen(false);
     // Navigate to most relevant context
-    if (n.type === "article_mention" && n.payload?.article_id) {
+    if ((n.type === "article_mention" || n.type === "user_article") && n.payload?.article_id) {
       navigate(`/article/${n.payload.article_id}`);
+    } else if (n.type === "user_group_message" && n.payload?.group_id) {
+      navigate(`/grupper/${n.payload.group_id}`);
+    } else if (n.type === "user_stream_start" && n.payload?.by_user_id) {
+      // Resolve username from by_user_id; the simplest approach is to
+      // fetch the profile lazily, but to keep the click instantaneous we
+      // optimistically use any username embedded in the payload.
+      const uname = n.payload?.by_username;
+      if (uname) {
+        navigate(`/@${uname}`);
+      } else {
+        // Fallback: open notifications page
+        navigate("/varsler");
+      }
     } else {
-      // For financial/role/status changes, navigate to /tall and let the
-      // user open the company there. (Direct deep-linking to a specific
-      // company is a future enhancement.)
       navigate("/tall");
     }
   };

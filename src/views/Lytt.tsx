@@ -24,7 +24,7 @@ const Lytt = () => {
   if (player.audioNotConfigured) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
+        <Header showSearch={false} />
         <div className="max-w-2xl mx-auto px-6 py-16 text-center">
           <Headphones className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h1 className="font-headline text-2xl font-semibold text-headline mb-2">
@@ -44,7 +44,7 @@ const Lytt = () => {
   if (!player.current) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
+        <Header showSearch={false} />
         <div className="max-w-2xl mx-auto px-6 py-16 text-center">
           <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
         </div>
@@ -54,7 +54,7 @@ const Lytt = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <Header />
+      <Header showSearch={false} />
       <main className="max-w-2xl mx-auto px-6 py-8">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="w-4 h-4" />

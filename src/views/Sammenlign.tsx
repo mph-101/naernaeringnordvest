@@ -91,7 +91,7 @@ export default function Sammenlign() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header showSearch={false} />
 
       <div className="bg-gradient-warm py-10 px-6">
         <div className="max-w-6xl mx-auto">

@@ -1,17 +1,24 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Bell, Building2, FileText, TrendingUp, AlertTriangle, Loader2, LogIn } from "lucide-react";
+import { Bell, Building2, FileText, TrendingUp, AlertTriangle, Loader2, LogIn, User, MessageSquare, Radio } from "lucide-react";
 import { Header } from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
-type NotificationType = "article_mention" | "financials_new" | "roles_changed" | "status_changed";
+type NotificationType =
+  | "article_mention"
+  | "financials_new"
+  | "roles_changed"
+  | "status_changed"
+  | "user_article"
+  | "user_group_message"
+  | "user_stream_start";
 
 interface NotificationRow {
   id: string;
   user_id: string;
   type: NotificationType;
-  orgnr: string;
+  orgnr: string | null;
   company_name: string | null;
   payload: any;
   read_at: string | null;
@@ -26,6 +33,9 @@ const FILTERS: { key: NotificationType | "all"; labelNo: string; labelEn: string
   { key: "financials_new", labelNo: "Regnskap", labelEn: "Financials" },
   { key: "roles_changed", labelNo: "Ledelse", labelEn: "Roles" },
   { key: "status_changed", labelNo: "Status", labelEn: "Status" },
+  { key: "user_article", labelNo: "Fra følger", labelEn: "From people" },
+  { key: "user_group_message", labelNo: "Gruppe-innlegg", labelEn: "Group posts" },
+  { key: "user_stream_start", labelNo: "Live", labelEn: "Live" },
 ];
 
 function relativeTime(iso: string, isNo: boolean): string {
@@ -91,6 +101,29 @@ function NotificationCard({ n, isNo, onClick }: { n: NotificationRow; isNo: bool
           ? (isNo ? "Under avvikling" : "Under liquidation")
           : (isNo ? "Status endret" : "Status updated");
       break;
+    case "user_article": {
+      const author = n.payload?.by_display_name || (isNo ? "En du følger" : "Someone you follow");
+      icon = <User className="w-5 h-5 text-accent" />;
+      title = isNo ? `${author} publiserte en sak` : `${author} published a story`;
+      body = n.payload?.title || "";
+      break;
+    }
+    case "user_group_message": {
+      const author = n.payload?.by_display_name || (isNo ? "En du følger" : "Someone you follow");
+      icon = <MessageSquare className="w-5 h-5 text-primary" />;
+      title = isNo
+        ? `${author} skrev i ${n.payload?.group_name || "en gruppe"}`
+        : `${author} posted in ${n.payload?.group_name || "a group"}`;
+      body = n.payload?.snippet || "";
+      break;
+    }
+    case "user_stream_start": {
+      const author = n.payload?.by_display_name || (isNo ? "En du følger" : "Someone you follow");
+      icon = <Radio className="w-5 h-5 text-destructive" />;
+      title = isNo ? `${author} er LIVE nå` : `${author} is LIVE now`;
+      body = n.payload?.title || "";
+      break;
+    }
   }
 
   return (
@@ -193,8 +226,12 @@ export default function Varsler() {
       await supabase.from("notifications").update({ read_at: new Date().toISOString() }).eq("id", n.id);
       setItems((prev) => prev.map((r) => (r.id === n.id ? { ...r, read_at: new Date().toISOString() } : r)));
     }
-    if (n.type === "article_mention" && n.payload?.article_id) {
+    if ((n.type === "article_mention" || n.type === "user_article") && n.payload?.article_id) {
       navigate(`/article/${n.payload.article_id}`);
+    } else if (n.type === "user_group_message" && n.payload?.group_id) {
+      navigate(`/grupper/${n.payload.group_id}`);
+    } else if (n.type === "user_stream_start" && n.payload?.by_username) {
+      navigate(`/@${n.payload.by_username}`);
     } else {
       navigate("/tall");
     }

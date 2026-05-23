@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
 import { fetchRegions, type EditorialRegion } from "@/lib/regions";
+import { JournalistFieldsSection } from "./JournalistFieldsSection";
 
 const legacyRegions = [
   { id: "more-og-romsdal", labelNo: "Nordvestlandet", labelEn: "Northwestern Norway" },
@@ -207,7 +208,7 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
       )}
 
       {/* Mascot guide toggle */}
-      <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl mt-2">
+      <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl mt-2 mb-6">
         <Compass className="w-4 h-4 text-muted-foreground flex-shrink-0" />
         <span className="text-sm font-subhead font-medium text-muted-foreground flex-1">
           {isNo ? "Vis kompass-guiden" : "Show compass guide"}
@@ -220,6 +221,9 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
           <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${mascotEnabled ? "translate-x-5" : ""}`} />
         </button>
       </div>
+
+      {/* Journalist-only fields (auto-hides for regular users) */}
+      <JournalistFieldsSection userId={userId} displayName={displayName} />
     </div>
   );
 }

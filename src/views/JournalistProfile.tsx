@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { FollowUserButton } from "@/components/FollowUserButton";
+import { LiveStreamPlayer } from "@/components/LiveStreamPlayer";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -39,6 +40,15 @@ interface ContributionRow {
   created_at: string;
 }
 
+interface LiveStreamRow {
+  id: string;
+  user_id: string;
+  status: string;
+  title: string | null;
+  playback_id: string;
+  started_at: string | null;
+}
+
 type Tab = "saker" | "bidrag" | "om";
 
 const PUBLIC_ROLES = ["journalist", "contributor", "editor"];
@@ -59,6 +69,7 @@ export default function JournalistProfile({ username }: Props) {
   const [loadingArticles, setLoadingArticles] = useState(false);
   const [contributions, setContributions] = useState<ContributionRow[]>([]);
   const [loadingContributions, setLoadingContributions] = useState(false);
+  const [liveStream, setLiveStream] = useState<LiveStreamRow | null>(null);
   const [tab, setTab] = useState<Tab>("saker");
 
   const t = isNo
@@ -134,6 +145,39 @@ export default function JournalistProfile({ username }: Props) {
       setLoadingArticles(false);
     })();
     return () => { mounted = false; };
+  }, [profile, hasPublicRole]);
+
+  // Watch for live streams from this user. Realtime-subscribe so a
+  // visitor sees the live banner appear as soon as the stream goes live.
+  useEffect(() => {
+    if (!profile || !hasPublicRole) return;
+    let mounted = true;
+
+    const refresh = async () => {
+      const { data } = await supabase
+        .from("live_streams_public")
+        .select("id, user_id, status, title, playback_id, started_at")
+        .eq("user_id", profile.user_id)
+        .eq("status", "live")
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!mounted) return;
+      setLiveStream((data as LiveStreamRow) || null);
+    };
+
+    refresh();
+
+    const channel = supabase
+      .channel(`live-stream-${profile.user_id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "live_streams", filter: `user_id=eq.${profile.user_id}` },
+        () => refresh()
+      )
+      .subscribe();
+
+    return () => { mounted = false; supabase.removeChannel(channel); };
   }, [profile, hasPublicRole]);
 
   // Load contributions (group_messages in public groups)
@@ -227,6 +271,13 @@ export default function JournalistProfile({ username }: Props) {
       <Header showSearch={false} />
 
       <div className="max-w-3xl mx-auto px-6 py-12">
+        {/* Live banner (only when this user is currently streaming) */}
+        {liveStream && (
+          <div className="mb-6">
+            <LiveStreamPlayer playbackId={liveStream.playback_id} title={liveStream.title} />
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row gap-6 items-start mb-8">
           <div className="w-24 h-24 rounded-full overflow-hidden bg-accent/10 flex items-center justify-center flex-shrink-0">

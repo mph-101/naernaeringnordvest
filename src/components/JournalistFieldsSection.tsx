@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Newspaper, AtSign, Loader2, Check, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Newspaper, AtSign, Loader2, Check, AlertCircle, Radio } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
@@ -197,14 +198,23 @@ export function JournalistFieldsSection({ userId, displayName }: Props) {
 
   return (
     <div className="bg-card border border-border rounded-2xl p-6 mb-6">
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-          <Newspaper className="w-5 h-5 text-accent" />
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+            <Newspaper className="w-5 h-5 text-accent" />
+          </div>
+          <div>
+            <h3 className="font-headline text-lg font-semibold text-headline">{t.section}</h3>
+            <p className="text-sm text-muted-foreground font-body">{t.sectionDesc}</p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-headline text-lg font-semibold text-headline">{t.section}</h3>
-          <p className="text-sm text-muted-foreground font-body">{t.sectionDesc}</p>
-        </div>
+        <Link
+          to="/profil/stream"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-destructive/10 text-destructive rounded-full text-xs font-subhead font-semibold hover:bg-destructive/20 transition-colors flex-shrink-0"
+        >
+          <Radio className="w-3.5 h-3.5" />
+          {isNo ? "Live-stream" : "Live stream"}
+        </Link>
       </div>
 
       <div className="space-y-4">

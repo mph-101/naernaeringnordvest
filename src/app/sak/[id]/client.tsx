@@ -74,6 +74,11 @@ export function ArticlePageClient({ id }: { id: string }) {
   const [hasFullAccess, setHasFullAccess] = useState(false);
   const [previewBody, setPreviewBody] = useState<string | null>(null);
   const [previewBodyEn, setPreviewBodyEn] = useState<string | null>(null);
+  const [paywallMeta, setPaywallMeta] = useState<{
+    reason: "anon_no_login" | "quota_exhausted" | "not_premium_fallback" | "subscription_required" | null;
+    freeReadsRemaining: number | null;
+    freeQuota: number | null;
+  }>({ reason: null, freeReadsRemaining: null, freeQuota: null });
   const variant = useArticleVariant(article?.id);
   const completedRef = useState({ done: false })[0];
 
@@ -85,8 +90,9 @@ export function ArticlePageClient({ id }: { id: string }) {
       setLoading(false);
 
       if (data?.premium) {
+        const visitorId = (await import("@/lib/visitor-id")).getVisitorId();
         const { data: access } = await supabase.functions.invoke("check-article-access", {
-          body: { articleId: data.id },
+          body: { articleId: data.id, visitorId: visitorId ?? undefined },
         });
         if (access?.access === "full") {
           setHasFullAccess(true);
@@ -95,6 +101,11 @@ export function ArticlePageClient({ id }: { id: string }) {
           setPreviewBody(access?.preview ?? null);
           setPreviewBodyEn(access?.preview_en ?? null);
         }
+        setPaywallMeta({
+          reason: access?.reason ?? null,
+          freeReadsRemaining: typeof access?.freeReadsRemaining === "number" ? access.freeReadsRemaining : null,
+          freeQuota: typeof access?.freeQuota === "number" ? access.freeQuota : null,
+        });
         setAccessChecked(true);
       } else {
         setHasFullAccess(true);
@@ -279,24 +290,83 @@ export function ArticlePageClient({ id }: { id: string }) {
             })()
           ) : null}
 
-          {showPaywall && (
-            <div className="relative -mt-24 pt-24">
-              <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent pointer-events-none" />
-              <div className="bg-card rounded-2xl border border-border p-10 text-center shadow-elevated">
-                <div className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Lock className="w-8 h-8 text-accent" />
-                </div>
-                <h2 className="font-headline text-2xl font-bold text-headline mb-3">{t.subscribeTitle}</h2>
-                <p className="text-muted-foreground font-body mb-8 max-w-md mx-auto leading-relaxed">{t.subscribeDesc}</p>
-                <div className="space-y-3 max-w-xs mx-auto">
-                  <a href="/abonnement" className="block w-full py-3.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft text-center">
-                    {t.subscribeButton}
-                  </a>
-                  <a href="/login" className="block w-full py-3.5 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors text-center">
-                    {t.signIn}
-                  </a>
+          {showPaywall && (() => {
+            // Tailor the paywall message to the reason we got from the
+            // edge function: ran out of free reads, never logged in, etc.
+            const isAnonNoLogin = paywallMeta.reason === "anon_no_login";
+            const isQuotaExhausted = paywallMeta.reason === "quota_exhausted";
+            const quota = paywallMeta.freeQuota ?? 0;
+
+            const reasonHeadlineNo = isAnonNoLogin
+              ? "Logg inn for å lese gratis"
+              : isQuotaExhausted
+                ? "Du har lest dine gratis premium-artikler"
+                : t.subscribeTitle;
+            const reasonHeadlineEn = isAnonNoLogin
+              ? "Sign in for free reads"
+              : isQuotaExhausted
+                ? "You have used your free premium reads"
+                : t.subscribeTitle;
+            const reasonHeadline = language === "no" ? reasonHeadlineNo : reasonHeadlineEn;
+
+            const reasonDescNo = isAnonNoLogin && quota
+              ? `Innloggede lesere får ${quota === 1 ? "én gratis premium-artikkel" : `${quota} gratis premium-artikler`} per 90 dager. Logg inn med din konto eller opprett en gratis.`
+              : isQuotaExhausted
+                ? `Du har brukt ${quota} gratis premium-artikler de siste 90 dagene. Få ubegrenset tilgang med et abonnement.`
+                : t.subscribeDesc;
+            const reasonDescEn = isAnonNoLogin && quota
+              ? `Signed-in readers get ${quota === 1 ? "one free premium article" : `${quota} free premium articles`} per 90 days. Sign in or create a free account.`
+              : isQuotaExhausted
+                ? `You have used ${quota} free premium articles in the past 90 days. Get unlimited access with a subscription.`
+                : t.subscribeDesc;
+            const reasonDesc = language === "no" ? reasonDescNo : reasonDescEn;
+
+            return (
+              <div className="relative -mt-24 pt-24">
+                <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+                <div className="bg-card rounded-2xl border border-border p-10 text-center shadow-elevated">
+                  <div className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <Lock className="w-8 h-8 text-accent" />
+                  </div>
+                  <h2 className="font-headline text-2xl font-bold text-headline mb-3">{reasonHeadline}</h2>
+                  <p className="text-muted-foreground font-body mb-8 max-w-md mx-auto leading-relaxed">{reasonDesc}</p>
+                  <div className="space-y-3 max-w-xs mx-auto">
+                    {isAnonNoLogin ? (
+                      <>
+                        <a href="/login" className="block w-full py-3.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft text-center">
+                          {t.signIn}
+                        </a>
+                        <a href="/abonnement" className="block w-full py-3.5 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors text-center">
+                          {t.subscribeButton}
+                        </a>
+                      </>
+                    ) : (
+                      <>
+                        <a href="/abonnement" className="block w-full py-3.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft text-center">
+                          {t.subscribeButton}
+                        </a>
+                        <a href="/login" className="block w-full py-3.5 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors text-center">
+                          {t.signIn}
+                        </a>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
+            );
+          })()}
+
+          {/* "X gratis igjen denne perioden"-banner når bruker fikk full tilgang via gratis-kvote */}
+          {hasFullAccess && article.premium && typeof paywallMeta.freeReadsRemaining === "number" && paywallMeta.freeQuota && (
+            <div className="mt-8 mb-4 px-4 py-3 bg-accent/5 border border-accent/20 rounded-xl text-sm font-subhead text-foreground flex items-center justify-between gap-3">
+              <span>
+                {language === "no"
+                  ? `Du har ${paywallMeta.freeReadsRemaining} av ${paywallMeta.freeQuota} gratis premium-artikler igjen de neste 90 dagene.`
+                  : `You have ${paywallMeta.freeReadsRemaining} of ${paywallMeta.freeQuota} free premium reads left in the next 90 days.`}
+              </span>
+              <a href="/abonnement" className="text-accent hover:underline font-semibold flex-shrink-0">
+                {language === "no" ? "Bli abonnent →" : "Subscribe →"}
+              </a>
             </div>
           )}
         </div>

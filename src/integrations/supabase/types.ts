@@ -2274,7 +2274,7 @@ export type Database = {
           company_name: string | null
           created_at: string
           id: string
-          orgnr: string
+          orgnr: string | null
           payload: Json
           read_at: string | null
           type: string
@@ -2284,7 +2284,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           id?: string
-          orgnr: string
+          orgnr?: string | null
           payload?: Json
           read_at?: string | null
           type: string
@@ -2294,7 +2294,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           id?: string
-          orgnr?: string
+          orgnr?: string | null
           payload?: Json
           read_at?: string | null
           type?: string
@@ -2376,10 +2376,37 @@ export type Database = {
         }
         Relationships: []
       }
+      premium_article_grants: {
+        Row: {
+          article_id: string
+          granted_at: string
+          id: number
+          user_id: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          article_id: string
+          granted_at?: string
+          id?: never
+          user_id?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          article_id?: string
+          granted_at?: string
+          id?: never
+          user_id?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           audio_mode_enabled: boolean
           avatar_url: string | null
+          beat: string | null
+          bio: string | null
+          contact_email: string | null
           created_at: string
           display_name: string | null
           editorial_region: string | null
@@ -2389,13 +2416,19 @@ export type Database = {
           mascot_enabled: boolean
           proofread_settings: Json | null
           region: string | null
+          social_urls: Json
+          title: string | null
           tour_completed_at: string | null
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
           audio_mode_enabled?: boolean
           avatar_url?: string | null
+          beat?: string | null
+          bio?: string | null
+          contact_email?: string | null
           created_at?: string
           display_name?: string | null
           editorial_region?: string | null
@@ -2405,13 +2438,19 @@ export type Database = {
           mascot_enabled?: boolean
           proofread_settings?: Json | null
           region?: string | null
+          social_urls?: Json
+          title?: string | null
           tour_completed_at?: string | null
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
           audio_mode_enabled?: boolean
           avatar_url?: string | null
+          beat?: string | null
+          bio?: string | null
+          contact_email?: string | null
           created_at?: string
           display_name?: string | null
           editorial_region?: string | null
@@ -2421,9 +2460,12 @@ export type Database = {
           mascot_enabled?: boolean
           proofread_settings?: Json | null
           region?: string | null
+          social_urls?: Json
+          title?: string | null
           tour_completed_at?: string | null
           updated_at?: string
           user_id?: string
+          username?: string | null
         }
         Relationships: [
           {
@@ -2737,6 +2779,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_follows: {
+        Row: {
+          created_at: string
+          followee_id: string
+          follower_id: string
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          followee_id: string
+          follower_id: string
+          id?: never
+        }
+        Update: {
+          created_at?: string
+          followee_id?: string
+          follower_id?: string
+          id?: never
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2934,6 +2997,7 @@ export type Database = {
           title: string
         }[]
       }
+      slugify_display_name: { Args: { input: string }; Returns: string }
       validate_api_key: {
         Args: { _key_hash: string }
         Returns: {

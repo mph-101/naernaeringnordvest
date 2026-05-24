@@ -182,17 +182,31 @@ export async function resolveAccess(
     const used = count ?? 0;
 
     if (used < grantSelectors.quota) {
-      // Grant this article. Use upsert to handle race conditions where
-      // two parallel checks for the same article both miss the existing
-      // row above.
-      await sbAdmin
+      // Grant this article. We INSERT and tolerate the 23505 unique-
+      // violation that happens if two parallel checks for the same
+      // article both miss the existing-row probe above. We can't use
+      // .upsert(onConflict: ...) here because our unique indexes are
+      // PARTIAL and onConflict needs a real constraint or full index.
+      const { error: insErr } = await sbAdmin
         .from("premium_article_grants")
-        .upsert(
+        .insert(
           userId
             ? { user_id: userId, article_id: articleId }
-            : { visitor_id: grantSelectors.value, article_id: articleId },
-          { onConflict: userId ? "user_id,article_id" : "visitor_id,article_id", ignoreDuplicates: true }
+            : { visitor_id: grantSelectors.value, article_id: articleId }
         );
+      if (insErr && insErr.code !== "23505") {
+        // Real failure (not a race-condition duplicate). Fail SAFE → preview.
+        console.error("grant insert failed:", insErr);
+        return {
+          status: 200,
+          body: {
+            access: "preview",
+            preview: firstParagraph(article.body as string | null),
+            preview_en: firstParagraph(article.body_en as string | null),
+            reason: "subscription_required",
+          },
+        };
+      }
       return {
         status: 200,
         body: {

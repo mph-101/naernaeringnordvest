@@ -297,27 +297,38 @@ export function ArticlePageClient({ id }: { id: string }) {
             const isQuotaExhausted = paywallMeta.reason === "quota_exhausted";
             const quota = paywallMeta.freeQuota ?? 0;
 
+            // Singular vs plural for the count phrase. Norwegian and English
+            // share the same singular-form trigger (count === 1).
+            const articleWord = (n: number, lang: "no" | "en") => {
+              if (lang === "no") return n === 1 ? "premium-artikkel" : "premium-artikler";
+              return n === 1 ? "premium article" : "premium articles";
+            };
+            const countWord = (n: number, lang: "no" | "en") => {
+              if (lang === "no") return n === 1 ? "én" : String(n);
+              return n === 1 ? "one" : String(n);
+            };
+
             const reasonHeadlineNo = isAnonNoLogin
               ? "Logg inn for å lese gratis"
               : isQuotaExhausted
-                ? "Du har lest dine gratis premium-artikler"
+                ? `Du har lest dine ${quota === 1 ? "gratis premium-artikkel" : "gratis premium-artikler"}`
                 : t.subscribeTitle;
             const reasonHeadlineEn = isAnonNoLogin
               ? "Sign in for free reads"
               : isQuotaExhausted
-                ? "You have used your free premium reads"
+                ? `You have used your free ${articleWord(quota, "en")}`
                 : t.subscribeTitle;
             const reasonHeadline = language === "no" ? reasonHeadlineNo : reasonHeadlineEn;
 
             const reasonDescNo = isAnonNoLogin && quota
-              ? `Innloggede lesere får ${quota === 1 ? "én gratis premium-artikkel" : `${quota} gratis premium-artikler`} per 90 dager. Logg inn med din konto eller opprett en gratis.`
+              ? `Innloggede lesere får ${countWord(quota, "no")} gratis ${articleWord(quota, "no")} per 90 dager. Logg inn med din konto eller opprett en gratis.`
               : isQuotaExhausted
-                ? `Du har brukt ${quota} gratis premium-artikler de siste 90 dagene. Få ubegrenset tilgang med et abonnement.`
+                ? `Du har brukt ${countWord(quota, "no")} gratis ${articleWord(quota, "no")} de siste 90 dagene. Få ubegrenset tilgang med et abonnement.`
                 : t.subscribeDesc;
             const reasonDescEn = isAnonNoLogin && quota
-              ? `Signed-in readers get ${quota === 1 ? "one free premium article" : `${quota} free premium articles`} per 90 days. Sign in or create a free account.`
+              ? `Signed-in readers get ${countWord(quota, "en")} free ${articleWord(quota, "en")} per 90 days. Sign in or create a free account.`
               : isQuotaExhausted
-                ? `You have used ${quota} free premium articles in the past 90 days. Get unlimited access with a subscription.`
+                ? `You have used ${countWord(quota, "en")} free ${articleWord(quota, "en")} in the past 90 days. Get unlimited access with a subscription.`
                 : t.subscribeDesc;
             const reasonDesc = language === "no" ? reasonDescNo : reasonDescEn;
 
@@ -357,18 +368,22 @@ export function ArticlePageClient({ id }: { id: string }) {
           })()}
 
           {/* "X gratis igjen denne perioden"-banner når bruker fikk full tilgang via gratis-kvote */}
-          {hasFullAccess && article.premium && typeof paywallMeta.freeReadsRemaining === "number" && paywallMeta.freeQuota && (
-            <div className="mt-8 mb-4 px-4 py-3 bg-accent/5 border border-accent/20 rounded-xl text-sm font-subhead text-foreground flex items-center justify-between gap-3">
-              <span>
-                {language === "no"
-                  ? `Du har ${paywallMeta.freeReadsRemaining} av ${paywallMeta.freeQuota} gratis premium-artikler igjen de neste 90 dagene.`
-                  : `You have ${paywallMeta.freeReadsRemaining} of ${paywallMeta.freeQuota} free premium reads left in the next 90 days.`}
-              </span>
-              <a href="/abonnement" className="text-accent hover:underline font-semibold flex-shrink-0">
-                {language === "no" ? "Bli abonnent →" : "Subscribe →"}
-              </a>
-            </div>
-          )}
+          {hasFullAccess && article.premium && typeof paywallMeta.freeReadsRemaining === "number" && paywallMeta.freeQuota && (() => {
+            const remaining = paywallMeta.freeReadsRemaining ?? 0;
+            const quota = paywallMeta.freeQuota ?? 0;
+            // Plural-aware copy. "Du har 1 gratis premium-artikkel igjen" /
+            // "Du har 2 gratis premium-artikler igjen". Same idea for EN.
+            const noText = `Du har ${remaining} av ${quota} gratis ${quota === 1 ? "premium-artikkel" : "premium-artikler"} igjen de neste 90 dagene.`;
+            const enText = `You have ${remaining} of ${quota} free premium ${quota === 1 ? "read" : "reads"} left in the next 90 days.`;
+            return (
+              <div className="mt-8 mb-4 px-4 py-3 bg-accent/5 border border-accent/20 rounded-xl text-sm font-subhead text-foreground flex items-center justify-between gap-3">
+                <span>{language === "no" ? noText : enText}</span>
+                <a href="/abonnement" className="text-accent hover:underline font-semibold flex-shrink-0">
+                  {language === "no" ? "Bli abonnent →" : "Subscribe →"}
+                </a>
+              </div>
+            );
+          })()}
         </div>
 
         <ArticleGallery articleId={id} />

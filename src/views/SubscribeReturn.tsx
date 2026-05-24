@@ -24,8 +24,7 @@ export default function SubscribeReturn() {
           Velkommen som abonnent!
         </h1>
         <p className="text-muted-foreground font-body mb-6">
-          Prøveperioden er aktivert. Du har full tilgang i 7 dager — vi sender deg en påminnelse
-          før første trekk.
+          Du har nå full tilgang til alle saker, Spør-AI og selskapsdatabasen. Velkommen om bord!
         </p>
         {sessionId && (
           <p className="text-xs text-muted-foreground/60 font-body mb-6">Ref: {sessionId}</p>

@@ -90,7 +90,6 @@ Deno.serve(async (req) => {
       return_url: body.returnUrl,
       ...(userEmail && { customer_email: userEmail }),
       subscription_data: {
-        trial_period_days: 7,
         metadata: {
           userId,
           plan: body.plan,

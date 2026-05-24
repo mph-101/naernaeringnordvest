@@ -26,20 +26,20 @@ Artikkel-rendering: check-article-access EF → full body eller preview
 
 Definert som Stripe-produkter med `lookup_key`. Lookup gjør at produkt-ID-er ikke ligger hardkodet i koden.
 
-| Plan | Pris | Lookup-key | Type | Trial |
-|---|---|---|---|---|
-| Personlig — kvartal | 199 kr / 3 mnd (~66 kr/mnd) | `personal_quarterly` | Recurring | 7 dager |
-| Personlig — år | 699 kr / år (~58 kr/mnd, spar 97 kr/år vs kvartal) | `personal_yearly` | Recurring | 7 dager |
-| Bedrift — 1–9 seter | 599 kr / sete / år | `business_seat_1_9` | Recurring | 7 dager |
-| Bedrift — 10–29 seter | 499 kr / sete / år | `business_seat_10_29` | Recurring | 7 dager |
-| Bedrift — 30+ seter | 399 kr / sete / år | `business_seat_30_plus` | Recurring | 7 dager |
-| Bedrift — legacy (deprecated) | 199 kr / sete / mnd | `business_seat_monthly` | Recurring | 7 dager |
-| Job Premium | 499 kr | `job_premium_one_time` | Engangs | — |
-| Event Featured | 1 990 kr | `event_featured_one_time` | Engangs | — |
+| Plan | Pris | Lookup-key | Type |
+|---|---|---|---|
+| Personlig — kvartal | 199 kr / 3 mnd (~66 kr/mnd) | `personal_quarterly` | Recurring |
+| Personlig — år | 699 kr / år (~58 kr/mnd, spar 97 kr/år vs kvartal) | `personal_yearly` | Recurring |
+| Bedrift — 1–9 seter | 599 kr / sete / år | `business_seat_1_9` | Recurring |
+| Bedrift — 10–29 seter | 499 kr / sete / år | `business_seat_10_29` | Recurring |
+| Bedrift — 30+ seter | 399 kr / sete / år | `business_seat_30_plus` | Recurring |
+| Bedrift — legacy (deprecated) | 199 kr / sete / mnd | `business_seat_monthly` | Recurring |
+| Job Premium | 499 kr | `job_premium_one_time` | Engangs |
+| Event Featured | 1 990 kr | `event_featured_one_time` | Engangs |
 
 Bedrift-plan er multi-seat med automatisk seat-tildeling via domene-verifisering (TXT-record). Volum-tier velges automatisk basert på `seatCount` ved checkout — se `getPriceId()` i `_shared/stripe.ts`. `business_seat_monthly` beholdes for bakovkompatibilitet til eksisterende kunder rulles over ved første fornyelse etter prisendringen.
 
-Trial: alle planer har 7 dagers gratis prøveperiode (satt via `trial_period_days: 7` i `create-checkout`).
+**Ingen prøveperiode**: Alle planer fakturerer fra første dag. Soft-paywall (3 gratis premium-artikler per rolling 90 dager for innloggede, 1 for anonyme) erstatter behovet for en formell trial.
 
 ---
 
@@ -233,7 +233,7 @@ Ikke planlagt arbeid, bare ideer:
 - "N gratis artikler / måned"-grense via `article_views`-tabellen
 - Vitest-tester for `check-article-access` + `payments-webhook`
 - Rabatt for abonnenter på job-premium / event-featured
-- Trial-perioder også for personlige planer (i dag kun bedrift)
+- Vurder gratis prøveperiode på nytt hvis konvertering er lav (vi har soft-paywall som primær konverteringsmotor)
 - Win-back e-post for canceled subscriptions
 - Detaljert subscription-analytics dashboard
 

@@ -27,7 +27,7 @@ const SHARED_PERSONAL_BULLETS = [
   "Alle saker, analyser og dypdykk",
   "Spør-AI og selskapsdatabasen Tall",
   "Personlige varsler ved nye saker du følger",
-  "7 dager gratis prøveperiode",
+  "Diskuter saker i åpne og lukkede grupper",
   "Si opp når som helst",
 ];
 
@@ -66,7 +66,7 @@ const PLANS: PlanDef[] = [
       "Alle ansatte får full tilgang",
       "Automatisk innlogging via verifisert e-postdomene",
       "Sentral fakturering — én faktura per år",
-      "7 dager gratis prøveperiode",
+      "Lukkede grupper for hele bedriften",
     ],
     icon: Building2,
   },
@@ -108,7 +108,7 @@ export default function Subscribe() {
             Bli abonnent
           </h1>
           <p className="text-muted-foreground font-body max-w-xl mx-auto">
-            Alle saker, Spør-AI og selskapsdatabasen. Prøv gratis i 7 dager.
+            Alle saker, Spør-AI og selskapsdatabasen — i én tilgang.
           </p>
         </div>
 
@@ -176,7 +176,7 @@ export default function Subscribe() {
                       : "bg-card border border-border text-foreground hover:bg-secondary"
                   }`}
                 >
-                  Start 7 dager gratis
+                  Bli abonnent
                 </button>
               </div>
             );
@@ -184,9 +184,8 @@ export default function Subscribe() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground font-body mt-8 max-w-2xl mx-auto">
-          Etter prøveperioden trekkes valgt beløp automatisk. MVA (25 %) kommer i tillegg og
-          beregnes ved utsjekk. Bedrifter faktureres årlig forskuddsvis. Du kan kansellere når
-          som helst fra profilen din.
+          MVA (25 %) kommer i tillegg og beregnes ved utsjekk. Bedrifter faktureres årlig
+          forskuddsvis. Du kan kansellere når som helst fra profilen din.
         </p>
       </div>
 

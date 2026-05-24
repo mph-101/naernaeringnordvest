@@ -4,7 +4,7 @@ import {
   type StripeEnv,
   createStripeClient,
   corsHeaders,
-  PRICE_IDS,
+  getPriceId,
 } from "../_shared/stripe.ts";
 
 const BodySchema = z.object({
@@ -68,8 +68,9 @@ Deno.serve(async (req) => {
     const env: StripeEnv = body.environment;
     const stripe = createStripeClient(env);
 
-    // Resolve human-readable price ID -> Stripe price via lookup_keys
-    const priceLookupKey = PRICE_IDS[body.plan];
+    // Resolve human-readable price ID -> Stripe price via lookup_keys.
+    // For business_seat we pick a volume tier based on seatCount.
+    const priceLookupKey = getPriceId(body.plan, body.seatCount);
     const prices = await stripe.prices.list({ lookup_keys: [priceLookupKey], limit: 1 });
     if (!prices.data.length) {
       return new Response(JSON.stringify({ error: "Price not configured" }), {

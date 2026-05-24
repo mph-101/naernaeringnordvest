@@ -28,13 +28,18 @@ Definert som Stripe-produkter med `lookup_key`. Lookup gjør at produkt-ID-er ik
 
 | Plan | Pris | Lookup-key | Type | Trial |
 |---|---|---|---|---|
-| Personlig — kvartal | 199 kr / 3 mnd (~66 kr/mnd) | `personal_quarterly` | Recurring | Nei |
-| Personlig — år | 699 kr / år (~58 kr/mnd, -12 %) | `personal_yearly` | Recurring | Nei |
-| Bedrift — sete | 199 kr / sete / mnd, 1-500 seter | `business_seat_monthly` | Recurring | 7 dager |
+| Personlig — kvartal | 199 kr / 3 mnd (~66 kr/mnd) | `personal_quarterly` | Recurring | 7 dager |
+| Personlig — år | 699 kr / år (~58 kr/mnd, spar 97 kr/år vs kvartal) | `personal_yearly` | Recurring | 7 dager |
+| Bedrift — 1–9 seter | 599 kr / sete / år | `business_seat_1_9` | Recurring | 7 dager |
+| Bedrift — 10–29 seter | 499 kr / sete / år | `business_seat_10_29` | Recurring | 7 dager |
+| Bedrift — 30+ seter | 399 kr / sete / år | `business_seat_30_plus` | Recurring | 7 dager |
+| Bedrift — legacy (deprecated) | 199 kr / sete / mnd | `business_seat_monthly` | Recurring | 7 dager |
 | Job Premium | 499 kr | `job_premium_one_time` | Engangs | — |
 | Event Featured | 1 990 kr | `event_featured_one_time` | Engangs | — |
 
-Bedrift-plan er multi-seat med automatisk seat-tildeling via domene-verifisering (TXT-record).
+Bedrift-plan er multi-seat med automatisk seat-tildeling via domene-verifisering (TXT-record). Volum-tier velges automatisk basert på `seatCount` ved checkout — se `getPriceId()` i `_shared/stripe.ts`. `business_seat_monthly` beholdes for bakovkompatibilitet til eksisterende kunder rulles over ved første fornyelse etter prisendringen.
+
+Trial: alle planer har 7 dagers gratis prøveperiode (satt via `trial_period_days: 7` i `create-checkout`).
 
 ---
 

@@ -60,17 +60,57 @@ export async function verifyWebhook(req: Request, env: StripeEnv): Promise<{ id:
 
 export { corsHeaders } from "./cors.ts";
 
-export const PRICE_IDS = {
-  quarterly: "personal_quarterly",
-  yearly: "personal_yearly",
-  business_seat: "business_seat_monthly",
-} as const;
+export type Plan = "quarterly" | "yearly" | "business_seat";
 
-export type Plan = keyof typeof PRICE_IDS;
+// Lookup keys recognised in Stripe. The business_seat plan now has 3
+// volume tiers; business_seat_monthly is kept ONLY so we can still
+// recognise existing subscribers on the old monthly price. New
+// checkouts always go through getPriceId() below, which picks the
+// right tier from seatCount.
+const BUSINESS_TIER_KEYS = [
+  "business_seat_1_9",
+  "business_seat_10_29",
+  "business_seat_30_plus",
+] as const;
+const LEGACY_BUSINESS_KEY = "business_seat_monthly";
+
+/**
+ * Resolve the Stripe lookup_key for a given plan + seat count.
+ * - quarterly / yearly: ignore seatCount
+ * - business_seat: 1-9 → 1_9, 10-29 → 10_29, 30+ → 30_plus
+ */
+export function getPriceId(plan: Plan, seatCount?: number): string {
+  if (plan === "quarterly") return "personal_quarterly";
+  if (plan === "yearly") return "personal_yearly";
+  if (plan === "business_seat") {
+    const seats = Math.max(1, seatCount ?? 1);
+    if (seats >= 30) return "business_seat_30_plus";
+    if (seats >= 10) return "business_seat_10_29";
+    return "business_seat_1_9";
+  }
+  throw new Error(`Unknown plan: ${plan}`);
+}
 
 export function planFromPriceId(priceId: string): Plan | null {
-  for (const [plan, id] of Object.entries(PRICE_IDS)) {
-    if (id === priceId) return plan as Plan;
+  if (priceId === "personal_quarterly") return "quarterly";
+  if (priceId === "personal_yearly") return "yearly";
+  if (
+    priceId === LEGACY_BUSINESS_KEY ||
+    (BUSINESS_TIER_KEYS as readonly string[]).includes(priceId)
+  ) {
+    return "business_seat";
   }
   return null;
 }
+
+/**
+ * Backward-compat: existing imports of PRICE_IDS still work. For
+ * business_seat we point at the entry-level tier so any code that
+ * still reads PRICE_IDS["business_seat"] doesn't reference a price
+ * that no longer exists.
+ */
+export const PRICE_IDS = {
+  quarterly: "personal_quarterly",
+  yearly: "personal_yearly",
+  business_seat: "business_seat_1_9",
+} as const;

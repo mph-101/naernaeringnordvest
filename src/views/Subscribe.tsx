@@ -11,33 +11,63 @@ import { useSubscription } from "@/hooks/useSubscription";
 
 type Plan = "quarterly" | "yearly" | "business_seat";
 
-const PLANS = [
+type PlanDef = {
+  id: Plan;
+  name: string;
+  price: string;
+  period: string;
+  monthly: string;
+  bullets: string[];
+  highlight?: boolean;
+  icon: typeof User;
+  tiers?: { range: string; price: string }[];
+};
+
+const SHARED_PERSONAL_BULLETS = [
+  "Alle saker, analyser og dypdykk",
+  "Spør-AI og selskapsdatabasen Tall",
+  "Personlige varsler ved nye saker du følger",
+  "7 dager gratis prøveperiode",
+  "Si opp når som helst",
+];
+
+const PLANS: PlanDef[] = [
   {
-    id: "quarterly" as Plan,
+    id: "quarterly",
     name: "Kvartal",
     price: "199 kr",
     period: "/ 3 måneder",
     monthly: "≈ 66 kr/mnd",
-    bullets: ["Tilgang til alle artikler", "Spør og Tall inkludert", "7 dager gratis prøveperiode", "Si opp når som helst"],
+    bullets: SHARED_PERSONAL_BULLETS,
     icon: User,
   },
   {
-    id: "yearly" as Plan,
+    id: "yearly",
     name: "År",
     price: "699 kr",
     period: "/ år",
-    monthly: "≈ 58 kr/mnd · spar 12%",
-    bullets: ["Alt i Kvartal", "Best pris", "7 dager gratis prøveperiode", "Faktureres årlig"],
+    monthly: "≈ 58 kr/mnd · Spar 97 kr/år vs kvartal",
+    bullets: SHARED_PERSONAL_BULLETS,
     highlight: true,
     icon: User,
   },
   {
-    id: "business_seat" as Plan,
+    id: "business_seat",
     name: "Bedrift",
-    price: "199 kr",
-    period: "/ sete / mnd",
-    monthly: "Eller domenebasert tilgang",
-    bullets: ["Pris per ansatt", "Verifisert domene = automatisk tilgang", "Sentral fakturering", "7 dager gratis prøveperiode"],
+    price: "fra 399 kr",
+    period: "/ sete / år",
+    monthly: "Volumrabatt fra 10 og 30 seter · Faktureres årlig",
+    tiers: [
+      { range: "1–9 seter", price: "599 kr/sete/år" },
+      { range: "10–29 seter", price: "499 kr/sete/år" },
+      { range: "30+ seter", price: "399 kr/sete/år" },
+    ],
+    bullets: [
+      "Alle ansatte får full tilgang",
+      "Automatisk innlogging via verifisert e-postdomene",
+      "Sentral fakturering — én faktura per år",
+      "7 dager gratis prøveperiode",
+    ],
     icon: Building2,
   },
 ];
@@ -78,8 +108,7 @@ export default function Subscribe() {
             Bli abonnent
           </h1>
           <p className="text-muted-foreground font-body max-w-xl mx-auto">
-            Få full tilgang til alle artikler, dypdykk og analyser. Prøv gratis i 7 dager — si opp
-            når som helst.
+            Alle saker, Spør-AI og selskapsdatabasen. Prøv gratis i 7 dager.
           </p>
         </div>
 
@@ -116,6 +145,21 @@ export default function Subscribe() {
                   <span className="text-sm text-muted-foreground font-body">{p.period}</span>
                 </div>
                 <p className="text-xs text-muted-foreground font-body mb-5">{p.monthly}</p>
+                {p.tiers && (
+                  <div className="mb-5 bg-surface-subtle border border-border rounded-xl p-3">
+                    <p className="text-[10px] font-subhead font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      Pris per sete
+                    </p>
+                    <ul className="space-y-1">
+                      {p.tiers.map((tier) => (
+                        <li key={tier.range} className="flex items-center justify-between text-xs font-body text-foreground">
+                          <span className="text-muted-foreground">{tier.range}</span>
+                          <span className="font-subhead font-semibold">{tier.price}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 <ul className="space-y-2.5 mb-6 flex-1">
                   {p.bullets.map((b) => (
                     <li key={b} className="flex items-start gap-2 text-sm font-body text-foreground">
@@ -140,8 +184,9 @@ export default function Subscribe() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground font-body mt-8 max-w-2xl mx-auto">
-          Etter prøveperioden trekkes valgt beløp automatisk. MVA (25%) kommer i tillegg og
-          beregnes ved utsjekk. Du kan kansellere når som helst fra profilen din.
+          Etter prøveperioden trekkes valgt beløp automatisk. MVA (25 %) kommer i tillegg og
+          beregnes ved utsjekk. Bedrifter faktureres årlig forskuddsvis. Du kan kansellere når
+          som helst fra profilen din.
         </p>
       </div>
 
@@ -187,6 +232,20 @@ export default function Subscribe() {
                     value={seatCount}
                     onChange={(e) => setSeatCount(Math.max(1, parseInt(e.target.value || "1", 10)))}
                   />
+                  {/* Live tier-feedback so the buyer sees the unit price they're locking in */}
+                  {(() => {
+                    const perSeat = seatCount >= 30 ? 399 : seatCount >= 10 ? 499 : 599;
+                    const total = perSeat * seatCount;
+                    return (
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        {perSeat} kr × {seatCount} {seatCount === 1 ? "sete" : "seter"} ={" "}
+                        <span className="font-subhead font-semibold text-foreground">
+                          {total.toLocaleString("nb-NO")} kr / år
+                        </span>
+                        {" "}(ekskl. MVA)
+                      </p>
+                    );
+                  })()}
                 </div>
                 <div>
                   <Label htmlFor="domain">Firmadomene (valgfritt)</Label>

@@ -227,6 +227,32 @@ async function handleWebhook(req: Request, env: StripeEnv) {
     case "customer.subscription.deleted":
       await handleSubscriptionDeleted(event.data.object, env);
       break;
+    case "customer.subscription.trial_will_end":
+      // Stripe sends this 3 days before a trial ends. We just log for
+      // now; in a later iteration we can send the journalist an email
+      // via Resend. The subscription will move to status='active' or
+      // 'past_due' automatically when the trial ends.
+      console.log("Trial ending soon:", event.data.object.id);
+      break;
+    case "invoice.payment_failed":
+      // Stripe.Smart Retries will keep trying; subscription.status
+      // moves to 'past_due' which triggers handleSubscriptionUpsert
+      // separately. Just log here; we don't double-handle.
+      console.log("Payment failed for invoice:", event.data.object.id);
+      break;
+    case "charge.refunded":
+      // If the refund is total AND the subscription was canceled,
+      // customer.subscription.deleted will fire separately. We log
+      // here for audit; granular handling (e.g. revoke role
+      // immediately for a partial refund on a partial-period invoice)
+      // can be added when the editorial team needs it.
+      console.log("Charge refunded:", event.data.object.id);
+      break;
+    case "charge.dispute.created":
+      // A chargeback was opened. Mark sensitive — Magnus should review
+      // the user and possibly revoke access manually. We log loudly.
+      console.warn("DISPUTE CREATED:", event.data.object.id, event.data.object.customer);
+      break;
     case "checkout.session.completed":
       await handleJobPremiumCheckout(event.data.object, env);
       await handleEventFeaturedCheckout(event.data.object, env);

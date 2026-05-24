@@ -29,7 +29,7 @@ Definert som Stripe-produkter med `lookup_key`. Lookup gjør at produkt-ID-er ik
 | Plan | Pris | Lookup-key | Type | Trial |
 |---|---|---|---|---|
 | Personlig — kvartal | 199 kr / 3 mnd (~66 kr/mnd) | `personal_quarterly` | Recurring | Nei |
-| Personlig — år | 690 kr / år (~58 kr/mnd, -13 %) | `personal_yearly` | Recurring | Nei |
+| Personlig — år | 699 kr / år (~58 kr/mnd, -12 %) | `personal_yearly` | Recurring | Nei |
 | Bedrift — sete | 199 kr / sete / mnd, 1-500 seter | `business_seat_monthly` | Recurring | 7 dager |
 | Job Premium | 499 kr | `job_premium_one_time` | Engangs | — |
 | Event Featured | 1 990 kr | `event_featured_one_time` | Engangs | — |

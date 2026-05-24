@@ -24,9 +24,9 @@ const PLANS = [
   {
     id: "yearly" as Plan,
     name: "År",
-    price: "690 kr",
+    price: "699 kr",
     period: "/ år",
-    monthly: "≈ 58 kr/mnd · spar 13%",
+    monthly: "≈ 58 kr/mnd · spar 12%",
     bullets: ["Alt i Kvartal", "Best pris", "7 dager gratis prøveperiode", "Faktureres årlig"],
     highlight: true,
     icon: User,

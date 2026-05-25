@@ -1,6 +1,5 @@
 import { corsHeaders } from "../_shared/cors.ts";
-
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+import { aiChatCompletion, AiGatewayError } from "../_shared/ai-client.ts";
 
 interface Guideline {
   article_type: string;
@@ -104,13 +103,9 @@ Returner et JSON-objekt med:
 ORIGINAL BRØDTEKST (HTML):
 ${body.slice(0, 20000)}`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    let data;
+    try {
+      data = await aiChatCompletion({
         model: "google/gemini-2.5-pro",
         messages: [
           { role: "system", content: systemPrompt },
@@ -143,28 +138,24 @@ ${body.slice(0, 20000)}`;
           },
         ],
         tool_choice: { type: "function", function: { name: "return_improved_body" } },
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "For mange forespørsler, prøv igjen om litt." }), {
-          status: 429,
-          headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
+      });
+    } catch (e) {
+      if (e instanceof AiGatewayError) {
+        if (e.status === 429) {
+          return new Response(JSON.stringify({ error: "For mange forespørsler, prøv igjen om litt." }), {
+            status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
+        if (e.status === 402) {
+          return new Response(JSON.stringify({ error: "AI-kreditter er brukt opp." }), {
+            status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI-kreditter er brukt opp." }), {
-          status: 402,
-          headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
-      }
-      throw new Error(`AI Gateway error: ${response.status} - ${errText}`);
+      throw e;
     }
 
-    const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = (data.choices?.[0]?.message?.tool_calls as any)?.[0];
     if (!toolCall) {
       throw new Error("AI returnerte ingen strukturert respons");
     }

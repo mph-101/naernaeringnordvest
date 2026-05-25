@@ -1,6 +1,5 @@
 import { corsHeaders } from "../_shared/cors.ts";
-
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+import { aiChatCompletion, AiGatewayError } from "../_shared/ai-client.ts";
 
 /**
  * Inserts short, descriptive H2 subheadings into article body HTML.
@@ -20,8 +19,6 @@ Deno.serve(async (req) => {
         status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
     // Strip existing headings (we'll regenerate)
     const cleanedBody = body.replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi, "");
 
@@ -97,10 +94,9 @@ Regler:
 SEKSJONER:
 ${sections.map((s) => `[${s.id}]\n${s.text}`).join("\n\n")}`;
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
+    let data;
+    try {
+      data = await aiChatCompletion({
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: "Du er en norsk avisredaktør som lager korte, treffende mellomtitler." },
@@ -133,26 +129,24 @@ ${sections.map((s) => `[${s.id}]\n${s.text}`).join("\n\n")}`;
           },
         }],
         tool_choice: { type: "function", function: { name: "set_subheadings" } },
-      }),
-    });
-
-    if (!aiRes.ok) {
-      if (aiRes.status === 429) {
-        return new Response(JSON.stringify({ error: "AI-tjenesten er overbelastet. Prøv igjen om litt." }), {
-          status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
+      });
+    } catch (e) {
+      if (e instanceof AiGatewayError) {
+        if (e.status === 429) {
+          return new Response(JSON.stringify({ error: "AI-tjenesten er overbelastet. Prøv igjen om litt." }), {
+            status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
+        if (e.status === 402) {
+          return new Response(JSON.stringify({ error: "AI-kreditt er oppbrukt." }), {
+            status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
       }
-      if (aiRes.status === 402) {
-        return new Response(JSON.stringify({ error: "AI-kreditt er oppbrukt." }), {
-          status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
-      }
-      const errText = await aiRes.text();
-      throw new Error(`AI gateway error: ${errText}`);
+      throw e;
     }
 
-    const data = await aiRes.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = (data.choices?.[0]?.message?.tool_calls as any)?.[0];
     if (!toolCall) throw new Error("No tool call in AI response");
     const parsed = JSON.parse(toolCall.function.arguments);
     const headings: { id: string; title: string }[] = parsed.subheadings || [];

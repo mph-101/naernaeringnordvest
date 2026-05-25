@@ -1,15 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { aiChatCompletion, AiGatewayError } from "../_shared/ai-client.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders(req) });
 
   try {
     const { person_name, new_role, new_company, old_role, old_company, change_type, source_text } = await req.json();
-
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const parts = [];
     if (person_name) parts.push(`Person: ${person_name}`);
@@ -42,40 +40,33 @@ Returner ALLTID svaret som gyldig JSON med følgende struktur:
 
 Returner KUN JSON, ingen annen tekst.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    let data;
+    try {
+      data = await aiChatCompletion({
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: infoBlock },
         ],
-      }),
-    });
-
-    if (!response.ok) {
-      const status = response.status;
-      if (status === 429) {
-        return new Response(JSON.stringify({ error: "For mange forespørsler, prøv igjen om litt." }), {
-          status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
+      });
+    } catch (e) {
+      if (e instanceof AiGatewayError) {
+        if (e.status === 429) {
+          return new Response(JSON.stringify({ error: "For mange forespørsler, prøv igjen om litt." }), {
+            status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
+        if (e.status === 402) {
+          return new Response(JSON.stringify({ error: "Kreditt oppbrukt." }), {
+            status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
+        console.error("AI gateway error:", e.status, e.body);
       }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: "Kreditt oppbrukt." }), {
-          status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
-      }
-      const t = await response.text();
-      console.error("AI gateway error:", status, t);
-      throw new Error("AI gateway error");
+      throw e;
     }
 
-    const data = await response.json();
-    const raw = data.choices?.[0]?.message?.content || "";
+    const raw = (data.choices?.[0]?.message?.content as string) || "";
 
     // Try to parse structured JSON from the AI response
     let notice = raw;

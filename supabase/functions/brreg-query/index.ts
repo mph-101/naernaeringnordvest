@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { aiChatCompletion, AiGatewayError } from "../_shared/ai-client.ts";
 
 const BRREG_BASE = "https://data.brreg.no";
 
@@ -22,17 +23,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
     // Step 1: Use AI to parse the question into BRREG API search parameters
-    const parseResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    let parseData;
+    try {
+      parseData = await aiChatCompletion({
         model: "google/gemini-3-flash-preview",
         messages: [
           {
@@ -140,29 +134,26 @@ Returner KUN JSON via tool call. Hvert objekt har:
           },
         ],
         tool_choice: { type: "function", function: { name: "plan_queries" } },
-      }),
-    });
-
-    if (!parseResponse.ok) {
-      const status = parseResponse.status;
-      if (status === 429) {
-        return new Response(JSON.stringify({ error: "For mange forespørsler, prøv igjen om litt." }), {
-          status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
-      }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: "Kreditt oppbrukt." }), {
-          status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
+      });
+    } catch (e) {
+      if (e instanceof AiGatewayError) {
+        if (e.status === 429) {
+          return new Response(JSON.stringify({ error: "For mange forespørsler, prøv igjen om litt." }), {
+            status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
+        if (e.status === 402) {
+          return new Response(JSON.stringify({ error: "Kreditt oppbrukt." }), {
+            status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
       }
       throw new Error("AI parse error");
     }
 
-    const parseData = await parseResponse.json();
-
     // Extract tool call result
     let queries: any[] = [];
-    const toolCall = parseData.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = (parseData.choices?.[0]?.message?.tool_calls as any)?.[0];
     if (toolCall?.function?.arguments) {
       try {
         const args = JSON.parse(toolCall.function.arguments);
@@ -303,13 +294,9 @@ Returner KUN JSON via tool call. Hvert objekt har:
     );
 
     // Step 3: Use AI to compose a natural language answer
-    const answerResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    let answerData;
+    try {
+      answerData = await aiChatCompletion({
         model: "google/gemini-3-flash-preview",
         messages: [
           {
@@ -346,25 +333,23 @@ REGLER FOR SVARET:
             content: `Spørsmål: ${question}\n\nData fra Brønnøysundregistrene:\n${JSON.stringify(results, null, 2)}`
           },
         ],
-      }),
-    });
-
-    if (!answerResponse.ok) {
-      const status = answerResponse.status;
-      if (status === 429) {
-        return new Response(JSON.stringify({ error: "For mange forespørsler, prøv igjen om litt." }), {
-          status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
-      }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: "Kreditt oppbrukt." }), {
-          status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
+      });
+    } catch (e) {
+      if (e instanceof AiGatewayError) {
+        if (e.status === 429) {
+          return new Response(JSON.stringify({ error: "For mange forespørsler, prøv igjen om litt." }), {
+            status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
+        if (e.status === 402) {
+          return new Response(JSON.stringify({ error: "Kreditt oppbrukt." }), {
+            status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
       }
       throw new Error("AI answer error");
     }
 
-    const answerData = await answerResponse.json();
     const answer = answerData.choices?.[0]?.message?.content || "Beklager, kunne ikke generere svar.";
 
     return new Response(JSON.stringify({ answer, results }), {

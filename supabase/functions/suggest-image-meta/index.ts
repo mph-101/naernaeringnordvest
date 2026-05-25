@@ -3,14 +3,12 @@
 // Returns: { alt_text: string, caption: string, photographer?: string }
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { aiChatCompletion, AiGatewayError } from "../_shared/ai-client.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders(req) });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
     const body = await req.json().catch(() => ({}));
     const imageBase64: string | undefined = body?.imageBase64;
     const mimeType: string = body?.mimeType || "image/jpeg";
@@ -43,13 +41,9 @@ Skriv på bokmål. Ikke spekuler om personer eller steder du ikke kan identifise
       ? `Kontekst fra redaktøren: ${hint}\n\nForeslå metadata for bildet.`
       : "Foreslå metadata for bildet.";
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    let data;
+    try {
+      data = await aiChatCompletion({
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
@@ -84,32 +78,30 @@ Skriv på bokmål. Ikke spekuler om personer eller steder du ikke kan identifise
           },
         ],
         tool_choice: { type: "function", function: { name: "suggest_image_meta" } },
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit nådd, prøv igjen om litt." }), {
-          status: 429,
-          headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
+      });
+    } catch (e) {
+      if (e instanceof AiGatewayError) {
+        if (e.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit nådd, prøv igjen om litt." }), {
+            status: 429,
+            headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
+        if (e.status === 402) {
+          return new Response(
+            JSON.stringify({ error: "AI-kreditt tom." }),
+            { status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" } },
+          );
+        }
+        console.error("AI gateway error:", e.status, e.body);
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI-kreditt tom. Legg til kreditt i Lovable Cloud." }),
-          { status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" } },
-        );
-      }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
       return new Response(JSON.stringify({ error: "AI-tjenesten feilet" }), {
         status: 500,
         headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
-    const data = await response.json();
-    const toolCall = data?.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = (data?.choices?.[0]?.message?.tool_calls as any)?.[0];
     const args = toolCall?.function?.arguments;
     if (!args) {
       return new Response(JSON.stringify({ error: "Ingen forslag generert" }), {

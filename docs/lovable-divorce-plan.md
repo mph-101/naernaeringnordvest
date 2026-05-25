@@ -1,8 +1,10 @@
 # Plan: Løsrive Nær Næring Nordvest fra Lovable
 
-Status per 2026-05-21. Prosjektet kjører i dag på **Lovable Cloud** (Supabase under panseret) med **Lovable AI Gateway** for AI-kall. Vercel håndterer frontend-deploy uavhengig.
+Status per 2026-05-25.
 
-Dette dokumentet skisserer en gradvis migrasjon til ren Supabase + valgt AI-provider, slik at du ikke har noen avhengighet til Lovable.
+**Fase 1 (AI-gateway-bytte) er ferdig.** Alle 21 edge functions går nå via en provider-agnostisk klient i `supabase/functions/_shared/ai-client.ts`. Default provider er OpenRouter, men `AI_BASE_URL`-secret lar oss bytte til OpenAI, Google AI Studio direkte, DeepInfra eller hva som helst OpenAI-kompatibelt uten kode-endring.
+
+Fase 2 (Supabase-eierskap) og Fase 3 (deploy-flow uten Lovable) gjenstår. Vercel håndterer fortsatt frontend-deploy uavhengig.
 
 ---
 
@@ -36,7 +38,28 @@ Alle 21 functions bruker Google Gemini via Lovable:
 
 ---
 
-## 3. Fase 1: Bytt AI-gateway (lav risiko, høy verdi)
+## 3. Fase 1: Bytt AI-gateway (FERDIG ✅)
+
+**Status:** Implementert i branch `feat/ai-divorce-from-lovable`.
+
+### Hva som ble gjort
+- Opprettet `supabase/functions/_shared/ai-client.ts` med `aiChatCompletion()` (JSON) og `aiFetch()` (raw, for streaming/SSE), pluss `AiGatewayError`-klasse som bevarer upstream-statuskode for 402/429-håndtering.
+- Migrert alle 21 functions: `brreg-query`, `articles-chat`, `idrett-chat`, `suggest-tags`, `suggest-companies`, `generate-title-excerpt`, `generate-fact-box`, `generate-key-points`, `generate-job-notice`, `suggest-image-meta`, `suggest-chart`, `generate-subheadings`, `proofread-article`, `improve-article-body`, `generate-social-posts`, `generate-article-draft`, `translate-article`, `extract-source`, `extract-source-async`, `transcribe-audio`, `generate-article-audio`.
+- Fjernet alle `LOVABLE_API_KEY`-referanser og `https://ai.gateway.lovable.dev`-URL-er fra function-koden.
+- ElevenLabs TTS i `generate-article-audio` er bevart uendret (kjører på `ELEVENLABS_API_KEY`, ikke AI-gateway).
+
+### Det Magnus må gjøre etter merge
+1. Opprett OpenRouter-konto på https://openrouter.ai
+2. Generer API-key
+3. Sett Supabase secrets:
+   - `AI_API_KEY` = OpenRouter-nøkkelen
+   - (valgfritt) `AI_BASE_URL` — default er `https://openrouter.ai/api/v1`
+   - (valgfritt) `AI_SITE_URL`, `AI_APP_NAME` — for OpenRouter-analytics
+4. Deploy edge functions (auto via Lovable, eller `supabase functions deploy <name>`)
+5. Verifiser én function (f.eks. `brreg-query` via "Spør Tall") fungerer
+6. Slett `LOVABLE_API_KEY`-secret fra Supabase
+
+### Originalt forslag (bevart som historikk)
 
 ### Anbefalt provider: **OpenRouter**
 

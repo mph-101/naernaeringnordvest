@@ -8,6 +8,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { aiChatCompletion, aiFetch } from "../_shared/ai-client.ts";
 
 const CHAT_MODEL = "google/gemini-3-flash-preview";
 const QUERY_REWRITE_MODEL = "google/gemini-2.5-flash-lite";
@@ -35,25 +36,19 @@ function stripHtml(html: string): string {
  * full-text search compared to feeding the raw question (which is full of
  * stop-words and conversational filler).
  */
-async function extractSearchTerms(question: string, apiKey: string): Promise<string> {
+async function extractSearchTerms(question: string): Promise<string> {
   try {
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: QUERY_REWRITE_MODEL,
-        messages: [
-          {
-            role: "system",
-            content:
-              "Du hjelper med å lage søk i en norsk avisarkivdatabase. Returner KUN 3–8 nøkkelord (egennavn, bransjer, steder, selskaper) fra brukerens spørsmål, atskilt med mellomrom. Ingen forklaring, ingen tegnsetting, ingen anførselstegn.",
-          },
-          { role: "user", content: question },
-        ],
-      }),
+    const json = await aiChatCompletion({
+      model: QUERY_REWRITE_MODEL,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Du hjelper med å lage søk i en norsk avisarkivdatabase. Returner KUN 3–8 nøkkelord (egennavn, bransjer, steder, selskaper) fra brukerens spørsmål, atskilt med mellomrom. Ingen forklaring, ingen tegnsetting, ingen anførselstegn.",
+        },
+        { role: "user", content: question },
+      ],
     });
-    if (!resp.ok) return question;
-    const json = await resp.json();
     const terms = json?.choices?.[0]?.message?.content as string | undefined;
     return (terms || question).trim();
   } catch {
@@ -68,18 +63,14 @@ async function extractSearchTerms(question: string, apiKey: string): Promise<str
  */
 async function planBrregQueries(
   question: string,
-  apiKey: string,
 ): Promise<Array<{ label: string; params: Record<string, string> }> | null> {
   try {
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: QUERY_REWRITE_MODEL,
-        messages: [
-          {
-            role: "system",
-            content: `Du planlegger oppslag i Brønnøysundregistrene (enhetsregisteret) for å berike svar fra en norsk lokalavis. Returner ETT JSON-objekt: {"queries":[...]} hvor hver query er {"label":"...","params":{...}}.
+    const json = await aiChatCompletion({
+      model: QUERY_REWRITE_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: `Du planlegger oppslag i Brønnøysundregistrene (enhetsregisteret) for å berike svar fra en norsk lokalavis. Returner ETT JSON-objekt: {"queries":[...]} hvor hver query er {"label":"...","params":{...}}.
 
 Bruk parametere: navn, kommunenummer, organisasjonsform (default AS,ASA), naeringskode, sort (f.eks "antallAnsatte,desc"), size (maks 10), konkurs.
 
@@ -88,14 +79,11 @@ Viktige kommunenumre: Oslo 0301, Bergen 4601, Trondheim 5001, Stavanger 1103, Mo
 Hvis spørsmålet handler om et NAVNGITT selskap, en bransje eller "største/nyeste/konkurs" i et sted: lag 1–3 queries.
 Hvis spørsmålet IKKE handler om selskapsdata (politikk, kultur, generelle nyheter osv.): returner {"queries":[]}.
 Returner BARE JSON.`,
-          },
-          { role: "user", content: question },
-        ],
-      }),
+        },
+        { role: "user", content: question },
+      ],
     });
-    if (!resp.ok) return null;
-    const json = await resp.json();
-    const content = (json?.choices?.[0]?.message?.content || "").trim();
+    const content = ((json?.choices?.[0]?.message?.content as string) || "").trim();
     const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     const parsed = JSON.parse(cleaned);
     const queries = Array.isArray(parsed?.queries) ? parsed.queries : [];
@@ -159,7 +147,6 @@ async function fetchBrreg(queries: Array<{ label: string; params: Record<string,
  */
 async function planTallQueries(
   question: string,
-  apiKey: string,
 ): Promise<{
   establishments: boolean;
   bankruptcies: boolean;
@@ -169,15 +156,12 @@ async function planTallQueries(
   days?: number;
 } | null> {
   try {
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: QUERY_REWRITE_MODEL,
-        messages: [
-          {
-            role: "system",
-            content: `Du planlegger oppslag i offentlige datakilder for Nær Nærings "Tall"-database. Returner ETT JSON-objekt:
+    const json = await aiChatCompletion({
+      model: QUERY_REWRITE_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: `Du planlegger oppslag i offentlige datakilder for Nær Nærings "Tall"-database. Returner ETT JSON-objekt:
 {"establishments":bool,"bankruptcies":bool,"labor":bool,"housing":bool,"kommunenummer":"....","days":N}
 
 - establishments=true hvis spørsmålet handler om nye selskaper/etableringer/oppstart.
@@ -188,14 +172,11 @@ async function planTallQueries(
 - days: hvor mange dager tilbake skal vi se på etableringer/konkurser (default 90, maks 365).
 
 Hvis ingen av kategoriene passer: returner alle false. Returner BARE JSON.`,
-          },
-          { role: "user", content: question },
-        ],
-      }),
+        },
+        { role: "user", content: question },
+      ],
     });
-    if (!resp.ok) return null;
-    const json = await resp.json();
-    const content = (json?.choices?.[0]?.message?.content || "").trim();
+    const content = ((json?.choices?.[0]?.message?.content as string) || "").trim();
     const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     const parsed = JSON.parse(cleaned);
     if (!parsed.establishments && !parsed.bankruptcies && !parsed.labor && !parsed.housing) return null;
@@ -317,10 +298,9 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
-    if (!LOVABLE_API_KEY || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
       throw new Error("Missing required env vars");
     }
 
@@ -357,7 +337,7 @@ serve(async (req) => {
 
     if (queryText.trim().length > 2) {
       try {
-        const searchTerms = await extractSearchTerms(queryText, LOVABLE_API_KEY);
+        const searchTerms = await extractSearchTerms(queryText);
         console.log("articles-chat: search terms =", searchTerms);
         const [
           { data: matches, error: matchErr },
@@ -367,8 +347,8 @@ serve(async (req) => {
         ] = await Promise.all([
           supabase.rpc("search_articles", { query_text: searchTerms, match_count: MATCH_COUNT }),
           supabase.rpc("search_trusted_sources", { query_text: searchTerms, match_count: TRUSTED_MATCH_COUNT }),
-          planBrregQueries(queryText, LOVABLE_API_KEY),
-          planTallQueries(queryText, LOVABLE_API_KEY),
+          planBrregQueries(queryText),
+          planTallQueries(queryText),
         ]);
         if (matchErr) console.error("search_articles error:", matchErr);
         if (trustedErr) console.error("search_trusted_sources error:", trustedErr);
@@ -507,9 +487,8 @@ Regler:
 
 ${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}\n\n` : ""}${trustedSources.length > 0 ? `BETRODDE EKSTERNE KILDER (kuratert av redaksjonen):\n\n${trustedBlock}\n\n` : ""}${brregBlock ? `BEDRIFTSDATA (Brønnøysundregistrene, sanntid):\n\n${brregBlock}\n\n` : ""}${tallBlock ? `TALL-DATABASEN (etablering, konkurs, arbeidsmarked, boligmarked):\n\n${tallBlock}\n` : ""}${sources.length === 0 && trustedSources.length === 0 && !brregBlock && !tallBlock ? "Ingen relevante artikler, betrodde kilder, bedriftsdata eller statistikk ble funnet for dette spørsmålet." : ""}`;
 
-    const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const upstream = await aiFetch("/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: CHAT_MODEL,
         messages: [{ role: "system", content: systemPrompt }, ...messages],

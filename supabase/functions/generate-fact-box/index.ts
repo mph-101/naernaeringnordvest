@@ -1,8 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 import { corsHeaders } from "../_shared/cors.ts";
-
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+import { aiChatCompletion, AiGatewayError } from "../_shared/ai-client.ts";
 
 // Generate a fact box from one or more sources. AI picks the best variant
 // (rich, image, or keyvalue) based on the source content.
@@ -16,8 +15,6 @@ Deno.serve(async (req) => {
         status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -51,10 +48,9 @@ REGLER:
 
     const userPrompt = `Lag en faktaboks basert på følgende kildemateriale.${hint ? `\n\nØNSKE FRA REDAKTØREN: ${hint}` : ""}\n\n${sourcesBlock}`;
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
+    let data;
+    try {
+      data = await aiChatCompletion({
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
@@ -92,26 +88,24 @@ REGLER:
           },
         }],
         tool_choice: { type: "function", function: { name: "create_fact_box" } },
-      }),
-    });
-
-    if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      if (aiRes.status === 429) {
-        return new Response(JSON.stringify({ error: "AI-tjenesten er overbelastet. Prøv igjen om litt." }), {
-          status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
+      });
+    } catch (e) {
+      if (e instanceof AiGatewayError) {
+        if (e.status === 429) {
+          return new Response(JSON.stringify({ error: "AI-tjenesten er overbelastet. Prøv igjen om litt." }), {
+            status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
+        if (e.status === 402) {
+          return new Response(JSON.stringify({ error: "AI-kreditt er oppbrukt. Legg til kreditter i workspace-innstillinger." }), {
+            status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
       }
-      if (aiRes.status === 402) {
-        return new Response(JSON.stringify({ error: "AI-kreditt er oppbrukt. Legg til kreditter i workspace-innstillinger." }), {
-          status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
-      }
-      throw new Error(`AI gateway error: ${errText}`);
+      throw e;
     }
 
-    const data = await aiRes.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = (data.choices?.[0]?.message?.tool_calls as any)?.[0];
     if (!toolCall) throw new Error("No tool call in AI response");
     const factBox = JSON.parse(toolCall.function.arguments);
 

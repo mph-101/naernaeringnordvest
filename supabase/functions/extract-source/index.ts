@@ -1,8 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 import { corsHeaders } from "../_shared/cors.ts";
-
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+import { aiChatCompletion } from "../_shared/ai-client.ts";
 
 // SSRF protection: block private/link-local/loopback IPs and disallowed schemes.
 function isPrivateOrBlockedHost(hostname: string): boolean {
@@ -84,8 +83,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -136,48 +133,33 @@ Deno.serve(async (req) => {
       if (sourceType === "document" && (detectedMime.startsWith("text/") || detectedMime.includes("plain"))) {
         extractedText = new TextDecoder().decode(uint8).slice(0, 100000);
       } else if (sourceType === "audio") {
-        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [{
-              role: "user",
-              content: [
-                { type: "input_audio", input_audio: { data: base64, format: detectedMime.includes("wav") ? "wav" : "mp3" } },
-                { type: "text", text: "Transkriber dette lydopptaket ordrett på norsk. Returner kun den transkriberte teksten, med naturlige avsnitt." },
-              ],
-            }],
-          }),
+        const data = await aiChatCompletion({
+          model: "google/gemini-2.5-flash",
+          messages: [{
+            role: "user",
+            content: [
+              { type: "input_audio", input_audio: { data: base64, format: detectedMime.includes("wav") ? "wav" : "mp3" } },
+              { type: "text", text: "Transkriber dette lydopptaket ordrett på norsk. Returner kun den transkriberte teksten, med naturlige avsnitt." },
+            ],
+          }],
         });
-        if (!aiRes.ok) throw new Error(`Audio transcription failed: ${await aiRes.text()}`);
-        const data = await aiRes.json();
-        extractedText = data.choices?.[0]?.message?.content || "";
+        extractedText = (data.choices?.[0]?.message?.content as string) || "";
       } else {
         // image or document (PDF/DOCX) → use multimodal extraction
         const isImage = detectedMime.startsWith("image/");
-        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [{
-              role: "user",
-              content: [
-                isImage
-                  ? { type: "image_url", image_url: { url: `data:${detectedMime};base64,${base64}` } }
-                  : { type: "file", file: { filename: "source", file_data: `data:${detectedMime};base64,${base64}` } },
-                { type: "text", text: "Hent ut all lesbar tekst fra dette dokumentet/bildet. Bevar avsnitt og struktur. Returner kun den ekstraherte teksten." },
-              ],
-            }],
-          }),
+        const data = await aiChatCompletion({
+          model: "google/gemini-2.5-flash",
+          messages: [{
+            role: "user",
+            content: [
+              isImage
+                ? { type: "image_url", image_url: { url: `data:${detectedMime};base64,${base64}` } }
+                : { type: "file", file: { filename: "source", file_data: `data:${detectedMime};base64,${base64}` } },
+              { type: "text", text: "Hent ut all lesbar tekst fra dette dokumentet/bildet. Bevar avsnitt og struktur. Returner kun den ekstraherte teksten." },
+            ],
+          }],
         });
-        if (!aiRes.ok) {
-          const errText = await aiRes.text();
-          throw new Error(`Extraction failed: ${errText}`);
-        }
-        const data = await aiRes.json();
-        extractedText = data.choices?.[0]?.message?.content || "";
+        extractedText = (data.choices?.[0]?.message?.content as string) || "";
       }
     } else if (sourceType === "text") {
       // Already-pasted text — just echo back

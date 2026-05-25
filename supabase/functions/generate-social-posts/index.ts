@@ -1,6 +1,5 @@
 import { corsHeaders } from "../_shared/cors.ts";
-
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+import { aiChatCompletion, AiGatewayError } from "../_shared/ai-client.ts";
 
 interface RequestBody {
   title?: string;
@@ -24,13 +23,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "AI gateway not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-      });
-    }
-
     const { title, excerpt, body, category, language = "no" } = (await req.json()) as RequestBody;
     const plainBody = stripHtml(body || "");
 
@@ -79,13 +71,9 @@ Each post must stand on its own (someone scrolling sees it without the article).
       },
     };
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    let data;
+    try {
+      data = await aiChatCompletion({
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
@@ -94,32 +82,28 @@ Each post must stand on its own (someone scrolling sees it without the article).
         tools: [tool],
         tool_choice: { type: "function", function: { name: "social_posts" } },
         temperature: 0.6,
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit nådd. Prøv igjen om litt." }), {
-          status: 429,
-          headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
+      });
+    } catch (e) {
+      if (e instanceof AiGatewayError) {
+        if (e.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit nådd. Prøv igjen om litt." }), {
+            status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
+        if (e.status === 402) {
+          return new Response(JSON.stringify({ error: "Tom for AI-kreditt." }), {
+            status: 402, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
+        console.error("AI gateway error:", e.status, e.body);
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Tom for AI-kreditt. Fyll opp i Lovable-arbeidsområdet." }), {
-          status: 402,
-          headers: { ...corsHeaders(req), "Content-Type": "application/json" },
-        });
-      }
-      console.error("AI gateway error:", response.status, errText);
       return new Response(JSON.stringify({ error: "AI-tjenesten svarte ikke" }), {
         status: 500,
         headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
-    const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = (data.choices?.[0]?.message?.tool_calls as any)?.[0];
     let parsed: { linkedin?: string; facebook?: string; instagram?: string } = {};
     if (toolCall?.function?.arguments) {
       try {

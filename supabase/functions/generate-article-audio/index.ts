@@ -3,6 +3,7 @@
 // Returnerer signed URL.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { aiChatCompletion } from "../_shared/ai-client.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,9 +17,7 @@ Deno.serve(async (req) => {
 
   try {
     const elevenKey = Deno.env.get("ELEVENLABS_API_KEY");
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
     if (!elevenKey) return json({ error: "AUDIO_NOT_CONFIGURED", message: "Lyd-modus er ikke aktivert ennå (mangler ElevenLabs-nøkkel)." }, 503);
-    if (!lovableKey) return json({ error: "Mangler LOVABLE_API_KEY" }, 503);
 
     const authHeader = req.headers.get("Authorization") ?? "";
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -85,20 +84,16 @@ Deno.serve(async (req) => {
     if (mode === "summary") {
       // Lag muntlig 60–90 ords sammendrag via Lovable AI
       const prompt = `Lag et muntlig nyhetssammendrag på norsk bokmål av artikkelen under, i én sammenhengende paragraf på 60–90 ord. Skriv som en nyhetsanker leser opp — naturlig, klart, ingen oppramsing. Start med en kort hekt. Ikke nevn at det er et sammendrag.\n\nTittel: ${article.title}\nIngress: ${article.excerpt}\nBrødtekst (utdrag):\n${plainBody.slice(0, 3000)}`;
-      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${lovableKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
+      let aiData;
+      try {
+        aiData = await aiChatCompletion({
           model: "google/gemini-2.5-flash",
           messages: [{ role: "user", content: prompt }],
-        }),
-      });
-      if (!aiResp.ok) {
-        const e = await aiResp.text();
-        return json({ error: `AI-sammendrag feilet [${aiResp.status}]: ${e}` }, 502);
+        });
+      } catch (e) {
+        return json({ error: `AI-sammendrag feilet: ${e instanceof Error ? e.message : String(e)}` }, 502);
       }
-      const aiData = await aiResp.json();
-      summaryText = (aiData.choices?.[0]?.message?.content ?? "").trim();
+      summaryText = ((aiData.choices?.[0]?.message?.content as string) ?? "").trim();
       if (!summaryText) return json({ error: "Tomt AI-sammendrag" }, 502);
       textToSpeak = `${article.title}. ${summaryText}`;
     } else {

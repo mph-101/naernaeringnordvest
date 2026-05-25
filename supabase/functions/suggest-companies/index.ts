@@ -1,6 +1,6 @@
 import { corsHeaders } from "../_shared/cors.ts";
+import { aiChatCompletion } from "../_shared/ai-client.ts";
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 const BRREG_BASE = "https://data.brreg.no";
 
 // Match a free-form company name against BRREG and return { name, orgnr }
@@ -89,26 +89,13 @@ Deno.serve(async (req) => {
 Article:
 ${plainText.slice(0, 4000)}`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.2,
-      }),
+    const data = await aiChatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.2,
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`AI Gateway error: ${response.status} - ${errText}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "[]";
+    const content = (data.choices?.[0]?.message?.content as string) || "[]";
     const match = content.match(/\[[\s\S]*\]/);
     const rawNames: string[] = match ? JSON.parse(match[0]) : [];
 

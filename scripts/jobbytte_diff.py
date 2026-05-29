@@ -122,8 +122,19 @@ def fetch_companies_in_fylke(client: httpx.Client) -> list[dict]:
         companies.extend(kommune_companies)
         log.info("Kommune %s: %d companies (running total %d)", kommunenr, len(kommune_companies), len(companies))
         time.sleep(THROTTLE_S)
-    log.info("Fetched %d companies total from Brreg for fylke %s", len(companies), FYLKE_PREFIX)
-    return companies
+
+    # Brreg pagination can surface the same orgnr twice (page drift: the result
+    # set shifts as entities are added while we page). Dedupe by orgnr so the
+    # fylke15 upsert doesn't hit "ON CONFLICT cannot affect row a second time"
+    # and we never process the same company twice.
+    unique: dict[str, dict] = {c["orgnr"]: c for c in companies}
+    log.info(
+        "Fetched %d companies (%d unique) from Brreg for fylke %s",
+        len(companies),
+        len(unique),
+        FYLKE_PREFIX,
+    )
+    return list(unique.values())
 
 
 def fetch_roles(orgnr: str, client: httpx.Client) -> list[dict]:

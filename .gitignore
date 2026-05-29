@@ -3,6 +3,10 @@
 .env.*
 !.env.example
 
+# Python (jobbytte scripts)
+__pycache__/
+*.pyc
+
 # Logs
 logs
 *.log

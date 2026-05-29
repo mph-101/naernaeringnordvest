@@ -26,9 +26,15 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 log = logging.getLogger("jobbytte")
 
 BRREG_BASE = "https://data.brreg.no/enhetsregisteret/api"
-FYLKE = "15"
+# Brreg has no fylke filter on the search endpoint, so we filter by kommunenummer.
+# Møre og Romsdal = every kommune whose number starts with "15". We resolve the
+# list dynamically from /kommuner so it survives kommune reforms.
+FYLKE_PREFIX = "15"
 ORG_FORMS = "AS,ASA,SA"
 PAGE_SIZE = 100
+# Brreg caps deep pagination at page*size <= 10000, so we paginate per kommune
+# (largest kommune is well under 10k AS/ASA/SA) instead of one county-wide query.
+PAGINATION_CAP = 10000
 THROTTLE_S = 0.2
 ROLE_TYPES_OF_INTEREST = {"DAGL", "STYR", "LEDE", "NEST"}
 
@@ -42,42 +48,69 @@ def get_supabase() -> Client:
 # ── Brreg helpers ──────────────────────────────────────────────────────────
 
 
-def fetch_companies_in_fylke() -> list[dict]:
-    """Return all AS/ASA/SA companies in Møre og Romsdal via Brreg search."""
+def fetch_kommuner_in_fylke(client: httpx.Client) -> list[str]:
+    """Return all kommunenummer in Møre og Romsdal (prefix "15")."""
+    resp = client.get(
+        f"{BRREG_BASE}/kommuner",
+        params={"size": 1000},
+        headers={"Accept": "application/json"},
+    )
+    resp.raise_for_status()
+    kommuner = resp.json().get("_embedded", {}).get("kommuner", [])
+    numbers = sorted(
+        k["nummer"] for k in kommuner if str(k.get("nummer", "")).startswith(FYLKE_PREFIX)
+    )
+    log.info("Resolved %d kommuner in fylke %s", len(numbers), FYLKE_PREFIX)
+    return numbers
+
+
+def fetch_companies_in_kommune(kommunenr: str, client: httpx.Client) -> list[dict]:
+    """Return all AS/ASA/SA companies in a single kommune via Brreg search."""
     companies: list[dict] = []
     page = 0
-    with httpx.Client(timeout=30) as client:
-        while True:
-            resp = client.get(
-                f"{BRREG_BASE}/enheter",
-                params={
-                    "fylkesnummer": FYLKE,
-                    "organisasjonsform": ORG_FORMS,
-                    "size": PAGE_SIZE,
-                    "page": page,
-                },
-                headers={"Accept": "application/json"},
+    while True:
+        resp = client.get(
+            f"{BRREG_BASE}/enheter",
+            params={
+                "kommunenummer": kommunenr,
+                "organisasjonsform": ORG_FORMS,
+                "size": PAGE_SIZE,
+                "page": page,
+            },
+            headers={"Accept": "application/json"},
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        enheter = data.get("_embedded", {}).get("enheter", [])
+        if not enheter:
+            break
+        for e in enheter:
+            companies.append(
+                {
+                    "orgnr": e["organisasjonsnummer"],
+                    "navn": e.get("navn", ""),
+                }
             )
-            resp.raise_for_status()
-            data = resp.json()
-            embedded = data.get("_embedded", {})
-            enheter = embedded.get("enheter", [])
-            if not enheter:
-                break
-            for e in enheter:
-                companies.append(
-                    {
-                        "orgnr": e["organisasjonsnummer"],
-                        "navn": e.get("navn", ""),
-                    }
-                )
-            page_info = data.get("page", {})
-            total_pages = page_info.get("totalPages", 1)
-            page += 1
-            if page >= total_pages:
-                break
-            time.sleep(THROTTLE_S)
-    log.info("Fetched %d companies from Brreg for fylke %s", len(companies), FYLKE)
+        page_info = data.get("page", {})
+        total_pages = page_info.get("totalPages", 1)
+        page += 1
+        # Defensive: never cross Brreg's deep-pagination cap (shouldn't happen
+        # per kommune, but guards against a kommune growing past the limit).
+        if page >= total_pages or page * PAGE_SIZE >= PAGINATION_CAP:
+            break
+        time.sleep(THROTTLE_S)
+    return companies
+
+
+def fetch_companies_in_fylke(client: httpx.Client) -> list[dict]:
+    """Return all AS/ASA/SA companies in Møre og Romsdal, kommune by kommune."""
+    companies: list[dict] = []
+    for kommunenr in fetch_kommuner_in_fylke(client):
+        kommune_companies = fetch_companies_in_kommune(kommunenr, client)
+        companies.extend(kommune_companies)
+        log.info("Kommune %s: %d companies (running total %d)", kommunenr, len(kommune_companies), len(companies))
+        time.sleep(THROTTLE_S)
+    log.info("Fetched %d companies total from Brreg for fylke %s", len(companies), FYLKE_PREFIX)
     return companies
 
 
@@ -212,15 +245,15 @@ def main() -> None:
     today = date.today()
     yesterday = today - timedelta(days=1)
 
-    companies = fetch_companies_in_fylke()
-    if not companies:
-        log.warning("No companies found — exiting")
-        return
-
     tips_created = 0
     errors = 0
 
     with httpx.Client(timeout=30) as http:
+        companies = fetch_companies_in_fylke(http)
+        if not companies:
+            log.warning("No companies found — exiting")
+            return
+
         for i, comp in enumerate(companies):
             orgnr = comp["orgnr"]
             navn = comp["navn"]

@@ -1,22 +1,24 @@
-name: Jobbytte – daily role change detector
+name: Jobbytte – weekly full sync
 
 on:
   schedule:
-    # Weekdays at 06:00 UTC (08:00 CEST) — incremental run via the Brreg
-    # updates feed. Finishes in ~1 min.
-    - cron: "0 6 * * 1-5"
+    # Sundays at 04:00 UTC. Full per-kommune sweep of every AS/ASA/SA in the
+    # county: refreshes the fylke15_companies membership set and acts as a
+    # safety net that catches any role change the daily updates feed missed.
+    - cron: "0 4 * * 0"
   workflow_dispatch: {}
 
 concurrency:
-  # Share the group with the weekly full sync so the two never overlap.
+  # Same group as the daily run so a full sweep and an incremental run never
+  # overlap (they share snapshot/state tables).
   group: jobbytte
   cancel-in-progress: false
 
 jobs:
-  detect:
-    name: Detect role changes in Møre og Romsdal (incremental)
+  full-sync:
+    name: Full role sweep of Møre og Romsdal
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
 
     steps:
       - name: Checkout
@@ -32,9 +34,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt
 
-      - name: Run jobbytte diff (incremental)
+      - name: Run jobbytte diff (full)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          JOBBYTTE_MODE: incremental
+          JOBBYTTE_MODE: full
         run: python scripts/jobbytte_diff.py

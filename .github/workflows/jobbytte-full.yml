@@ -18,7 +18,9 @@ jobs:
   full-sync:
     name: Full role sweep of Møre og Romsdal
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    # ~19.8k companies, one Brreg call each at ~10 req/s ≈ 85 min. Generous
+    # margin since the sweep must finish in one run (no resume).
+    timeout-minutes: 240
 
     steps:
       - name: Checkout

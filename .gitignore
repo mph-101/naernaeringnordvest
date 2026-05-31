@@ -7,6 +7,10 @@
 __pycache__/
 *.pyc
 
+# Migration snapshots & scan output — may contain sensitive data (e.g. bcrypt hashes)
+docs/migration-*-snapshot.md
+docs/migration-scan.md
+
 # Logs
 logs
 *.log

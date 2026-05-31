@@ -568,8 +568,11 @@ export type Database = {
           excerpt_en: string | null
           forked_from_article_id: string | null
           id: string
+          image_caption: string | null
+          image_credit: string | null
           image_crop: Json | null
           image_focal: Json | null
+          image_source: string | null
           image_url: string | null
           key_points: Json | null
           key_points_en: Json | null
@@ -599,8 +602,11 @@ export type Database = {
           excerpt_en?: string | null
           forked_from_article_id?: string | null
           id?: string
+          image_caption?: string | null
+          image_credit?: string | null
           image_crop?: Json | null
           image_focal?: Json | null
+          image_source?: string | null
           image_url?: string | null
           key_points?: Json | null
           key_points_en?: Json | null
@@ -630,8 +636,11 @@ export type Database = {
           excerpt_en?: string | null
           forked_from_article_id?: string | null
           id?: string
+          image_caption?: string | null
+          image_credit?: string | null
           image_crop?: Json | null
           image_focal?: Json | null
+          image_source?: string | null
           image_url?: string | null
           key_points?: Json | null
           key_points_en?: Json | null

@@ -1,6 +1,7 @@
 import { Fragment, useMemo } from "react";
 import { ArticleChart, type ChartData } from "./ArticleChart";
 import { SourceCard, decodeSourceCard, type SourceCardData } from "@/components/source-card/SourceCard";
+import { ImageCaption } from "@/components/ImageCaption";
 import { pickDropcapVariant, dropcapClassName } from "@/lib/dropcap";
 
 interface ArticleBodyProps {
@@ -9,12 +10,48 @@ interface ArticleBodyProps {
   category?: string | null;
 }
 
+interface InlineImage {
+  src: string;
+  alt: string;
+  caption: string | null;
+  credit: string | null;
+  source: string | null;
+}
+
 interface Segment {
-  type: "html" | "chart" | "sourceCard";
+  type: "html" | "chart" | "sourceCard" | "image";
   content: string;
   chart?: ChartData;
   sourceCard?: SourceCardData;
+  image?: InlineImage;
 }
+
+// Decode an HTML entity-escaped attribute value back to plain text. Handles the
+// entities we emit in the editor (escapeAttr) and is safe outside the browser.
+const decodeAttr = (s: string): string =>
+  s
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&");
+
+const parseInlineImage = (figureHtml: string): InlineImage | null => {
+  const attr = (name: string): string | null => {
+    const m = figureHtml.match(new RegExp(`\\bdata-${name}="([^"]*)"`, "i"));
+    return m ? decodeAttr(m[1]) : null;
+  };
+  const srcMatch = figureHtml.match(/<img\b[^>]*\bsrc="([^"]+)"/i);
+  if (!srcMatch) return null;
+  const altMatch = figureHtml.match(/<img\b[^>]*\balt="([^"]*)"/i);
+  return {
+    src: srcMatch[1],
+    alt: altMatch ? decodeAttr(altMatch[1]) : "",
+    caption: attr("caption"),
+    credit: attr("credit"),
+    source: attr("source"),
+  };
+};
 
 const decodeChart = (encoded: string): ChartData | null => {
   try {
@@ -37,8 +74,9 @@ const decodeChart = (encoded: string): ChartData | null => {
 export const ArticleBody = ({ html, className = "", category }: ArticleBodyProps) => {
   const segments = useMemo<Segment[]>(() => {
     if (!html) return [];
-    // Match Nær Næring custom blocks: chart figures and source-card asides.
-    const regex = /<figure\b(?=[^>]*\bdata-nn-chart="true")(?=[^>]*\bdata-chart="([^"]+)")[^>]*>[\s\S]*?<\/figure>|<aside\b(?=[^>]*\bdata-nn-source-card="true")(?=[^>]*\bdata-source-card="([^"]+)")[^>]*>[\s\S]*?<\/aside>/gi;
+    // Match Nær Næring custom blocks: chart figures, source-card asides, and
+    // captioned inline images (figure[data-nn-image]).
+    const regex = /<figure\b(?=[^>]*\bdata-nn-chart="true")(?=[^>]*\bdata-chart="([^"]+)")[^>]*>[\s\S]*?<\/figure>|<aside\b(?=[^>]*\bdata-nn-source-card="true")(?=[^>]*\bdata-source-card="([^"]+)")[^>]*>[\s\S]*?<\/aside>|<figure\b(?=[^>]*\bdata-nn-image="true")[^>]*>[\s\S]*?<\/figure>/gi;
     const result: Segment[] = [];
     let lastIndex = 0;
     let m: RegExpExecArray | null;
@@ -61,7 +99,13 @@ export const ArticleBody = ({ html, className = "", category }: ArticleBodyProps
           result.push({ type: "html", content: m[0] });
         }
       } else {
-        result.push({ type: "html", content: m[0] });
+        // Captioned inline image
+        const img = parseInlineImage(m[0]);
+        if (img) {
+          result.push({ type: "image", content: m[0], image: img });
+        } else {
+          result.push({ type: "html", content: m[0] });
+        }
       }
       lastIndex = m.index + m[0].length;
     }
@@ -127,6 +171,16 @@ export const ArticleBody = ({ html, className = "", category }: ArticleBodyProps
           <ArticleChart key={i} data={seg.chart} />
         ) : seg.type === "sourceCard" && seg.sourceCard ? (
           <SourceCard key={i} data={seg.sourceCard} />
+        ) : seg.type === "image" && seg.image ? (
+          <figure key={i} className="my-8">
+            <img
+              src={seg.image.src}
+              alt={seg.image.alt}
+              className="w-full rounded-lg"
+              loading="lazy"
+            />
+            <ImageCaption caption={seg.image.caption} credit={seg.image.credit} source={seg.image.source} />
+          </figure>
         ) : (
           <Fragment key={i}>
             <div className="my-0 pb-[5px]" dangerouslySetInnerHTML={{ __html: seg.content }} />

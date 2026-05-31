@@ -31,7 +31,7 @@ import { FactBoxLibraryDialog } from "@/components/factbox/FactBoxLibraryDialog"
 import { encodeFactBox, type FactBoxData } from "@/components/factbox/FactBox";
 import { SourceCardDialog } from "@/components/source-card/SourceCardDialog";
 import { encodeSourceCard, type SourceCardData } from "@/components/source-card/SourceCard";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ArticleTagInput } from "./ArticleTagInput";
 import { AIDraftFromSourcesButton } from "./AIDraftFromSourcesButton";
 import { RegionPicker } from "./RegionPicker";
@@ -105,6 +105,10 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [editingChart, setEditingChart] = useState<{ chart: ChartData; pos: number } | null>(null);
   const [factBoxDialogOpen, setFactBoxDialogOpen] = useState(false);
   const [editingFactBox, setEditingFactBox] = useState<{ data: FactBoxData; pos: number } | null>(null);
+  // Inline image caption dialog: after an inline image uploads we collect its
+  // caption / credit / source before inserting a <figure data-nn-image> block.
+  const [inlineImg, setInlineImg] = useState<{ url: string; alt: string; caption: string; credit: string; source: string } | null>(null);
+  const [insertingInlineImg, setInsertingInlineImg] = useState(false);
   const [sourceCardDialogOpen, setSourceCardDialogOpen] = useState(false);
   const [editingSourceCard, setEditingSourceCard] = useState<{ data: SourceCardData; pos: number } | null>(null);
   const editorInstanceRef = useRef<any>(null);
@@ -148,6 +152,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     region_slug: null as string | null,
     media_url: "",
     pinned_position: null as number | null,
+    image_caption: "",
+    image_credit: "",
+    image_source: "",
   });
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
@@ -260,6 +267,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       published_at: currentForm.status === "published" ? new Date().toISOString() : null,
       region_slug: currentForm.region_slug || null,
       pinned_position: currentForm.pinned_position ?? null,
+      image_caption: currentForm.image_caption?.trim() || null,
+      image_credit: currentForm.image_credit?.trim() || null,
+      image_source: currentForm.image_source?.trim() || null,
     } as any;
     try {
       if (currentArticleId) {
@@ -414,6 +424,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         region_slug: ((data as any).region_slug as string | null) ?? null,
         media_url: ((data as any).media_url as string | null) ?? "",
         pinned_position: ((data as any).pinned_position as number | null) ?? null,
+        image_caption: ((data as any).image_caption as string | null) ?? "",
+        image_credit: ((data as any).image_credit as string | null) ?? "",
+        image_source: ((data as any).image_source as string | null) ?? "",
       });
       // Remember the body that's currently live so we can detect real edits
       // on the next publish.
@@ -485,6 +498,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         region_slug: form.region_slug || null,
         media_url: form.media_url?.trim() ? form.media_url.trim() : null,
         pinned_position: form.pinned_position ?? null,
+        image_caption: form.image_caption?.trim() || null,
+        image_credit: form.image_credit?.trim() || null,
+        image_source: form.image_source?.trim() || null,
       } as any;
 
       const syncSharedRegions = async (id: string) => {
@@ -1134,9 +1150,30 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         return;
       }
       const { data: { publicUrl } } = supabase.storage.from("article-images").getPublicUrl(path);
-      updateForm({ body: form.body + `<img src="${publicUrl}" alt="" />` });
+      // Collect caption/credit before inserting the figure block.
+      setInlineImg({ url: publicUrl, alt: "", caption: "", credit: "", source: "" });
     };
     input.click();
+  };
+
+  // Escape a value for safe use inside an HTML double-quoted attribute.
+  const escapeAttr = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const confirmInsertInlineImage = () => {
+    if (!inlineImg) return;
+    setInsertingInlineImg(true);
+    const { url, alt, caption, credit, source } = inlineImg;
+    const attrs = [
+      'data-nn-image="true"',
+      caption.trim() ? `data-caption="${escapeAttr(caption.trim())}"` : "",
+      credit.trim() ? `data-credit="${escapeAttr(credit.trim())}"` : "",
+      source.trim() ? `data-source="${escapeAttr(source.trim())}"` : "",
+    ].filter(Boolean).join(" ");
+    const figureHtml = `<figure ${attrs}><img src="${url}" alt="${escapeAttr(alt.trim())}" /></figure>`;
+    updateForm({ body: form.body + figureHtml });
+    setInlineImg(null);
+    setInsertingInlineImg(false);
   };
 
   const handleInsertChart = (chart: ChartData) => {

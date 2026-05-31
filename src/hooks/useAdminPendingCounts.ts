@@ -25,7 +25,7 @@ export function useAdminPendingCounts() {
 
   const refresh = useCallback(async () => {
     const [tipsRes, jobsRes, eventsRes] = await Promise.all([
-      supabase.from("tips").select("id", { count: "exact", head: true }),
+      supabase.from("tips").select("id", { count: "exact", head: true }).eq("status", "new"),
       supabase.from("job_listings").select("id", { count: "exact", head: true }).eq("status", "pending"),
       supabase.from("events").select("id", { count: "exact", head: true }).eq("status", "pending"),
     ]);

@@ -15,6 +15,7 @@ import { RelatedByTags } from "@/components/RelatedByTags";
 import { CompanyMiniProfile } from "@/components/CompanyMiniProfile";
 import { ArticleGallery } from "@/components/ArticleGallery";
 import { ArticleBody } from "@/components/charts/ArticleBody";
+import { ImageCaption } from "@/components/ImageCaption";
 import { pickDropcapVariant, dropcapClassName } from "@/lib/dropcap";
 import { cropToBackgroundStyle, parseCrop, parseFocal } from "@/lib/image-crop";
 import { useTheme } from "@/hooks/useTheme";
@@ -48,6 +49,9 @@ interface ArticleData {
   created_by?: string | null;
   co_authors?: string[] | null;
   media_url?: string | null;
+  image_caption?: string | null;
+  image_credit?: string | null;
+  image_source?: string | null;
 }
 
 function timeAgo(dateStr: string, lang: "no" | "en"): string {
@@ -73,6 +77,9 @@ const Article = () => {
   const [hasFullAccess, setHasFullAccess] = useState(false);
   const [previewBody, setPreviewBody] = useState<string | null>(null);
   const [previewBodyEn, setPreviewBodyEn] = useState<string | null>(null);
+  // Fallback hero caption/credit looked up from media_assets when the article
+  // has no per-article override (older articles predating image_caption columns).
+  const [heroAssetMeta, setHeroAssetMeta] = useState<{ caption: string | null; photographer: string | null; source: string | null } | null>(null);
   const variant = useArticleVariant(article?.id);
   const completedRef = useState({ done: false })[0];
 
@@ -105,6 +112,24 @@ const Article = () => {
     fetchArticle();
     supabase.from("article_company_tags").select("orgnr, company_name").eq("article_id", id).then(({ data }) => setCompanyTags(data || []));
   }, [id]);
+
+  // Look up media_assets metadata for the hero image as a fallback caption
+  // source. Only used when the article has no per-article caption override.
+  useEffect(() => {
+    const a = article as any;
+    if (!a?.image_url) { setHeroAssetMeta(null); return; }
+    if (a.image_caption || a.image_credit) { setHeroAssetMeta(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("media_assets")
+        .select("caption, photographer, source")
+        .eq("public_url", a.image_url)
+        .maybeSingle();
+      if (!cancelled) setHeroAssetMeta(data ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, [article]);
 
   const handleScroll = useCallback(() => {
     const scrollTop = window.scrollY;
@@ -182,6 +207,11 @@ const Article = () => {
   const heroBg = effectiveImageUrl
     ? cropToBackgroundStyle(parseCrop(effectiveCrop), parseFocal(effectiveFocal), { precise: true })
     : { size: "cover", position: "center" };
+  // Hero caption/credit: prefer per-article override, fall back to the
+  // media_assets metadata looked up by URL.
+  const heroCaption = (article as any).image_caption || heroAssetMeta?.caption || null;
+  const heroCredit = (article as any).image_credit || heroAssetMeta?.photographer || null;
+  const heroSource = (article as any).image_source || heroAssetMeta?.source || null;
 
   const BackButton = () => (
     <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-10 font-body text-sm group">
@@ -222,6 +252,12 @@ const Article = () => {
           <span className="inline-block px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white text-sm font-subhead font-medium rounded-full border border-white/20">{article.category}</span>
         </div>
       </div>
+
+      {effectiveImageUrl && (heroCaption || heroCredit) && (
+        <div className="max-w-xl mx-auto w-full px-6 pt-3">
+          <ImageCaption caption={heroCaption} credit={heroCredit} source={heroSource} />
+        </div>
+      )}
 
       <article className="max-w-xl mx-auto px-6 pt-10 pb-14">
         <BackButton />

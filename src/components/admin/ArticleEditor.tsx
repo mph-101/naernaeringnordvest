@@ -155,6 +155,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   // Track the body that was last published so we can write a revision diff
   // (and only on actual changes) when the editor publishes again.
   const [lastPublishedBody, setLastPublishedBody] = useState<string>("");
+  const [originalPublishedAt, setOriginalPublishedAt] = useState<string | null>(null);
   const [changeNote, setChangeNote] = useState<string>("");
   const [forkedFromArticleId, setForkedFromArticleId] = useState<string | null>(null);
   const [forkedFromTitle, setForkedFromTitle] = useState<string | null>(null);
@@ -257,7 +258,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       key_points_en: currentForm.key_points_en,
       status: currentForm.status,
       published: currentForm.status === "published",
-      published_at: currentForm.status === "published" ? new Date().toISOString() : null,
+      published_at: currentForm.status === "published"
+        ? (originalPublishedAt || new Date().toISOString())
+        : null,
       region_slug: currentForm.region_slug || null,
       pinned_position: currentForm.pinned_position ?? null,
     } as any;
@@ -284,13 +287,16 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           .select("id")
           .single();
         if (error) throw error;
-        if (inserted?.id) setCurrentArticleId(inserted.id);
+        if (inserted?.id) {
+          setCurrentArticleId(inserted.id);
+          if (payload.published_at) setOriginalPublishedAt(payload.published_at);
+        }
       }
       setAutoSaveStatus("saved");
     } catch {
       setAutoSaveStatus("unsaved");
     }
-  }, [currentArticleId]);
+  }, [currentArticleId, originalPublishedAt]);
 
   // Flush pending edits when the user closes the tab or navigates away.
   useEffect(() => {
@@ -415,9 +421,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         media_url: ((data as any).media_url as string | null) ?? "",
         pinned_position: ((data as any).pinned_position as number | null) ?? null,
       });
-      // Remember the body that's currently live so we can detect real edits
-      // on the next publish.
       setLastPublishedBody(data.published ? (data.body || "") : "");
+      setOriginalPublishedAt(data.published_at ?? null);
       setForkedFromArticleId(((data as any).forked_from_article_id as string | null) ?? null);
       const { data: tags } = await supabase.from("article_company_tags").select("orgnr, company_name").eq("article_id", articleId);
       setCompanyTags(tags || []);
@@ -481,7 +486,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         key_points_en: form.key_points_en,
         status: form.status,
         published: form.status === "published",
-        published_at: form.status === "published" ? new Date().toISOString() : null,
+        published_at: form.status === "published"
+          ? (originalPublishedAt || new Date().toISOString())
+          : null,
         region_slug: form.region_slug || null,
         media_url: form.media_url?.trim() ? form.media_url.trim() : null,
         pinned_position: form.pinned_position ?? null,
@@ -555,6 +562,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           );
         }
         await syncSharedRegions(idForUpdate);
+        if (!originalPublishedAt && articleData.published_at) {
+          setOriginalPublishedAt(articleData.published_at);
+        }
         toast({ title: "Lagret", description: "Artikkelen er oppdatert" });
       } else {
         const { data: inserted, error } = await supabase
@@ -565,6 +575,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         if (error) throw error;
         if (inserted?.id) {
           setCurrentArticleId(inserted.id);
+          if (articleData.published_at) setOriginalPublishedAt(articleData.published_at);
           await syncSharedRegions(inserted.id);
         }
         toast({ title: "Opprettet", description: "Artikkelen er opprettet" });

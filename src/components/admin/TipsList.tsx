@@ -24,9 +24,13 @@ export const TipsList = () => {
 
   const fetchTips = async () => {
     try {
-      // Note: This requires admin access via edge function in production
-      // For now, we show a placeholder since tips table has SELECT USING (false)
-      setTips([]);
+      const { data, error } = await supabase
+        .from("tips")
+        .select("id, journalist_id, journalist_name, content, follow_up_email, created_at")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setTips(data ?? []);
     } catch (error) {
       console.error("Error fetching tips:", error);
     } finally {
@@ -34,17 +38,14 @@ export const TipsList = () => {
     }
   };
 
-  const journalists = ["redaksjonen", "ingrid-solberg", "erik-nordahl", "maria-henriksen", "anders-kristiansen", "karin-moe"];
-  const journalistNames: Record<string, string> = {
-    "redaksjonen": "Redaksjonen",
-    "ingrid-solberg": "Ingrid Solberg",
-    "erik-nordahl": "Erik Nordahl",
-    "maria-henriksen": "Maria Henriksen",
-    "anders-kristiansen": "Anders Kristiansen",
-    "karin-moe": "Karin Moe"
-  };
+  const journalistMap = new Map<string, string>();
+  for (const tip of tips) {
+    if (!journalistMap.has(tip.journalist_id)) {
+      journalistMap.set(tip.journalist_id, tip.journalist_name);
+    }
+  }
 
-  const filteredTips = selectedJournalist 
+  const filteredTips = selectedJournalist
     ? tips.filter(t => t.journalist_id === selectedJournalist)
     : tips;
 
@@ -65,31 +66,33 @@ export const TipsList = () => {
       </div>
 
       {/* Filter by journalist */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        <button
-          onClick={() => setSelectedJournalist(null)}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            selectedJournalist === null 
-              ? "bg-primary text-primary-foreground" 
-              : "bg-muted hover:bg-muted/80 text-muted-foreground"
-          }`}
-        >
-          Alle
-        </button>
-        {journalists.map((j) => (
+      {journalistMap.size > 1 && (
+        <div className="flex flex-wrap gap-2 mb-6">
           <button
-            key={j}
-            onClick={() => setSelectedJournalist(j)}
+            onClick={() => setSelectedJournalist(null)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              selectedJournalist === j 
-                ? "bg-primary text-primary-foreground" 
+              selectedJournalist === null
+                ? "bg-primary text-primary-foreground"
                 : "bg-muted hover:bg-muted/80 text-muted-foreground"
             }`}
           >
-            {journalistNames[j]}
+            Alle
           </button>
-        ))}
-      </div>
+          {[...journalistMap.entries()].map(([id, name]) => (
+            <button
+              key={id}
+              onClick={() => setSelectedJournalist(id)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                selectedJournalist === id
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted hover:bg-muted/80 text-muted-foreground"
+              }`}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {filteredTips.length === 0 ? (
         <div className="bg-card rounded-xl p-12 text-center shadow-soft">

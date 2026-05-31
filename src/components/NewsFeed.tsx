@@ -88,7 +88,7 @@ export const NewsFeed = () => {
   const [articleSharedRegions, setArticleSharedRegions] = useState<Map<string, string[]>>(new Map());
   const [nativeAds, setNativeAds] = useState<NativeAd[]>([]);
   const navigate = useNavigate();
-  const INITIAL_COUNT = 11;
+  const INITIAL_COUNT = 10;
   const PAGE_SIZE = 9;
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const [loadingMore, setLoadingMore] = useState(false);

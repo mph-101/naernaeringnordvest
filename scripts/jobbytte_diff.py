@@ -49,6 +49,12 @@ FEED_PAGE_SIZE = 1000
 CURSOR_KEY = "last_oppdateringsid"
 # When no cursor exists yet, look this many days back in the updates feed.
 INITIAL_LOOKBACK_DAYS = 2
+# Full mode sweeps ~19.8k companies (1 Brreg call each), so a tighter throttle
+# is still polite (~10 req/s) and roughly halves the per-company cost.
+FULL_THROTTLE_S = 0.1
+# Snapshot writes are batched in the full run to avoid a DB round trip per
+# company (that per-company round trip is what timed the first full run out).
+SNAPSHOT_BATCH = 500
 
 
 def get_supabase() -> Client:
@@ -375,20 +381,11 @@ def fetch_updated_orgnr_since(
 # ── Per-company processing ───────────────────────────────────────────────────
 
 
-def process_company(sb: Client, http: httpx.Client, orgnr: str, navn: str, today: date) -> int:
-    """Fetch roles, diff against the last snapshot, emit tips, store snapshot.
-
-    Returns the number of tips created. A company with no prior snapshot is
-    treated as baseline (snapshot stored, no tips).
-    """
-    roles = fetch_roles(orgnr, http)
-    old_roles = get_latest_snapshot(sb, orgnr, before=today)
-    store_snapshot(sb, orgnr, roles, today)
-
-    if old_roles is None:
-        return 0
-
-    added, removed = diff_roles(old_roles, roles)
+def emit_tips(
+    sb: Client, orgnr: str, navn: str, old_roles: list[dict], new_roles: list[dict], today: date
+) -> int:
+    """Diff old vs new roles and insert a pending tip per interesting change."""
+    added, removed = diff_roles(old_roles, new_roles)
     interesting_added = [
         r for r in added if r.get("type") in ROLE_TYPES_OF_INTEREST and not r.get("fratradt")
     ]
@@ -450,30 +447,122 @@ def process_company(sb: Client, http: httpx.Client, orgnr: str, navn: str, today
     return tips
 
 
+def process_company(sb: Client, http: httpx.Client, orgnr: str, navn: str, today: date) -> int:
+    """Incremental path: fetch roles, diff against the last snapshot, emit tips,
+    store snapshot. A company with no prior snapshot is baseline (no tips).
+
+    Used by the daily run (~150 companies), where a per-company DB round trip is
+    cheap. The full run uses a bulk-prefetch + batched-write path instead.
+    """
+    roles = fetch_roles(orgnr, http)
+    old_roles = get_latest_snapshot(sb, orgnr, before=today)
+    store_snapshot(sb, orgnr, roles, today)
+    if old_roles is None:
+        return 0
+    return emit_tips(sb, orgnr, navn, old_roles, roles, today)
+
+
+def load_prior_snapshots(sb: Client, before: date) -> dict[str, list[dict]]:
+    """Bulk-load the latest snapshot per orgnr strictly before `before`.
+
+    One paginated scan instead of a round trip per company — this is the change
+    that keeps the full sweep inside its time budget. Rows are ordered by
+    snapshot_date ascending so later dates overwrite earlier in the dict,
+    leaving the most recent prior state per orgnr.
+    """
+    out: dict[str, list[dict]] = {}
+    page = 0
+    size = 1000
+    while True:
+        resp = (
+            sb.table("company_roles_snapshots")
+            .select("orgnr, roles, snapshot_date")
+            .lt("snapshot_date", before.isoformat())
+            .order("snapshot_date", desc=False)
+            .order("orgnr", desc=False)
+            .range(page * size, (page + 1) * size - 1)
+            .execute()
+        )
+        rows = resp.data or []
+        for r in rows:
+            out[r["orgnr"]] = r["roles"]
+        if len(rows) < size:
+            break
+        page += 1
+    log.info("Prefetched prior snapshots for %d companies", len(out))
+    return out
+
+
+def flush_snapshots(sb: Client, buffer: list[dict]) -> None:
+    """Upsert buffered snapshots in batches. Each orgnr appears once per run and
+    snapshot_date is constant, so no (orgnr, snapshot_date) collides in a batch."""
+    if not buffer:
+        return
+    for i in range(0, len(buffer), SNAPSHOT_BATCH):
+        sb.table("company_roles_snapshots").upsert(
+            buffer[i : i + SNAPSHOT_BATCH], on_conflict="orgnr,snapshot_date"
+        ).execute()
+
+
 # ── Run modes ────────────────────────────────────────────────────────────────
 
 
 def run_full(sb: Client, http: httpx.Client, today: date) -> int:
-    """Weekly safety net: list every company in the county and diff all."""
+    """Weekly safety net: list every company in the county and diff all.
+
+    Avoids the two per-company Supabase round trips that timed out the first
+    attempt: prior snapshots are prefetched in one scan and new snapshots are
+    written in batches, leaving only the (unavoidable) one Brreg call per
+    company in the hot loop.
+    """
     companies = fetch_companies_in_fylke(http)
     if not companies:
         log.warning("No companies found — exiting")
         return 0
 
     upsert_fylke15_companies(sb, companies)
+    prior = load_prior_snapshots(sb, before=today)
 
+    now_iso = datetime.now(timezone.utc).isoformat()
+    snapshot_buffer: list[dict] = []
     tips = 0
     errors = 0
+
     for i, comp in enumerate(companies):
+        orgnr = comp["orgnr"]
+        navn = comp["navn"]
         try:
-            tips += process_company(sb, http, comp["orgnr"], comp["navn"], today)
+            roles = fetch_roles(orgnr, http)
+            snapshot_buffer.append(
+                {
+                    "orgnr": orgnr,
+                    "snapshot_date": today.isoformat(),
+                    "roles": roles,
+                    "fetched_at": now_iso,
+                }
+            )
+            if len(snapshot_buffer) >= SNAPSHOT_BATCH:
+                flush_snapshots(sb, snapshot_buffer)
+                snapshot_buffer = []
+
+            old_roles = prior.get(orgnr)
+            if old_roles is not None:
+                tips += emit_tips(sb, orgnr, navn, old_roles, roles, today)
         except Exception:
             errors += 1
-            log.exception("Error processing %s (%s)", comp["orgnr"], comp["navn"])
-        if i % 500 == 0 and i > 0:
-            log.info("Progress: %d/%d companies, %d tips so far", i, len(companies), tips)
-        time.sleep(THROTTLE_S)
+            log.exception("Error processing %s (%s)", orgnr, navn)
 
+        if i % 1000 == 0 and i > 0:
+            log.info(
+                "Progress: %d/%d companies, %d tips, %d buffered",
+                i,
+                len(companies),
+                tips,
+                len(snapshot_buffer),
+            )
+        time.sleep(FULL_THROTTLE_S)
+
+    flush_snapshots(sb, snapshot_buffer)
     log.info("Full run done. Companies: %d, tips: %d, errors: %d", len(companies), tips, errors)
     return tips
 

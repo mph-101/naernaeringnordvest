@@ -51,6 +51,7 @@ const ArrangementDetalj = lazy(() => import("./views/ArrangementDetalj"));
 const Newsletter = lazy(() => import("./views/Newsletter"));
 const Unsubscribe = lazy(() => import("./views/Unsubscribe"));
 const Lytt = lazy(() => import("./views/Lytt"));
+const ComingSoon = lazy(() => import("./views/ComingSoon"));
 
 // Idrett is only used for redirects — no need to lazy-load a redirect
 const Idrett = lazy(() => import("./views/Idrett"));
@@ -126,6 +127,7 @@ const App = () => (
               <Route path="/cookies" element={<Info />} />
               <Route path="/tilgjengelighet" element={<Info />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/kommer-snart" element={<ComingSoon />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
               </Suspense>

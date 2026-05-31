@@ -42,6 +42,7 @@ import { PollsManager } from "./PollsManager";
 import { EventsReview } from "./EventsReview";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminPendingCounts } from "@/hooks/useAdminPendingCounts";
 
 interface AdminDashboardProps {
   session: any;
@@ -53,6 +54,7 @@ type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "job-
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const { hasRole } = useAuth();
   const isAdmin = hasRole("admin");
+  const pendingCounts = useAdminPendingCounts();
   const [view, setView] = useState<View>("dashboard");
   const [editingArticleId, setEditingArticleId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -86,6 +88,12 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "events" as View, label: "Arrangementer", icon: CalendarDays },
     ...(isAdmin ? [{ id: "users" as View, label: "Brukere", icon: UserCog }] : []),
   ];
+
+  const badgeCounts: Partial<Record<View, number>> = {
+    tips: pendingCounts.tips,
+    "job-listings": pendingCounts.jobListings,
+    events: pendingCounts.events,
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -134,6 +142,11 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
             >
               <item.icon className="w-5 h-5" />
               {item.label}
+              {(badgeCounts[item.id] ?? 0) > 0 && (
+                <span className="ml-auto min-w-[1.25rem] h-5 px-1.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold flex items-center justify-center">
+                  {badgeCounts[item.id]}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -207,6 +220,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 description="Se innkomne tips fra lesere"
                 icon={MessageSquare}
                 onClick={() => setView("tips")}
+                badge={pendingCounts.tips}
               />
               <DashboardCard
                 title="Jobbytter"
@@ -219,6 +233,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 description="Godkjenn innsendte stillingsannonser"
                 icon={Briefcase}
                 onClick={() => setView("job-listings")}
+                badge={pendingCounts.jobListings}
               />
               <DashboardCard
                 title="Faktura-forespørsler"
@@ -243,6 +258,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
                 description="Godkjenn næringslivsarrangementer fra abonnenter"
                 icon={CalendarDays}
                 onClick={() => setView("events")}
+                badge={pendingCounts.events}
               />
               {isAdmin && (
                 <DashboardCard
@@ -337,20 +353,26 @@ interface DashboardCardProps {
   icon: React.ComponentType<{ className?: string }>;
   onClick?: () => void;
   disabled?: boolean;
+  badge?: number;
 }
 
-const DashboardCard = ({ title, description, icon: Icon, onClick, disabled }: DashboardCardProps) => (
+const DashboardCard = ({ title, description, icon: Icon, onClick, disabled, badge }: DashboardCardProps) => (
   <button
     onClick={onClick}
     disabled={disabled}
     className={`
-      bg-card rounded-xl p-6 text-left shadow-soft transition-all
-      ${disabled 
-        ? "opacity-50 cursor-not-allowed" 
+      relative bg-card rounded-xl p-6 text-left shadow-soft transition-all
+      ${disabled
+        ? "opacity-50 cursor-not-allowed"
         : "hover:shadow-elevated hover:-translate-y-1 cursor-pointer"
       }
     `}
   >
+    {(badge ?? 0) > 0 && (
+      <span className="absolute top-3 right-3 min-w-[1.5rem] h-6 px-2 rounded-full bg-accent text-accent-foreground text-xs font-semibold flex items-center justify-center">
+        {badge}
+      </span>
+    )}
     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
       <Icon className="w-6 h-6 text-primary" />
     </div>

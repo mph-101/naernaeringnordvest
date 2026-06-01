@@ -159,9 +159,12 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [sharedRegions, setSharedRegions] = useState<string[]>([]);
-  // Track the body that was last published so we can write a revision diff
-  // (and only on actual changes) when the editor publishes again.
+  // Track the last published state so we can write a revision when any
+  // meaningful field changes (body, title, excerpt, image).
   const [lastPublishedBody, setLastPublishedBody] = useState<string>("");
+  const [lastPublishedTitle, setLastPublishedTitle] = useState<string>("");
+  const [lastPublishedExcerpt, setLastPublishedExcerpt] = useState<string>("");
+  const [lastPublishedImageUrl, setLastPublishedImageUrl] = useState<string>("");
   const [originalPublishedAt, setOriginalPublishedAt] = useState<string | null>(null);
   const [changeNote, setChangeNote] = useState<string>("");
   const [forkedFromArticleId, setForkedFromArticleId] = useState<string | null>(null);
@@ -435,6 +438,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         image_source: ((data as any).image_source as string | null) ?? "",
       });
       setLastPublishedBody(data.published ? (data.body || "") : "");
+      setLastPublishedTitle(data.published ? (data.title || "") : "");
+      setLastPublishedExcerpt(data.published ? (data.excerpt || "") : "");
+      setLastPublishedImageUrl(data.published ? (data.image_url || "") : "");
       setOriginalPublishedAt(data.published_at ?? null);
       setForkedFromArticleId(((data as any).forked_from_article_id as string | null) ?? null);
       const { data: tags } = await supabase.from("article_company_tags").select("orgnr, company_name").eq("article_id", articleId);
@@ -526,10 +532,15 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       if (idForUpdate) {
         const { error } = await supabase.from("articles").update(articleData).eq("id", idForUpdate);
         if (error) throw error;
-        // Write a revision row when this save publishes the article AND the body
-        // changed since the last published version. This gives readers a
-        // transparent changelog and only fires on real publishes.
-        if (form.status === "published" && form.body && form.body !== lastPublishedBody) {
+        // Write a revision row when this save publishes the article AND any
+        // meaningful field changed since the last published version. This gives
+        // readers a transparent changelog.
+        const bodyChanged = form.body !== lastPublishedBody;
+        const titleChanged = form.title !== lastPublishedTitle;
+        const excerptChanged = form.excerpt !== lastPublishedExcerpt;
+        const imageChanged = (form.image_url || "") !== lastPublishedImageUrl;
+        const hasChange = bodyChanged || titleChanged || excerptChanged || imageChanged;
+        if (form.status === "published" && hasChange) {
           try {
             const { data: { user } } = await supabase.auth.getUser();
             const { data: latest } = await supabase
@@ -541,11 +552,18 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               .maybeSingle();
             const nextNum = ((latest as any)?.revision_number ?? 0) + 1;
             const wc = stripHtml(form.body).split(/\s+/).filter(Boolean).length;
-            const prevWc = stripHtml(lastPublishedBody).split(/\s+/).filter(Boolean).length;
-            const delta = wc - prevWc;
-            const summary = lastPublishedBody
-              ? `${delta >= 0 ? "+" : ""}${delta} ord (${wc} totalt)`
-              : `${wc} ord`;
+            const parts: string[] = [];
+            if (bodyChanged && lastPublishedBody) {
+              const prevWc = stripHtml(lastPublishedBody).split(/\s+/).filter(Boolean).length;
+              const delta = wc - prevWc;
+              parts.push(`${delta >= 0 ? "+" : ""}${delta} ord (${wc} totalt)`);
+            } else if (bodyChanged) {
+              parts.push(`${wc} ord`);
+            }
+            if (titleChanged) parts.push("tittel endret");
+            if (excerptChanged) parts.push("ingress endret");
+            if (imageChanged) parts.push("bilde endret");
+            const summary = parts.join(", ") || null;
             await supabase.from("article_revisions" as any).insert({
               article_id: idForUpdate,
               revision_number: nextNum,
@@ -558,6 +576,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               changed_by_name: form.author || null,
             });
             setLastPublishedBody(form.body);
+            setLastPublishedTitle(form.title);
+            setLastPublishedExcerpt(form.excerpt);
+            setLastPublishedImageUrl(form.image_url || "");
             setChangeNote("");
           } catch (revErr) {
             // Non-fatal — the article still saved.
@@ -1405,9 +1426,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Change note for the public revision log — only relevant when an
-            already-published article is being re-published with body edits. */}
-        {form.status === "published" && lastPublishedBody && form.body !== lastPublishedBody && (
+        {/* Change note for the public revision log — shown when an
+            already-published article has meaningful edits. */}
+        {form.status === "published" && lastPublishedBody && (form.body !== lastPublishedBody || form.title !== lastPublishedTitle || form.excerpt !== lastPublishedExcerpt || (form.image_url || "") !== lastPublishedImageUrl) && (
           <div className="rounded-2xl border border-accent/40 bg-accent/5 p-4">
             <Label htmlFor="change-note" className="text-xs font-subhead font-semibold uppercase tracking-wider text-accent">
               Endringsnotat (vises i åpenhetsloggen)
@@ -1432,8 +1453,17 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           <ImageUpload
             currentUrl={form.image_url}
             onUpload={(url) =>
-              // Reset crop/focal when a new image is uploaded — they don't apply to the new image
               updateForm({ image_url: url, image_crop: null, image_focal: null })
+            }
+            onUploadWithMeta={(meta) =>
+              updateForm({
+                image_url: meta.url,
+                image_crop: null,
+                image_focal: null,
+                image_caption: meta.caption || form.image_caption,
+                image_credit: meta.photographer || form.image_credit,
+                image_source: meta.source || form.image_source,
+              })
             }
           />
           {form.image_url && (
@@ -1507,6 +1537,39 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               initialFocal={form.image_focal}
               onSave={(crop, focal) => updateForm({ image_crop: crop, image_focal: focal })}
             />
+          )}
+          {form.image_url && (
+            <div className="space-y-3 pt-2 border-t border-border/60">
+              <div>
+                <Label htmlFor="image-caption" className="text-xs text-muted-foreground">Bildetekst</Label>
+                <Input
+                  id="image-caption"
+                  value={form.image_caption}
+                  onChange={(e) => updateForm({ image_caption: e.target.value })}
+                  placeholder="Beskriv hva bildet viser"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="image-credit" className="text-xs text-muted-foreground">Fotograf / kreditering</Label>
+                  <Input
+                    id="image-credit"
+                    value={form.image_credit}
+                    onChange={(e) => updateForm({ image_credit: e.target.value })}
+                    placeholder="Foto: Navn Navnesen"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="image-source" className="text-xs text-muted-foreground">Kilde / lisens</Label>
+                  <Input
+                    id="image-source"
+                    value={form.image_source}
+                    onChange={(e) => updateForm({ image_source: e.target.value })}
+                    placeholder="NTB, Unsplash, etc."
+                  />
+                </div>
+              </div>
+            </div>
           )}
         </div>
 

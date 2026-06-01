@@ -45,7 +45,6 @@ export function ArticleRevisionLog({
   }, [articleId]);
 
   const hasRevisions = items.length > 0;
-  const latest = hasRevisions ? items[0] : null;
   const fmtDateTime = (iso: string) =>
     new Date(iso).toLocaleString(isNo ? "nb-NO" : "en-US", {
       dateStyle: "medium",
@@ -53,6 +52,14 @@ export function ArticleRevisionLog({
     });
   const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString(isNo ? "nb-NO" : "en-US", { dateStyle: "medium" });
+
+  // Compute correct "first published" and "last edited" dates by comparing
+  // article.published_at with the oldest/newest revision timestamps.
+  const allDates = items.map((r) => new Date(r.published_at).getTime());
+  if (originalPublishedAt) allDates.push(new Date(originalPublishedAt).getTime());
+  const firstPublishedDate = allDates.length > 0 ? new Date(Math.min(...allDates)).toISOString() : originalPublishedAt;
+  const lastEditedDate = hasRevisions ? new Date(Math.max(...items.map((r) => new Date(r.published_at).getTime()))).toISOString() : null;
+  const lastEditor = hasRevisions ? items.reduce((a, b) => new Date(a.published_at) > new Date(b.published_at) ? a : b).changed_by_name : null;
 
   return (
     <section className="mb-12 rounded-2xl border border-border bg-surface-subtle/60 px-5 py-4">
@@ -86,7 +93,7 @@ export function ArticleRevisionLog({
           <div className="min-w-0">
             <dt className="text-muted-foreground">{isNo ? "Publisert" : "Published"}</dt>
             <dd className="text-foreground/90 font-medium">
-              {originalPublishedAt ? fmtDateTime(originalPublishedAt) : isNo ? "Ukjent" : "Unknown"}
+              {firstPublishedDate ? fmtDateTime(firstPublishedDate) : isNo ? "Ukjent" : "Unknown"}
               {originalAuthor ? ` · ${originalAuthor}` : ""}
             </dd>
           </div>
@@ -96,10 +103,10 @@ export function ArticleRevisionLog({
           <div className="min-w-0">
             <dt className="text-muted-foreground">{isNo ? "Sist redigert" : "Last edited"}</dt>
             <dd className="text-foreground/90 font-medium">
-              {latest ? (
+              {lastEditedDate ? (
                 <>
-                  {fmtDateTime(latest.published_at)}
-                  {latest.changed_by_name ? ` · ${latest.changed_by_name}` : ""}
+                  {fmtDateTime(lastEditedDate)}
+                  {lastEditor ? ` · ${lastEditor}` : ""}
                 </>
               ) : (
                 <span className="text-muted-foreground italic font-normal">
@@ -139,7 +146,7 @@ export function ArticleRevisionLog({
               </div>
             </li>
           ))}
-          {originalPublishedAt && (
+          {firstPublishedDate && (
             <li className="flex gap-3 text-sm font-body opacity-80">
               <span className="mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground text-[11px] font-subhead font-bold tabular-nums shrink-0">
                 v0
@@ -149,7 +156,7 @@ export function ArticleRevisionLog({
                   {isNo ? "Opprinnelig publisering" : "Original publication"}
                 </div>
                 <div className="text-xs text-muted-foreground mt-0.5">
-                  {fmtDate(originalPublishedAt)}
+                  {fmtDate(firstPublishedDate)}
                   {originalAuthor ? ` · ${originalAuthor}` : ""}
                 </div>
               </div>

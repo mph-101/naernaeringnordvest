@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Languages, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2, Undo2, ExternalLink, Crop as CropIcon, Eye, Megaphone } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2, Undo2, ExternalLink, Crop as CropIcon, Eye, Megaphone } from "lucide-react";
 import { ArticlePreviewDialog } from "./ArticlePreviewDialog";
 import { PrePublishChecklist, buildPublishChecklist } from "./PrePublishChecklist";
 import { Dialog as ImproveDialog, DialogContent as ImproveDialogContent, DialogHeader as ImproveDialogHeader, DialogTitle as ImproveDialogTitle, DialogFooter as ImproveDialogFooter } from "@/components/ui/dialog";
@@ -33,9 +33,11 @@ import { SourceCardDialog } from "@/components/source-card/SourceCardDialog";
 import { encodeSourceCard, type SourceCardData } from "@/components/source-card/SourceCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ArticleTagInput } from "./ArticleTagInput";
+import { CollapsibleSection } from "./CollapsibleSection";
 import { AIDraftFromSourcesButton } from "./AIDraftFromSourcesButton";
 import { RegionPicker } from "./RegionPicker";
 import { AuthorSelect } from "./AuthorSelect";
+import { InlineImagePicker, type InlineImageResult } from "./InlineImagePicker";
 import { SocialPostsDialog } from "./SocialPostsDialog";
 import { fetchRegions, type EditorialRegion } from "@/lib/regions";
 import type { Tag as ArticleTag } from "@/lib/tag-utils";
@@ -83,6 +85,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [proofreading, setProofreading] = useState(false);
   const [generatingSubheadings, setGeneratingSubheadings] = useState(false);
   const [socialDialogOpen, setSocialDialogOpen] = useState(false);
+  const [inlineImagePickerOpen, setInlineImagePickerOpen] = useState(false);
   const [proofSuggestions, setProofSuggestions] = useState<{ id: string; original: string; suggestion: string; reason: string; category: string }[]>([]);
   // Undo stack for accepted proofreading changes. Each entry captures the
   // body BEFORE the change plus the suggestion(s) that were applied, so we
@@ -155,6 +158,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     image_caption: "",
     image_credit: "",
     image_source: "",
+    scheduled_publish_at: null as string | null,
   });
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
@@ -276,6 +280,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       image_caption: currentForm.image_caption?.trim() || null,
       image_credit: currentForm.image_credit?.trim() || null,
       image_source: currentForm.image_source?.trim() || null,
+      scheduled_publish_at: currentForm.scheduled_publish_at || null,
     } as any;
     try {
       if (currentArticleId) {
@@ -436,6 +441,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         image_caption: ((data as any).image_caption as string | null) ?? "",
         image_credit: ((data as any).image_credit as string | null) ?? "",
         image_source: ((data as any).image_source as string | null) ?? "",
+        scheduled_publish_at: ((data as any).scheduled_publish_at as string | null) ?? null,
       });
       setLastPublishedBody(data.published ? (data.body || "") : "");
       setLastPublishedTitle(data.published ? (data.title || "") : "");
@@ -514,6 +520,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         image_caption: form.image_caption?.trim() || null,
         image_credit: form.image_credit?.trim() || null,
         image_source: form.image_source?.trim() || null,
+        scheduled_publish_at: form.scheduled_publish_at || null,
       } as any;
 
       const syncSharedRegions = async (id: string) => {
@@ -1168,24 +1175,11 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   };
 
   const handleInsertImage = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      const ext = file.name.split(".").pop();
-      const path = `inline/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from("article-images").upload(path, file);
-      if (error) {
-        toast({ title: "Feil", description: error.message, variant: "destructive" });
-        return;
-      }
-      const { data: { publicUrl } } = supabase.storage.from("article-images").getPublicUrl(path);
-      // Collect caption/credit before inserting the figure block.
-      setInlineImg({ url: publicUrl, alt: "", caption: "", credit: "", source: "" });
-    };
-    input.click();
+    setInlineImagePickerOpen(true);
+  };
+
+  const handleInlineImageSelected = (result: InlineImageResult) => {
+    setInlineImg({ url: result.url, alt: result.alt, caption: result.caption, credit: result.credit, source: result.source });
   };
 
   // Escape a value for safe use inside an HTML double-quoted attribute.
@@ -1407,7 +1401,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                     });
                     return;
                   }
-                  updateForm({ status: s });
+                  updateForm({ status: s, ...(s === "published" ? { scheduled_publish_at: null } : {}) });
                 }}
                 disabled={s === "published" && !canPublish}
                 title={s === "published" && !canPublish ? "Fullfør publiseringskravene først" : undefined}
@@ -1422,6 +1416,38 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             ))}
             <PrePublishChecklist items={publishChecklist} variant="compact" />
           </div>
+
+          {form.status !== "published" && (
+            <div className="flex items-center gap-2 mt-2">
+              <Label htmlFor="scheduled-publish" className="text-xs text-muted-foreground whitespace-nowrap">
+                Planlagt publisering:
+              </Label>
+              <input
+                id="scheduled-publish"
+                type="datetime-local"
+                value={form.scheduled_publish_at ? form.scheduled_publish_at.slice(0, 16) : ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  updateForm({ scheduled_publish_at: val ? new Date(val).toISOString() : null });
+                }}
+                className="h-8 px-2 text-xs rounded-md border border-input bg-background"
+              />
+              {form.scheduled_publish_at && (
+                <button
+                  type="button"
+                  onClick={() => updateForm({ scheduled_publish_at: null })}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
+          {form.scheduled_publish_at && form.status !== "published" && (
+            <div className="mt-1.5 px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-medium inline-flex items-center gap-1.5">
+              Planlagt: {new Date(form.scheduled_publish_at).toLocaleString("nb-NO", { dateStyle: "medium", timeStyle: "short" })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -1448,8 +1474,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           <PrePublishChecklist items={publishChecklist} variant="card" />
         )}
         {/* Featured Image */}
-        <div className="bg-card rounded-xl p-6 shadow-soft space-y-4">
-          <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">Hovedbilde</h3>
+        <CollapsibleSection title="Hovedbilde" defaultOpen storageKey="featured-image">
           <ImageUpload
             currentUrl={form.image_url}
             onUpload={(url) =>
@@ -1571,24 +1596,17 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               </div>
             </div>
           )}
-        </div>
+        </CollapsibleSection>
 
         {/* Bildegalleri */}
         <ArticleGalleryEditor articleId={articleId} />
 
-        {/* A/B-testing av tittel + bilde */}
-        {currentArticleId && (
-          <ArticleVariantsManager
-            articleId={currentArticleId}
-            baselineTitle={form.title}
-            baselineImage={form.image_url || null}
-          />
-        )}
-
         {/* Norwegian content */}
-        <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
-          <div className="flex items-center justify-between border-b border-border pb-3">
-            <h3 className="font-headline text-lg font-medium text-headline">Norsk innhold</h3>
+        <CollapsibleSection
+          title="Norsk innhold"
+          defaultOpen
+          storageKey="norwegian-content"
+          headerRight={
             <div className="flex gap-2 flex-wrap">
               <AIDraftFromSourcesButton
                 onApply={(draft) => updateForm({
@@ -1616,7 +1634,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               </Button>
               <AudioTranscriber ref={audioRef} onTranscript={handleAudioTranscript} />
             </div>
-          </div>
+          }
+        >
 
           <div>
             <Label htmlFor="title">Tittel *</Label>
@@ -1902,77 +1921,37 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               <Button type="button" variant="outline" size="sm" onClick={() => addKeyPoint()}><Plus className="w-4 h-4 mr-1" /> Legg til punkt</Button>
             </div>
           </div>
-        </div>
+        </CollapsibleSection>
 
-        {/* English content */}
-        <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
-          <div className="flex items-center justify-between border-b border-border pb-3">
-            <h3 className="font-headline text-lg font-medium text-headline">Engelsk innhold</h3>
-            <Button type="button" variant="outline" size="sm" onClick={translateToEnglish} disabled={translating} className="gap-2">
-              {translating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
-              {translating ? "Oversetter..." : "Oversett automatisk"}
-            </Button>
-          </div>
-
-          <div>
-            <Label htmlFor="title_en">Title</Label>
-            <Input id="title_en" value={form.title_en} onChange={(e) => updateForm({ title_en: e.target.value })} placeholder="Article title in English" className="mt-1.5" />
-          </div>
-
-          <div>
-            <Label htmlFor="excerpt_en">Excerpt</Label>
-            <Textarea id="excerpt_en" value={form.excerpt_en} onChange={(e) => updateForm({ excerpt_en: e.target.value })} placeholder="Short description in English" className="mt-1.5" />
-          </div>
-
-          <div>
-            <Label>Body</Label>
-            <div className="mt-1.5">
-              <RichTextEditor content={form.body_en} onChange={(html) => updateForm({ body_en: html })} placeholder="Article content in English..." />
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label>Key Points (English)</Label>
-              <Button type="button" variant="outline" size="sm" onClick={() => generateKeyPoints(true)} disabled={generatingPoints || !form.body_en} className="gap-2">
-                {generatingPoints ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                Auto-generate
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {form.key_points_en.map((point, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input value={point} onChange={(e) => handleKeyPointChange(index, e.target.value, true)} placeholder={`Point ${index + 1}`} />
-                  <Button type="button" variant="outline" size="sm" onClick={() => removeKeyPoint(index, true)}><X className="w-4 h-4" /></Button>
-                </div>
-              ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => addKeyPoint(true)}><Plus className="w-4 h-4 mr-1" /> Add point</Button>
-            </div>
-          </div>
-        </div>
+        {/* A/B-testing av tittel + bilde */}
+        {currentArticleId && (
+          <ArticleVariantsManager
+            articleId={currentArticleId}
+            baselineTitle={form.title}
+            baselineImage={form.image_url || null}
+          />
+        )}
 
         {/* Region & sharing */}
-        <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
-          <div className="flex items-center justify-between border-b border-border pb-3">
-            <h3 className="font-headline text-lg font-medium text-headline flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-accent" />
-              Redaksjon
-            </h3>
-            {articleId && form.title && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={forkArticle}
-                disabled={forking}
-                className="gap-2"
-                title="Lag en regional versjon (kladd) som du kan tilpasse"
-              >
-                {forking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <GitFork className="w-3.5 h-3.5" />}
-                {forking ? "Forker..." : "Fork som regional versjon"}
-              </Button>
-            )}
-          </div>
+        <CollapsibleSection
+          title="Redaksjon"
+          icon={MapPin}
+          storageKey="region"
+          headerRight={articleId && form.title ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={forkArticle}
+              disabled={forking}
+              className="gap-2"
+              title="Lag en regional versjon (kladd) som du kan tilpasse"
+            >
+              {forking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <GitFork className="w-3.5 h-3.5" />}
+              {forking ? "Forker..." : "Fork som regional versjon"}
+            </Button>
+          ) : undefined}
+        >
 
           {forkedFromArticleId && (
             <div className="px-3 py-2 rounded-lg bg-accent/10 border border-accent/20 text-xs text-foreground/80 flex items-center gap-2">
@@ -2014,11 +1993,10 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               disabledSlug={form.region_slug}
             />
           </div>
-        </div>
+        </CollapsibleSection>
 
         {/* Metadata */}
-        <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
-          <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">Metadata</h3>
+        <CollapsibleSection title="Metadata" storageKey="metadata">
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="md:col-span-2 lg:col-span-3">
@@ -2156,17 +2134,19 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               </p>
             </div>
           </div>
-        </div>
+        </CollapsibleSection>
 
         {/* Company Tags */}
-        <div className="bg-card rounded-xl p-6 shadow-soft space-y-6">
-          <div className="flex items-center justify-between border-b border-border pb-3">
-            <h3 className="font-headline text-lg font-medium text-headline">Selskapskobling</h3>
+        <CollapsibleSection
+          title="Selskapskobling"
+          storageKey="company-tags"
+          headerRight={
             <Button type="button" variant="outline" size="sm" onClick={suggestCompanies} disabled={suggestingCompanies} className="gap-2">
               {suggestingCompanies ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Building2 className="w-3.5 h-3.5" />}
               Foreslå fra tekst
             </Button>
-          </div>
+          }
+        >
 
           {/* AI Suggestions */}
           {suggestedCompanies.length > 0 && (() => {
@@ -2320,13 +2300,10 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               <div className="absolute right-3 top-9 text-xs text-muted-foreground">Søker...</div>
             )}
           </div>
-        </div>
+        </CollapsibleSection>
 
         {/* Tags */}
-        <div className="bg-card rounded-xl p-6 shadow-soft space-y-4">
-          <h3 className="font-headline text-lg font-medium text-headline border-b border-border pb-3">
-            Tags
-          </h3>
+        <CollapsibleSection title="Tags" storageKey="tags">
           <p className="text-xs text-muted-foreground -mt-2">
             Nøkkelord vises som klikkbare chips nederst i artikkelen og knytter sammen relatert innhold.
           </p>
@@ -2336,13 +2313,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             articleTitle={form.title}
             articleBody={form.body}
           />
-        </div>
+        </CollapsibleSection>
 
         <div className="flex items-center justify-end gap-4">
           <Button type="button" variant="outline" onClick={onBack}>Avbryt</Button>
           <Button type="submit" disabled={saving}>
             <Save className="w-4 h-4 mr-2" />
-            {saving ? "Lagrer..." : "Lagre"}
+            {saving ? "Lagrer..." : form.status === "published" ? "Oppdater artikkel" : "Lagre og publiser"}
           </Button>
         </div>
       </form>
@@ -2372,6 +2349,12 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         excerpt={form.excerpt}
         body={composedBody || form.body}
         category={form.category}
+      />
+
+      <InlineImagePicker
+        open={inlineImagePickerOpen}
+        onOpenChange={setInlineImagePickerOpen}
+        onSelect={handleInlineImageSelected}
       />
 
       <Dialog

@@ -24,6 +24,7 @@ import { getArticleImage } from "@/lib/articles";
 import { supabase } from "@/integrations/supabase/client";
 import { useArticleTracking } from "@/hooks/useArticleTracking";
 import { useArticleVariant, logVariantCompleted } from "@/hooks/useArticleVariant";
+import { ImageCaption } from "@/components/ImageCaption";
 import { ListenToArticleButton } from "@/components/audio/ListenToArticleButton";
 import { useAudioModeEnabled } from "@/hooks/useAudioModeEnabled";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -50,6 +51,9 @@ interface ArticleData {
   created_by?: string | null;
   co_authors?: string[] | null;
   media_url?: string | null;
+  image_caption?: string | null;
+  image_credit?: string | null;
+  image_source?: string | null;
 }
 
 function timeAgo(dateStr: string, lang: "no" | "en"): string {
@@ -79,8 +83,27 @@ export function ArticlePageClient({ id }: { id: string }) {
     freeReadsRemaining: number | null;
     freeQuota: number | null;
   }>({ reason: null, freeReadsRemaining: null, freeQuota: null });
+  const [heroAssetMeta, setHeroAssetMeta] = useState<{ caption: string | null; photographer: string | null; source: string | null } | null>(null);
   const variant = useArticleVariant(article?.id);
   const completedRef = useState({ done: false })[0];
+
+  // Fallback: look up media_assets metadata for the hero image when the
+  // article has no per-article caption override.
+  useEffect(() => {
+    const a = article as any;
+    if (!a?.image_url) { setHeroAssetMeta(null); return; }
+    if (a.image_caption || a.image_credit) { setHeroAssetMeta(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("media_assets")
+        .select("caption, photographer, source")
+        .eq("public_url", a.image_url)
+        .maybeSingle();
+      if (!cancelled) setHeroAssetMeta(data ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, [article]);
 
   useEffect(() => {
     if (!id) return;
@@ -187,6 +210,9 @@ export function ArticlePageClient({ id }: { id: string }) {
   const heroBg = effectiveImageUrl
     ? cropToBackgroundStyle(parseCrop(effectiveCrop), parseFocal(effectiveFocal), { precise: true })
     : { size: "cover", position: "center" };
+  const heroCaption = (article as any).image_caption || heroAssetMeta?.caption || null;
+  const heroCredit = (article as any).image_credit || heroAssetMeta?.photographer || null;
+  const heroSource = (article as any).image_source || heroAssetMeta?.source || null;
   const isHtml = /<[a-z][\s\S]*>/i.test(body);
   const showPaywall = article.premium && !hasFullAccess;
 
@@ -217,6 +243,12 @@ export function ArticlePageClient({ id }: { id: string }) {
           </span>
         </div>
       </div>
+
+      {effectiveImageUrl && (heroCaption || heroCredit) && (
+        <div className="max-w-xl mx-auto w-full px-6 pt-3">
+          <ImageCaption caption={heroCaption} credit={heroCredit} source={heroSource} />
+        </div>
+      )}
 
       <article className="max-w-xl mx-auto px-6 pt-10 pb-14">
         <button

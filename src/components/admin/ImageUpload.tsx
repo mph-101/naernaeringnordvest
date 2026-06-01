@@ -112,9 +112,9 @@ export const ImageUpload = ({
     const q = archiveSearch.trim().toLowerCase();
     if (!q) return true;
     return (
-      a.caption.toLowerCase().includes(q) ||
-      a.alt_text.toLowerCase().includes(q) ||
-      a.photographer.toLowerCase().includes(q)
+      (a.caption || "").toLowerCase().includes(q) ||
+      (a.alt_text || "").toLowerCase().includes(q) ||
+      (a.photographer || "").toLowerCase().includes(q)
     );
   });
 

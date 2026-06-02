@@ -3,19 +3,15 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/env";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, X, Plus, Sparkles, Loader2, CloudOff, Cloud, Building2, SpellCheck, Check, XCircle, MapPin, GitFork, Share2, Wand2, FileCheck, Heading2, Undo2, ExternalLink, Crop as CropIcon, Eye, Megaphone } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Loader2, CloudOff, Cloud, Building2, Check, MapPin, GitFork, Share2, Wand2, FileCheck, ExternalLink, Crop as CropIcon, Eye } from "lucide-react";
 import { ArticlePreviewDialog } from "./ArticlePreviewDialog";
 import { PrePublishChecklist, buildPublishChecklist } from "./PrePublishChecklist";
 import { Dialog as ImproveDialog, DialogContent as ImproveDialogContent, DialogHeader as ImproveDialogHeader, DialogTitle as ImproveDialogTitle, DialogFooter as ImproveDialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
 import { InlineDiff } from "./InlineDiff";
-import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
 import { ArticleGalleryEditor } from "./ArticleGalleryEditor";
 import { ArticleVariantsManager } from "./ArticleVariantsManager";
@@ -23,8 +19,7 @@ import { ImageCropDialog } from "./ImageCropDialog";
 import type { ImageCrop, ImageFocal } from "@/lib/image-crop";
 import { cropToBackgroundStyle, parseCrop, parseFocal } from "@/lib/image-crop";
 import { CategorySelect } from "./CategorySelect";
-import { AudioTranscriber, type AudioTranscriberHandle } from "./AudioTranscriber";
-import { ProofreadRules, loadProofreadRules, loadProofreadSettings, loadProofreadSettingsFromDb, type ProofreadRule } from "./ProofreadRules";
+import { loadProofreadSettingsFromDb } from "./ProofreadRules";
 import { ChartGenerator } from "@/components/charts/ChartGenerator";
 import type { ChartData } from "@/components/charts/ArticleChart";
 import { FactBoxLibraryDialog } from "@/components/factbox/FactBoxLibraryDialog";
@@ -34,14 +29,15 @@ import { encodeSourceCard, type SourceCardData } from "@/components/source-card/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ArticleTagInput } from "./ArticleTagInput";
 import { CollapsibleSection } from "./CollapsibleSection";
-import { AIDraftFromSourcesButton } from "./AIDraftFromSourcesButton";
 import { RegionPicker } from "./RegionPicker";
 import { AuthorSelect } from "./AuthorSelect";
 import { InlineImagePicker, type InlineImageResult } from "./InlineImagePicker";
-import { SocialPostsDialog } from "./SocialPostsDialog";
 import { fetchRegions, type EditorialRegion } from "@/lib/regions";
 import type { Tag as ArticleTag } from "@/lib/tag-utils";
 import { ArticleMediaEmbed } from "@/components/ArticleMediaEmbed";
+import { ArticleEditorBody } from "./ArticleEditorBody";
+import { useArticleProofreading } from "@/hooks/useArticleProofreading";
+import { useArticleAI } from "@/hooks/useArticleAI";
 
 interface ArticleEditorProps {
   articleId: string | null;
@@ -71,45 +67,16 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
-  // Local mirror of articleId so we can flip a freshly-created draft into
-  // "edit mode" without remounting the editor.
   const [currentArticleId, setCurrentArticleId] = useState<string | null>(articleId);
-  // Re-sync if the parent passes a different id (e.g. opening another article).
   useEffect(() => {
     setCurrentArticleId(articleId);
   }, [articleId]);
-  const [generatingPoints, setGeneratingPoints] = useState(false);
-  const [translating, setTranslating] = useState(false);
-  const [suggestingCompanies, setSuggestingCompanies] = useState(false);
-  const [generatingTitleExcerpt, setGeneratingTitleExcerpt] = useState(false);
-  const [proofreading, setProofreading] = useState(false);
-  const [generatingSubheadings, setGeneratingSubheadings] = useState(false);
-  const [socialDialogOpen, setSocialDialogOpen] = useState(false);
-  const [inlineImagePickerOpen, setInlineImagePickerOpen] = useState(false);
-  const [proofSuggestions, setProofSuggestions] = useState<{ id: string; original: string; suggestion: string; reason: string; category: string }[]>([]);
-  // Undo stack for accepted proofreading changes. Each entry captures the
-  // body BEFORE the change plus the suggestion(s) that were applied, so we
-  // can both restore the text and re-add the suggestion(s) to the panel.
-  const [proofUndoStack, setProofUndoStack] = useState<
-    { previousBody: string; restored: { id: string; original: string; suggestion: string; reason: string; category: string }[] }[]
-  >([]);
-  const [improving, setImproving] = useState(false);
-  const [improveFocus, setImproveFocus] = useState<string[]>(["sitater", "lenker", "lengde", "struktur", "stil"]);
-  const [improvePopoverOpen, setImprovePopoverOpen] = useState(false);
-  const [improveResult, setImproveResult] = useState<{
-    improved_body: string;
-    summary: string;
-    issues_found: string[];
-    word_count_before: number;
-    word_count_after: number;
-  } | null>(null);
   const [composedBody, setComposedBody] = useState<string>("");
   const [chartDialogOpen, setChartDialogOpen] = useState(false);
   const [editingChart, setEditingChart] = useState<{ chart: ChartData; pos: number } | null>(null);
   const [factBoxDialogOpen, setFactBoxDialogOpen] = useState(false);
   const [editingFactBox, setEditingFactBox] = useState<{ data: FactBoxData; pos: number } | null>(null);
-  // Inline image caption dialog: after an inline image uploads we collect its
-  // caption / credit / source before inserting a <figure data-nn-image> block.
+  const [inlineImagePickerOpen, setInlineImagePickerOpen] = useState(false);
   const [inlineImg, setInlineImg] = useState<{ url: string; alt: string; caption: string; credit: string; source: string } | null>(null);
   const [insertingInlineImg, setInsertingInlineImg] = useState(false);
   const [sourceCardDialogOpen, setSourceCardDialogOpen] = useState(false);
@@ -122,16 +89,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [searchResults, setSearchResults] = useState<{ orgnr: string; navn: string }[]>([]);
   const [searchingCompanies, setSearchingCompanies] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  // Each suggested company carries the orgnr resolved by suggest-companies'
-  // BRREG-matching pass. orgnr is null when no clear winner could be picked,
-  // in which case we fall back to the manual lookupAndAddCompany flow.
-  const [suggestedCompanies, setSuggestedCompanies] = useState<{ name: string; orgnr: string | null }[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formRef = useRef<any>(null);
-  const audioRef = useRef<AudioTranscriberHandle>(null);
-  const [isDraggingAudio, setIsDraggingAudio] = useState(false);
-  const dragCounterRef = useRef(0);
 
   const [form, setForm] = useState({
     title: "",
@@ -163,8 +123,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [sharedRegions, setSharedRegions] = useState<string[]>([]);
-  // Track the last published state so we can write a revision when any
-  // meaningful field changes (body, title, excerpt, image).
   const [lastPublishedBody, setLastPublishedBody] = useState<string>("");
   const [lastPublishedTitle, setLastPublishedTitle] = useState<string>("");
   const [lastPublishedExcerpt, setLastPublishedExcerpt] = useState<string>("");
@@ -176,9 +134,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [allRegions, setAllRegions] = useState<EditorialRegion[]>([]);
   const [forking, setForking] = useState(false);
 
-  // Pre-publish checklist: items must all be done before status can be set
-  // to "published" (and before submit is allowed with that status). The list
-  // is derived on every render so it always reflects unsaved edits.
   const publishChecklist = buildPublishChecklist({
     author: form.author,
     imageUrl: form.image_url,
@@ -188,18 +143,45 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   });
   const canPublish = publishChecklist.every((i) => i.done);
 
-  // Load regions list once
+  // --- Hooks for AI and proofreading ---
+  const getBody = useCallback(() => formRef.current?.body || "", []);
+  const updateBodyFromProof = useCallback((body: string) => {
+    setForm((prev) => ({ ...prev, body }));
+    triggerAutoSave();
+  }, []);
+
+  const proofHook = useArticleProofreading(getBody, updateBodyFromProof);
+
+  const getFormForAI = useCallback(() => {
+    const f = formRef.current;
+    return {
+      title: f?.title || "",
+      excerpt: f?.excerpt || "",
+      body: f?.body || "",
+      body_en: f?.body_en || "",
+      title_en: f?.title_en || "",
+      excerpt_en: f?.excerpt_en || "",
+      type: f?.type || "article",
+    };
+  }, []);
+
+  const updateFormFromAI = useCallback((updates: Record<string, any>) => {
+    setForm((prev) => ({ ...prev, ...updates }));
+    triggerAutoSave();
+  }, []);
+
+  const aiHook = useArticleAI(getFormForAI, updateFormFromAI);
+
+  // --- Effects ---
+
   useEffect(() => {
     fetchRegions().then(setAllRegions).catch(() => {});
   }, []);
 
-  // Hydrate proofread settings from the user's profile so their last-chosen
-  // focus areas + language profile are restored across sessions and devices.
   useEffect(() => {
     loadProofreadSettingsFromDb().catch(() => {});
   }, []);
 
-  // For new articles: default region to the journalist's primary editorial region
   useEffect(() => {
     if (articleId) return;
     (async () => {
@@ -223,19 +205,17 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     if (articleId) fetchArticle();
   }, [articleId]);
 
-  // Auto-calculate read time when body or type changes
   useEffect(() => {
     if (form.body && form.body.length > 20) {
       const calculated = calcReadTime(form.body, form.type);
       if (calculated !== form.read_time) {
-        // Use updateForm so the new read_time is included in auto-save
         updateForm({ read_time: calculated });
       }
     }
   }, [form.body, form.type]);
 
-  // Auto-save (debounced). For new articles, the first auto-save creates
-  // the row so subsequent edits update in place.
+  // --- Auto-save ---
+
   const triggerAutoSave = useCallback(() => {
     setAutoSaveStatus("unsaved");
     if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
@@ -244,12 +224,9 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }, 1200);
   }, []);
 
-  // Performs the actual save. Extracted so we can also call it
-  // synchronously from beforeunload / onBack to flush pending edits.
   const runAutoSave = useCallback(async () => {
     const currentForm = formRef.current;
     if (!currentForm) return;
-    // Need at least a title before we'll create a draft row
     if (!currentForm.title || !currentForm.title.trim()) return;
     setAutoSaveStatus("saving");
     const payload = {
@@ -290,9 +267,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           .eq("id", currentArticleId);
         if (error) throw error;
       } else {
-        // First auto-save: create the row so future edits can update in place.
-        // Insert a minimal record (excerpt/category/author may still be empty,
-        // so fall back to safe defaults that satisfy NOT NULL constraints).
         const insertPayload = {
           ...payload,
           excerpt: payload.excerpt || "",
@@ -316,7 +290,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
   }, [currentArticleId, originalPublishedAt]);
 
-  // Flush pending edits when the user closes the tab or navigates away.
   useEffect(() => {
     const flush = () => {
       if (autoSaveRef.current) {
@@ -327,7 +300,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     };
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (autoSaveStatus === "unsaved") {
-        // Try a synchronous flush so we don't lose data
         flush();
         e.preventDefault();
         e.returnValue = "";
@@ -345,20 +317,14 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     triggerAutoSave();
   };
 
-  // Track first render so we don't auto-sync relations right after fetchArticle
-  // populates them (which would just re-write the same data).
   const relationsHydratedRef = useRef(false);
   useEffect(() => {
-    // Reset whenever the loaded article changes
     relationsHydratedRef.current = false;
   }, [articleId]);
 
-  // Debounced auto-save of company tags, article tags and shared regions.
-  // Only runs once we have a persisted article id.
   useEffect(() => {
     if (!currentArticleId) return;
     if (!relationsHydratedRef.current) {
-      // Skip the very first run after hydration
       relationsHydratedRef.current = true;
       return;
     }
@@ -366,7 +332,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     const t = setTimeout(async () => {
       setAutoSaveStatus("saving");
       try {
-        // Company tags
         await supabase.from("article_company_tags").delete().eq("article_id", currentArticleId);
         if (companyTags.length > 0) {
           await supabase.from("article_company_tags").insert(
@@ -377,7 +342,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             })),
           );
         }
-        // Article tags
         await supabase.from("article_tags").delete().eq("article_id", currentArticleId);
         if (articleTags.length > 0) {
           const { data: { user } } = await supabase.auth.getUser();
@@ -389,7 +353,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             })),
           );
         }
-        // Shared regions
         await supabase.from("article_shared_regions" as any).delete().eq("article_id", currentArticleId);
         const targets = sharedRegions.filter((s) => s && s !== formRef.current?.region_slug);
         if (targets.length > 0) {
@@ -409,6 +372,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }, 1500);
     return () => clearTimeout(t);
   }, [currentArticleId, companyTags, articleTags, sharedRegions]);
+
+  // --- Data fetching ---
 
   const fetchArticle = async () => {
     if (!articleId) return;
@@ -475,11 +440,10 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
   };
 
+  // --- Submit ---
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Hard guard: if the user somehow has status=published but the checklist
-    // is incomplete (e.g. tags removed after promoting), refuse to save and
-    // demote back to draft so nothing accidentally goes live half-baked.
     if (form.status === "published" && !canPublish) {
       toast({
         title: "Kan ikke publisere",
@@ -525,7 +489,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
       const syncSharedRegions = async (id: string) => {
         await supabase.from("article_shared_regions" as any).delete().eq("article_id", id);
-        // Filter out the article's own region (that's implicit)
         const targets = sharedRegions.filter((s) => s && s !== form.region_slug);
         if (targets.length > 0) {
           const { data: { user } } = await supabase.auth.getUser();
@@ -539,9 +502,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       if (idForUpdate) {
         const { error } = await supabase.from("articles").update(articleData).eq("id", idForUpdate);
         if (error) throw error;
-        // Write a revision row when this save publishes the article AND any
-        // meaningful field changed since the last published version. This gives
-        // readers a transparent changelog.
         const bodyChanged = form.body !== lastPublishedBody;
         const titleChanged = form.title !== lastPublishedTitle;
         const excerptChanged = form.excerpt !== lastPublishedExcerpt;
@@ -588,7 +548,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             setLastPublishedImageUrl(form.image_url || "");
             setChangeNote("");
           } catch (revErr) {
-            // Non-fatal — the article still saved.
             console.warn("Could not write revision", revErr);
           }
         }
@@ -632,12 +591,13 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
   };
 
+  // --- Fork ---
+
   const forkArticle = async () => {
     if (!articleId) return;
     setForking(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      // Determine the user's primary editorial region for the new fork
       let targetRegion: string | null = null;
       if (user) {
         const { data: prof } = await supabase
@@ -677,13 +637,11 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         .select("id")
         .single();
       if (error) throw error;
-      // Copy company tags
       if (companyTags.length > 0 && inserted?.id) {
         await supabase.from("article_company_tags").insert(
           companyTags.map((t) => ({ article_id: inserted.id, orgnr: t.orgnr, company_name: t.company_name })),
         );
       }
-      // Copy article tags
       if (articleTags.length > 0 && inserted?.id) {
         await supabase.from("article_tags").insert(
           articleTags.map((t) => ({ article_id: inserted.id, tag_id: t.id, created_by: user?.id })),
@@ -698,481 +656,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     }
   };
 
-  const generateKeyPoints = async (isEnglish = false) => {
-    const bodyText = isEnglish ? form.body_en : form.body;
-    if (!bodyText || bodyText.length < 50) {
-      toast({ title: "For kort", description: "Brødteksten må være minst 50 tegn", variant: "destructive" });
-      return;
-    }
-    setGeneratingPoints(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-key-points", {
-        body: { body: bodyText, language: isEnglish ? "en" : "no" },
-      });
-      if (error) throw error;
-      if (data?.points?.length) {
-        updateForm({ [isEnglish ? "key_points_en" : "key_points"]: data.points });
-        toast({ title: "Generert", description: "Hovedpunktene er generert" });
-      }
-    } catch (err: any) {
-      toast({ title: "Feil", description: err.message, variant: "destructive" });
-    } finally {
-      setGeneratingPoints(false);
-    }
-  };
-
-  const generateTitleExcerpt = async () => {
-    if (!form.body || form.body.length < 50) {
-      toast({ title: "For kort", description: "Brødteksten må være minst 50 tegn", variant: "destructive" });
-      return;
-    }
-    setGeneratingTitleExcerpt(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-title-excerpt", {
-        body: { body: form.body },
-      });
-      if (error) throw error;
-      if (data?.title || data?.excerpt) {
-        updateForm({
-          ...(data.title ? { title: data.title } : {}),
-          ...(data.excerpt ? { excerpt: data.excerpt } : {}),
-        });
-        toast({ title: "Generert", description: "Tittel og ingress er generert" });
-      }
-    } catch (err: any) {
-      toast({ title: "Feil", description: err.message, variant: "destructive" });
-    } finally {
-      setGeneratingTitleExcerpt(false);
-    }
-  };
-
-  const proofreadBody = async () => {
-    if (!form.body || form.body.length < 50) {
-      toast({ title: "For kort", description: "Brødteksten må være minst 50 tegn", variant: "destructive" });
-      return;
-    }
-    setProofreading(true);
-    setProofSuggestions([]);
-    setProofUndoStack([]);
-    try {
-      const customRules = loadProofreadRules();
-      const settings = loadProofreadSettings();
-
-      // Apply local rule matches first (deterministic, fast)
-      const localSuggestions: { original: string; suggestion: string; reason: string; category: string }[] = [];
-      const plainText = form.body.replace(/<[^>]*>/g, " ");
-      for (const r of customRules) {
-        if (!r.from) continue;
-        const escaped = r.from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const re = new RegExp(`\\b${escaped}\\b`, "i");
-        const match = plainText.match(re);
-        if (match) {
-          localSuggestions.push({
-            original: match[0],
-            suggestion: r.to,
-            reason: r.reason || "Egen regel",
-            category: r.category || "stil",
-          });
-        }
-      }
-
-      const { data, error } = await supabase.functions.invoke("proofread-article", {
-        body: { body: form.body, customRules, profile: settings.profile, focusAreas: settings.focusAreas },
-      });
-      if (error) throw error;
-      const aiSuggestions = data?.suggestions || [];
-      // Merge, dedupe by original+suggestion, assign stable ids
-      const seen = new Set<string>();
-      const merged = [...localSuggestions, ...aiSuggestions]
-        .filter((s: any) => {
-          const key = `${s.original}→${s.suggestion}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return Boolean(s.original) && Boolean(s.suggestion);
-        })
-        .map((s: any, i: number) => ({
-          id: `ps-${Date.now()}-${i}`,
-          original: s.original,
-          suggestion: s.suggestion,
-          reason: s.reason || "",
-          category: s.category || "stil",
-        }));
-      if (merged.length) {
-        setProofSuggestions(merged);
-        toast({ title: "Språkvask fullført", description: `${merged.length} forslag funnet` });
-      } else {
-        toast({ title: "Ingen forslag", description: "Teksten ser bra ut!" });
-      }
-    } catch (err: any) {
-      toast({ title: "Feil", description: err.message, variant: "destructive" });
-    } finally {
-      setProofreading(false);
-    }
-  };
-
-  const generateSubheadings = async () => {
-    if (!form.body || form.body.length < 100) {
-      toast({ title: "For kort", description: "Brødteksten må være minst 100 tegn", variant: "destructive" });
-      return;
-    }
-    setGeneratingSubheadings(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-subheadings", {
-        body: { body: form.body },
-      });
-      if (error) throw error;
-      if (data?.body && data.inserted > 0) {
-        updateForm({ body: data.body });
-        toast({ title: "Mellomtitler lagt til", description: `${data.inserted} mellomtitler generert` });
-      } else {
-        toast({ title: "Ingen mellomtitler", description: "Teksten er for kort eller har for få avsnitt" });
-      }
-    } catch (err: any) {
-      toast({ title: "Feil", description: err.message, variant: "destructive" });
-    } finally {
-      setGeneratingSubheadings(false);
-    }
-  };
-
-  const improveBody = async () => {
-    if (!form.body || form.body.length < 50) {
-      toast({ title: "For kort", description: "Brødteksten må være minst 50 tegn", variant: "destructive" });
-      return;
-    }
-    if (improveFocus.length === 0) {
-      toast({ title: "Velg minst ett fokusområde", variant: "destructive" });
-      return;
-    }
-    setImprovePopoverOpen(false);
-    setImproving(true);
-    setImproveResult(null);
-    try {
-      const { data: gls } = await supabase
-        .from("editorial_guidelines")
-        .select("article_type, display_name, rules, min_paragraphs, max_words")
-        .eq("article_type", form.type)
-        .maybeSingle();
-      const { data, error } = await supabase.functions.invoke("improve-article-body", {
-        body: { body: form.body, guideline: gls ?? null, articleType: form.type, focusAreas: improveFocus },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (!data?.result?.improved_body) throw new Error("Ingen forbedring returnert");
-      setImproveResult(data.result);
-    } catch (err: any) {
-      toast({ title: "Feil", description: err.message, variant: "destructive" });
-    } finally {
-      setImproving(false);
-    }
-  };
-
-  const applyImprovedBody = () => {
-    if (!improveResult) return;
-    // If the composed text from accepted hunks matches the full improved
-    // version, use the AI's HTML directly to preserve markup. Otherwise
-    // rebuild HTML from the user's per-hunk decisions as paragraphs.
-    const stripHtml = (h: string) =>
-      h
-        .replace(/<\s*(p|h[1-6]|li|blockquote|br|div)[^>]*>/gi, "\n")
-        .replace(/<\/\s*(p|h[1-6]|li|blockquote|div)\s*>/gi, "\n")
-        .replace(/<[^>]+>/g, "")
-        .replace(/&nbsp;/g, " ")
-        .replace(/\n{3,}/g, "\n\n")
-        .trim();
-    const fullImprovedPlain = stripHtml(improveResult.improved_body);
-    const fullOriginalPlain = stripHtml(form.body);
-    let nextBody: string;
-    if (composedBody.trim() === fullImprovedPlain.trim()) {
-      nextBody = improveResult.improved_body;
-    } else if (composedBody.trim() === fullOriginalPlain.trim()) {
-      nextBody = form.body;
-    } else {
-      const paragraphs = composedBody
-        .split(/\n{2,}/)
-        .map((p) => p.trim())
-        .filter(Boolean)
-        .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
-        .join("\n");
-      nextBody = paragraphs || improveResult.improved_body;
-    }
-    updateForm({ body: nextBody });
-    toast({ title: "Brødtekst oppdatert", description: improveResult.summary });
-    setImproveResult(null);
-    setComposedBody("");
-  };
-
-  // Replace a plain-text occurrence inside HTML body without touching tags.
-  // We walk only text nodes so HTML structure stays intact and we always
-  // find the term even when it sits inside <p>, <strong> etc.
-  const replaceInHtmlBody = (html: string, original: string, suggestion: string): { html: string; replaced: boolean } => {
-    if (!original) return { html, replaced: false };
-    let replaced = false;
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(`<div id="__nn_root">${html}</div>`, "text/html");
-      const root = doc.getElementById("__nn_root");
-      if (!root) return { html, replaced: false };
-      const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-      const nodes: Text[] = [];
-      let n: Node | null = walker.nextNode();
-      while (n) {
-        nodes.push(n as Text);
-        n = walker.nextNode();
-      }
-      for (const textNode of nodes) {
-        const value = textNode.nodeValue || "";
-        const idx = value.indexOf(original);
-        if (idx >= 0) {
-          textNode.nodeValue = value.slice(0, idx) + suggestion + value.slice(idx + original.length);
-          replaced = true;
-          break;
-        }
-      }
-      if (!replaced) {
-        // Fallback: case-insensitive search across the whole text
-        for (const textNode of nodes) {
-          const value = textNode.nodeValue || "";
-          const lower = value.toLowerCase();
-          const idx = lower.indexOf(original.toLowerCase());
-          if (idx >= 0) {
-            textNode.nodeValue = value.slice(0, idx) + suggestion + value.slice(idx + original.length);
-            replaced = true;
-            break;
-          }
-        }
-      }
-      return { html: replaced ? root.innerHTML : html, replaced };
-    } catch {
-      // Last-resort fallback: naive string replace
-      if (html.includes(original)) {
-        return { html: html.replace(original, suggestion), replaced: true };
-      }
-      return { html, replaced: false };
-    }
-  };
-
-  const applyProofSuggestionById = useCallback((id: string) => {
-    setProofSuggestions(prev => {
-      const s = prev.find(p => p.id === id);
-      if (!s) return prev;
-      const previousBody = form.body;
-      const { html: newBody, replaced } = replaceInHtmlBody(previousBody, s.original, s.suggestion);
-      if (!replaced) {
-        toast({ title: "Fant ikke teksten", description: `Kunne ikke finne "${s.original}" i brødteksten`, variant: "destructive" });
-        return prev;
-      }
-      updateForm({ body: newBody });
-      setProofUndoStack(stack => [...stack, { previousBody, restored: [s] }]);
-      toast({ title: "Endret", description: `"${s.original}" → "${s.suggestion}"` });
-      return prev.filter(p => p.id !== id);
-    });
-  }, [form.body, toast, updateForm]);
-
-  const dismissProofSuggestionById = useCallback((id: string) => {
-    setProofSuggestions(prev => prev.filter(p => p.id !== id));
-  }, []);
-
-  const applyAllProofSuggestions = () => {
-    if (proofSuggestions.length === 0) return;
-    const previousBody = form.body;
-    let newBody = previousBody;
-    const appliedSuggestions: typeof proofSuggestions = [];
-    const skipped: typeof proofSuggestions = [];
-    for (const s of proofSuggestions) {
-      const { html, replaced } = replaceInHtmlBody(newBody, s.original, s.suggestion);
-      if (replaced) {
-        newBody = html;
-        appliedSuggestions.push(s);
-      } else {
-        skipped.push(s);
-      }
-    }
-    if (appliedSuggestions.length > 0) {
-      updateForm({ body: newBody });
-      setProofUndoStack(stack => [...stack, { previousBody, restored: appliedSuggestions }]);
-    }
-    setProofSuggestions(skipped);
-    if (appliedSuggestions.length > 0) {
-      toast({
-        title: "Alle forslag godtatt",
-        description: `${appliedSuggestions.length} endring${appliedSuggestions.length === 1 ? "" : "er"} brukt${skipped.length ? `, ${skipped.length} hoppet over` : ""}`,
-      });
-    } else {
-      toast({ title: "Ingen endringer", description: "Fant ingen treff å bruke", variant: "destructive" });
-    }
-  };
-
-  const undoLastProofChange = useCallback(() => {
-    setProofUndoStack(stack => {
-      if (stack.length === 0) return stack;
-      const last = stack[stack.length - 1];
-      updateForm({ body: last.previousBody });
-      // Re-add the rolled-back suggestions to the panel so the journalist
-      // can choose to apply them again (or dismiss them).
-      setProofSuggestions(prev => {
-        const existingIds = new Set(prev.map(p => p.id));
-        const restored = last.restored.filter(r => !existingIds.has(r.id));
-        return [...restored, ...prev];
-      });
-      const count = last.restored.length;
-      toast({
-        title: "Angret",
-        description: `${count} endring${count === 1 ? "" : "er"} rullet tilbake`,
-      });
-      return stack.slice(0, -1);
-    });
-  }, [toast, updateForm]);
-
-  // Bridge inline accept/reject buttons rendered as ProseMirror widget
-  // decorations back into React state. The buttons dispatch DOM CustomEvents
-  // because they live outside the React tree.
-  useEffect(() => {
-    const onAccept = (e: Event) => {
-      const id = (e as CustomEvent<{ id: string }>).detail?.id;
-      if (id) applyProofSuggestionById(id);
-    };
-    const onReject = (e: Event) => {
-      const id = (e as CustomEvent<{ id: string }>).detail?.id;
-      if (id) dismissProofSuggestionById(id);
-    };
-    window.addEventListener("nn:proofread-accept", onAccept);
-    window.addEventListener("nn:proofread-reject", onReject);
-    return () => {
-      window.removeEventListener("nn:proofread-accept", onAccept);
-      window.removeEventListener("nn:proofread-reject", onReject);
-    };
-  }, [applyProofSuggestionById, dismissProofSuggestionById]);
-
-  // Cmd/Ctrl+Z hurtigtast for å angre siste språkvask-endring. Aktiv kun
-  // når undo-stacken har innhold, slik at TipTap sin egen undo fortsatt
-  // fungerer ellers. Vi bruker capture-fasen for å rekke å overstyre
-  // editorens egen handler før den ser eventet.
-  useEffect(() => {
-    if (proofUndoStack.length === 0) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      const isUndo =
-        (e.metaKey || e.ctrlKey) &&
-        !e.shiftKey &&
-        !e.altKey &&
-        (e.key === "z" || e.key === "Z");
-      if (!isUndo) return;
-      e.preventDefault();
-      e.stopPropagation();
-      undoLastProofChange();
-    };
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [proofUndoStack.length, undoLastProofChange]);
-
-  const translateToEnglish = async () => {
-    if (!form.body || form.body.length < 20) {
-      toast({ title: "For kort", description: "Skriv norsk innhold først", variant: "destructive" });
-      return;
-    }
-    setTranslating(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("translate-article", {
-        body: { title: form.title, excerpt: form.excerpt, body: form.body },
-      });
-      if (error) throw error;
-      if (data?.title_en || data?.body_en) {
-        updateForm({
-          title_en: data.title_en || form.title_en,
-          excerpt_en: data.excerpt_en || form.excerpt_en,
-          body_en: data.body_en || form.body_en,
-        });
-        toast({ title: "Oversatt", description: "Artikkelen er oversatt til engelsk" });
-      }
-    } catch (err: any) {
-      toast({ title: "Feil", description: err.message, variant: "destructive" });
-    } finally {
-      setTranslating(false);
-    }
-  };
-
-  const suggestCompanies = async () => {
-    if (!form.body || form.body.length < 50) return;
-    setSuggestingCompanies(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("suggest-companies", {
-        body: { body: form.body },
-      });
-      if (error) throw error;
-      if (data?.companies?.length) {
-        // Backward-compat: suggest-companies used to return string[]. The
-        // newer version returns { name, orgnr | null }[]. Normalize either
-        // shape into the new schema.
-        const normalized: { name: string; orgnr: string | null }[] = data.companies.map((c: any) =>
-          typeof c === "string" ? { name: c, orgnr: null } : { name: c.name, orgnr: c.orgnr ?? null }
-        );
-        setSuggestedCompanies(normalized);
-        toast({ title: "Foreslått", description: `${normalized.length} selskaper funnet i teksten` });
-      } else {
-        toast({ title: "Ingen funnet", description: "Ingen selskaper identifisert i teksten" });
-      }
-    } catch (err: any) {
-      toast({ title: "Feil", description: err.message, variant: "destructive" });
-    } finally {
-      setSuggestingCompanies(false);
-    }
-  };
-
-  const lookupAndAddCompany = async (name: string) => {
-    try {
-      const baseUrl = `${SUPABASE_URL}/functions/v1/brreg-proxy`;
-      // Strip legal suffix so Brreg's AND-search returns a broader candidate pool.
-      // The proxy ranks results and prefers exact "X AS"/"X ASA" matches.
-      const stripped = name.trim().replace(/\s+(AS|ASA|SA|ANS|DA|BA)$/i, "").trim();
-      const queries = stripped && stripped.toLowerCase() !== name.trim().toLowerCase()
-        ? [stripped, name]
-        : [name];
-
-      let c: any = null;
-      for (const q of queries) {
-        const res = await fetch(`${baseUrl}?action=search&q=${encodeURIComponent(q)}&size=8`, {
-          headers: { Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-        });
-        const d = await res.json();
-        c = d.companies?.[0];
-        if (c?.orgnr) break;
-      }
-
-      if (c?.orgnr) {
-        const orgnr = c.orgnr;
-        if (!companyTags.some(t => t.orgnr === orgnr)) {
-          setCompanyTags(prev => [...prev, { orgnr, company_name: c.navn }]);
-        }
-        setSuggestedCompanyNames(prev => prev.filter(n => n !== name));
-      } else {
-        toast({ title: "Ikke funnet", description: `Fant ikke «${name}» i Brønnøysundregisteret`, variant: "destructive" });
-      }
-    } catch (err: any) {
-      toast({ title: "Feil", description: err?.message || "Kunne ikke søke", variant: "destructive" });
-    }
-  };
-
-  const handleKeyPointChange = (index: number, value: string, isEnglish = false) => {
-    const field = isEnglish ? "key_points_en" : "key_points";
-    const newPoints = [...form[field]];
-    newPoints[index] = value;
-    updateForm({ [field]: newPoints });
-  };
-
-  const addKeyPoint = (isEnglish = false) => {
-    const field = isEnglish ? "key_points_en" : "key_points";
-    updateForm({ [field]: [...form[field], ""] });
-  };
-
-  const removeKeyPoint = (index: number, isEnglish = false) => {
-    const field = isEnglish ? "key_points_en" : "key_points";
-    updateForm({ [field]: form[field].filter((_, i) => i !== index) });
-  };
-
-  const handleAudioTranscript = (text: string) => {
-    const current = form.body;
-    const separator = current ? "<p></p>" : "";
-    updateForm({ body: current + separator + `<p>${text}</p>` });
-  };
+  // --- Inline image helpers ---
 
   const handleInsertImage = () => {
     setInlineImagePickerOpen(true);
@@ -1182,7 +666,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     setInlineImg({ url: result.url, alt: result.alt, caption: result.caption, credit: result.credit, source: result.source });
   };
 
-  // Escape a value for safe use inside an HTML double-quoted attribute.
   const escapeAttr = (s: string) =>
     s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -1202,17 +685,15 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     setInsertingInlineImg(false);
   };
 
+  // --- Chart/FactBox/SourceCard insert ---
+
   const handleInsertChart = (chart: ChartData) => {
-    // Encode chart data as base64 JSON inside a figure block so it survives
-    // round-trips through the rich text editor and is rendered as a React
-    // component on the public article page.
     const json = JSON.stringify(chart);
     const encoded = btoa(unescape(encodeURIComponent(json)));
     const figureHtml = `<figure data-nn-chart="true" data-chart="${encoded}"><p><strong>${chart.title}</strong> — ${chart.source}</p></figure>`;
 
     const editor = editorInstanceRef.current;
     if (editingChart && editor) {
-      // Replace the existing chart node at its known position
       const node = editor.state.doc.nodeAt(editingChart.pos);
       if (node && node.type.name === "chartFigure") {
         editor
@@ -1229,7 +710,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       }
     }
 
-    // Insert at the current cursor position if we have an editor, otherwise append
     if (editor) {
       editor.chain().focus().insertContent(figureHtml + "<p></p>").run();
     } else {
@@ -1331,6 +811,42 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     setEditingSourceCard(null);
   };
 
+  // --- Apply improved body ---
+
+  const applyImprovedBody = () => {
+    if (!aiHook.improveResult) return;
+    const stripH = (h: string) =>
+      h
+        .replace(/<\s*(p|h[1-6]|li|blockquote|br|div)[^>]*>/gi, "\n")
+        .replace(/<\/\s*(p|h[1-6]|li|blockquote|div)\s*>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/g, " ")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+    const fullImprovedPlain = stripH(aiHook.improveResult.improved_body);
+    const fullOriginalPlain = stripH(form.body);
+    let nextBody: string;
+    if (composedBody.trim() === fullImprovedPlain.trim()) {
+      nextBody = aiHook.improveResult.improved_body;
+    } else if (composedBody.trim() === fullOriginalPlain.trim()) {
+      nextBody = form.body;
+    } else {
+      const paragraphs = composedBody
+        .split(/\n{2,}/)
+        .map((p) => p.trim())
+        .filter(Boolean)
+        .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
+        .join("\n");
+      nextBody = paragraphs || aiHook.improveResult.improved_body;
+    }
+    updateForm({ body: nextBody });
+    toast({ title: "Brødtekst oppdatert", description: aiHook.improveResult.summary });
+    aiHook.setImproveResult(null);
+    setComposedBody("");
+  };
+
+  // --- Render ---
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1341,7 +857,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
 
   return (
     <div className="min-w-0">
-      {/* Header with status — wraps cleanly on mobile so nothing overflows */}
+      {/* Header with status */}
       <div className="mb-6 space-y-3 md:space-y-0 md:flex md:items-center md:gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <button
@@ -1452,8 +968,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Change note for the public revision log — shown when an
-            already-published article has meaningful edits. */}
+        {/* Change note for the public revision log */}
         {form.status === "published" && lastPublishedBody && (form.body !== lastPublishedBody || form.title !== lastPublishedTitle || form.excerpt !== lastPublishedExcerpt || (form.image_url || "") !== lastPublishedImageUrl) && (
           <div className="rounded-2xl border border-accent/40 bg-accent/5 p-4">
             <Label htmlFor="change-note" className="text-xs font-subhead font-semibold uppercase tracking-wider text-accent">
@@ -1468,11 +983,10 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             />
           </div>
         )}
-        {/* Pre-publish checklist — surfaced when not yet published so editors
-            can see exactly what's missing without hunting through fields. */}
         {form.status !== "published" && !canPublish && (
           <PrePublishChecklist items={publishChecklist} variant="card" />
         )}
+
         {/* Featured Image */}
         <CollapsibleSection title="Hovedbilde" defaultOpen storageKey="featured-image">
           <ImageUpload
@@ -1532,7 +1046,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                   </Button>
                 </div>
               </div>
-              {/* Live preview in both formats */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <div className="text-[11px] text-muted-foreground mb-1">Hero (16:9)</div>
@@ -1598,330 +1111,48 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           )}
         </CollapsibleSection>
 
-        {/* Bildegalleri */}
         <ArticleGalleryEditor articleId={articleId} />
 
-        {/* Norwegian content */}
-        <CollapsibleSection
-          title="Norsk innhold"
-          defaultOpen
-          storageKey="norwegian-content"
-          headerRight={
-            <div className="flex gap-2 flex-wrap">
-              <AIDraftFromSourcesButton
-                onApply={(draft) => updateForm({
-                  title: draft.title,
-                  excerpt: draft.excerpt,
-                  body: draft.body,
-                  key_points: draft.key_points,
-                })}
-              />
-              <Button type="button" variant="outline" size="sm" onClick={generateTitleExcerpt} disabled={generatingTitleExcerpt || !form.body || form.body.length < 50} className="gap-2">
-                {generatingTitleExcerpt ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                {generatingTitleExcerpt ? "Genererer..." : "Generer tittel/ingress"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setSocialDialogOpen(true)}
-                disabled={!form.title || !form.body || form.body.length < 50}
-                className="gap-2"
-                title="Generer SoMe-utkast for LinkedIn, Facebook/X og Instagram"
-              >
-                <Megaphone className="w-3.5 h-3.5" />
-                SoMe-forslag
-              </Button>
-              <AudioTranscriber ref={audioRef} onTranscript={handleAudioTranscript} />
-            </div>
-          }
-        >
-
-          <div>
-            <Label htmlFor="title">Tittel *</Label>
-            <Input id="title" value={form.title} onChange={(e) => updateForm({ title: e.target.value })} placeholder="Artikkelens tittel" className="mt-1.5" required />
-          </div>
-
-          <div>
-            <Label htmlFor="excerpt">Ingress *</Label>
-            <Textarea id="excerpt" value={form.excerpt} onChange={(e) => updateForm({ excerpt: e.target.value })} placeholder="Kort beskrivelse av artikkelen" className="mt-1.5" required />
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <Label>Brødtekst *</Label>
-              <div className="flex items-center gap-1 flex-wrap">
-                <ProofreadRules />
-                <Button type="button" variant="outline" size="sm" onClick={proofreadBody} disabled={proofreading || !form.body || form.body.length < 50} className="gap-2">
-                  {proofreading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SpellCheck className="w-3.5 h-3.5" />}
-                  {proofreading ? "Analyserer..." : "Språkvask"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={generateSubheadings}
-                  disabled={generatingSubheadings || !form.body || form.body.length < 100}
-                  className="gap-2"
-                  title="Generer korte mellomtitler hvert 2.-3. avsnitt"
-                >
-                  {generatingSubheadings ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Heading2 className="w-3.5 h-3.5" />}
-                  {generatingSubheadings ? "Genererer..." : "Mellomtitler"}
-                </Button>
-                <Popover open={improvePopoverOpen} onOpenChange={setImprovePopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={improving || !form.body || form.body.length < 50}
-                      className="gap-2"
-                      title="Sjekk mot retningslinjer: velg fokusområder"
-                    >
-                      {improving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
-                      {improving ? "Forbedrer..." : "Forbedre brødtekst"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-72" align="end">
-                    <div className="space-y-3">
-                      <div>
-                        <p className="font-heading text-sm font-medium">Fokusområder</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">Velg hva AI skal sjekke og endre.</p>
-                      </div>
-                      <div className="space-y-2">
-                        {[
-                          { id: "sitater", label: "Sitatformat", desc: "« » og blockquote" },
-                          { id: "lenker", label: "Kildelenker", desc: "Behold/normaliser <a>" },
-                          { id: "lengde", label: "Ordtelling", desc: "Stram inn mot maks ord" },
-                          { id: "struktur", label: "Struktur", desc: "Avsnitt og mellomtitler" },
-                          { id: "stil", label: "Stil", desc: "Klarhet og tone" },
-                        ].map((f) => {
-                          const checked = improveFocus.includes(f.id);
-                          return (
-                            <label
-                              key={f.id}
-                              className="flex items-start gap-2 p-2 rounded-md hover:bg-muted/50 cursor-pointer"
-                            >
-                              <Checkbox
-                                checked={checked}
-                                onCheckedChange={(v) => {
-                                  setImproveFocus((prev) =>
-                                    v ? [...new Set([...prev, f.id])] : prev.filter((x) => x !== f.id),
-                                  );
-                                }}
-                                className="mt-0.5"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="text-sm font-body text-foreground">{f.label}</div>
-                                <div className="text-xs text-muted-foreground">{f.desc}</div>
-                              </div>
-                            </label>
-                          );
-                        })}
-                      </div>
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-border">
-                        <button
-                          type="button"
-                          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          onClick={() =>
-                            setImproveFocus(["sitater", "lenker", "lengde", "struktur", "stil"])
-                          }
-                        >
-                          Velg alle
-                        </button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={improveBody}
-                          disabled={improving || improveFocus.length === 0}
-                          className="gap-1.5"
-                        >
-                          <Wand2 className="w-3.5 h-3.5" />
-                          Start
-                        </Button>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-            <div
-              className={`mt-1.5 relative rounded-lg transition-all ${
-                isDraggingAudio ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
-              }`}
-              onDragEnter={(e) => {
-                if (!Array.from(e.dataTransfer.types).includes("Files")) return;
-                e.preventDefault();
-                dragCounterRef.current += 1;
-                setIsDraggingAudio(true);
-              }}
-              onDragOver={(e) => {
-                if (Array.from(e.dataTransfer.types).includes("Files")) {
-                  e.preventDefault();
-                  e.dataTransfer.dropEffect = "copy";
-                }
-              }}
-              onDragLeave={(e) => {
-                if (!Array.from(e.dataTransfer.types).includes("Files")) return;
-                e.preventDefault();
-                dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
-                if (dragCounterRef.current === 0) setIsDraggingAudio(false);
-              }}
-              onDrop={(e) => {
-                if (!Array.from(e.dataTransfer.types).includes("Files")) return;
-                e.preventDefault();
-                dragCounterRef.current = 0;
-                setIsDraggingAudio(false);
-                const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith("audio/"));
-                if (!file) {
-                  toast({ title: "Ikke en lydfil", description: "Slipp en lydfil (mp3, wav, m4a osv.)", variant: "destructive" });
-                  return;
-                }
-                if (audioRef.current?.isProcessing()) {
-                  toast({ title: "Vent litt", description: "En lydfil behandles allerede", variant: "destructive" });
-                  return;
-                }
-                audioRef.current?.uploadFile(file);
-              }}
-            >
-              <RichTextEditor
-                content={form.body}
-                onChange={(html) => updateForm({ body: html })}
-                onImageUpload={handleInsertImage}
-                onInsertChart={() => { setEditingChart(null); setChartDialogOpen(true); }}
-                onEditChart={handleEditChart}
-                onInsertFactBox={() => { setEditingFactBox(null); setFactBoxDialogOpen(true); }}
-                onEditFactBox={handleEditFactBox}
-                onInsertSourceCard={() => { setEditingSourceCard(null); setSourceCardDialogOpen(true); }}
-                onEditSourceCard={handleEditSourceCard}
-                editorRef={(ed) => { editorInstanceRef.current = ed; }}
-                placeholder="Skriv artikkelens innhold her..."
-                highlights={proofSuggestions.map((s) => ({
-                  id: s.id,
-                  text: s.original,
-                  suggestion: s.suggestion,
-                  reason: s.reason,
-                  category: s.category,
-                }))}
-              />
-              {isDraggingAudio && (
-                <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center pointer-events-none z-10">
-                  <div className="bg-card px-4 py-2 rounded-lg shadow-soft text-sm font-medium text-foreground">
-                    Slipp lydfilen for å transkribere
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {(proofSuggestions.length > 0 || proofUndoStack.length > 0) && (
-              <div className="mt-3 flex flex-col gap-2 px-3 py-2 rounded-lg border border-border bg-muted/40 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-sm text-foreground">
-                    {proofSuggestions.length > 0 ? (
-                      <>
-                        <span className="font-medium">{proofSuggestions.length}</span>{" "}
-                        forslag vises inline i brødteksten — klikk{" "}
-                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold align-middle">✓</span>{" "}
-                        for å godta eller{" "}
-                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold align-middle">✕</span>{" "}
-                        for å avvise
-                      </>
-                    ) : (
-                      <span className="text-muted-foreground">Alle forslag behandlet — du kan fortsatt angre siste endring</span>
-                    )}
-                  </span>
-                  {proofSuggestions.length > 0 && (() => {
-                    const counts = proofSuggestions.reduce<Record<string, number>>((acc, s) => {
-                      const cat = s.category || "stil";
-                      acc[cat] = (acc[cat] || 0) + 1;
-                      return acc;
-                    }, {});
-                    const labels: Record<string, string> = {
-                      anglisisme: "Anglisismer",
-                      grammatikk: "Grammatikk",
-                      skrivefeil: "Skrivefeil",
-                      dialekt: "Dialekt",
-                      stil: "Stil",
-                      forenkling: "Forenkling",
-                    };
-                    // Color classes per category, themed via semantic tokens.
-                    const styles: Record<string, string> = {
-                      anglisisme: "bg-destructive/15 text-destructive border-destructive/30",
-                      grammatikk: "bg-destructive/20 text-destructive border-destructive/40",
-                      skrivefeil: "bg-destructive/20 text-destructive border-destructive/40",
-                      dialekt: "bg-accent text-accent-foreground border-accent-foreground/20",
-                      stil: "bg-accent text-accent-foreground border-accent-foreground/20",
-                      forenkling: "bg-muted-foreground/15 text-muted-foreground border-muted-foreground/30",
-                    };
-                    const order = ["anglisisme", "grammatikk", "skrivefeil", "dialekt", "stil", "forenkling"];
-                    const entries = Object.entries(counts).sort(
-                      ([a], [b]) => (order.indexOf(a) === -1 ? 99 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 99 : order.indexOf(b)),
-                    );
-                    return (
-                      <div className="flex flex-wrap items-center gap-1">
-                        {entries.map(([cat, count]) => (
-                          <span
-                            key={cat}
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-medium ${styles[cat] || styles.stil}`}
-                            title={`${count} ${labels[cat] || cat}`}
-                          >
-                            <span className="font-bold tabular-nums">{count}</span>
-                            <span>{labels[cat] || cat}</span>
-                          </span>
-                        ))}
-                      </div>
-                    );
-                  })()}
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  {proofUndoStack.length > 0 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={undoLastProofChange}
-                      className="h-7 gap-1.5 text-xs"
-                      title={`Angre siste endring (⌘/Ctrl+Z) — ${proofUndoStack.length} kan angres`}
-                    >
-                      <Undo2 className="w-3.5 h-3.5" />
-                      Angre siste
-                    </Button>
-                  )}
-                  {proofSuggestions.length > 0 && (
-                    <>
-                      <Button type="button" variant="outline" size="sm" onClick={applyAllProofSuggestions} className="h-7 gap-1.5 text-xs">
-                        <Check className="w-3.5 h-3.5" />
-                        Godta alle
-                      </Button>
-                      <Button type="button" variant="ghost" size="sm" onClick={() => setProofSuggestions([])} className="h-7 text-xs">
-                        Avvis alle
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label>Hovedpunkter</Label>
-              <Button type="button" variant="outline" size="sm" onClick={() => generateKeyPoints(false)} disabled={generatingPoints} className="gap-2">
-                {generatingPoints ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                Generer automatisk
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {form.key_points.map((point, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input value={point} onChange={(e) => handleKeyPointChange(index, e.target.value)} placeholder={`Punkt ${index + 1}`} />
-                  <Button type="button" variant="outline" size="sm" onClick={() => removeKeyPoint(index)}><X className="w-4 h-4" /></Button>
-                </div>
-              ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => addKeyPoint()}><Plus className="w-4 h-4 mr-1" /> Legg til punkt</Button>
-            </div>
-          </div>
-        </CollapsibleSection>
+        {/* Norwegian content — extracted to ArticleEditorBody */}
+        <ArticleEditorBody
+          body={form.body}
+          title={form.title}
+          excerpt={form.excerpt}
+          category={form.category}
+          keyPoints={form.key_points}
+          keyPointsEn={form.key_points_en}
+          onBodyChange={(html) => updateForm({ body: html })}
+          onFormUpdate={updateForm}
+          editorRef={(ed) => { editorInstanceRef.current = ed; }}
+          proofreading={proofHook.proofreading}
+          proofSuggestions={proofHook.proofSuggestions}
+          proofUndoStack={proofHook.proofUndoStack}
+          onProofread={proofHook.proofreadBody}
+          onApplyAllProof={proofHook.applyAllProofSuggestions}
+          onDismissAllProof={proofHook.clearProofSuggestions}
+          onUndoLastProof={proofHook.undoLastProofChange}
+          generatingPoints={aiHook.generatingPoints}
+          generatingTitleExcerpt={aiHook.generatingTitleExcerpt}
+          generatingSubheadings={aiHook.generatingSubheadings}
+          improving={aiHook.improving}
+          onGenerateKeyPoints={aiHook.generateKeyPoints}
+          onGenerateTitleExcerpt={aiHook.generateTitleExcerpt}
+          onGenerateSubheadings={aiHook.generateSubheadings}
+          onImproveBody={aiHook.improveBody}
+          onApplyDraft={(draft) => updateForm({
+            title: draft.title,
+            excerpt: draft.excerpt,
+            body: draft.body,
+            key_points: draft.key_points,
+          })}
+          onInsertImage={handleInsertImage}
+          onInsertChart={() => { setEditingChart(null); setChartDialogOpen(true); }}
+          onEditChart={handleEditChart}
+          onInsertFactBox={() => { setEditingFactBox(null); setFactBoxDialogOpen(true); }}
+          onEditFactBox={handleEditFactBox}
+          onInsertSourceCard={() => { setEditingSourceCard(null); setSourceCardDialogOpen(true); }}
+          onEditSourceCard={handleEditSourceCard}
+        />
 
         {/* A/B-testing av tittel + bilde */}
         {currentArticleId && (
@@ -2141,34 +1372,29 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           title="Selskapskobling"
           storageKey="company-tags"
           headerRight={
-            <Button type="button" variant="outline" size="sm" onClick={suggestCompanies} disabled={suggestingCompanies} className="gap-2">
-              {suggestingCompanies ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Building2 className="w-3.5 h-3.5" />}
+            <Button type="button" variant="outline" size="sm" onClick={aiHook.suggestCompanies} disabled={aiHook.suggestingCompanies} className="gap-2">
+              {aiHook.suggestingCompanies ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Building2 className="w-3.5 h-3.5" />}
               Foreslå fra tekst
             </Button>
           }
         >
 
           {/* AI Suggestions */}
-          {suggestedCompanies.length > 0 && (() => {
-            // Helper: a suggestion is considered "added" when its orgnr is
-            // already in companyTags (preferred) or, as a fallback, when a
-            // tag with the same name exists (covers manual-added entries).
+          {aiHook.suggestedCompanies.length > 0 && (() => {
             const isAdded = (s: { name: string; orgnr: string | null }) =>
               (s.orgnr && companyTags.some((t) => t.orgnr === s.orgnr)) ||
               companyTags.some((t) => t.company_name?.toLowerCase().trim() === s.name.toLowerCase().trim());
 
-            const remaining = suggestedCompanies.filter((s) => !isAdded(s));
+            const remaining = aiHook.suggestedCompanies.filter((s) => !isAdded(s));
 
             const addOne = async (s: { name: string; orgnr: string | null }) => {
-              // Fast path: we already have orgnr from suggest-companies
               if (s.orgnr) {
                 if (!companyTags.some((t) => t.orgnr === s.orgnr)) {
                   setCompanyTags((prev) => [...prev, { orgnr: s.orgnr!, company_name: s.name }]);
                 }
                 return;
               }
-              // Slow path: AI could not match orgnr — fall back to manual lookup
-              await lookupAndAddCompany(s.name);
+              await aiHook.lookupAndAddCompany(s.name, companyTags, (tag) => setCompanyTags((prev) => [...prev, tag]));
             };
 
             return (
@@ -2193,7 +1419,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                {suggestedCompanies.map((s) => {
+                {aiHook.suggestedCompanies.map((s) => {
                   const added = isAdded(s);
                   return (
                     <button
@@ -2342,15 +1568,6 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         }}
       />
 
-      <SocialPostsDialog
-        open={socialDialogOpen}
-        onOpenChange={setSocialDialogOpen}
-        title={form.title}
-        excerpt={form.excerpt}
-        body={composedBody || form.body}
-        category={form.category}
-      />
-
       <InlineImagePicker
         open={inlineImagePickerOpen}
         onOpenChange={setInlineImagePickerOpen}
@@ -2390,7 +1607,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         initial={editingSourceCard?.data || null}
       />
 
-      <ImproveDialog open={!!improveResult} onOpenChange={(open) => !open && setImproveResult(null)}>
+      <ImproveDialog open={!!aiHook.improveResult} onOpenChange={(open) => !open && aiHook.setImproveResult(null)}>
         <ImproveDialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <ImproveDialogHeader>
             <ImproveDialogTitle className="flex items-center gap-2">
@@ -2398,25 +1615,25 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               AI-forbedret brødtekst
             </ImproveDialogTitle>
           </ImproveDialogHeader>
-          {improveResult && (
+          {aiHook.improveResult && (
             <div className="space-y-4">
               <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
-                <p className="text-sm font-body text-foreground">{improveResult.summary}</p>
+                <p className="text-sm font-body text-foreground">{aiHook.improveResult.summary}</p>
                 <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                  <span>Ord før: <strong className="text-foreground">{improveResult.word_count_before}</strong></span>
+                  <span>Ord før: <strong className="text-foreground">{aiHook.improveResult.word_count_before}</strong></span>
                   <span>→</span>
-                  <span>Ord etter: <strong className="text-foreground">{improveResult.word_count_after}</strong></span>
+                  <span>Ord etter: <strong className="text-foreground">{aiHook.improveResult.word_count_after}</strong></span>
                 </div>
               </div>
 
-              {improveResult.issues_found.length > 0 && (
+              {aiHook.improveResult.issues_found.length > 0 && (
                 <div>
                   <Label className="flex items-center gap-1.5 mb-2">
                     <FileCheck className="w-3.5 h-3.5" />
-                    Endringer ({improveResult.issues_found.length})
+                    Endringer ({aiHook.improveResult.issues_found.length})
                   </Label>
                   <ul className="space-y-1.5">
-                    {improveResult.issues_found.map((issue, i) => (
+                    {aiHook.improveResult.issues_found.map((issue, i) => (
                       <li key={i} className="text-sm font-body text-foreground/80 flex items-start gap-2">
                         <Check className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
                         <span>{issue}</span>
@@ -2443,7 +1660,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                 <div className="max-h-[50vh] overflow-y-auto">
                   <InlineDiff
                     original={form.body}
-                    improved={improveResult.improved_body}
+                    improved={aiHook.improveResult.improved_body}
                     onResultChange={setComposedBody}
                   />
                 </div>
@@ -2451,7 +1668,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             </div>
           )}
           <ImproveDialogFooter>
-            <Button variant="outline" onClick={() => setImproveResult(null)}>Avbryt</Button>
+            <Button variant="outline" onClick={() => aiHook.setImproveResult(null)}>Avbryt</Button>
             <Button onClick={applyImprovedBody} className="gap-2">
               <Check className="w-4 h-4" />
               Bruk forbedret versjon

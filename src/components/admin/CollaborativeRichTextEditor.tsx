@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, type ComponentProps } from "react";
 import type { Editor } from "@tiptap/react";
 import { RichTextEditor } from "./RichTextEditor";
+import { PresenceAvatars } from "./PresenceAvatars";
 import { useCollabProvider } from "@/hooks/useCollabProvider";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -86,12 +87,20 @@ export const CollaborativeRichTextEditor = ({
   // Remount (not just re-render) when collaboration turns on/off so the editor
   // is created once with its final extension set and its view mounts cleanly.
   return (
-    <RichTextEditor
-      {...rest}
-      key={collab ? "collab" : "plain"}
-      content={content}
-      editorRef={captureEditor}
-      collab={collab}
-    />
+    <div className="space-y-2">
+      {collab && handle && (
+        <PresenceAvatars
+          awareness={handle.provider.awareness}
+          localClientId={handle.doc.clientID}
+        />
+      )}
+      <RichTextEditor
+        {...rest}
+        key={collab ? "collab" : "plain"}
+        content={content}
+        editorRef={captureEditor}
+        collab={collab}
+      />
+    </div>
   );
 };

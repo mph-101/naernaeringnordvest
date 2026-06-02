@@ -42,3 +42,6 @@ next-env.d.ts
 *.sw?
 .commitmsg.tmp
 .claude/
+
+# TypeScript incremental build cache
+*.tsbuildinfo

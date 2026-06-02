@@ -5,8 +5,12 @@ import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
+import Collaboration from "@tiptap/extension-collaboration";
+import CollaborationCaret from "@tiptap/extension-collaboration-caret";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import type * as Y from "yjs";
+import type { CollabUser } from "@/lib/collab";
 import { ChartFigureView } from "@/components/charts/ChartFigureView";
 import { FactBoxNodeView } from "@/components/factbox/FactBoxNodeView";
 import { SourceCardNodeView } from "@/components/source-card/SourceCardNodeView";
@@ -70,6 +74,14 @@ interface RichTextEditorProps {
   placeholder?: string;
   className?: string;
   highlights?: ProofreadHighlight[];
+  /** When set, the editor binds to a shared Yjs document for real-time
+   *  collaboration. History is delegated to Yjs and local content seeding is
+   *  skipped — the parent seeds the doc once after first sync. */
+  collab?: {
+    doc: Y.Doc;
+    provider: { awareness: unknown };
+    user: CollabUser;
+  } | null;
 }
 
 const highlightPluginKey = new PluginKey<ProofreadHighlight[]>("proofread-highlights");
@@ -358,35 +370,53 @@ export const RichTextEditor = ({
   placeholder = "Start å skrive...",
   className = "",
   highlights,
+  collab,
 }: RichTextEditorProps) => {
   const isInitial = useRef(true);
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3] },
-      }),
-      Image.configure({ inline: false, allowBase64: true }),
-      Link.configure({ openOnClick: false }),
-      Underline,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Placeholder.configure({ placeholder }),
-      HighlightExtension.configure({ highlights: highlights || [] }),
-      ChartFigureNode,
-      FactBoxNode,
-      SourceCardNode,
-    ],
-    content,
-    onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+  const editor = useEditor(
+    {
+      extensions: [
+        StarterKit.configure({
+          heading: { levels: [1, 2, 3] },
+          // Yjs owns undo/redo in collaborative mode.
+          ...(collab ? { undoRedo: false } : {}),
+        }),
+        Image.configure({ inline: false, allowBase64: true }),
+        Link.configure({ openOnClick: false }),
+        Underline,
+        TextAlign.configure({ types: ["heading", "paragraph"] }),
+        Placeholder.configure({ placeholder }),
+        HighlightExtension.configure({ highlights: highlights || [] }),
+        ChartFigureNode,
+        FactBoxNode,
+        SourceCardNode,
+        ...(collab
+          ? [
+              Collaboration.configure({ document: collab.doc }),
+              CollaborationCaret.configure({ provider: collab.provider, user: collab.user }),
+            ]
+          : []),
+      ],
+      // In collab mode the Yjs document is the source of truth; the parent
+      // seeds it once after first sync (see CollaborativeRichTextEditor).
+      content: collab ? undefined : content,
+      onUpdate: ({ editor }) => {
+        onChange(editor.getHTML());
+      },
     },
-  });
+    // Recreate the editor when collaboration is toggled on/off.
+    [collab?.doc],
+  );
 
   // Sync external content changes (e.g. proofreading fixes, AI improvements,
   // translation) into the editor. Skip while the editor is focused so we
   // don't yank the user's caret while they're typing.
   useEffect(() => {
     if (!editor) return;
+    // In collaborative mode the shared Yjs document owns the content; never
+    // push local HTML into it here or we'd clobber remote edits.
+    if (collab) return;
     if (isInitial.current) {
       isInitial.current = false;
       if (content && editor.getHTML() !== content) {
@@ -397,7 +427,7 @@ export const RichTextEditor = ({
     if (editor.getHTML() === content) return;
     if (editor.isFocused) return;
     editor.commands.setContent(content || "", { emitUpdate: false });
-  }, [editor, content]);
+  }, [editor, content, collab]);
 
   // Update highlights dynamically without recreating the editor.
   // Push the new array through the plugin state via a transaction meta so

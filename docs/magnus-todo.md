@@ -62,6 +62,23 @@ Koden er klar — `vercel.json` peker allerede på `npm run build:next`, framewo
 **Ikke gjort (venter på din beslutning):** flippe default `dev`/`build`-script til
 Next og peke produksjons-DNS mot Vercel. Det er den ekte cutoveren (fase 5).
 
-> Sidenotat: migrasjonen `20260601130000_yjs_collab_infrastructure.sql` (for
-> fremtidig samredigering) er **ikke** kjørt mot prod ennå. Den trengs først når
-> Liveblocks-arbeidet starter — etter Vercel-cutover — så ingen hast.
+## Samredigering (Fase B) — for å gå live
+
+Migrasjonen `20260601130000_yjs_collab_infrastructure.sql` er nå kjørt mot prod
+(`yjs_snapshots` + `articles.collab_enabled`). Koden for Fase B er på plass bak
+en provider-abstraksjon med Liveblocks. For å aktivere sanntids samredigering:
+
+1. **Opprett Liveblocks-konto** på liveblocks.io (free tier holder).
+2. **Hent secret key** (`sk_...`) fra Liveblocks-dashboardet.
+3. **Legg den inn** som `LIVEBLOCKS_SECRET_KEY`:
+   - lokalt i `.env.local`
+   - i Vercel → Project Settings → Environment Variables (server-only, ikke `NEXT_PUBLIC_`)
+4. **Slå på flagget** per artikkel for test: sett `collab_enabled = true` på en
+   artikkelrad i Supabase, åpne den i to nettlesere og verifiser sanntids sync.
+
+Uten nøkkelen faller editoren stille tilbake til ikke-samarbeidende modus, så
+ingenting crasher i mellomtiden.
+
+> Vurder før utrulling: Liveblocks er en US-tredjepart som mottar artikkel-body.
+> Alternativet (selvhostet Hocuspocus i EU) er fortsatt åpent — byttet er lite
+> fordi alt ligger bak `src/lib/collab/createCollabProvider`.

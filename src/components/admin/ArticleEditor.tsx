@@ -119,6 +119,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     image_credit: "",
     image_source: "",
     scheduled_publish_at: null as string | null,
+    collab_enabled: false,
   });
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
@@ -407,6 +408,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         image_credit: ((data as any).image_credit as string | null) ?? "",
         image_source: ((data as any).image_source as string | null) ?? "",
         scheduled_publish_at: ((data as any).scheduled_publish_at as string | null) ?? null,
+        collab_enabled: ((data as any).collab_enabled as boolean | null) ?? false,
       });
       setLastPublishedBody(data.published ? (data.body || "") : "");
       setLastPublishedTitle(data.published ? (data.title || "") : "");
@@ -1121,6 +1123,8 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           category={form.category}
           keyPoints={form.key_points}
           keyPointsEn={form.key_points_en}
+          articleId={currentArticleId}
+          collabEnabled={form.collab_enabled}
           onBodyChange={(html) => updateForm({ body: html })}
           onFormUpdate={updateForm}
           editorRef={(ed) => { editorInstanceRef.current = ed; }}

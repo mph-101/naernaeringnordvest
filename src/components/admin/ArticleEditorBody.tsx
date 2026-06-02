@@ -17,7 +17,7 @@ import {
   Sparkles,
   Megaphone,
 } from "lucide-react";
-import { RichTextEditor } from "./RichTextEditor";
+import { CollaborativeRichTextEditor } from "./CollaborativeRichTextEditor";
 import { ProofreadRules } from "./ProofreadRules";
 import { AudioTranscriber, type AudioTranscriberHandle } from "./AudioTranscriber";
 import { AIDraftFromSourcesButton } from "./AIDraftFromSourcesButton";
@@ -67,6 +67,10 @@ interface ArticleEditorBodyProps {
   onEditFactBox: (data: FactBoxData, pos: number) => void;
   onInsertSourceCard: () => void;
   onEditSourceCard: (data: SourceCardData, pos: number) => void;
+
+  // Collaboration
+  articleId: string | null;
+  collabEnabled: boolean;
 }
 
 export const ArticleEditorBody = ({
@@ -79,6 +83,8 @@ export const ArticleEditorBody = ({
   onBodyChange,
   onFormUpdate,
   editorRef,
+  articleId,
+  collabEnabled,
   proofreading,
   proofSuggestions,
   proofUndoStack,
@@ -309,7 +315,9 @@ export const ArticleEditorBody = ({
               audioRef.current?.uploadFile(file);
             }}
           >
-            <RichTextEditor
+            <CollaborativeRichTextEditor
+              articleId={articleId}
+              collabEnabled={collabEnabled}
               content={body}
               onChange={onBodyChange}
               onImageUpload={onInsertImage}

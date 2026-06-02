@@ -562,6 +562,7 @@ export type Database = {
           body_en: string | null
           category: string
           co_authors: string[]
+          collab_enabled: boolean
           created_at: string
           created_by: string | null
           excerpt: string
@@ -597,6 +598,7 @@ export type Database = {
           body_en?: string | null
           category: string
           co_authors?: string[]
+          collab_enabled?: boolean
           created_at?: string
           created_by?: string | null
           excerpt: string
@@ -632,6 +634,7 @@ export type Database = {
           body_en?: string | null
           category?: string
           co_authors?: string[]
+          collab_enabled?: boolean
           created_at?: string
           created_by?: string | null
           excerpt?: string
@@ -2898,6 +2901,32 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      yjs_snapshots: {
+        Row: {
+          article_id: string
+          updated_at: string
+          yjs_state: string
+        }
+        Insert: {
+          article_id: string
+          updated_at?: string
+          yjs_state: string
+        }
+        Update: {
+          article_id?: string
+          updated_at?: string
+          yjs_state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "yjs_snapshots_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: true
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

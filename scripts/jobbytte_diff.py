@@ -314,7 +314,10 @@ def get_cursor(sb: Client) -> int | None:
         .maybe_single()
         .execute()
     )
-    if resp.data and resp.data.get("value"):
+    # maybe_single() returns None (not a response) when the row doesn't exist —
+    # e.g. on a fresh database where the cursor was never seeded. Treat that as
+    # "no cursor yet" so the job cold-starts instead of crashing.
+    if resp and resp.data and resp.data.get("value"):
         return int(resp.data["value"])
     return None
 

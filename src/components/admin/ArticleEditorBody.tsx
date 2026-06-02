@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2,
@@ -16,6 +17,7 @@ import {
   X,
   Sparkles,
   Megaphone,
+  Users,
 } from "lucide-react";
 import { CollaborativeRichTextEditor } from "./CollaborativeRichTextEditor";
 import { ProofreadRules } from "./ProofreadRules";
@@ -275,6 +277,27 @@ export const ArticleEditorBody = ({
                 </PopoverContent>
               </Popover>
             </div>
+          </div>
+          <div className="mt-1.5 flex items-center justify-between gap-3 rounded-md border border-border bg-muted/20 px-3 py-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Users className="w-4 h-4 text-muted-foreground shrink-0" />
+              <div className="min-w-0">
+                <div className="text-sm font-body text-foreground">Samredigering</div>
+                <div className="text-xs text-muted-foreground">
+                  {!articleId
+                    ? "Lagre artikkelen først for å aktivere."
+                    : collabEnabled
+                      ? "På — flere kan redigere brødteksten samtidig i sanntid."
+                      : "Av — vanlig redigering."}
+                </div>
+              </div>
+            </div>
+            <Switch
+              checked={collabEnabled}
+              onCheckedChange={(v) => onFormUpdate({ collab_enabled: v })}
+              disabled={!articleId}
+              aria-label="Slå samredigering av eller på"
+            />
           </div>
           <div
             className={`mt-1.5 relative rounded-lg transition-all ${

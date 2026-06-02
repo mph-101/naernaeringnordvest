@@ -259,6 +259,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
       image_credit: currentForm.image_credit?.trim() || null,
       image_source: currentForm.image_source?.trim() || null,
       scheduled_publish_at: currentForm.scheduled_publish_at || null,
+      collab_enabled: currentForm.collab_enabled,
     } as any;
     try {
       if (currentArticleId) {
@@ -487,6 +488,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         image_credit: form.image_credit?.trim() || null,
         image_source: form.image_source?.trim() || null,
         scheduled_publish_at: form.scheduled_publish_at || null,
+        collab_enabled: form.collab_enabled,
       } as any;
 
       const syncSharedRegions = async (id: string) => {

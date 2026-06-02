@@ -62,23 +62,28 @@ Koden er klar — `vercel.json` peker allerede på `npm run build:next`, framewo
 **Ikke gjort (venter på din beslutning):** flippe default `dev`/`build`-script til
 Next og peke produksjons-DNS mot Vercel. Det er den ekte cutoveren (fase 5).
 
-## Samredigering (Fase B) — for å gå live
+## Samredigering — LIVE i prod (Fase A+B+C delvis)
 
-Migrasjonen `20260601130000_yjs_collab_infrastructure.sql` er nå kjørt mot prod
-(`yjs_snapshots` + `articles.collab_enabled`). Koden for Fase B er på plass bak
-en provider-abstraksjon med Liveblocks. For å aktivere sanntids samredigering:
+Status 2026-06-02: sanntids samredigering er live. Migrasjonen er kjørt,
+`LIVEBLOCKS_SECRET_KEY` er satt i både `.env.local` og Vercel, og to-vinduers
+sync + presence-avatarer er verifisert. Redaktører styrer det via av/på-knappen
+i artikkeleditoren (default av, kun redaksjonelle roller).
 
-1. **Opprett Liveblocks-konto** på liveblocks.io (free tier holder).
-2. **Hent secret key** (`sk_...`) fra Liveblocks-dashboardet.
-3. **Legg den inn** som `LIVEBLOCKS_SECRET_KEY`:
-   - lokalt i `.env.local`
-   - i Vercel → Project Settings → Environment Variables (server-only, ikke `NEXT_PUBLIC_`)
-4. **Slå på flagget** per artikkel for test: sett `collab_enabled = true` på en
-   artikkelrad i Supabase, åpne den i to nettlesere og verifiser sanntids sync.
+**Gjenstående handlinger for deg:**
 
-Uten nøkkelen faller editoren stille tilbake til ikke-samarbeidende modus, så
-ingenting crasher i mellomtiden.
+1. **Transport-beslutning (låser opp resten av Fase C).** Liveblocks (hosted, US-
+   tredjepart får artikkel-body) vs selvhostet **Hocuspocus** (EU, ~$5–10/mnd).
+   Alt ligger bak `src/lib/collab/createCollabProvider`, så byttet er lite. Når
+   du har valgt, bygger Claude robust server-side persistering + cold-start fra
+   `yjs_snapshots` (siste Fase C-bit). Inntil da: `articles.body` holdes fersk av
+   eksisterende auto-lagring, og cold-start seeder fra HTML.
+2. **Rydd test-artikkelen** «Tester nytt varslingssystem… Brunvoll AS»
+   (id `2a67658b-7187-480a-887d-1877eeda5421`): har fortsatt `collab_enabled =
+   true` + testtekst i body. Skru av via knappen i editoren (eller SQL), og fjern
+   ev. testtekst via revisjonsloggen.
+3. **(Lavt) bun-lockfiler utdaterte.** Collab-pakkene ble lagt til via npm, så
+   `bun.lock`/`bun.lockb` er ikke oppdatert. CI bruker npm (`package-lock.json`),
+   så det er ufarlig — men kjør `bun install` hvis noen bruker bun lokalt.
 
-> Vurder før utrulling: Liveblocks er en US-tredjepart som mottar artikkel-body.
-> Alternativet (selvhostet Hocuspocus i EU) er fortsatt åpent — byttet er lite
-> fordi alt ligger bak `src/lib/collab/createCollabProvider`.
+> Personvern: Liveblocks er US-basert og mottar artikkel-body. Hvis det er et
+> problem, velg Hocuspocus-stien (punkt 1).

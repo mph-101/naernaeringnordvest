@@ -373,6 +373,7 @@ export const RichTextEditor = ({
   collab,
 }: RichTextEditorProps) => {
   const isInitial = useRef(true);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const editor = useEditor(
     {
@@ -405,8 +406,10 @@ export const RichTextEditor = ({
         onChange(editor.getHTML());
       },
     },
-    // Recreate the editor when collaboration is toggled on/off.
-    [collab?.doc],
+    // No deps: the editor is created once per mount. Collaboration is toggled by
+    // remounting this component with a different `key` (see
+    // CollaborativeRichTextEditor), which guarantees the editor view is mounted
+    // before our effects run — avoiding "view not available" on recreation.
   );
 
   // Sync external content changes (e.g. proofreading fixes, AI improvements,
@@ -433,9 +436,13 @@ export const RichTextEditor = ({
   // Push the new array through the plugin state via a transaction meta so
   // ProseMirror recomputes decorations.
   useEffect(() => {
-    if (!editor) return;
-    const tr = editor.state.tr.setMeta(highlightPluginKey, highlights || []);
-    editor.view.dispatch(tr);
+    if (!editor || editor.isDestroyed) return;
+    try {
+      const tr = editor.state.tr.setMeta(highlightPluginKey, highlights || []);
+      editor.view.dispatch(tr);
+    } catch {
+      // View not mounted yet; highlights apply on the next change.
+    }
   }, [editor, highlights]);
 
   // Listen for chart-edit requests dispatched from the ChartFigureView node-view
@@ -447,7 +454,10 @@ export const RichTextEditor = ({
         onEditChart(detail.chart, detail.pos);
       }
     };
-    const el = editor.view.dom;
+    // Listen on the stable container, not editor.view.dom (which may not be
+    // mounted yet). The node-view events bubble, so they reach here.
+    const el = containerRef.current;
+    if (!el) return;
     el.addEventListener("nn-chart-edit", handler as EventListener);
     return () => el.removeEventListener("nn-chart-edit", handler as EventListener);
   }, [editor, onEditChart]);
@@ -461,7 +471,8 @@ export const RichTextEditor = ({
         onEditFactBox(detail.data, detail.pos);
       }
     };
-    const el = editor.view.dom;
+    const el = containerRef.current;
+    if (!el) return;
     el.addEventListener("nn-factbox-edit", handler as EventListener);
     return () => el.removeEventListener("nn-factbox-edit", handler as EventListener);
   }, [editor, onEditFactBox]);
@@ -475,7 +486,8 @@ export const RichTextEditor = ({
         onEditSourceCard(detail.data, detail.pos);
       }
     };
-    const el = editor.view.dom;
+    const el = containerRef.current;
+    if (!el) return;
     el.addEventListener("nn-source-card-edit", handler as EventListener);
     return () => el.removeEventListener("nn-source-card-edit", handler as EventListener);
   }, [editor, onEditSourceCard]);
@@ -522,7 +534,7 @@ export const RichTextEditor = ({
   );
 
   return (
-    <div className={`border border-input rounded-lg overflow-hidden bg-background ${className}`}>
+    <div ref={containerRef} className={`border border-input rounded-lg overflow-hidden bg-background ${className}`}>
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-0.5 p-2 border-b border-input bg-muted/30">
         <ToolButton onClick={() => editor.chain().focus().undo().run()} title="Angre">

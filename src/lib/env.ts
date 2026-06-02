@@ -33,4 +33,5 @@ export const SUPABASE_PROJECT_ID = firstNonEmpty(
 
 export const PAYMENTS_CLIENT_TOKEN = firstNonEmpty(
   typeof import.meta !== "undefined" ? (import.meta as any).env?.VITE_PAYMENTS_CLIENT_TOKEN : undefined,
+  hasProcess ? process.env.NEXT_PUBLIC_PAYMENTS_CLIENT_TOKEN : undefined,
 ) || undefined;

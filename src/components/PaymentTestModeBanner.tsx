@@ -1,5 +1,6 @@
-const clientToken =
-  (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_PAYMENTS_CLIENT_TOKEN) as string | undefined;
+import { PAYMENTS_CLIENT_TOKEN } from "@/lib/env";
+
+const clientToken = PAYMENTS_CLIENT_TOKEN;
 
 export function PaymentTestModeBanner() {
   if (!clientToken?.startsWith("pk_test_")) return null;

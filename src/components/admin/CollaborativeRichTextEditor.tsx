@@ -83,5 +83,15 @@ export const CollaborativeRichTextEditor = ({
         }
       : null;
 
-  return <RichTextEditor {...rest} content={content} editorRef={captureEditor} collab={collab} />;
+  // Remount (not just re-render) when collaboration turns on/off so the editor
+  // is created once with its final extension set and its view mounts cleanly.
+  return (
+    <RichTextEditor
+      {...rest}
+      key={collab ? "collab" : "plain"}
+      content={content}
+      editorRef={captureEditor}
+      collab={collab}
+    />
+  );
 };

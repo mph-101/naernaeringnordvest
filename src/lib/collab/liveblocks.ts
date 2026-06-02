@@ -1,4 +1,4 @@
-import { createClient, type Client } from "@liveblocks/client";
+import { createClient } from "@liveblocks/client";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
 import * as Y from "yjs";
 import type { CollabHandle } from "./types";
@@ -7,24 +7,37 @@ import type { CollabHandle } from "./types";
  * Liveblocks transport for collaborative editing.
  *
  * This is the ONLY file that imports `@liveblocks/*`. To move to a self-hosted
- * Hocuspocus backend, add a sibling `hocuspocus.ts` exporting the same
- * `createLiveblocksCollab`-shaped function and switch the import in ./index.ts.
+ * Hocuspocus backend, add a sibling exporting the same function shape and switch
+ * the import in ./index.ts.
+ *
+ * Auth: the app stores its Supabase session in localStorage (not cookies), so we
+ * can't rely on cookie-based server auth. Instead we send the access token as a
+ * Bearer header to our Next route, which verifies it and mints a session token.
  */
 
-let client: Client | null = null;
+export type TokenGetter = () => Promise<string | null>;
 
-function getClient(): Client {
-  if (!client) {
-    // Auth is delegated to our Next route, which verifies the Supabase JWT and
-    // role before minting a Liveblocks session token. No public key in the client.
-    client = createClient({ authEndpoint: "/api/liveblocks-auth" });
-  }
-  return client;
-}
+export function createLiveblocksCollab(roomId: string, getToken: TokenGetter): CollabHandle {
+  const client = createClient({
+    authEndpoint: async (room) => {
+      const token = await getToken();
+      const res = await fetch("/api/liveblocks-auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ room }),
+      });
+      if (!res.ok) {
+        throw new Error(`Liveblocks auth failed: ${res.status}`);
+      }
+      return await res.json();
+    },
+  });
 
-export function createLiveblocksCollab(roomId: string): CollabHandle {
   const doc = new Y.Doc();
-  const { room, leave } = getClient().enterRoom(roomId);
+  const { room, leave } = client.enterRoom(roomId);
   const yProvider = new LiveblocksYjsProvider(room, doc);
 
   const whenSynced = new Promise<void>((resolve) => {

@@ -1,11 +1,14 @@
 import { Liveblocks } from "@liveblocks/node";
-import { createSupabaseServer } from "@/lib/supabase-next/server";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 /**
  * Liveblocks authentication endpoint.
  *
- * The browser's Liveblocks client POSTs here (no public key client-side). We:
- *   1. verify the caller's Supabase session (JWT in the auth cookies),
+ * The browser's Liveblocks client POSTs here with the caller's Supabase access
+ * token in the Authorization header (the app stores its session in localStorage,
+ * not cookies, so we verify the token explicitly rather than reading cookies). We:
+ *   1. verify the token and resolve the user,
  *   2. confirm they hold an editorial role (admin/editor/journalist),
  *   3. mint a scoped Liveblocks session token for `article:*` rooms.
  *
@@ -26,24 +29,40 @@ function colorForUser(id: string): string {
   return CARET_COLORS[hash % CARET_COLORS.length];
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   const secret = process.env.LIVEBLOCKS_SECRET_KEY;
   if (!secret) {
     return new Response("Liveblocks not configured", { status: 501 });
   }
 
-  const supabase = await createSupabaseServer();
+  const authHeader = request.headers.get("authorization") ?? "";
+  const token = authHeader.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7).trim()
+    : null;
+  if (!token) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  // Anon-key client carrying the caller's JWT: getUser validates the token and
+  // rpc calls run as the authenticated user (has_role is SECURITY DEFINER).
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
 
   const {
     data: { user },
     error: userError,
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser(token);
 
   if (userError || !user) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  // Verify the caller holds at least one editorial role.
   const roleChecks = await Promise.all(
     STAFF_ROLES.map((role) =>
       supabase.rpc("has_role", { _user_id: user.id, _role: role }),

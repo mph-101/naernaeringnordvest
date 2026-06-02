@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createCollabProvider, type CollabHandle } from "@/lib/collab";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Opens a collaborative editing session for one article and tears it down on
@@ -14,6 +15,13 @@ export function useCollabProvider(
 ): CollabHandle | null {
   const [handle, setHandle] = useState<CollabHandle | null>(null);
 
+  // Current Supabase access token, fetched fresh on every (re)auth so the
+  // backend can verify the user. The app stores its session in localStorage.
+  const getToken = useCallback(async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? null;
+  }, []);
+
   useEffect(() => {
     if (!enabled || !articleId) {
       setHandle(null);
@@ -26,7 +34,7 @@ export function useCollabProvider(
     // Guard against any transport/network error so a failed room never crashes
     // the editor — the component falls back to the non-collaborative editor.
     try {
-      created = createCollabProvider(`article:${articleId}`);
+      created = createCollabProvider(`article:${articleId}`, getToken);
       if (active) {
         setHandle(created);
       } else {
@@ -42,7 +50,7 @@ export function useCollabProvider(
       setHandle(null);
       created?.destroy();
     };
-  }, [articleId, enabled]);
+  }, [articleId, enabled, getToken]);
 
   return handle;
 }

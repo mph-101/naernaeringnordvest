@@ -79,34 +79,24 @@ function getRegion(): string | null {
 export async function startArticleView(articleId: string) {
   if (!articleId) return null;
   const sessionId = getSessionId();
-  let userId: string | null = null;
-  try {
-    const { data } = await supabase.auth.getSession();
-    userId = data.session?.user?.id ?? null;
-  } catch {
-    // ignore — anonymous tracking is fine
-  }
 
   const referrer_host = getReferrerHost();
   const device_type = detectDevice();
   const region_slug = getRegion();
 
-  const { data, error } = await supabase
-    .from("article_views")
-    .insert({
-      article_id: articleId,
-      session_id: sessionId,
-      user_id: userId,
-      referrer_host,
-      device_type,
-      region_slug,
-    } as any)
-    .select("id")
-    .maybeSingle();
+  // Writes go through SECURITY DEFINER RPCs (see migration
+  // 20260603120000_article_view_write_rpcs.sql). The RPC sets user_id from
+  // auth.uid() server-side, and returns the new id even to anonymous callers
+  // (a direct INSERT ... RETURNING cannot, since anon has no SELECT policy).
+  const { data: rowId, error } = await supabase.rpc("log_article_view", {
+    _article_id: articleId,
+    _session_id: sessionId,
+    _referrer_host: referrer_host,
+    _device_type: device_type,
+    _region_slug: region_slug,
+  });
 
-  if (error || !data) return null;
-
-  const rowId = (data as any).id as string;
+  if (error || !rowId) return null;
   let lastSeconds = 0;
   let lastDepth = 0;
   let lastCompleted = false;
@@ -126,20 +116,26 @@ export async function startArticleView(articleId: string) {
       lastSeconds = sec;
       lastDepth = depth;
       lastCompleted = completed;
-      await supabase
-        .from("article_views")
-        .update({ read_seconds: sec, scroll_depth: depth, completed } as any)
-        .eq("id", rowId);
+      await supabase.rpc("update_article_view", {
+        _id: rowId,
+        _session_id: sessionId,
+        _read_seconds: sec,
+        _scroll_depth: depth,
+        _completed: completed,
+      });
     },
     end: async (read_seconds: number, scroll_depth: number, completed: boolean) => {
       const sec = Math.round(read_seconds);
       const depth = Math.min(100, Math.round(scroll_depth * 100) / 100);
       try {
-        // Use sendBeacon-like fire-and-forget; we still hit the standard endpoint.
-        await supabase
-          .from("article_views")
-          .update({ read_seconds: sec, scroll_depth: depth, completed } as any)
-          .eq("id", rowId);
+        // Fire-and-forget on unload; same guarded RPC as update().
+        await supabase.rpc("update_article_view", {
+          _id: rowId,
+          _session_id: sessionId,
+          _read_seconds: sec,
+          _scroll_depth: depth,
+          _completed: completed,
+        });
       } catch {
         /* ignore */
       }

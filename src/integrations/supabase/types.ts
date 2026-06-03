@@ -3050,6 +3050,16 @@ export type Database = {
         Returns: undefined
       }
       increment_job_view: { Args: { _job_id: string }; Returns: undefined }
+      log_article_view: {
+        Args: {
+          _article_id: string
+          _device_type?: string
+          _referrer_host?: string
+          _region_slug?: string
+          _session_id: string
+        }
+        Returns: string
+      }
       is_group_admin: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
@@ -3105,6 +3115,16 @@ export type Database = {
         }[]
       }
       slugify_display_name: { Args: { input: string }; Returns: string }
+      update_article_view: {
+        Args: {
+          _completed: boolean
+          _id: string
+          _read_seconds: number
+          _scroll_depth: number
+          _session_id: string
+        }
+        Returns: undefined
+      }
       validate_api_key: {
         Args: { _key_hash: string }
         Returns: {

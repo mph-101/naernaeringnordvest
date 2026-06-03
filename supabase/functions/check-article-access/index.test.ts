@@ -169,6 +169,76 @@ Deno.test("premium + anon revisiting already-granted article: full, no count cos
   assertEquals((r.body as any).access, "full");
 });
 
+// ---------- resolveAccess: subscriber / staff role gating ----------
+
+// Inject a fixed user id so we exercise the authenticated branch without a
+// live JWT. These cover security-review finding #2: a lapsed subscriber must
+// not keep premium access via their (never-revoked) subscriber role.
+const asUser = (id: string) => (_authHeader: string | null) => Promise.resolve(id);
+
+Deno.test("active subscription → full (via has_active_subscription)", async () => {
+  const sb = makeMockSupabase({
+    article: { id: "a1", premium: true, body: "Full body", body_en: null, published: true },
+    hasActiveSubscription: true,
+  });
+  const r = await resolveAccess("a1", undefined, {
+    sbAdmin: sb,
+    authHeader: "Bearer x",
+    resolveUserId: asUser("user-1"),
+  });
+  assertEquals((r.body as any).access, "full");
+});
+
+Deno.test("admin role, no active sub → full (staff bypass preserved)", async () => {
+  const sb = makeMockSupabase({
+    article: { id: "a1", premium: true, body: "Full body", body_en: null, published: true },
+    hasActiveSubscription: false,
+    roles: [{ role: "admin" }],
+  });
+  const r = await resolveAccess("a1", undefined, {
+    sbAdmin: sb,
+    authHeader: "Bearer x",
+    resolveUserId: asUser("admin-1"),
+  });
+  assertEquals((r.body as any).access, "full");
+});
+
+Deno.test("lapsed subscriber (role present, no active sub, quota spent) → preview", async () => {
+  const sb = makeMockSupabase({
+    article: { id: "a1", premium: true, body: "Full body", body_en: null, published: true },
+    hasActiveSubscription: false,
+    roles: [{ role: "subscriber" }],
+    existingGrant: null,
+    grantCount: 3, // authenticated quota = 3, already spent
+  });
+  const r = await resolveAccess("a1", undefined, {
+    sbAdmin: sb,
+    authHeader: "Bearer x",
+    resolveUserId: asUser("lapsed-1"),
+  });
+  // Before the fix the subscriber role granted unlimited access here.
+  assertEquals((r.body as any).access, "preview");
+  assertEquals((r.body as any).reason, "quota_exhausted");
+});
+
+Deno.test("business role, no active sub → falls through to free quota, not unlimited", async () => {
+  const sb = makeMockSupabase({
+    article: { id: "a1", premium: true, body: "Full body", body_en: null, published: true },
+    hasActiveSubscription: false,
+    roles: [{ role: "business" }],
+    existingGrant: null,
+    grantCount: 0, // quota available → gets ONE free read, then would be capped
+  });
+  const r = await resolveAccess("a1", undefined, {
+    sbAdmin: sb,
+    authHeader: "Bearer x",
+    resolveUserId: asUser("biz-1"),
+  });
+  assertEquals((r.body as any).access, "full");
+  // Crucially this is a quota-tracked read, not an unlimited staff bypass.
+  assertEquals((r.body as any).freeQuota, 3);
+});
+
 // ---------- resolveAccess: fail-safe paths ----------
 
 Deno.test("rpc throws → preview, not 500", async () => {

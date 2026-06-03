@@ -9,7 +9,13 @@ import { corsHeaders } from "../_shared/cors.ts";
 const FREE_QUOTA_AUTHENTICATED = 3;
 const FREE_QUOTA_ANONYMOUS = 1;
 const FREE_WINDOW_DAYS = 90;
-const STAFF_ROLES = new Set(["admin", "editor", "journalist", "subscriber", "business"]);
+// Editorial staff get unlimited premium access via raw role membership.
+// IMPORTANT: subscriber/business are deliberately NOT here. Paid access must
+// flow through has_active_subscription(), which checks current_period_end so
+// access ends when the subscription lapses. The subscriber/business role is
+// never revoked on cancellation, so trusting it here would grant lapsed
+// subscribers permanent access. (Security review 2026-06-03, finding #2.)
+const STAFF_ROLES = new Set(["admin", "editor", "journalist"]);
 
 const BodySchema = z.object({
   articleId: z.string().min(1).max(256),
@@ -38,6 +44,30 @@ export function firstParagraph(txt: string | null): string | null {
 interface ResolveAccessDeps {
   sbAdmin: SupabaseClient;
   authHeader: string | null;
+  // Resolves the caller's user id from the Authorization header. Injectable so
+  // the subscriber/role gating can be unit-tested without a live JWT.
+  resolveUserId?: (authHeader: string | null) => Promise<string | null>;
+}
+
+// Validates the Bearer JWT and returns the caller's user id, or null for an
+// anonymous / invalid token. Invalid tokens are treated as anonymous, never an
+// error, so a malformed header degrades to the free-quota path.
+async function resolveUserIdFromJwt(authHeader: string | null): Promise<string | null> {
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  try {
+    const sbUser = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData } = await sbUser.auth.getClaims(token);
+    return (claimsData?.claims?.sub as string) ?? null;
+  } catch (e) {
+    // Invalid token → treat as anon. Logging only.
+    console.warn("check-article-access: invalid bearer token", e);
+    return null;
+  }
 }
 
 // The core logic, exported so it can be unit-tested with a mocked client.
@@ -71,22 +101,7 @@ export async function resolveAccess(
   }
 
   // Premium path: identify the caller
-  let userId: string | null = null;
-  if (authHeader?.startsWith("Bearer ")) {
-    try {
-      const sbUser = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } }
-      );
-      const token = authHeader.replace("Bearer ", "");
-      const { data: claimsData } = await sbUser.auth.getClaims(token);
-      userId = (claimsData?.claims?.sub as string) ?? null;
-    } catch (e) {
-      // Invalid token → treat as anon. Logging only.
-      console.warn("check-article-access: invalid bearer token", e);
-    }
-  }
+  const userId = await (deps.resolveUserId ?? resolveUserIdFromJwt)(authHeader);
 
   // 1) Active subscription / staff → full
   if (userId) {

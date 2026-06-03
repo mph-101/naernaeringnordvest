@@ -34,5 +34,17 @@ jobs:
       - name: Run unit tests (vitest)
         run: npm test
 
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      # Edge functions live under supabase/functions and are NOT covered by
+      # vitest (scoped to src/**). Run their Deno tests here so security-critical
+      # logic (paywall, webhook idempotency) is actually enforced in CI.
+      # node_modules from `npm ci` above resolves the npm: specifiers.
+      - name: Run edge function tests (deno)
+        run: deno test --allow-env --allow-read --allow-net --node-modules-dir=auto --no-check supabase/functions/
+
       - name: Build
         run: npm run build

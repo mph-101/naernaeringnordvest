@@ -39,3 +39,22 @@
   - **Tilgang på collab-knapp:** gated til redaksjonelle roller (`hasAnyRole(['admin','editor','journalist'])`) — journalister kan nå styre samredigering, konsistent med auth-routens roller.
   - **Persistering:** allerede dekket av eksisterende auto-lagring (collab `onUpdate` → `onChange` → debounced save holder `articles.body` fersk) + seed-on-empty fra HTML ved cold-start. Binær `yjs_snapshots`-persistering (webhook / Hocuspocus `onStoreDocument`) er bevisst utsatt til transport-valget er tatt — en Liveblocks-webhook nå kan bli kastet bort ved et Hocuspocus-bytte.
   - Verifisert: eslint exit 0, tsc (app) rent, vite build grønt. Live presence-test krever to innloggede økter (Magnus' steg).
+
+### Gjenoppta samredigering her (snapshot 2026-06-02)
+
+**Live i prod:** sanntids sync + presence + av/på-knapp (redaksjonelle roller, default av). `LIVEBLOCKS_SECRET_KEY` satt i `.env.local` og Vercel.
+
+**Arkitektur (alt bak ett bytte-punkt):**
+- `src/lib/collab/index.ts` → `createCollabProvider(roomId, getToken)` — ENESTE sted å bytte transport. I dag `liveblocks.ts`; for Hocuspocus: lag `hocuspocus.ts` med samme signatur og bytt importen her.
+- `src/lib/collab/liveblocks.ts` — eneste fil som importerer `@liveblocks/*`. authEndpoint sender Supabase-JWT som Bearer.
+- `src/hooks/useCollabProvider.ts` — åpner/lukker rom (`article:<id>`), gir `getToken` fra Supabase-sesjon.
+- `src/app/api/liveblocks-auth/route.ts` — verifiserer JWT + `has_role`, minter token. 501 uten nøkkel (graceful fallback).
+- `src/components/admin/RichTextEditor.tsx` — valgfri `collab`-prop (Collaboration + CollaborationCaret).
+- `src/components/admin/CollaborativeRichTextEditor.tsx` — wrapper: useCollabProvider + seed-on-empty + PresenceAvatars; `key` remounter ved av/på.
+- `src/components/admin/PresenceAvatars.tsx` — avatarer via Yjs awareness (transport-nøytralt).
+- Toggle + rolle-gate: `src/components/admin/ArticleEditorBody.tsx`; flagget lastes/lagres i `ArticleEditor.tsx`.
+- DB: `yjs_snapshots`-tabell + `articles.collab_enabled` (migrasjon kjørt i prod).
+
+**Neste (krever beslutning):** velg transport (Liveblocks vs Hocuspocus) → bygg så server-side binær persistering til `yjs_snapshots` + cold-start derfra (fjerner dobbel-seed-race ved samtidig første-åpning). Detaljert plan: `~/.claude/plans/jeg-vil-ha-muligheten-hashed-moore.md` (Fase C punkt 8–10 + Fase D).
+
+**Lokal kjøring:** `npm run dev:next` → http://localhost:3000/admin → Artikler → åpne artikkel → toggel «Samredigering». Manuelle Magnus-steg: `docs/magnus-todo.md`.

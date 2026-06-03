@@ -4,6 +4,15 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Stripe miljøisolasjon (2026-06-03) — KRITISK, krever din beslutning
+- Sikkerhetsgjennomgang fant at klienten selv velger `environment` i
+  `create-checkout`, slik at en bruker kan abonnere med Stripe **testkort** og få
+  ekte premium-tilgang i prod. Detaljer + forslag: `docs/security-stripe-environment-isolation.md`.
+- **Jeg har bevisst ikke rørt Stripe-flyten** (jf. arbeidsreglene). Jeg trenger
+  svar på valg A/B/C i notatet før jeg lager PR.
+- **Sjekk også:** finnes det allerede sandbox-rader i prod `subscriptions` /
+  `business_accounts`? I så fall bør de ryddes (DELETE mot prod = din jobb).
+
 ### Bildetekst-funksjon (2026-05-31) — KRITISK før deploy
 - **Kjør migrasjonen `supabase/migrations/20260531120000_article_image_caption.sql`** mot prod.
   Claude fikk `permission denied` via MCP-tokenet og kunne ikke kjøre den selv.

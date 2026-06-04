@@ -21,12 +21,14 @@ import {
   Receipt,
   Megaphone,
   Vote,
-  CalendarDays
+  CalendarDays,
+  Activity
 } from "lucide-react";
 import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
 import { TipsList } from "./TipsList";
 import { JobChangeReview } from "./JobChangeReview";
+import { BarometerSignalReview } from "./BarometerSignalReview";
 import { JobListingsReview } from "./JobListingsReview";
 import { JobInvoiceRequests } from "./JobInvoiceRequests";
 import { NativeAdsManager } from "./NativeAdsManager";
@@ -49,7 +51,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "job-listings" | "job-invoices" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media" | "authors" | "native-ads" | "polls" | "events";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "job-listings" | "job-invoices" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media" | "authors" | "native-ads" | "polls" | "events" | "barometer";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const { hasRole } = useAuth();
@@ -81,6 +83,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "tags" as View, label: "Tags", icon: TagIcon },
     { id: "tips" as View, label: "Tips", icon: MessageSquare },
     { id: "job-changes" as View, label: "Jobbytter", icon: Users },
+    { id: "barometer" as View, label: "Næringsbarometer", icon: Activity },
     { id: "job-listings" as View, label: "Stillingsannonser", icon: Briefcase },
     { id: "job-invoices" as View, label: "Faktura-forespørsler", icon: Receipt },
     { id: "native-ads" as View, label: "Native-annonser", icon: Megaphone },
@@ -297,6 +300,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "job-changes" && (
           <JobChangeReview />
+        )}
+
+        {view === "barometer" && (
+          <BarometerSignalReview />
         )}
 
         {view === "job-listings" && (

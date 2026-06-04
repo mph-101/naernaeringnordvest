@@ -132,9 +132,9 @@ const App = () => (
               <Route path="/tilgjengelighet" element={<Info />} />
               {FEATURES.BAROMETER && (
                 <>
-                  <Route path="/næringspuls" element={<Naeringspuls />} />
-                  {/* ASCII-alias for delbare lenker */}
-                  <Route path="/naeringspuls" element={<Navigate to="/næringspuls" replace />} />
+                  <Route path="/naeringspuls" element={<Naeringspuls />} />
+                  {/* /næringspuls (æ) redirecter til kanonisk ASCII-rute */}
+                  <Route path="/næringspuls" element={<Navigate to="/naeringspuls" replace />} />
                 </>
               )}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

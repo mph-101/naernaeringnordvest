@@ -42,6 +42,19 @@ const nextConfig: NextConfig = {
         destination: "/abonnement/retur",
         permanent: false,
       },
+      // æ i URL-segment fungerer ikke pålitelig med Next sin fil-baserte routing
+      // (NFC/NFD-normalisering på tvers av OS/Vercel), så den kanoniske ruten er
+      // ASCII /naeringspuls. /næringspuls redirecter dit slik at begge virker.
+      {
+        source: "/n%C3%A6ringspuls",
+        destination: "/naeringspuls",
+        permanent: false,
+      },
+      {
+        source: "/næringspuls",
+        destination: "/naeringspuls",
+        permanent: false,
+      },
     ];
   },
 };

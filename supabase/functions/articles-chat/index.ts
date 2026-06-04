@@ -20,6 +20,28 @@ const BRREG_CACHE_MAX = 500;
 const brregCache = new Map<string, { at: number; value: { label: string; total: number; companies: any[] } }>();
 const tallCache = new Map<string, { at: number; value: any }>();
 const TALL_TTL_MS = 1000 * 60 * 60 * 6;
+// Regnskapsregisteret (annual accounts) — enriches NAMED companies with key
+// financial figures. Updated once a year per company, so a long TTL is fine.
+const REGNSKAP_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours
+const regnskapCache = new Map<string, { at: number; value: CompanyFinancials | null }>();
+// Cap how many companies we pull accounts for per request — each is one extra
+// upstream call, and the model only needs a handful to answer well.
+const MAX_FINANCIAL_FETCH = 3;
+
+interface CompanyFinancials {
+  aar: string; // closing year, e.g. "2023"
+  periode: string; // "2023-01-01 – 2023-12-31"
+  valuta: string;
+  driftsinntekter: number | null; // operating revenue
+  driftsresultat: number | null; // operating result
+  aarsresultat: number | null; // net result for the year
+  egenkapital: number | null; // total equity
+  sumEiendeler: number | null; // total assets
+}
+
+function toNum(v: unknown): number | null {
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
 
 function stripHtml(html: string): string {
   return html
@@ -63,18 +85,20 @@ async function extractSearchTerms(question: string): Promise<string> {
  */
 async function planBrregQueries(
   question: string,
-): Promise<Array<{ label: string; params: Record<string, string> }> | null> {
+): Promise<Array<{ label: string; params: Record<string, string>; financials?: boolean }> | null> {
   try {
     const json = await aiChatCompletion({
       model: QUERY_REWRITE_MODEL,
       messages: [
         {
           role: "system",
-          content: `Du planlegger oppslag i Brønnøysundregistrene (enhetsregisteret) for å berike svar fra en norsk lokalavis. Returner ETT JSON-objekt: {"queries":[...]} hvor hver query er {"label":"...","params":{...}}.
+          content: `Du planlegger oppslag i Brønnøysundregistrene (enhetsregisteret) for å berike svar fra en norsk lokalavis. Returner ETT JSON-objekt: {"queries":[...]} hvor hver query er {"label":"...","params":{...},"financials":bool}.
 
 Bruk parametere: navn, kommunenummer, organisasjonsform (default AS,ASA), naeringskode, sort (f.eks "antallAnsatte,desc"), size (maks 10), konkurs.
 
 Viktige kommunenumre: Oslo 0301, Bergen 4601, Trondheim 5001, Stavanger 1103, Molde 1506, Ålesund 1507, Kristiansund 1505, Tromsø 5501, Bodø 1804.
+
+Sett "financials":true på en query når spørsmålet handler om økonomi for et NAVNGITT selskap — omsetning, driftsresultat, årsresultat, lønnsomhet, overskudd, underskudd, regnskap, inntekter. Da hentes årsregnskap fra Regnskapsregisteret. Ellers "financials":false.
 
 Hvis spørsmålet handler om et NAVNGITT selskap, en bransje eller "største/nyeste/konkurs" i et sted: lag 1–3 queries.
 Hvis spørsmålet IKKE handler om selskapsdata (politikk, kultur, generelle nyheter osv.): returner {"queries":[]}.
@@ -87,7 +111,13 @@ Returner BARE JSON.`,
     const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     const parsed = JSON.parse(cleaned);
     const queries = Array.isArray(parsed?.queries) ? parsed.queries : [];
-    return queries.length ? queries.slice(0, 3) : null;
+    return queries.length
+      ? queries.slice(0, 3).map((q: any) => ({
+          label: q.label,
+          params: q.params || {},
+          financials: !!q.financials,
+        }))
+      : null;
   } catch (e) {
     console.error("planBrregQueries failed:", e);
     return null;
@@ -139,6 +169,84 @@ async function fetchBrreg(queries: Array<{ label: string; params: Record<string,
       }
     }),
   );
+}
+
+/**
+ * Look up the most recent annual accounts for a company in Regnskapsregisteret
+ * and reduce them to the few key figures a journalist actually quotes. Returns
+ * `null` when the company files no accounts (very small AS, newly founded) or
+ * the lookup fails — callers treat that as "no financial data available".
+ */
+async function fetchRegnskap(orgnr: string): Promise<CompanyFinancials | null> {
+  const cached = regnskapCache.get(orgnr);
+  if (cached && Date.now() - cached.at < REGNSKAP_TTL_MS) return cached.value;
+  try {
+    const res = await fetch(`${BRREG_BASE}/regnskapsregisteret/regnskap/${orgnr}`, {
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) {
+      regnskapCache.set(orgnr, { at: Date.now(), value: null });
+      return null;
+    }
+    const data = await res.json();
+    const items: any[] = Array.isArray(data) ? data : [];
+    if (!items.length) {
+      regnskapCache.set(orgnr, { at: Date.now(), value: null });
+      return null;
+    }
+    // Pick the latest filed period (the API does not guarantee ordering).
+    items.sort((a, b) =>
+      String(b?.regnskapsperiode?.tilDato || "").localeCompare(String(a?.regnskapsperiode?.tilDato || "")),
+    );
+    const latest = items[0];
+    const resultat = latest?.resultatregnskapResultat || {};
+    const drift = resultat?.driftsresultat || {};
+    const fraDato = latest?.regnskapsperiode?.fraDato || "";
+    const tilDato = latest?.regnskapsperiode?.tilDato || "";
+    const value: CompanyFinancials = {
+      aar: tilDato ? tilDato.slice(0, 4) : "",
+      periode: fraDato && tilDato ? `${fraDato} – ${tilDato}` : tilDato || "",
+      valuta: latest?.valuta || "NOK",
+      driftsinntekter: toNum(drift?.driftsinntekter?.sumDriftsinntekter),
+      driftsresultat: toNum(drift?.driftsresultat),
+      aarsresultat: toNum(resultat?.aarsresultat),
+      egenkapital: toNum(latest?.egenkapitalGjeld?.egenkapital?.sumEgenkapital),
+      sumEiendeler: toNum(latest?.eiendeler?.sumEiendeler),
+    };
+    regnskapCache.set(orgnr, { at: Date.now(), value });
+    return value;
+  } catch (e) {
+    console.error(`fetchRegnskap ${orgnr} failed:`, e);
+    return null;
+  }
+}
+
+/**
+ * Resolve a single company by org.nr from Enhetsregisteret. Used when the user
+ * pastes an org.nr directly so we can show the company card alongside its
+ * accounts even if it never surfaced in a name/industry search.
+ */
+async function fetchEnhet(orgnr: string): Promise<any | null> {
+  try {
+    const res = await fetch(`${BRREG_BASE}/enhetsregisteret/api/enheter/${orgnr}`, {
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return null;
+    const e = await res.json();
+    if (!e?.organisasjonsnummer) return null;
+    return {
+      navn: e.navn,
+      orgnr: e.organisasjonsnummer,
+      ansatte: e.antallAnsatte || 0,
+      kommune: e.forretningsadresse?.kommune || "",
+      bransje: e.naeringskode1?.beskrivelse || "",
+      stiftet: e.stiftelsesdato || "",
+      konkurs: e.konkurs || false,
+    };
+  } catch (e) {
+    console.error(`fetchEnhet ${orgnr} failed:`, e);
+    return null;
+  }
 }
 
 /**
@@ -473,6 +581,77 @@ serve(async (req) => {
       });
     }
 
+    // ---- Financial enrichment (Regnskapsregisteret) ------------------------
+    // Once we have settled on companies (no disambiguation pending), pull annual
+    // accounts for the named companies the planner flagged, plus any org.nr the
+    // user pasted directly. Figures are attached onto the company objects so the
+    // client renders them, and summarised into a prompt block for the model.
+    let financialsBlock = "";
+    try {
+      const toFetch: Array<{ orgnr: string; company: any }> = [];
+      const seen = new Set<string>();
+
+      const enqueue = (company: any) => {
+        if (company?.orgnr && !seen.has(company.orgnr)) {
+          seen.add(company.orgnr);
+          toFetch.push({ orgnr: company.orgnr, company });
+        }
+      };
+
+      // a) Explicit org.nr in the question takes priority — fetch the enhet too
+      //    if it never surfaced in a search, so the company card has something
+      //    to show. Processed first so a user-picked company always wins the cap.
+      const orgnrs = queryText.match(/\b\d{9}\b/g) || [];
+      for (const orgnr of orgnrs) {
+        if (seen.has(orgnr)) continue;
+        let company: any = null;
+        for (const r of brregResults) {
+          const hit = r.companies?.find((c: any) => c.orgnr === orgnr);
+          if (hit) { company = hit; break; }
+        }
+        if (!company) {
+          const enhet = await fetchEnhet(orgnr);
+          if (enhet) {
+            company = enhet;
+            brregResults.push({ label: enhet.navn, total: 1, companies: [enhet], queryParams: { orgnr } });
+          }
+        }
+        if (company) enqueue(company);
+      }
+
+      // b) Companies from financial-flagged plan queries (top 2 per query).
+      if (brregPlan) {
+        brregPlan.forEach((q, i) => {
+          if (!q.financials) return;
+          const r = brregResults[i];
+          if (r?.companies?.length) r.companies.slice(0, 2).forEach(enqueue);
+        });
+      }
+
+      const capped = toFetch.slice(0, MAX_FINANCIAL_FETCH);
+      const accounts = await Promise.all(capped.map((t) => fetchRegnskap(t.orgnr)));
+      const fmtAmt = (n: number | null, valuta: string) =>
+        n === null ? "ukjent" : `${Math.round(n).toLocaleString("nb-NO")} ${valuta === "NOK" ? "kr" : valuta}`;
+      const lines: string[] = [];
+      capped.forEach((t, i) => {
+        const f = accounts[i];
+        if (!f) return;
+        t.company.regnskap = f;
+        const cur = f.valuta || "NOK";
+        lines.push(
+          `• ${t.company.navn} (org.nr ${t.orgnr}) — regnskapsår ${f.aar || "?"}` +
+            (cur !== "NOK" ? ` (rapportert i ${cur})` : "") +
+            `: driftsinntekter ${fmtAmt(f.driftsinntekter, cur)}, ` +
+            `driftsresultat ${fmtAmt(f.driftsresultat, cur)}, ` +
+            `årsresultat ${fmtAmt(f.aarsresultat, cur)}` +
+            (f.egenkapital !== null ? `, egenkapital ${fmtAmt(f.egenkapital, cur)}` : ""),
+        );
+      });
+      if (lines.length) financialsBlock = lines.join("\n");
+    } catch (e) {
+      console.error("financial enrichment failed:", e);
+    }
+
     const systemPrompt = `Du er Spør, en kunnskapsrik redaksjonsassistent for nettavisen Nær Næring. Svar basert på de oppgitte artikkelutdragene og bedriftsdataene under. Hver gang du bruker informasjon fra en artikkel- eller betrodd kilde, siter den inline med [1], [2] osv. Bedriftsdata fra Brønnøysundregistrene siteres inline som [B].
 
 Regler:
@@ -480,12 +659,13 @@ Regler:
 - Vær konkret, presis og nøktern — som en god lokalavisjournalist.
 - Når du bruker BRREG-data: skriv selskapsnavnet i **fet skrift**, og uthev tall (antall ansatte, organisasjonsnummer, stiftelsesår) også i **fet skrift**, etterfulgt av [B]. Eksempel: "**Equinor ASA** har **20 245 ansatte** [B]."
 - Når du bruker statistikk fra Tall-databasen (etablering, konkurs, arbeidsmarked, boligmarked): siter med [T] og uthev tall i **fet skrift**. Eksempel: "Det ble registrert **47 konkurser** i Molde siste 90 dager [T]."
-- Hvis spørsmålet handler om bedrifter eller næringsliv, prioriter å vise konkrete tall fra BRREG når de finnes.
+- Når du bruker regnskapstall (Regnskapsregisteret): uthev beløp i **fet skrift**, oppgi alltid regnskapsåret, og siter med [B]. Eksempel: "**Linjebygg Offshore AS** hadde driftsinntekter på **412 mill. kr** og et årsresultat på **18 mill. kr** i 2023 [B]." Avrund store beløp til mill./mrd. der det leser bedre.
+- Hvis spørsmålet handler om bedrifter eller næringsliv, prioriter å vise konkrete tall fra BRREG når de finnes. Når du har BÅDE regnskapstall og en relevant artikkel om selskapet, knytt dem sammen — f.eks. "**X AS** [B] var omtalt i [2]".
 - Hvis verken artikler eller BRREG gir grunnlag for å svare, si det tydelig og foreslå et omformulert spørsmål.
 - Aldri dikt opp tall, navn eller hendelser som ikke står i kildene.
 - Skriv kort: gjerne en oppsummerende setning, deretter kulepunkter eller en kort tabell hvis det passer.
 
-${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}\n\n` : ""}${trustedSources.length > 0 ? `BETRODDE EKSTERNE KILDER (kuratert av redaksjonen):\n\n${trustedBlock}\n\n` : ""}${brregBlock ? `BEDRIFTSDATA (Brønnøysundregistrene, sanntid):\n\n${brregBlock}\n\n` : ""}${tallBlock ? `TALL-DATABASEN (etablering, konkurs, arbeidsmarked, boligmarked):\n\n${tallBlock}\n` : ""}${sources.length === 0 && trustedSources.length === 0 && !brregBlock && !tallBlock ? "Ingen relevante artikler, betrodde kilder, bedriftsdata eller statistikk ble funnet for dette spørsmålet." : ""}`;
+${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}\n\n` : ""}${trustedSources.length > 0 ? `BETRODDE EKSTERNE KILDER (kuratert av redaksjonen):\n\n${trustedBlock}\n\n` : ""}${brregBlock ? `BEDRIFTSDATA (Brønnøysundregistrene, sanntid):\n\n${brregBlock}\n\n` : ""}${financialsBlock ? `REGNSKAPSTALL (Regnskapsregisteret, siste tilgjengelige årsregnskap):\n\n${financialsBlock}\n\n` : ""}${tallBlock ? `TALL-DATABASEN (etablering, konkurs, arbeidsmarked, boligmarked):\n\n${tallBlock}\n` : ""}${sources.length === 0 && trustedSources.length === 0 && !brregBlock && !financialsBlock && !tallBlock ? "Ingen relevante artikler, betrodde kilder, bedriftsdata eller statistikk ble funnet for dette spørsmålet." : ""}`;
 
     const upstream = await aiFetch("/chat/completions", {
       method: "POST",

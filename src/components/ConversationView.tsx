@@ -612,6 +612,29 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                         </a>
                                         {c.stiftet && <> · {language === "no" ? "stiftet" : "founded"} {c.stiftet.slice(0, 4)}</>}
                                       </p>
+                                      {c.regnskap && (c.regnskap.driftsinntekter != null || c.regnskap.aarsresultat != null) && (() => {
+                                        const locale = language === "no" ? "nb-NO" : "en-US";
+                                        const unit = c.regnskap.valuta === "NOK" ? "kr" : c.regnskap.valuta;
+                                        return (
+                                          <p className="text-[11px] text-muted-foreground/90 font-body mt-1">
+                                            {language === "no" ? "Regnskap" : "Accounts"} {c.regnskap.aar}
+                                            {c.regnskap.driftsinntekter != null && (
+                                              <> · {language === "no" ? "omsetning" : "revenue"}{" "}
+                                                <span className="font-semibold text-foreground">
+                                                  {Math.round(c.regnskap.driftsinntekter).toLocaleString(locale)} {unit}
+                                                </span>
+                                              </>
+                                            )}
+                                            {c.regnskap.aarsresultat != null && (
+                                              <> · {language === "no" ? "resultat" : "result"}{" "}
+                                                <span className={`font-semibold ${c.regnskap.aarsresultat < 0 ? "text-destructive" : "text-foreground"}`}>
+                                                  {Math.round(c.regnskap.aarsresultat).toLocaleString(locale)} {unit}
+                                                </span>
+                                              </>
+                                            )}
+                                          </p>
+                                        );
+                                      })()}
                                     </div>
                                     <div className="flex flex-col items-end flex-shrink-0">
                                       <div className="flex items-center gap-1 font-headline text-xl font-bold text-primary leading-none">
@@ -630,9 +653,13 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                         ))}
                       </div>
                       <div className="px-4 py-2 text-[11px] text-muted-foreground font-body bg-muted/30 border-t border-border">
-                        {language === "no"
-                          ? "Kilde: data.brreg.no — Brønnøysundregistrene (enhetsregisteret)"
-                          : "Source: data.brreg.no — Brønnøysund Register Centre"}
+                        {message.brregResults!.some((r) => r.companies.some((c) => c.regnskap))
+                          ? (language === "no"
+                              ? "Kilde: data.brreg.no — Brønnøysundregistrene (enhets- og regnskapsregisteret)"
+                              : "Source: data.brreg.no — Brønnøysund Register Centre (entity & accounts)")
+                          : (language === "no"
+                              ? "Kilde: data.brreg.no — Brønnøysundregistrene (enhetsregisteret)"
+                              : "Source: data.brreg.no — Brønnøysund Register Centre")}
                       </div>
                     </div>
                   )}

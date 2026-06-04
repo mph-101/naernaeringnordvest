@@ -1,5 +1,14 @@
 # Progress
 
+## Spør — regnskapstall (2026-06-04)
+
+- **Skjerpet Spør med regnskapstall fra Regnskapsregisteret** — 2026-06-04, branch `feat/spor-regnskapstall`
+  - Bakgrunn: «Spør databasen»-modulen ble skrotet (branch `chore/fjern-spor-databasen`). Den hadde regnskapsoppslag som hovedmodulen «Spør» (`articles-chat`) manglet — `fetchBrreg` traff kun Enhetsregisteret. Denne PR-en gjenvinner den kapasiteten, nå vevet sammen med artikkelreferanser.
+  - Edge function `articles-chat`: ny `fetchRegnskap(orgnr)` (siste årsregnskap → driftsinntekter/driftsresultat/årsresultat/egenkapital, valuta-aware) + `fetchEnhet(orgnr)` for direkte org.nr-oppslag. Planleggeren (`planBrregQueries`) flagger nå `financials` på navngitte selskaps-økonomispørsmål. Tall hentes etter disambiguerings-gaten, festes på selskaps-objektene og legges i eget promptblokk. Maks 3 oppslag per forespørsel (cache 24t). Eksplisitt org.nr fra bruker prioriteres.
+  - Klient: `BrregCompany.regnskap?` (ny `BrregRegnskap`-type); selskapskortet i `ConversationView` viser omsetning/resultat med riktig valuta, kildekreditt utvides til «enhets- og regnskapsregisteret».
+  - Verifisert: API-feltstier bekreftet mot live Regnskapsregisteret (org.nr 923609016), `tsc --noEmit` + eslint rene (0 errors). Full E2E krever deploy av funksjonen (staging).
+  - Filer: `supabase/functions/articles-chat/index.ts`, `src/lib/articles-chat.ts`, `src/components/ConversationView.tsx`.
+
 ## Sikkerhetsgjennomgang abonnement (2026-06-03)
 
 - **Funn #2 — paywall stolte på `subscriber`/`business`-rolle** — 2026-06-03, branch `fix/paywall-subscriber-role-gating`

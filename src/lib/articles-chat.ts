@@ -20,6 +20,17 @@ export interface TrustedSource {
   published_at: string | null;
 }
 
+export interface BrregRegnskap {
+  aar: string;
+  periode: string;
+  valuta: string;
+  driftsinntekter: number | null;
+  driftsresultat: number | null;
+  aarsresultat: number | null;
+  egenkapital: number | null;
+  sumEiendeler: number | null;
+}
+
 export interface BrregCompany {
   navn: string;
   orgnr: string;
@@ -28,6 +39,8 @@ export interface BrregCompany {
   bransje: string;
   stiftet: string;
   konkurs: boolean;
+  /** Annual accounts from Regnskapsregisteret — only present for named lookups. */
+  regnskap?: BrregRegnskap;
 }
 
 export interface BrregResult {

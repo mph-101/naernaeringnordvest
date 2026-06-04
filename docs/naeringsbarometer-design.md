@@ -258,8 +258,9 @@ Tersklene **MÅ kalibreres mot 3–4 års historikk** før drift (~1 tips/kvarta
 
 ## 8. Frontend
 
-- Ny rute `/barometer` (lazy) bak `FEATURE_BAROMETER` i `src/lib/features.ts` +
-  `App.tsx` (og App Router-tvilling når fase 3-skallet brukes).
+- Ny rute `/næringspuls` (besluttet 2026-06-04; lazy) bak `FEATURE_BAROMETER` i
+  `src/lib/features.ts` + `App.tsx` (og App Router-tvilling når fase 3-skallet
+  brukes). `/barometer` reserveres evt. som redirect.
 - `naeringsbarometer_dashboard.html` brukes som **komponent-mal** (Georgia-serif,
   kobber/cream) — tall hentes live fra `barometer_datapoints`, aldri hardkodet.
 - Region-bevisst: leser region fra `RegionProvider`/host (multi-region §5), faller
@@ -310,8 +311,8 @@ mapping trengs for abonnement-joinen. Det som gjenstår av fase 2 er frontend-sk
    kommunenivå? Krever mer detaljert tabell enn `10309`. (overlevering §106)
 5. **Omsetning i puls-KPI:** per bransje eller bare totalt? (overlevering §105)
 6. **Metered fri-grense:** antall (2–3?), per måned vs. økt, innlogget vs. anonym? (§6)
-7. **Redaksjonelt rute-navn:** `/barometer` vs `/naeringspulsen`? (URL = redaksjonell
-   beslutning per CLAUDE.md)
+7. ~~**Redaksjonelt rute-navn**~~ — AVKLART 2026-06-04: `/næringspuls`
+   (ASCII-varianten `/naeringspuls` står åpen hvis ren delbar lenke prioriteres).
 
 ---
 

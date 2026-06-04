@@ -11,3 +11,7 @@ Kontekst: implementering av næringsbarometeret (`docs/naeringsbarometer-design.
    barometer-tabeller fra start, default `nordvestlandet`. Bygger på eksisterende
    `editorial_regions`, blokkeres ikke av resten av fase 2.
 3. **Designdokument først** — godkjennes før migrasjoner skrives.
+4. **Rute-navn: `/næringspuls`** (besluttet 2026-06-04). Erstatter de tidligere
+   kandidatene `/barometer` / `/naeringspulsen`. Merk: `æ` i URL prosent-kodes
+   (`%C3%A6`); ASCII-varianten `/naeringspuls` er et åpent alternativ hvis ren
+   delbar lenke prioriteres. Brukes i frontend (PR 3), påvirker ikke skjemaet.

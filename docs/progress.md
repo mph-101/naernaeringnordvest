@@ -69,3 +69,21 @@
 **Neste (krever beslutning):** velg transport (Liveblocks vs Hocuspocus) → bygg så server-side binær persistering til `yjs_snapshots` + cold-start derfra (fjerner dobbel-seed-race ved samtidig første-åpning). Detaljert plan: `~/.claude/plans/jeg-vil-ha-muligheten-hashed-moore.md` (Fase C punkt 8–10 + Fase D).
 
 **Lokal kjøring:** `npm run dev:next` → http://localhost:3000/admin → Artikler → åpne artikkel → toggel «Samredigering». Manuelle Magnus-steg: `docs/magnus-todo.md`.
+
+## Fase 2 — Kjede-arkitektur
+
+- **2.2 Multi-region-skjema kjørt mot prod** — 2026-06-04, branch `feat/naeringsbarometer-skjema` (PR #102)
+  - Drift-audit avdekket at `20260518200000_multi_region_schema.sql` aldri var kjørt i prod (repo-mappa ≠ prod-fasit — prod gjenoppbygd fra snapshot 05-26). Full analyse: `docs/migration-drift-audit.md`.
+  - Rettet latent bug i migrasjonen: kun 4/9 FK-er til `editorial_regions(slug)` hadde `ON UPDATE CASCADE` → slug-omdøpingen ville feilet mot `articles` m.fl. La til CASCADE på `articles`, `article_shared_regions`, `employer_profiles`, `job_listings`, `profiles` + eksplisitt `UPDATE profiles.region` (ikke FK).
+  - Kjørt mot prod (`oemzrhlybemakwpyhcno`): `more-og-romsdal→nordvestlandet`, `trondelag→midt-norge`, `region_slug` på 7 tabeller (subscriptions, business_accounts, groups, polls, native_ads, job_changes, tips), `region_hidden_articles`. Verifisert: 12 artikler kaskadert, ingen advisor-regress utover eksisterende mønster.
+  - Frontend-slugs oppdatert i `Onboarding.tsx`, `ProfileEditor.tsx`, `NewsFeed.tsx`. Types regenerert. lint 0 errors, tsc rent, 58/58 tester.
+  - **Gjenstår av fase 2:** frontend regionalt skall (RegionProvider/subdomene) — 2.3.
+  - **Gjenstår drift (Magnus' beslutning):** 5 andre uanvendte migrasjoner (stripe_events, encrypt_tip_email, 2 cron-jobber, live_streams) — se `docs/magnus-todo.md`.
+
+## Næringsbarometer
+
+- **PR 1 — skjema** — 2026-06-04, branch `feat/naeringsbarometer-skjema` (PR #102)
+  - `20260604100000_naeringsbarometer_schema.sql` kjørt mot prod: `barometer_modules` (konfig/"spaken"), `barometer_datapoints` (SSB-tall, RLS-gated på tilgangsnivå), `barometer_signals` (avvik→godkjenningskø, speiler `job_changes`). `barometer_tilgang`-enum (åpen|metered|lukket). Region-bevisst (`region_slug`).
+  - Hjelpefunksjoner: `has_editorial_role` + region-scopet `has_barometer_access` (SECURITY DEFINER). Muren håndheves server-side i RLS (bevisst avvik fra EF-paywallen — `docs/decisions.md`).
+  - Seed: 11 moduler for nordvestlandet. Verifisert: 11 rader, 4 åpne, funksjoner+policies på plass.
+  - Rute besluttet: `/næringspuls`. Design: `docs/naeringsbarometer-design.md`. **Gjenstår:** PR 2 (SSB-henting + avviksdetektor-EF-er + cron), PR 3 (`/næringspuls`-frontend), PR 4 (metered-RPC + teaser), PR 5–7.

@@ -47,10 +47,10 @@ interface NativeAd {
 }
 
 const regionToSportLabel: Record<string, { no: string; en: string }> = {
-  "more-og-romsdal": { no: "Nordvestlandet", en: "Northwestern Norway" },
+  "nordvestlandet": { no: "Nordvestlandet", en: "Northwestern Norway" },
   vestlandet: { no: "Vestlandet", en: "Western Norway" },
   "nord-norge": { no: "Nord-Norge", en: "Northern Norway" },
-  trondelag: { no: "Midt-Norge", en: "Central Norway" },
+  "midt-norge": { no: "Midt-Norge", en: "Central Norway" },
   ostlandet: { no: "Østlandet", en: "Eastern Norway" },
   sorlandet: { no: "Sørlandet", en: "Southern Norway" },
 };

@@ -47,6 +47,40 @@ ALTER TABLE public.newsletter_issues
     FOREIGN KEY (region_slug) REFERENCES public.editorial_regions(slug)
     ON UPDATE CASCADE ON DELETE SET NULL;
 
+-- The remaining FKs to editorial_regions(slug) were ON UPDATE NO ACTION, which
+-- would block the slug rename in step 3 (verified against prod 2026-06-04).
+-- Add ON UPDATE CASCADE so the rename propagates. Preserve ON DELETE NO ACTION
+-- (current behaviour) — regions are effectively never deleted.
+ALTER TABLE public.articles
+  DROP CONSTRAINT IF EXISTS articles_region_slug_fkey,
+  ADD CONSTRAINT articles_region_slug_fkey
+    FOREIGN KEY (region_slug) REFERENCES public.editorial_regions(slug)
+    ON UPDATE CASCADE ON DELETE NO ACTION;
+
+ALTER TABLE public.article_shared_regions
+  DROP CONSTRAINT IF EXISTS article_shared_regions_region_slug_fkey,
+  ADD CONSTRAINT article_shared_regions_region_slug_fkey
+    FOREIGN KEY (region_slug) REFERENCES public.editorial_regions(slug)
+    ON UPDATE CASCADE ON DELETE NO ACTION;
+
+ALTER TABLE public.employer_profiles
+  DROP CONSTRAINT IF EXISTS employer_profiles_region_slug_fkey,
+  ADD CONSTRAINT employer_profiles_region_slug_fkey
+    FOREIGN KEY (region_slug) REFERENCES public.editorial_regions(slug)
+    ON UPDATE CASCADE ON DELETE NO ACTION;
+
+ALTER TABLE public.job_listings
+  DROP CONSTRAINT IF EXISTS job_listings_region_slug_fkey,
+  ADD CONSTRAINT job_listings_region_slug_fkey
+    FOREIGN KEY (region_slug) REFERENCES public.editorial_regions(slug)
+    ON UPDATE CASCADE ON DELETE NO ACTION;
+
+ALTER TABLE public.profiles
+  DROP CONSTRAINT IF EXISTS profiles_editorial_region_fkey,
+  ADD CONSTRAINT profiles_editorial_region_fkey
+    FOREIGN KEY (editorial_region) REFERENCES public.editorial_regions(slug)
+    ON UPDATE CASCADE ON DELETE NO ACTION;
+
 -- ============================================================
 -- 3. Rename regions (ON UPDATE CASCADE propagates to all FKs)
 -- ============================================================
@@ -87,6 +121,12 @@ UPDATE public.editorial_regions SET
   subdomain = 'sorlandet',
   description = 'Lokalt næringsliv på Sørlandet'
 WHERE slug = 'sorlandet';
+
+-- profiles.region (brukerens hjemregion) er IKKE en FK til editorial_regions,
+-- så slug-omdøpingen over kaskaderer ikke hit. Oppdater eksplisitt (verifisert:
+-- 1 rad med 'more-og-romsdal', 0 med 'trondelag' i prod 2026-06-04).
+UPDATE public.profiles SET region = 'nordvestlandet' WHERE region = 'more-og-romsdal';
+UPDATE public.profiles SET region = 'midt-norge'     WHERE region = 'trondelag';
 
 -- ============================================================
 -- 4. Add region_slug to tables that are missing it

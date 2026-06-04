@@ -4,6 +4,21 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Migrasjons-drift (2026-06-04) — delvis ryddet, 5 gjenstår
+Full analyse i [`docs/migration-drift-audit.md`](migration-drift-audit.md).
+**Seks repo-migrasjoner var aldri kjørt i prod.** Repo-mappa ≠ fasit (prod ble
+gjenoppbygd fra snapshot 05-26 med egne tidsstempler).
+
+- ✅ **Multi-region** (`20260518200000`) kjørt mot prod + frontend-slugs (PR #102).
+  MCP-tokenet kan nå kjøre `apply_migration` (tidligere `permission denied`).
+- **Gjenstår — kjappe additive fikser** (lav risiko, kan kjøres når du vil):
+  `stripe_events` (idempotens stille av i `payments-webhook`), `live_streams`
+  (brutt feature), de to manglende cron-jobbene (`refresh-financials-cache-monthly`,
+  `refresh-roles-and-status-weekly` — cachene auto-oppdateres ikke i dag).
+- **Gjenstår — egen oppgave:** `encrypt_tip_email` (fase 1.2, `20260518130000`):
+  IKKE kjør frittstående — filen er destruktiv og pipelinen er uferdig. Inntil da
+  lagres tips-e-post i klartekst.
+
 ### Stripe miljøisolasjon (2026-06-03) — KRITISK, krever din beslutning
 - Sikkerhetsgjennomgang fant at klienten selv velger `environment` i
   `create-checkout`, slik at en bruker kan abonnere med Stripe **testkort** og få
@@ -13,7 +28,9 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 - **Sjekk også:** finnes det allerede sandbox-rader i prod `subscriptions` /
   `business_accounts`? I så fall bør de ryddes (DELETE mot prod = din jobb).
 
-### Bildetekst-funksjon (2026-05-31) — KRITISK før deploy
+### ✅ LØST: Bildetekst-funksjon (2026-05-31)
+> **Verifisert kjørt i prod 2026-06-04** (drift-audit): kolonnene `image_caption`
+> m.fl. finnes på `articles`. Ingen handling nødvendig. Beholdt for historikk.
 - **Kjør migrasjonen `supabase/migrations/20260531120000_article_image_caption.sql`** mot prod.
   Claude fikk `permission denied` via MCP-tokenet og kunne ikke kjøre den selv.
   Den legger til `image_caption`, `image_credit`, `image_source` på `articles`.

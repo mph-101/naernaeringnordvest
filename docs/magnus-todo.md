@@ -4,6 +4,15 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Slett deployet `brreg-query`-funksjon (2026-06-04)
+"Spør databasen"-modulen er skrotet i koden (PR — branch `chore/fjern-spor-databasen`):
+frontend-fanen i `/tall`, `CompanyQuery.tsx` og funksjonen `brreg-query` er fjernet
+fra repoet. Men å slette en Edge Function fra repoet av-deployer den **ikke** fra
+Supabase — `brreg-query` ligger igjen som en ubrukt funksjon i prod.
+- **Gjør:** Slett funksjonen i Supabase-dashbordet (Edge Functions → `brreg-query` →
+  delete), evt. `supabase functions delete brreg-query`. Lav risiko: ingenting kaller
+  den lenger etter at PR-en er merget.
+
 ### Migrasjons-drift (2026-06-04) — delvis ryddet, 5 gjenstår
 Full analyse i [`docs/migration-drift-audit.md`](migration-drift-audit.md).
 **Seks repo-migrasjoner var aldri kjørt i prod.** Repo-mappa ≠ fasit (prod ble

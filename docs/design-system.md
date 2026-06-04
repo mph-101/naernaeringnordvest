@@ -400,7 +400,6 @@ For optimistic UI-oppdateringer: vis ny tilstand umiddelbart, rollback ved feil.
 | Tema-switcher | `src/hooks/useTheme.tsx` |
 | Header | `src/components/Header.tsx` |
 | Eksempelmodal | `src/views/Groups.tsx` (create modal) |
-| Eksempelkort | `src/components/tall/CompanyQuery.tsx` |
 
 ---
 

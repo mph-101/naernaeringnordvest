@@ -6,9 +6,6 @@ verify_jwt = false
 [functions.brreg-proxy]
 verify_jwt = false
 
-[functions.brreg-query]
-verify_jwt = false
-
 [functions.refresh-financials-cache]
 verify_jwt = false
 

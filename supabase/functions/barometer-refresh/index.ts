@@ -24,6 +24,16 @@ import {
 const SSB_REGION = "15";
 const REGION_SLUG = "nordvestlandet";
 
+// Kommuner i kommuneprofilen (gjeldende koder). På kommune_grunntall-datapunkter
+// brukes nace_code-feltet som breakdown-nøkkel = kommunekode.
+const KOMMUNER = [
+  { code: "1506", navn: "Molde" },
+  { code: "1508", navn: "Ålesund" },
+  { code: "1505", navn: "Kristiansund" },
+];
+const KOMMUNE_CODES = KOMMUNER.map((k) => k.code);
+const kommuneNavn = (code: string) => KOMMUNER.find((k) => k.code === code)?.navn ?? code;
+
 const json = (body: unknown, status = 200, req?: Request) =>
   new Response(JSON.stringify(body), {
     status,
@@ -166,6 +176,30 @@ async function omsetning(): Promise<Datapoint[]> {
   return out;
 }
 
+// --- Kommuneprofil (07459 befolkning, 10309 bedrifter, 06944 inntekt) ------
+// 07459: utelat Kjonn/Alder helt -> SSB eliminerer (totalbefolkning).
+async function kommune(): Promise<Datapoint[]> {
+  const [bef, bed, innt] = await Promise.all([
+    ssbFetch("07459", [item("Region", KOMMUNE_CODES), item("ContentsCode", ["Personer1"]), top("Tid", 1)]),
+    ssbFetch("10309", [item("Region", KOMMUNE_CODES), item("NACE2007", ["00-99", "45-47"]), item("AntAnsatte", ["99"]), item("ContentsCode", ["Virksheter"]), top("Tid", 1)]),
+    ssbFetch("06944", [item("Region", KOMMUNE_CODES), item("HusholdType", ["0000"]), item("ContentsCode", ["InntSkatt"]), top("Tid", 1)]),
+  ]);
+  const out: Datapoint[] = [];
+  const push = (indicator: string, kcode: string, period: string, value: number, unit: string, table: string) =>
+    out.push({
+      region_slug: REGION_SLUG, module_key: "kommune_grunntall", indicator,
+      nace_code: kcode, period, label: kommuneNavn(kcode), value, unit,
+      meta: { kommune: kommuneNavn(kcode) }, source_table: table,
+    });
+
+  for (const c of bef.cells) if (c.value != null) push("befolkning", c.dims.Region, c.dims.Tid, c.value as number, "antall", "07459");
+  for (const c of bed.cells) if (c.value != null) {
+    push(c.dims.NACE2007 === "45-47" ? "bedrifter_varehandel" : "bedrifter", c.dims.Region, c.dims.Tid, c.value as number, "antall", "10309");
+  }
+  for (const c of innt.cells) if (c.value != null) push("inntekt_median", c.dims.Region, c.dims.Tid, c.value as number, "kr", "06944");
+  return out;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders(req) });
@@ -181,11 +215,12 @@ Deno.serve(async (req) => {
     konkurser(),
     etableringer(),
     omsetning(),
+    kommune(),
   ]);
 
   const rows: Datapoint[] = [];
   const errors: string[] = [];
-  const names = ["konkurser", "etableringer", "omsetning"];
+  const names = ["konkurser", "etableringer", "omsetning", "kommune"];
   results.forEach((r, i) => {
     if (r.status === "fulfilled") rows.push(...r.value);
     else errors.push(`${names[i]}: ${r.reason?.message ?? r.reason}`);

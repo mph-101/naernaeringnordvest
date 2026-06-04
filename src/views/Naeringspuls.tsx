@@ -8,7 +8,7 @@ import {
 import { TrendingUp, TrendingDown, Building2, Sprout, Banknote, Lock } from "lucide-react";
 
 const REGION = "nordvestlandet";
-const OPEN_MODULES = ["naeringspuls_kpi", "konkursgraf_12mnd", "bransje_snapshot"];
+const OPEN_MODULES = ["naeringspuls_kpi", "konkursgraf_12mnd", "bransje_snapshot", "kommune_grunntall"];
 
 interface Row {
   module_key: string;
@@ -82,6 +82,17 @@ export default function Naeringspuls() {
       .sort((a, b) => b.value - a.value),
   [rows]);
 
+  // Kommuneprofil: gruppér kommune_grunntall-datapunkter på kommune (nace_code).
+  const kommuner = useMemo(() => {
+    const byKom = new Map<string, { navn: string; vals: Record<string, { value: number; period: string }> }>();
+    for (const r of rows.filter((r) => r.module_key === "kommune_grunntall" && r.value != null)) {
+      const code = r.nace_code;
+      if (!byKom.has(code)) byKom.set(code, { navn: (r.meta?.kommune as string) ?? r.label ?? code, vals: {} });
+      byKom.get(code)!.vals[r.indicator] = { value: Number(r.value), period: r.period };
+    }
+    return [...byKom.values()].sort((a, b) => (b.vals.befolkning?.value ?? 0) - (a.vals.befolkning?.value ?? 0));
+  }, [rows]);
+
   const maxBransje = bransjer.length ? bransjer[0].value : 1;
   const latestKonkursPeriod = konkursSeries.at(-1)?.period;
 
@@ -154,6 +165,38 @@ export default function Naeringspuls() {
                 })}
               </div>
             </section>
+
+            {/* Kommuneprofil — grunntall per kommune */}
+            {kommuner.length > 0 && (
+              <section>
+                <h2 className="font-headline text-xl font-semibold text-headline mb-1">
+                  {isNo ? "Kommuneprofil" : "Municipality profile"}
+                </h2>
+                <p className="font-body text-sm text-muted-foreground mb-4">
+                  {isNo ? "Grunntall for de største kommunene. Kilde: SSB (07459, 10309, 06944)." : "Key figures for the largest municipalities. Source: SSB."}
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {kommuner.map((k) => (
+                    <div key={k.navn} className="bg-card border border-border rounded-xl p-5">
+                      <h3 className="font-headline text-lg font-semibold text-headline mb-3">{k.navn}</h3>
+                      <dl className="space-y-2 font-body text-sm">
+                        {[
+                          { label: isNo ? "Innbyggere" : "Population", v: k.vals.befolkning?.value, fmt: nf },
+                          { label: isNo ? "Bedrifter" : "Businesses", v: k.vals.bedrifter?.value, fmt: nf },
+                          { label: isNo ? "Varehandel-bedrifter" : "Retail businesses", v: k.vals.bedrifter_varehandel?.value, fmt: nf },
+                          { label: isNo ? "Median inntekt e. skatt" : "Median income", v: k.vals.inntekt_median?.value, fmt: (n: number) => `${nf(n)} kr` },
+                        ].map((row) => (
+                          <div key={row.label} className="flex items-baseline justify-between gap-2">
+                            <dt className="text-muted-foreground">{row.label}</dt>
+                            <dd className="font-semibold text-headline tabular-nums">{row.v != null ? row.fmt(row.v) : "—"}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Konkursgraf — inneværende 12 mnd */}
             <section className="bg-card border border-border rounded-xl p-5">

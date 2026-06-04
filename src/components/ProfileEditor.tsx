@@ -7,10 +7,10 @@ import { fetchRegions, type EditorialRegion } from "@/lib/regions";
 import { JournalistFieldsSection } from "./JournalistFieldsSection";
 
 const legacyRegions = [
-  { id: "more-og-romsdal", labelNo: "Nordvestlandet", labelEn: "Northwestern Norway" },
+  { id: "nordvestlandet", labelNo: "Nordvestlandet", labelEn: "Northwestern Norway" },
   { id: "vestlandet", labelNo: "Vestlandet", labelEn: "Western Norway" },
   { id: "nord-norge", labelNo: "Nord-Norge", labelEn: "Northern Norway" },
-  { id: "trondelag", labelNo: "Midt-Norge", labelEn: "Central Norway" },
+  { id: "midt-norge", labelNo: "Midt-Norge", labelEn: "Central Norway" },
   { id: "ostlandet", labelNo: "Østlandet", labelEn: "Eastern Norway" },
   { id: "sorlandet", labelNo: "Sørlandet", labelEn: "Southern Norway" },
 ];

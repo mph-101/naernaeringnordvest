@@ -4,7 +4,30 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
-### Bildetekst-funksjon (2026-05-31) — KRITISK før deploy
+### Migrasjons-drift (2026-06-04) — KRITISK, før mer feature-arbeid
+Full analyse i [`docs/migration-drift-audit.md`](migration-drift-audit.md).
+**Seks repo-migrasjoner er aldri kjørt i prod.** Repo-mappa ≠ fasit (prod ble
+gjenoppbygd fra snapshot 05-26 med egne tidsstempler). Ingenting endret i prod
+under auditen — kun lesespørringer.
+
+Det som trenger din beslutning/handling:
+- **MCP-token-tilgang:** historisk kunne ikke Claude kjøre migrasjoner via MCP
+  (`permission denied`, jf. bildetekst-saken under). Avklar om jeg kan kjøre
+  `apply_migration` nå, ellers kjører du dem.
+- **Kjappe additive fikser** (lav risiko): `stripe_events` (idempotens stille av i
+  `payments-webhook`), `live_streams` (brutt feature), de to manglende cron-jobbene
+  (`refresh-financials-cache-monthly`, `refresh-roles-and-status-weekly` — cachene
+  auto-oppdateres ikke i dag).
+- **Multi-region** (`20260518200000`): krever DB + frontend-slug-endring
+  (`more-og-romsdal → nordvestlandet`) i samme PR. Låser opp barometeret.
+- **Tip-kryptering** (fase 1.2, `20260518130000`): IKKE kjør frittstående — filen
+  er destruktiv og pipelinen er uferdig. Egen oppgave. Inntil da lagres
+  tips-e-post i klartekst.
+
+### ✅ LØST: Bildetekst-funksjon (2026-05-31)
+> **Verifisert kjørt i prod 2026-06-04** (drift-audit): kolonnene `image_caption`
+> m.fl. finnes på `articles`. Ingen handling nødvendig. Beholdt for historikk.
+
 - **Kjør migrasjonen `supabase/migrations/20260531120000_article_image_caption.sql`** mot prod.
   Claude fikk `permission denied` via MCP-tokenet og kunne ikke kjøre den selv.
   Den legger til `image_caption`, `image_credit`, `image_source` på `articles`.

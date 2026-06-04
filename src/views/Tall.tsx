@@ -6,13 +6,12 @@ import { CompanySearch } from "@/components/tall/CompanySearch";
 import { CompanyTable } from "@/components/tall/CompanyTable";
 import { CompanyLists } from "@/components/tall/CompanyLists";
 import { EstablishmentsOverview } from "@/components/tall/EstablishmentsOverview";
-import { CompanyQuery } from "@/components/tall/CompanyQuery";
 import { LaborMarketOverview } from "@/components/tall/LaborMarketOverview";
 import { HousingMarketOverview } from "@/components/tall/HousingMarketOverview";
 import { useTheme } from "@/hooks/useTheme";
-import { Search, List, TrendingUp, MessageSquare, Briefcase, Home } from "lucide-react";
+import { Search, List, TrendingUp, Briefcase, Home } from "lucide-react";
 
-type Tab = "search" | "lists" | "overview" | "query" | "labor" | "housing";
+type Tab = "search" | "lists" | "overview" | "labor" | "housing";
 
 export default function Tall() {
   const { language } = useTheme();
@@ -30,7 +29,6 @@ export default function Tall() {
 
   const tabs: { id: Tab; label: string; icon: any }[] = [
     { id: "search", label: isNo ? "Selskapssøk" : "Company Search", icon: Search },
-    { id: "query", label: isNo ? "Spør databasen" : "Ask Database", icon: MessageSquare },
     { id: "lists", label: isNo ? "Mine lister" : "My Lists", icon: List },
     { id: "overview", label: isNo ? "Etablering og konkurs" : "Establishments & Bankruptcies", icon: TrendingUp },
     { id: "labor", label: isNo ? "Arbeidsmarked" : "Labor Market", icon: Briefcase },
@@ -94,7 +92,6 @@ export default function Tall() {
             />
           </div>
         )}
-        {tab === "query" && <CompanyQuery />}
         {tab === "lists" && <CompanyLists session={session} />}
         {tab === "overview" && (
           <EstablishmentsOverview

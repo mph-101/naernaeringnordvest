@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { useTheme } from "@/hooks/useTheme";
@@ -8,7 +9,8 @@ import {
 import { TrendingUp, TrendingDown, Building2, Sprout, Banknote, Lock } from "lucide-react";
 
 const REGION = "nordvestlandet";
-const OPEN_MODULES = ["naeringspuls_kpi", "konkursgraf_12mnd", "bransje_snapshot", "kommune_grunntall"];
+// Datapunkter hentes for ALLE moduler; RLS filtrerer lukkede for ikke-abonnenter.
+// At en lukket modul gir datapunkter = brukeren har tilgang.
 
 interface Row {
   module_key: string;
@@ -38,18 +40,23 @@ export default function Naeringspuls() {
   const { language } = useTheme();
   const isNo = language === "no";
   const [rows, setRows] = useState<Row[]>([]);
+  const [modules, setModules] = useState<{ module_key: string; title: string; tilgangsniva: string; sort_order: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
-        .from("barometer_datapoints")
-        .select("module_key, indicator, nace_code, period, value, unit, label, meta")
-        .eq("region_slug", REGION)
-        .in("module_key", OPEN_MODULES);
-      if (error) { setError(true); setLoading(false); return; }
-      setRows((data as Row[]) ?? []);
+      const [dp, mod] = await Promise.all([
+        supabase.from("barometer_datapoints")
+          .select("module_key, indicator, nace_code, period, value, unit, label, meta")
+          .eq("region_slug", REGION),
+        supabase.from("barometer_modules")
+          .select("module_key, title, tilgangsniva, sort_order")
+          .eq("region_slug", REGION).eq("is_active", true).order("sort_order"),
+      ]);
+      if (dp.error) { setError(true); setLoading(false); return; }
+      setRows((dp.data as Row[]) ?? []);
+      setModules((mod.data as typeof modules) ?? []);
       setLoading(false);
     })();
   }, []);
@@ -92,6 +99,24 @@ export default function Naeringspuls() {
     }
     return [...byKom.values()].sort((a, b) => (b.vals.befolkning?.value ?? 0) - (a.vals.befolkning?.value ?? 0));
   }, [rows]);
+
+  // Lukket: avvikstolkning + kommune-benchmark (kommer kun tilbake for abonnenter via RLS).
+  const avvik = useMemo(() =>
+    rows.filter((r) => r.module_key === "naeringspuls_avvik" && r.value != null)
+      .map((r) => ({ label: r.label, value: Number(r.value), meta: r.meta })),
+  [rows]);
+  const benchmark = useMemo(() =>
+    rows.filter((r) => r.module_key === "kommune_benchmark" && r.value != null)
+      .map((r) => ({ navn: (r.meta?.kommune as string) ?? r.label ?? r.nace_code, value: Number(r.value) }))
+      .sort((a, b) => b.value - a.value),
+  [rows]);
+  // Alle lukkede moduler fra konfig; unlocked = vi fikk datapunkter for den.
+  const lockedModules = useMemo(() => {
+    const haveData = new Set(rows.map((r) => r.module_key));
+    return modules
+      .filter((m) => m.tilgangsniva !== "åpen")
+      .map((m) => ({ ...m, unlocked: haveData.has(m.module_key) }));
+  }, [modules, rows]);
 
   const maxBransje = bransjer.length ? bransjer[0].value : 1;
   const latestKonkursPeriod = konkursSeries.at(-1)?.period;
@@ -254,20 +279,68 @@ export default function Naeringspuls() {
               </div>
             </section>
 
-            {/* Teaser for låste moduler (mur kommer i PR 4) */}
-            <section className="border border-dashed border-border rounded-xl p-5 flex items-start gap-3 bg-secondary/30">
-              <Lock className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-headline text-base font-semibold text-headline">
-                  {isNo ? "Mer kommer for abonnenter" : "More coming for subscribers"}
-                </h3>
-                <p className="font-body text-sm text-muted-foreground mt-1">
-                  {isNo
-                    ? "Avvikstolkning, konkurser mot historisk normal, kommune-mot-kommune og bransje-historikk åpnes for abonnenter."
-                    : "Deviation analysis, bankruptcies vs historical norm, municipality benchmarking and industry history will open for subscribers."}
+            {/* Muren: lukkede moduler — full for abonnenter (RLS), teaser ellers */}
+            {lockedModules.length > 0 && (
+              <section>
+                <h2 className="font-headline text-xl font-semibold text-headline mb-1">
+                  {isNo ? "For abonnenter" : "For subscribers"}
+                </h2>
+                <p className="font-body text-sm text-muted-foreground mb-4">
+                  {isNo ? "Avvikstolkning og dypere analyser." : "Deviation analysis and deeper insights."}
                 </p>
-              </div>
-            </section>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {lockedModules.map((m) => {
+                    if (m.unlocked && m.module_key === "naeringspuls_avvik" && avvik.length > 0) {
+                      return (
+                        <div key={m.module_key} className="bg-card border border-border rounded-xl p-5">
+                          <h3 className="font-headline text-base font-semibold text-headline mb-3">{m.title}</h3>
+                          <dl className="space-y-2 font-body text-sm">
+                            {avvik.map((a) => (
+                              <div key={a.label} className="flex items-baseline justify-between gap-2">
+                                <dt className="text-muted-foreground">{a.label}</dt>
+                                <dd className={`font-semibold tabular-nums ${a.value >= 0 ? "text-accent" : "text-destructive"}`}>{fmtPct(a.value)}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </div>
+                      );
+                    }
+                    if (m.unlocked && m.module_key === "kommune_benchmark" && benchmark.length > 0) {
+                      return (
+                        <div key={m.module_key} className="bg-card border border-border rounded-xl p-5">
+                          <h3 className="font-headline text-base font-semibold text-headline mb-1">{m.title}</h3>
+                          <p className="font-body text-xs text-muted-foreground mb-3">{isNo ? "Bedrifter per 1000 innbyggere" : "Businesses per 1000 residents"}</p>
+                          <dl className="space-y-2 font-body text-sm">
+                            {benchmark.map((b) => (
+                              <div key={b.navn} className="flex items-baseline justify-between gap-2">
+                                <dt className="text-muted-foreground">{b.navn}</dt>
+                                <dd className="font-semibold text-headline tabular-nums">{nf(b.value, 1)}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={m.module_key} className="bg-card border border-dashed border-border rounded-xl p-5">
+                        <div className="flex items-start gap-3">
+                          <Lock className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                          <div>
+                            <h3 className="font-headline text-base font-semibold text-headline">{m.title}</h3>
+                            <p className="font-body text-sm text-muted-foreground mt-1">
+                              {isNo ? "Lås opp med abonnement." : "Unlock with a subscription."}
+                            </p>
+                            <Link to="/abonnement" className="inline-flex items-center gap-1 mt-3 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-subhead hover:opacity-90 transition-opacity">
+                              {isNo ? "Bli abonnent" : "Subscribe"}
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
           </>
         )}
       </main>

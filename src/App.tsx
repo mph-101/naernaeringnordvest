@@ -10,6 +10,7 @@ import { RegionProvider } from "@/hooks/useRegion";
 import { AudioPlayerProvider } from "./hooks/useAudioPlayer";
 import { MiniPlayer } from "./components/audio/MiniPlayer";
 import { MascotTour } from "./components/mascot/MascotTour";
+import { FeatureWalkthrough } from "./components/onboarding/FeatureWalkthrough";
 
 // Critical path — loaded eagerly
 import Index from "./views/Index";
@@ -76,6 +77,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <MascotTour />
+              <FeatureWalkthrough />
               <Suspense fallback={<PageLoader />}>
               <Routes>
               <Route path="/" element={<Index />} />

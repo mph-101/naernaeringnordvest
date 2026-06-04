@@ -11,6 +11,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { MascotTour } from "@/components/mascot/MascotTour";
+import { FeatureWalkthrough } from "@/components/onboarding/FeatureWalkthrough";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,7 @@ export function NextProviders({ children }: { children: React.ReactNode }) {
                   <TooltipProvider>
                     {children}
                     <MascotTour />
+                    <FeatureWalkthrough />
                     <Toaster />
                     <Sonner />
                   </TooltipProvider>

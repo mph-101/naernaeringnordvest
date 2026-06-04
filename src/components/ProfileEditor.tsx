@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Camera, Pencil, X, Check, Loader2, User, MapPin, Building, Compass } from "lucide-react";
+import { Camera, Pencil, X, Check, Loader2, User, MapPin, Building, Compass, Sparkles, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
@@ -208,7 +208,7 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
       )}
 
       {/* Mascot guide toggle */}
-      <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl mt-2 mb-6">
+      <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl mt-2 mb-2">
         <Compass className="w-4 h-4 text-muted-foreground flex-shrink-0" />
         <span className="text-sm font-subhead font-medium text-muted-foreground flex-1">
           {isNo ? "Vis kompass-guiden" : "Show compass guide"}
@@ -221,6 +221,18 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
           <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${mascotEnabled ? "translate-x-5" : ""}`} />
         </button>
       </div>
+
+      {/* Feature walkthrough launcher */}
+      <button
+        onClick={() => window.dispatchEvent(new CustomEvent("nn:feature-walkthrough-start"))}
+        className="flex items-center gap-3 w-full p-3 bg-secondary/50 rounded-xl mb-6 hover:bg-secondary transition-colors text-left"
+      >
+        <Sparkles className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        <span className="text-sm font-subhead font-medium text-muted-foreground flex-1">
+          {isNo ? "Vis funksjonsgjennomgang" : "Show feature walkthrough"}
+        </span>
+        <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+      </button>
 
       {/* Journalist-only fields (auto-hides for regular users) */}
       <JournalistFieldsSection userId={userId} displayName={displayName} />

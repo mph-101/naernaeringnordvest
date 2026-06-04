@@ -1,5 +1,16 @@
 # Progress
 
+## Sikkerhetsgjennomgang abonnement (2026-06-03)
+
+- **Funn #2 — paywall stolte på `subscriber`/`business`-rolle** — 2026-06-03, branch `fix/paywall-subscriber-role-gating`
+  - `check-article-access` ga full tilgang basert på rå rollemedlemskap (`STAFF_ROLES` inkluderte `subscriber` + `business`). Rollen revokeres aldri ved oppsigelse, så utløpte abonnenter beholdt premium-tilgang permanent — `has_active_subscription` (som sjekker `current_period_end`) ble omgått.
+  - Fix: fjernet `subscriber`/`business` fra `STAFF_ROLES` — betalt tilgang går nå utelukkende via `has_active_subscription`. Redaksjonelle roller (`admin`/`editor`/`journalist`) beholder ubegrenset tilgang.
+  - Gjorde `userId`-utledning injiserbar (`resolveUserId`-dep) så den sikkerhetskritiske rolle-stien kan enhetstestes uten ekte JWT. La til 4 tester (aktiv sub → full, admin → full, utløpt abonnent → preview, business uten sub → kvote ikke ubegrenset).
+  - Verifisert: `deno test` 15/15 grønt, `deno check` + eslint rene. Filer: `supabase/functions/check-article-access/{index,index.test}.ts`.
+  - **Merk (separat gap):** CI (`ci.yml`) kjører kun vitest (`src/**`), ikke Deno-testene under `supabase/functions/`. Disse må kjøres manuelt med `deno test`. Verdt å legge til et Deno-steg i CI senere.
+- **Funn #1 — Stripe sandbox gir ekte tilgang** — designnotat skrevet, venter på Magnus. Se `docs/security-stripe-environment-isolation.md` + `docs/magnus-todo.md`.
+- **Funn #3 — `article_views` UPDATE `USING(true)`** — flagget, ikke fikset (RLS-endring krever din godkjenning).
+
 ## Fase 1 — Sikkerhets-sprint
 
 - **1.5 .env ut av git** — 2026-05-17, branch `chore/env-out-of-git`
@@ -40,9 +51,28 @@
   - **Persistering:** allerede dekket av eksisterende auto-lagring (collab `onUpdate` → `onChange` → debounced save holder `articles.body` fersk) + seed-on-empty fra HTML ved cold-start. Binær `yjs_snapshots`-persistering (webhook / Hocuspocus `onStoreDocument`) er bevisst utsatt til transport-valget er tatt — en Liveblocks-webhook nå kan bli kastet bort ved et Hocuspocus-bytte.
   - Verifisert: eslint exit 0, tsc (app) rent, vite build grønt. Live presence-test krever to innloggede økter (Magnus' steg).
 
+### Gjenoppta samredigering her (snapshot 2026-06-02)
+
+**Live i prod:** sanntids sync + presence + av/på-knapp (redaksjonelle roller, default av). `LIVEBLOCKS_SECRET_KEY` satt i `.env.local` og Vercel.
+
+**Arkitektur (alt bak ett bytte-punkt):**
+- `src/lib/collab/index.ts` → `createCollabProvider(roomId, getToken)` — ENESTE sted å bytte transport. I dag `liveblocks.ts`; for Hocuspocus: lag `hocuspocus.ts` med samme signatur og bytt importen her.
+- `src/lib/collab/liveblocks.ts` — eneste fil som importerer `@liveblocks/*`. authEndpoint sender Supabase-JWT som Bearer.
+- `src/hooks/useCollabProvider.ts` — åpner/lukker rom (`article:<id>`), gir `getToken` fra Supabase-sesjon.
+- `src/app/api/liveblocks-auth/route.ts` — verifiserer JWT + `has_role`, minter token. 501 uten nøkkel (graceful fallback).
+- `src/components/admin/RichTextEditor.tsx` — valgfri `collab`-prop (Collaboration + CollaborationCaret).
+- `src/components/admin/CollaborativeRichTextEditor.tsx` — wrapper: useCollabProvider + seed-on-empty + PresenceAvatars; `key` remounter ved av/på.
+- `src/components/admin/PresenceAvatars.tsx` — avatarer via Yjs awareness (transport-nøytralt).
+- Toggle + rolle-gate: `src/components/admin/ArticleEditorBody.tsx`; flagget lastes/lagres i `ArticleEditor.tsx`.
+- DB: `yjs_snapshots`-tabell + `articles.collab_enabled` (migrasjon kjørt i prod).
+
+**Neste (krever beslutning):** velg transport (Liveblocks vs Hocuspocus) → bygg så server-side binær persistering til `yjs_snapshots` + cold-start derfra (fjerner dobbel-seed-race ved samtidig første-åpning). Detaljert plan: `~/.claude/plans/jeg-vil-ha-muligheten-hashed-moore.md` (Fase C punkt 8–10 + Fase D).
+
+**Lokal kjøring:** `npm run dev:next` → http://localhost:3000/admin → Artikler → åpne artikkel → toggel «Samredigering». Manuelle Magnus-steg: `docs/magnus-todo.md`.
+
 ## Fase 2 — Kjede-arkitektur
 
-- **2.2 Multi-region-skjema kjørt mot prod** — 2026-06-04, branch `feat/naeringsbarometer-skjema`
+- **2.2 Multi-region-skjema kjørt mot prod** — 2026-06-04, branch `feat/naeringsbarometer-skjema` (PR #102)
   - Drift-audit avdekket at `20260518200000_multi_region_schema.sql` aldri var kjørt i prod (repo-mappa ≠ prod-fasit — prod gjenoppbygd fra snapshot 05-26). Full analyse: `docs/migration-drift-audit.md`.
   - Rettet latent bug i migrasjonen: kun 4/9 FK-er til `editorial_regions(slug)` hadde `ON UPDATE CASCADE` → slug-omdøpingen ville feilet mot `articles` m.fl. La til CASCADE på `articles`, `article_shared_regions`, `employer_profiles`, `job_listings`, `profiles` + eksplisitt `UPDATE profiles.region` (ikke FK).
   - Kjørt mot prod (`oemzrhlybemakwpyhcno`): `more-og-romsdal→nordvestlandet`, `trondelag→midt-norge`, `region_slug` på 7 tabeller (subscriptions, business_accounts, groups, polls, native_ads, job_changes, tips), `region_hidden_articles`. Verifisert: 12 artikler kaskadert, ingen advisor-regress utover eksisterende mønster.
@@ -52,8 +82,8 @@
 
 ## Næringsbarometer
 
-- **PR 1 — skjema** — 2026-06-04, branch `feat/naeringsbarometer-skjema`
+- **PR 1 — skjema** — 2026-06-04, branch `feat/naeringsbarometer-skjema` (PR #102)
   - `20260604100000_naeringsbarometer_schema.sql` kjørt mot prod: `barometer_modules` (konfig/"spaken"), `barometer_datapoints` (SSB-tall, RLS-gated på tilgangsnivå), `barometer_signals` (avvik→godkjenningskø, speiler `job_changes`). `barometer_tilgang`-enum (åpen|metered|lukket). Region-bevisst (`region_slug`).
   - Hjelpefunksjoner: `has_editorial_role` + region-scopet `has_barometer_access` (SECURITY DEFINER). Muren håndheves server-side i RLS (bevisst avvik fra EF-paywallen — `docs/decisions.md`).
   - Seed: 11 moduler for nordvestlandet. Verifisert: 11 rader, 4 åpne, funksjoner+policies på plass.
-  - Design: `docs/naeringsbarometer-design.md`. **Gjenstår:** PR 2 (SSB-henting + avviksdetektor-EF-er + cron), PR 3 (`/barometer`-frontend), PR 4 (metered-RPC + teaser), PR 5–7.
+  - Rute besluttet: `/næringspuls`. Design: `docs/naeringsbarometer-design.md`. **Gjenstår:** PR 2 (SSB-henting + avviksdetektor-EF-er + cron), PR 3 (`/næringspuls`-frontend), PR 4 (metered-RPC + teaser), PR 5–7.

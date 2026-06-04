@@ -4,30 +4,33 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
-### Migrasjons-drift (2026-06-04) — KRITISK, før mer feature-arbeid
+### Migrasjons-drift (2026-06-04) — delvis ryddet, 5 gjenstår
 Full analyse i [`docs/migration-drift-audit.md`](migration-drift-audit.md).
-**Seks repo-migrasjoner er aldri kjørt i prod.** Repo-mappa ≠ fasit (prod ble
-gjenoppbygd fra snapshot 05-26 med egne tidsstempler). Ingenting endret i prod
-under auditen — kun lesespørringer.
+**Seks repo-migrasjoner var aldri kjørt i prod.** Repo-mappa ≠ fasit (prod ble
+gjenoppbygd fra snapshot 05-26 med egne tidsstempler).
 
-Det som trenger din beslutning/handling:
-- **MCP-token-tilgang:** historisk kunne ikke Claude kjøre migrasjoner via MCP
-  (`permission denied`, jf. bildetekst-saken under). Avklar om jeg kan kjøre
-  `apply_migration` nå, ellers kjører du dem.
-- **Kjappe additive fikser** (lav risiko): `stripe_events` (idempotens stille av i
-  `payments-webhook`), `live_streams` (brutt feature), de to manglende cron-jobbene
-  (`refresh-financials-cache-monthly`, `refresh-roles-and-status-weekly` — cachene
-  auto-oppdateres ikke i dag).
-- **Multi-region** (`20260518200000`): krever DB + frontend-slug-endring
-  (`more-og-romsdal → nordvestlandet`) i samme PR. Låser opp barometeret.
-- **Tip-kryptering** (fase 1.2, `20260518130000`): IKKE kjør frittstående — filen
-  er destruktiv og pipelinen er uferdig. Egen oppgave. Inntil da lagres
-  tips-e-post i klartekst.
+- ✅ **Multi-region** (`20260518200000`) kjørt mot prod + frontend-slugs (PR #102).
+  MCP-tokenet kan nå kjøre `apply_migration` (tidligere `permission denied`).
+- **Gjenstår — kjappe additive fikser** (lav risiko, kan kjøres når du vil):
+  `stripe_events` (idempotens stille av i `payments-webhook`), `live_streams`
+  (brutt feature), de to manglende cron-jobbene (`refresh-financials-cache-monthly`,
+  `refresh-roles-and-status-weekly` — cachene auto-oppdateres ikke i dag).
+- **Gjenstår — egen oppgave:** `encrypt_tip_email` (fase 1.2, `20260518130000`):
+  IKKE kjør frittstående — filen er destruktiv og pipelinen er uferdig. Inntil da
+  lagres tips-e-post i klartekst.
+
+### Stripe miljøisolasjon (2026-06-03) — KRITISK, krever din beslutning
+- Sikkerhetsgjennomgang fant at klienten selv velger `environment` i
+  `create-checkout`, slik at en bruker kan abonnere med Stripe **testkort** og få
+  ekte premium-tilgang i prod. Detaljer + forslag: `docs/security-stripe-environment-isolation.md`.
+- **Jeg har bevisst ikke rørt Stripe-flyten** (jf. arbeidsreglene). Jeg trenger
+  svar på valg A/B/C i notatet før jeg lager PR.
+- **Sjekk også:** finnes det allerede sandbox-rader i prod `subscriptions` /
+  `business_accounts`? I så fall bør de ryddes (DELETE mot prod = din jobb).
 
 ### ✅ LØST: Bildetekst-funksjon (2026-05-31)
 > **Verifisert kjørt i prod 2026-06-04** (drift-audit): kolonnene `image_caption`
 > m.fl. finnes på `articles`. Ingen handling nødvendig. Beholdt for historikk.
-
 - **Kjør migrasjonen `supabase/migrations/20260531120000_article_image_caption.sql`** mot prod.
   Claude fikk `permission denied` via MCP-tokenet og kunne ikke kjøre den selv.
   Den legger til `image_caption`, `image_credit`, `image_source` på `articles`.
@@ -85,23 +88,28 @@ Koden er klar — `vercel.json` peker allerede på `npm run build:next`, framewo
 **Ikke gjort (venter på din beslutning):** flippe default `dev`/`build`-script til
 Next og peke produksjons-DNS mot Vercel. Det er den ekte cutoveren (fase 5).
 
-## Samredigering (Fase B) — for å gå live
+## Samredigering — LIVE i prod (Fase A+B+C delvis)
 
-Migrasjonen `20260601130000_yjs_collab_infrastructure.sql` er nå kjørt mot prod
-(`yjs_snapshots` + `articles.collab_enabled`). Koden for Fase B er på plass bak
-en provider-abstraksjon med Liveblocks. For å aktivere sanntids samredigering:
+Status 2026-06-02: sanntids samredigering er live. Migrasjonen er kjørt,
+`LIVEBLOCKS_SECRET_KEY` er satt i både `.env.local` og Vercel, og to-vinduers
+sync + presence-avatarer er verifisert. Redaktører styrer det via av/på-knappen
+i artikkeleditoren (default av, kun redaksjonelle roller).
 
-1. **Opprett Liveblocks-konto** på liveblocks.io (free tier holder).
-2. **Hent secret key** (`sk_...`) fra Liveblocks-dashboardet.
-3. **Legg den inn** som `LIVEBLOCKS_SECRET_KEY`:
-   - lokalt i `.env.local`
-   - i Vercel → Project Settings → Environment Variables (server-only, ikke `NEXT_PUBLIC_`)
-4. **Slå på flagget** per artikkel for test: sett `collab_enabled = true` på en
-   artikkelrad i Supabase, åpne den i to nettlesere og verifiser sanntids sync.
+**Gjenstående handlinger for deg:**
 
-Uten nøkkelen faller editoren stille tilbake til ikke-samarbeidende modus, så
-ingenting crasher i mellomtiden.
+1. **Transport-beslutning (låser opp resten av Fase C).** Liveblocks (hosted, US-
+   tredjepart får artikkel-body) vs selvhostet **Hocuspocus** (EU, ~$5–10/mnd).
+   Alt ligger bak `src/lib/collab/createCollabProvider`, så byttet er lite. Når
+   du har valgt, bygger Claude robust server-side persistering + cold-start fra
+   `yjs_snapshots` (siste Fase C-bit). Inntil da: `articles.body` holdes fersk av
+   eksisterende auto-lagring, og cold-start seeder fra HTML.
+2. **Rydd test-artikkelen** «Tester nytt varslingssystem… Brunvoll AS»
+   (id `2a67658b-7187-480a-887d-1877eeda5421`): har fortsatt `collab_enabled =
+   true` + testtekst i body. Skru av via knappen i editoren (eller SQL), og fjern
+   ev. testtekst via revisjonsloggen.
+3. **(Lavt) bun-lockfiler utdaterte.** Collab-pakkene ble lagt til via npm, så
+   `bun.lock`/`bun.lockb` er ikke oppdatert. CI bruker npm (`package-lock.json`),
+   så det er ufarlig — men kjør `bun install` hvis noen bruker bun lokalt.
 
-> Vurder før utrulling: Liveblocks er en US-tredjepart som mottar artikkel-body.
-> Alternativet (selvhostet Hocuspocus i EU) er fortsatt åpent — byttet er lite
-> fordi alt ligger bak `src/lib/collab/createCollabProvider`.
+> Personvern: Liveblocks er US-basert og mottar artikkel-body. Hvis det er et
+> problem, velg Hocuspocus-stien (punkt 1).

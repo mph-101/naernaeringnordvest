@@ -4,6 +4,7 @@ import { StickyNote, X, Save, Loader2, FileText, FileDown, Share2, Users, Linked
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
+import { FabSlot } from "@/components/FabSlot";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -272,15 +273,17 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
 
   return (
     <>
-      {/* FAB */}
-      <button
-        data-tour="article-notes"
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-accent text-accent-foreground rounded-full shadow-elevated flex items-center justify-center hover:scale-105 transition-transform"
-        aria-label={t.notes}
-      >
-        <StickyNote className="w-6 h-6" />
-      </button>
+      {/* FAB — joins the shared FAB stack, sits above the compass guide */}
+      <FabSlot order={1}>
+        <button
+          data-tour="article-notes"
+          onClick={() => setIsOpen(true)}
+          className="w-14 h-14 bg-accent text-accent-foreground rounded-full shadow-elevated flex items-center justify-center hover:scale-105 transition-transform"
+          aria-label={t.notes}
+        >
+          <StickyNote className="w-6 h-6" />
+        </button>
+      </FabSlot>
 
       {/* Modal */}
       {isOpen && (

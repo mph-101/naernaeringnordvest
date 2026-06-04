@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { CompassMascot } from "./CompassMascot";
+import { FabSlot } from "@/components/FabSlot";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
@@ -188,6 +189,14 @@ export function MascotTour() {
   const step = STEPS[stepIdx];
   const showSpotlight = active && step && rect;
 
+  // Counter reflects only the steps that actually apply to the current route.
+  // Several steps are route-gated (e.g. article-only) and silently skipped, so
+  // the raw STEPS.length over-counts — on the homepage the tour runs 6 steps,
+  // not 8. Display position and total within the route-applicable subset.
+  const onRoute = (s: Step) => !s.routeMatch || s.routeMatch(location.pathname);
+  const totalForRoute = STEPS.filter(onRoute).length;
+  const posForRoute = STEPS.slice(0, stepIdx + 1).filter(onRoute).length;
+
   return (
     <>
       {/* Spotlight overlay */}
@@ -241,7 +250,7 @@ export function MascotTour() {
                 </p>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-subhead text-muted-foreground tabular-nums">
-                    {stepIdx + 1} / {STEPS.length}
+                    {posForRoute} / {totalForRoute}
                   </span>
                   <div className="flex items-center gap-2">
                     <button onClick={finish} className="text-xs font-subhead text-muted-foreground hover:text-foreground px-2 py-1">
@@ -259,19 +268,21 @@ export function MascotTour() {
         </div>
       )}
 
-      {/* Floating idle mascot */}
+      {/* Floating idle mascot — joins the shared FAB stack (anchored corner) */}
       {!active && (
-        <button
-          onClick={() => { setStepIdx(0); setActive(true); }}
-          aria-label={isNo ? "Start guide" : "Start guide"}
-          title={isNo ? "Vis guide" : "Show guide"}
-          className="fixed bottom-5 right-5 z-50 group rounded-full p-1 bg-card shadow-elevated border border-border hover:scale-105 transition-transform"
-        >
-          <CompassMascot size={48} />
-          <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-accent ring-2 ring-card opacity-0 group-hover:opacity-100 transition-opacity">
-            <span className="sr-only"><Compass /></span>
-          </span>
-        </button>
+        <FabSlot order={0}>
+          <button
+            onClick={() => { setStepIdx(0); setActive(true); }}
+            aria-label={isNo ? "Start guide" : "Start guide"}
+            title={isNo ? "Vis guide" : "Show guide"}
+            className="relative group rounded-full p-1 bg-card shadow-elevated border border-border hover:scale-105 transition-transform"
+          >
+            <CompassMascot size={48} />
+            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-accent ring-2 ring-card opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="sr-only"><Compass /></span>
+            </span>
+          </button>
+        </FabSlot>
       )}
     </>
   );

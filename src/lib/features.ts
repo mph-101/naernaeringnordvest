@@ -12,6 +12,9 @@ export const FEATURES = {
   HJERNEVELV: envBool("VITE_FEATURE_HJERNEVELV", false),
   MASCOT: envBool("VITE_FEATURE_MASCOT", false),
   GAMES: envBool("VITE_FEATURE_GAMES", false),
+  // Næringsbarometer. Default on in dev so /næringspuls is reachable while we
+  // build it; set VITE_FEATURE_BAROMETER=false in prod until official launch.
+  BAROMETER: envBool("VITE_FEATURE_BAROMETER", true),
 } as const;
 
 export type FeatureKey = keyof typeof FEATURES;

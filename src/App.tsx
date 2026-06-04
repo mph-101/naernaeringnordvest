@@ -11,6 +11,7 @@ import { AudioPlayerProvider } from "./hooks/useAudioPlayer";
 import { MiniPlayer } from "./components/audio/MiniPlayer";
 import { MascotTour } from "./components/mascot/MascotTour";
 import { FeatureWalkthrough } from "./components/onboarding/FeatureWalkthrough";
+import { FEATURES } from "@/lib/features";
 
 // Critical path — loaded eagerly
 import Index from "./views/Index";
@@ -53,6 +54,7 @@ const Newsletter = lazy(() => import("./views/Newsletter"));
 const Unsubscribe = lazy(() => import("./views/Unsubscribe"));
 const Lytt = lazy(() => import("./views/Lytt"));
 const ComingSoon = lazy(() => import("./views/ComingSoon"));
+const Naeringspuls = lazy(() => import("./views/Naeringspuls"));
 
 // Idrett is only used for redirects — no need to lazy-load a redirect
 const Idrett = lazy(() => import("./views/Idrett"));
@@ -128,6 +130,13 @@ const App = () => (
               <Route path="/eierskap" element={<Info />} />
               <Route path="/cookies" element={<Info />} />
               <Route path="/tilgjengelighet" element={<Info />} />
+              {FEATURES.BAROMETER && (
+                <>
+                  <Route path="/næringspuls" element={<Naeringspuls />} />
+                  {/* ASCII-alias for delbare lenker */}
+                  <Route path="/naeringspuls" element={<Navigate to="/næringspuls" replace />} />
+                </>
+              )}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="/kommer-snart" element={<ComingSoon />} />
               <Route path="*" element={<NotFound />} />

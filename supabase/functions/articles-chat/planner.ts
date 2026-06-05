@@ -77,8 +77,8 @@ TALL — {"establishments":bool,"bankruptcies":bool,"labor":bool,"housing":bool,
 - kommunenummer: samme regel som over (nasjonale byer kan fylles, MR-steder utelates).
 - days: dager tilbake for etablering/konkurs (default 90, maks 365).
 
-RANKING — sett "ranking" når spørsmålet ber om en rangering eller superlativ over en GRUPPE (størst/flest/mest/topp/«hvilke … i regionen/bransjen/kommunen»), IKKE om et navngitt selskap.
-- metric: "ansatte" (flest ansatte / størst arbeidsplass), "omsetning" (størst omsetning/inntekter/lønnsomhet), ellers "annet".
+RANKING — sett "ranking" når spørsmålet ber om en rangering eller superlativ over en GRUPPE (størst/flest/mest/topp/største arbeidsgivere/«hvilke … i regionen/bransjen/kommunen»), IKKE om et navngitt selskap.
+- metric: "ansatte" (flest ansatte / største arbeidsgivere / størst arbeidsplass), "omsetning" (størst omsetning/inntekter/lønnsomhet), ellers "annet".
 - omfang: "region" (Møre og Romsdal / regionen), "kommune" (én bestemt kommune), "nasjonalt", eller "bransje".
 Ellers "ranking": null.
 

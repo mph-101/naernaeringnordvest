@@ -9,6 +9,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { aiChatCompletion, aiFetch } from "../_shared/ai-client.ts";
+import { collectFinancialTargets } from "./financial-targets.ts";
 
 const CHAT_MODEL = "google/gemini-3-flash-preview";
 const QUERY_REWRITE_MODEL = "google/gemini-2.5-flash-lite";
@@ -442,6 +443,10 @@ serve(async (req) => {
     let brregResults: any[] = [];
     let tallBlock = "";
     let tallResults: any = null;
+    // Declared out here so the financial-enrichment block below can read it.
+    // (It used to be block-scoped inside the retrieval try, which made the
+    // enrichment block throw ReferenceError and silently fetch no accounts.)
+    let brregPlan: Array<{ label: string; params: Record<string, string>; financials?: boolean }> | null = null;
 
     if (queryText.trim().length > 2) {
       try {
@@ -450,7 +455,7 @@ serve(async (req) => {
         const [
           { data: matches, error: matchErr },
           { data: trusted, error: trustedErr },
-          brregPlan,
+          brregPlanRes,
           tallPlan,
         ] = await Promise.all([
           supabase.rpc("search_articles", { query_text: searchTerms, match_count: MATCH_COUNT }),
@@ -460,6 +465,7 @@ serve(async (req) => {
         ]);
         if (matchErr) console.error("search_articles error:", matchErr);
         if (trustedErr) console.error("search_trusted_sources error:", trustedErr);
+        brregPlan = brregPlanRes;
 
         if (brregPlan && brregPlan.length) {
           brregResults = await fetchBrreg(brregPlan);
@@ -588,47 +594,23 @@ serve(async (req) => {
     // client renders them, and summarised into a prompt block for the model.
     let financialsBlock = "";
     try {
-      const toFetch: Array<{ orgnr: string; company: any }> = [];
-      const seen = new Set<string>();
-
-      const enqueue = (company: any) => {
-        if (company?.orgnr && !seen.has(company.orgnr)) {
-          seen.add(company.orgnr);
-          toFetch.push({ orgnr: company.orgnr, company });
-        }
-      };
-
-      // a) Explicit org.nr in the question takes priority — fetch the enhet too
-      //    if it never surfaced in a search, so the company card has something
-      //    to show. Processed first so a user-picked company always wins the cap.
+      // Resolve any org.nr written in the question that did not surface in a
+      // search, so its company card (and accounts) can still be shown.
       const orgnrs = queryText.match(/\b\d{9}\b/g) || [];
       for (const orgnr of orgnrs) {
-        if (seen.has(orgnr)) continue;
-        let company: any = null;
-        for (const r of brregResults) {
-          const hit = r.companies?.find((c: any) => c.orgnr === orgnr);
-          if (hit) { company = hit; break; }
+        const present = brregResults.some((r) => r.companies?.some((c: any) => c.orgnr === orgnr));
+        if (present) continue;
+        const enhet = await fetchEnhet(orgnr);
+        if (enhet) {
+          brregResults.push({ label: enhet.navn, total: 1, companies: [enhet], queryParams: { orgnr } });
         }
-        if (!company) {
-          const enhet = await fetchEnhet(orgnr);
-          if (enhet) {
-            company = enhet;
-            brregResults.push({ label: enhet.navn, total: 1, companies: [enhet], queryParams: { orgnr } });
-          }
-        }
-        if (company) enqueue(company);
       }
 
-      // b) Companies from financial-flagged plan queries (top 2 per query).
-      if (brregPlan) {
-        brregPlan.forEach((q, i) => {
-          if (!q.financials) return;
-          const r = brregResults[i];
-          if (r?.companies?.length) r.companies.slice(0, 2).forEach(enqueue);
-        });
-      }
-
-      const capped = toFetch.slice(0, MAX_FINANCIAL_FETCH);
+      // Pick which companies get an annual-accounts lookup: explicit org.nr
+      // first, then financials-flagged plan queries — deduped + capped. Passing
+      // brregPlan in as an argument structurally prevents the earlier
+      // out-of-scope ReferenceError that silently disabled enrichment.
+      const capped = collectFinancialTargets(queryText, brregResults, brregPlan, MAX_FINANCIAL_FETCH);
       const accounts = await Promise.all(capped.map((t) => fetchRegnskap(t.orgnr)));
       const fmtAmt = (n: number | null, valuta: string) =>
         n === null ? "ukjent" : `${Math.round(n).toLocaleString("nb-NO")} ${valuta === "NOK" ? "kr" : valuta}`;

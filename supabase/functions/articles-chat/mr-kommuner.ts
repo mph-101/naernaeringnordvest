@@ -75,6 +75,52 @@ export function resolveMrKommuneFromText(text: string): MrKommune | null {
   return null;
 }
 
+// Relative geo terms that, for a Nær Næring reader, mean "the region" =
+// Møre og Romsdal / Nordvestlandet. Used to scope lookups region-wide when the
+// user says "lokale/regionale/her i regionen" without naming a kommune.
+const REGION_WORDS = new Set([
+  "regionen",
+  "regional",
+  "regionalt",
+  "regionale",
+  "lokal",
+  "lokale",
+  "lokalt",
+  "nordvestlandet",
+  "fylket",
+]);
+
+/** True when the question refers to the region relatively (no kommune named). */
+export function isRegionScoped(text: string): boolean {
+  if (!text) return false;
+  const lower = text.toLowerCase();
+  if (lower.includes("møre og romsdal")) return true;
+  return lower.split(/[^a-zæøå0-9]+/).some((t) => REGION_WORDS.has(t));
+}
+
+/**
+ * If the question refers to the region relatively (and no specific kommune was
+ * resolved), scope BRREG queries and the Tall plan to ALL of Møre og Romsdal —
+ * the comma-separated kommune list, which enhetsregisteret and brreg-proxy both
+ * accept. Mutates in place; returns true when region scope was applied.
+ */
+export function applyRegionScope(
+  brreg: Array<{ params?: Record<string, string> }> | null,
+  tall: { kommunenummer?: string } | null,
+  text: string,
+): boolean {
+  if (!isRegionScoped(text)) return false;
+  const csv = MR_KOMMUNE_NUMBERS.join(",");
+  if (tall && !tall.kommunenummer) tall.kommunenummer = csv;
+  if (brreg) {
+    for (const q of brreg) {
+      if (!q.params) q.params = {};
+      if (!q.params.kommunenummer) q.params.kommunenummer = csv;
+    }
+  }
+  return true;
+}
+
 /**
  * If the question names an MR kommune, fill it into any BRREG query and the
  * Tall plan that did not already specify a kommunenummer. Mutates the passed

@@ -11,7 +11,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { aiChatCompletion, aiFetch } from "../_shared/ai-client.ts";
 import { collectFinancialTargets } from "./financial-targets.ts";
 import { PLANNER_SYSTEM_PROMPT, parsePlannerResponse, decideRankingRoute, type PlannerResult } from "./planner.ts";
-import { applyMrKommune, MR_KOMMUNE_NUMBERS, kommuneNavnByNummer } from "./mr-kommuner.ts";
+import { applyMrKommune, applyRegionScope, MR_KOMMUNE_NUMBERS, kommuneNavnByNummer } from "./mr-kommuner.ts";
 
 const CHAT_MODEL = "google/gemini-3-flash-preview";
 const QUERY_REWRITE_MODEL = "google/gemini-2.5-flash-lite";
@@ -260,7 +260,11 @@ function formatTallBlock(tall: {
   kommunenummer?: string;
 }): string {
   const parts: string[] = [];
-  const geo = tall.kommunenummer ? ` (kommune ${tall.kommunenummer})` : " (hele landet)";
+  const geo = !tall.kommunenummer
+    ? " (hele landet)"
+    : tall.kommunenummer.includes(",")
+      ? " (Møre og Romsdal)"
+      : ` (kommune ${tall.kommunenummer})`;
   if (tall.establishments?.companies?.length) {
     const list = tall.establishments.companies.slice(0, 10).map((c: any) =>
       `   - ${c.navn} (org.nr ${c.orgnr}) — stiftet ${c.stiftelsesdato || "?"}, ${c.kommune || "?"}${c.naeringsbeskriv ? `, ${c.naeringsbeskriv}` : ""}`,
@@ -391,9 +395,12 @@ serve(async (req) => {
         // coverage with correct current codes (incl. Ålesund 1508). Fills in the
         // kommunenummer the planner was told to leave blank for MR places.
         const mr = applyMrKommune(brregPlan, tallPlan, queryText);
+        // No specific kommune, but the question is region-relative ("lokale",
+        // "i regionen", "på Nordvestlandet") → scope to all of Møre og Romsdal.
+        const regionScoped = !mr && applyRegionScope(brregPlan, tallPlan, queryText);
         console.log(
           "articles-chat: planner =",
-          JSON.stringify({ searchTerms, brreg: brregPlan?.length ?? 0, tall: !!tallPlan, mr: mr?.navn ?? null }),
+          JSON.stringify({ searchTerms, brreg: brregPlan?.length ?? 0, tall: !!tallPlan, mr: mr?.navn ?? null, region: regionScoped }),
         );
 
         const [
@@ -609,6 +616,7 @@ serve(async (req) => {
 
 Regler:
 - Svar alltid på norsk (bokmål eller nynorsk slik kildene er skrevet).
+- «Regionen», «lokalt», «her» og «på Nordvestlandet» betyr Møre og Romsdal. Tall og bedriftsdata merket «(Møre og Romsdal)» dekker hele regionen.
 - Vær konkret, presis og nøktern — som en god lokalavisjournalist.
 - Når du bruker BRREG-data: skriv selskapsnavnet i **fet skrift**, og uthev tall (antall ansatte, organisasjonsnummer, stiftelsesår) også i **fet skrift**, etterfulgt av [B]. Eksempel: "**Equinor ASA** har **20 245 ansatte** [B]."
 - Når du bruker statistikk fra Tall-databasen (etablering, konkurs, arbeidsmarked, boligmarked): siter med [T] og uthev tall i **fet skrift**. Eksempel: "Det ble registrert **47 konkurser** i Molde siste 90 dager [T]."

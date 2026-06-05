@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   resolveMrKommuneFromText,
   applyMrKommune,
+  applyRegionScope,
+  isRegionScoped,
   kommuneNavnByNummer,
   MR_KOMMUNER,
   MR_KOMMUNE_NUMBERS,
@@ -74,5 +76,46 @@ describe("applyMrKommune", () => {
   it("tolerates null brreg / null tall", () => {
     expect(() => applyMrKommune(null, null, "konkurser i Rauma")).not.toThrow();
     expect(applyMrKommune(null, null, "konkurser i Rauma")?.nummer).toBe("1539");
+  });
+});
+
+describe("isRegionScoped", () => {
+  it("detects relative region terms", () => {
+    expect(isRegionScoped("lokale bedrifter")).toBe(true);
+    expect(isRegionScoped("hvor mange konkurser i regionen")).toBe(true);
+    expect(isRegionScoped("næringslivet på Nordvestlandet")).toBe(true);
+    expect(isRegionScoped("etableringer i Møre og Romsdal")).toBe(true);
+    expect(isRegionScoped("regionale forskjeller")).toBe(true);
+  });
+
+  it("does not fire on unrelated text or named-only places", () => {
+    expect(isRegionScoped("omsetning for Equinor")).toBe(false);
+    expect(isRegionScoped("konkurser i Norge")).toBe(false);
+    expect(isRegionScoped("konkurser i Ulstein")).toBe(false);
+    expect(isRegionScoped("")).toBe(false);
+  });
+});
+
+describe("applyRegionScope", () => {
+  const ALL_MR = MR_KOMMUNE_NUMBERS.join(",");
+
+  it("scopes Tall and BRREG to all of MR for relative region terms", () => {
+    const brreg = [{ params: {} as Record<string, string> }];
+    const tall = { kommunenummer: "" };
+    expect(applyRegionScope(brreg, tall, "lokale konkurser")).toBe(true);
+    expect(tall.kommunenummer).toBe(ALL_MR);
+    expect(brreg[0].params.kommunenummer).toBe(ALL_MR);
+  });
+
+  it("is a no-op when no region term is present", () => {
+    const tall = { kommunenummer: "" };
+    expect(applyRegionScope(null, tall, "omsetning for Equinor")).toBe(false);
+    expect(tall.kommunenummer).toBe("");
+  });
+
+  it("does not overwrite an already-set kommunenummer", () => {
+    const tall = { kommunenummer: "1506" };
+    applyRegionScope(null, tall, "lokale konkurser");
+    expect(tall.kommunenummer).toBe("1506");
   });
 });

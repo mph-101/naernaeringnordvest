@@ -10,8 +10,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { aiChatCompletion, aiFetch } from "../_shared/ai-client.ts";
 import { collectFinancialTargets } from "./financial-targets.ts";
-import { PLANNER_SYSTEM_PROMPT, parsePlannerResponse, type PlannerResult } from "./planner.ts";
-import { applyMrKommune } from "./mr-kommuner.ts";
+import { PLANNER_SYSTEM_PROMPT, parsePlannerResponse, decideRankingRoute, type PlannerResult } from "./planner.ts";
+import { applyMrKommune, MR_KOMMUNE_NUMBERS } from "./mr-kommuner.ts";
 
 const CHAT_MODEL = "google/gemini-3-flash-preview";
 const QUERY_REWRITE_MODEL = "google/gemini-2.5-flash-lite";
@@ -343,6 +343,8 @@ serve(async (req) => {
     let brregResults: any[] = [];
     let tallBlock = "";
     let tallResults: any = null;
+    let rankingBlock = "";
+    let rankingInstruction = "";
     // Declared out here so the financial-enrichment block below can read it.
     // (It used to be block-scoped inside the retrieval try, which made the
     // enrichment block throw ReferenceError and silently fetch no accounts.)
@@ -411,6 +413,33 @@ serve(async (req) => {
             kommunenummer: tallPlan.kommunenummer || "",
           };
           tallBlock = formatTallBlock(tallResults);
+        }
+
+        // Ranking / superlative questions ("largest companies in the region").
+        // Ground them honestly: an authoritative register ranking where one
+        // exists (by employees over MR/kommune), otherwise an explicitly
+        // non-exhaustive archive answer that offers the answerable variant.
+        // See docs/spor-populasjonssvar-design.md.
+        const rankingRoute = decideRankingRoute(plan.ranking);
+        if (rankingRoute === "top") {
+          const byKommune = plan.ranking!.omfang === "kommune" && mr;
+          const kommune = byKommune ? mr!.nummer : MR_KOMMUNE_NUMBERS.join(",");
+          const geo = byKommune ? mr!.navn : "Møre og Romsdal";
+          const top = await fetchTallProxy("top", { kommune, sort: "antallAnsatte", order: "desc", size: "10" });
+          const companies = Array.isArray(top?.companies) ? top.companies : [];
+          if (companies.length) {
+            rankingBlock = companies
+              .slice(0, 10)
+              .map(
+                (c: any, i: number) =>
+                  `${i + 1}. ${c.navn} (org.nr ${c.orgnr}) — ${c.antallAnsatte} ansatte, ${c.kommune}${c.naeringsbeskriv ? `, ${c.naeringsbeskriv}` : ""}`,
+              )
+              .join("\n");
+            rankingInstruction = `Dette er et RANGERINGSSPØRSMÅL. Lista under RANGERING er de største selskapene i ${geo} etter ANTALL ANSATTE (kilde: Brønnøysund). Svar med denne, og si tydelig at den er etter antall ansatte — ikke omsetning. Ikke antyd at den er etter omsetning.`;
+          }
+        } else if (rankingRoute === "articles") {
+          const metricTxt = plan.ranking!.metric === "omsetning" ? "omsetning" : "dette";
+          rankingInstruction = `Dette er et RANGERINGSSPØRSMÅL som IKKE kan rangeres uttømmende fra registrene (en rangering etter ${metricTxt} for hele regionen finnes ikke som ett oppslag). Hvis du rangerer ut fra artiklene, LED svaret med at det kun gjelder selskaper Nær Næring har omtalt — ikke en fullstendig oversikt. Tilby å vise de største etter antall ansatte fra Brønnøysund.`;
         }
 
         sources = (matches || []).map((m: any, i: number) => ({
@@ -552,8 +581,8 @@ Regler:
 - Hvis verken artikler eller BRREG gir grunnlag for å svare, si det tydelig og foreslå et omformulert spørsmål.
 - Aldri dikt opp tall, navn eller hendelser som ikke står i kildene.
 - Skriv kort: gjerne en oppsummerende setning, deretter kulepunkter eller en kort tabell hvis det passer.
-
-${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}\n\n` : ""}${trustedSources.length > 0 ? `BETRODDE EKSTERNE KILDER (kuratert av redaksjonen):\n\n${trustedBlock}\n\n` : ""}${brregBlock ? `BEDRIFTSDATA (Brønnøysundregistrene, sanntid):\n\n${brregBlock}\n\n` : ""}${financialsBlock ? `REGNSKAPSTALL (Regnskapsregisteret, siste tilgjengelige årsregnskap):\n\n${financialsBlock}\n\n` : ""}${tallBlock ? `TALL-DATABASEN (etablering, konkurs, arbeidsmarked, boligmarked):\n\n${tallBlock}\n` : ""}${sources.length === 0 && trustedSources.length === 0 && !brregBlock && !financialsBlock && !tallBlock ? "Ingen relevante artikler, betrodde kilder, bedriftsdata eller statistikk ble funnet for dette spørsmålet." : ""}`;
+${rankingInstruction ? `\nVIKTIG (rangering): ${rankingInstruction}\n` : ""}
+${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}\n\n` : ""}${trustedSources.length > 0 ? `BETRODDE EKSTERNE KILDER (kuratert av redaksjonen):\n\n${trustedBlock}\n\n` : ""}${rankingBlock ? `RANGERING (Brønnøysund, sortert etter antall ansatte):\n\n${rankingBlock}\n\n` : ""}${brregBlock ? `BEDRIFTSDATA (Brønnøysundregistrene, sanntid):\n\n${brregBlock}\n\n` : ""}${financialsBlock ? `REGNSKAPSTALL (Regnskapsregisteret, siste tilgjengelige årsregnskap):\n\n${financialsBlock}\n\n` : ""}${tallBlock ? `TALL-DATABASEN (etablering, konkurs, arbeidsmarked, boligmarked):\n\n${tallBlock}\n` : ""}${sources.length === 0 && trustedSources.length === 0 && !brregBlock && !financialsBlock && !tallBlock && !rankingBlock ? "Ingen relevante artikler, betrodde kilder, bedriftsdata eller statistikk ble funnet for dette spørsmålet." : ""}`;
 
     const upstream = await aiFetch("/chat/completions", {
       method: "POST",
@@ -596,8 +625,12 @@ ${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contex
             if (done) break;
             controller.enqueue(value);
           }
-          // Send our sources as a synthetic SSE event the client knows about
-          const sourcesPayload = `event: sources\ndata: ${JSON.stringify({ sources, trustedSources, brregResults, tallResults })}\n\n`;
+          // Send our sources as a synthetic SSE event the client knows about.
+          // Drop zero-hit BRREG lookups so the reader never sees an empty
+          // "0 treff" box (e.g. when the planner produced an unanswerable
+          // free-text company search).
+          const visibleBrreg = brregResults.filter((r: any) => r?.companies?.length);
+          const sourcesPayload = `event: sources\ndata: ${JSON.stringify({ sources, trustedSources, brregResults: visibleBrreg, tallResults })}\n\n`;
           controller.enqueue(encoder.encode(sourcesPayload));
         } catch (e) {
           console.error("stream pipe error:", e);

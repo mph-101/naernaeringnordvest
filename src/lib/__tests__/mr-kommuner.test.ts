@@ -3,11 +3,15 @@ import {
   resolveMrKommuneFromText,
   applyMrKommune,
   MR_KOMMUNER,
+  MR_KOMMUNE_NUMBERS,
 } from "../../../supabase/functions/articles-chat/mr-kommuner";
 
 describe("resolveMrKommuneFromText", () => {
   it("covers all 27 Møre og Romsdal kommuner", () => {
     expect(MR_KOMMUNER).toHaveLength(27);
+    expect(MR_KOMMUNE_NUMBERS).toHaveLength(27);
+    expect(MR_KOMMUNE_NUMBERS).toContain("1508"); // Ålesund (current code)
+    expect(MR_KOMMUNE_NUMBERS).not.toContain("1507"); // stale Ålesund code
   });
 
   it("resolves a kommune named in the question", () => {

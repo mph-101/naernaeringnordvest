@@ -44,6 +44,9 @@ export const MR_KOMMUNER: MrKommune[] = [
   { nummer: "1580", navn: "Haram" },
 ];
 
+/** All MR kommunenumre — for region-wide register queries (comma-joined). */
+export const MR_KOMMUNE_NUMBERS: string[] = MR_KOMMUNER.map((k) => k.nummer);
+
 const BY_LOWER_NAME = new Map(MR_KOMMUNER.map((k) => [k.navn.toLowerCase(), k]));
 
 /**

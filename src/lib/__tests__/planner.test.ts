@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { parsePlannerResponse } from "../../../supabase/functions/articles-chat/planner";
+import {
+  parsePlannerResponse,
+  decideRankingRoute,
+} from "../../../supabase/functions/articles-chat/planner";
 
 describe("parsePlannerResponse", () => {
   it("parses a full planner response into the three fields", () => {
@@ -56,10 +59,42 @@ describe("parsePlannerResponse", () => {
 
   it("falls back to the raw question on malformed JSON", () => {
     const out = parsePlannerResponse("not json at all", "hva skjer i Molde");
-    expect(out).toEqual({ searchTerms: "hva skjer i Molde", brreg: null, tall: null });
+    expect(out).toEqual({ searchTerms: "hva skjer i Molde", brreg: null, tall: null, ranking: null });
   });
 
   it("falls back to the question when searchTerms is missing/empty", () => {
     expect(parsePlannerResponse(JSON.stringify({ brreg: [] }), "min spørring").searchTerms).toBe("min spørring");
+  });
+
+  it("parses a ranking object and defaults missing fields", () => {
+    const out = parsePlannerResponse(
+      JSON.stringify({ searchTerms: "x", ranking: { metric: "omsetning", omfang: "region" } }),
+      "f",
+    );
+    expect(out.ranking).toEqual({ metric: "omsetning", omfang: "region" });
+
+    const loose = parsePlannerResponse(JSON.stringify({ searchTerms: "x", ranking: { metric: "weird" } }), "f");
+    expect(loose.ranking).toEqual({ metric: "annet", omfang: "region" });
+  });
+
+  it("leaves ranking null when absent", () => {
+    expect(parsePlannerResponse(JSON.stringify({ searchTerms: "x" }), "f").ranking).toBeNull();
+  });
+});
+
+describe("decideRankingRoute", () => {
+  it("returns null for non-ranking questions", () => {
+    expect(decideRankingRoute(null)).toBeNull();
+  });
+
+  it("routes by-employees and generic region/kommune rankings to the authoritative register", () => {
+    expect(decideRankingRoute({ metric: "ansatte", omfang: "region" })).toBe("top");
+    expect(decideRankingRoute({ metric: "annet", omfang: "kommune" })).toBe("top");
+  });
+
+  it("routes revenue / national / industry rankings to the honest archive path", () => {
+    expect(decideRankingRoute({ metric: "omsetning", omfang: "region" })).toBe("articles");
+    expect(decideRankingRoute({ metric: "ansatte", omfang: "nasjonalt" })).toBe("articles");
+    expect(decideRankingRoute({ metric: "ansatte", omfang: "bransje" })).toBe("articles");
   });
 });

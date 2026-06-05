@@ -4,6 +4,22 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Spør: lokal arbeidsgiver-rangering (2026-06-05) — etter merge av PR-stabelen
+Design: [`docs/spor-storste-arbeidsgivere-design.md`](spor-storste-arbeidsgivere-design.md).
+Krever din handling etter at #112 → #113 → arbeidsgiver-PR-en er merget:
+1. **Kjør de to migrasjonene** mot prod: `20260605120000_mr_companies.sql`
+   (ny tabell) og `20260605120100_schedule_mr_employers_refresh.sql` (cron).
+2. **Deploy `refresh-mr-employers`** edge function:
+   `supabase functions deploy refresh-mr-employers --project-ref oemzrhlybemakwpyhcno`.
+3. **Backfill nå** (ellers er tabellen tom til søndag): kjør funksjonen én gang
+   manuelt (SQL Editor-snutten ligger nederst i schedule-migrasjonen). Spør
+   faller tilbake på live-BRREG til tabellen er fylt, så det virker uansett —
+   men backfill gir lokal rangering med en gang.
+4. **Cron-GUC:** `refresh-mr-employers-weekly` krever at `app.settings.supabase_url`
+   og `app.settings.service_role_key` er satt (samme GUC-er som de andre
+   schedulerne). Verifiser:
+   `SELECT * FROM cron.job WHERE jobname = 'refresh-mr-employers-weekly';`
+
 ### Slett deployet `brreg-query`-funksjon (2026-06-04)
 "Spør databasen"-modulen er skrotet i koden (PR — branch `chore/fjern-spor-databasen`):
 frontend-fanen i `/tall`, `CompanyQuery.tsx` og funksjonen `brreg-query` er fjernet

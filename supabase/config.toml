@@ -12,6 +12,9 @@ verify_jwt = false
 [functions.refresh-roles-and-status]
 verify_jwt = false
 
+[functions.refresh-mr-employers]
+verify_jwt = false
+
 [functions.cloudflare-stream]
 verify_jwt = false
 

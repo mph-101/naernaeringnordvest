@@ -11,7 +11,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { aiChatCompletion, aiFetch } from "../_shared/ai-client.ts";
 import { collectFinancialTargets } from "./financial-targets.ts";
 import { PLANNER_SYSTEM_PROMPT, parsePlannerResponse, decideRankingRoute, type PlannerResult } from "./planner.ts";
-import { applyMrKommune, MR_KOMMUNE_NUMBERS } from "./mr-kommuner.ts";
+import { applyMrKommune, MR_KOMMUNE_NUMBERS, kommuneNavnByNummer } from "./mr-kommuner.ts";
 
 const CHAT_MODEL = "google/gemini-3-flash-preview";
 const QUERY_REWRITE_MODEL = "google/gemini-2.5-flash-lite";
@@ -295,6 +295,37 @@ function formatTallBlock(tall: {
   return parts.join("\n\n");
 }
 
+/**
+ * Largest employers from our own database (mr_companies, refreshed weekly from
+ * Brønnøysund). Returns up to 10, shaped like brreg-proxy `top` so the ranking
+ * formatting is identical. Empty array on cold start / error so the caller can
+ * fall back to a live BRREG lookup.
+ */
+async function fetchLocalTopEmployers(
+  supabase: ReturnType<typeof createClient>,
+  kommunenummer: string | null,
+): Promise<any[]> {
+  try {
+    let q = supabase
+      .from("mr_companies")
+      .select("orgnr, navn, kommunenummer, antall_ansatte, naeringsbeskriv")
+      .order("antall_ansatte", { ascending: false })
+      .limit(10);
+    if (kommunenummer) q = q.eq("kommunenummer", kommunenummer);
+    const { data, error } = await q;
+    if (error || !data) return [];
+    return data.map((r: any) => ({
+      navn: r.navn,
+      orgnr: r.orgnr,
+      antallAnsatte: r.antall_ansatte,
+      kommune: kommuneNavnByNummer(r.kommunenummer) || r.kommunenummer || "",
+      naeringsbeskriv: r.naeringsbeskriv || "",
+    }));
+  } catch {
+    return [];
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders(req) });
 
@@ -423,10 +454,15 @@ serve(async (req) => {
         const rankingRoute = decideRankingRoute(plan.ranking);
         if (rankingRoute === "top") {
           const byKommune = plan.ranking!.omfang === "kommune" && mr;
-          const kommune = byKommune ? mr!.nummer : MR_KOMMUNE_NUMBERS.join(",");
           const geo = byKommune ? mr!.navn : "Møre og Romsdal";
-          const top = await fetchTallProxy("top", { kommune, sort: "antallAnsatte", order: "desc", size: "10" });
-          const companies = Array.isArray(top?.companies) ? top.companies : [];
+          // Rank from our own database (mr_companies, refreshed weekly). Fall
+          // back to live BRREG on cold start / empty table so it always answers.
+          let companies = await fetchLocalTopEmployers(supabase, byKommune ? mr!.nummer : null);
+          if (!companies.length) {
+            const kommune = byKommune ? mr!.nummer : MR_KOMMUNE_NUMBERS.join(",");
+            const top = await fetchTallProxy("top", { kommune, sort: "antallAnsatte", order: "desc", size: "10" });
+            companies = Array.isArray(top?.companies) ? top.companies : [];
+          }
           if (companies.length) {
             rankingBlock = companies
               .slice(0, 10)

@@ -48,6 +48,12 @@ export const MR_KOMMUNER: MrKommune[] = [
 export const MR_KOMMUNE_NUMBERS: string[] = MR_KOMMUNER.map((k) => k.nummer);
 
 const BY_LOWER_NAME = new Map(MR_KOMMUNER.map((k) => [k.navn.toLowerCase(), k]));
+const BY_NUMMER = new Map(MR_KOMMUNER.map((k) => [k.nummer, k.navn]));
+
+/** Kommune name for a kommunenummer, or null if it is not an MR kommune. */
+export function kommuneNavnByNummer(nummer: string): string | null {
+  return BY_NUMMER.get(nummer) ?? null;
+}
 
 /**
  * Find the first Møre og Romsdal kommune named as a whole word in `text`.

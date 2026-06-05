@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   resolveMrKommuneFromText,
   applyMrKommune,
+  kommuneNavnByNummer,
   MR_KOMMUNER,
   MR_KOMMUNE_NUMBERS,
 } from "../../../supabase/functions/articles-chat/mr-kommuner";
@@ -35,6 +36,12 @@ describe("resolveMrKommuneFromText", () => {
   it("returns null when no MR kommune is mentioned", () => {
     expect(resolveMrKommuneFromText("omsetning for Equinor")).toBeNull();
     expect(resolveMrKommuneFromText("")).toBeNull();
+  });
+
+  it("maps kommunenummer back to name (for ranking display)", () => {
+    expect(kommuneNavnByNummer("1508")).toBe("Ålesund");
+    expect(kommuneNavnByNummer("1516")).toBe("Ulstein");
+    expect(kommuneNavnByNummer("0301")).toBeNull(); // Oslo — not MR
   });
 });
 

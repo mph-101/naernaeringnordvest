@@ -18,10 +18,39 @@ export interface TallPlan {
   days?: number;
 }
 
+export interface Ranking {
+  metric: "ansatte" | "omsetning" | "annet";
+  omfang: "region" | "kommune" | "nasjonalt" | "bransje";
+}
+
 export interface PlannerResult {
   searchTerms: string;
   brreg: BrregQuery[] | null;
   tall: TallPlan | null;
+  // Non-null when the question is a superlative/ranking over a GROUP (e.g.
+  // "largest companies in the region") rather than a named entity. Drives both
+  // routing and the honest-framing rules — see decideRankingRoute.
+  ranking: Ranking | null;
+}
+
+export type RankingRoute = "top" | "articles";
+
+/**
+ * Where to ground a ranking question.
+ *   "top"      — authoritative: enhetsregisteret sorted by employees over the
+ *                region/kommune (brreg-proxy `top`). Used for ansatte/generic.
+ *   "articles" — no register can rank the whole population on this metric/scope
+ *                (revenue region-wide, national, industry). Answer from the
+ *                archive but framed as non-exhaustive, offering the answerable
+ *                (by-employees) variant.
+ * Returns null for non-ranking questions (unchanged behaviour).
+ */
+export function decideRankingRoute(ranking: Ranking | null): RankingRoute | null {
+  if (!ranking) return null;
+  const obtainableByEmployees =
+    (ranking.metric === "ansatte" || ranking.metric === "annet") &&
+    (ranking.omfang === "region" || ranking.omfang === "kommune");
+  return obtainableByEmployees ? "top" : "articles";
 }
 
 export const PLANNER_SYSTEM_PROMPT = `Du er planleggeren for «Spør», AI-assistenten til lokalavisen Nær Næring (Møre og Romsdal). Analyser brukerens spørsmål og returner ETT JSON-objekt med tre felt:
@@ -29,7 +58,8 @@ export const PLANNER_SYSTEM_PROMPT = `Du er planleggeren for «Spør», AI-assis
 {
   "searchTerms": "3–8 nøkkelord for fulltekstsøk i avisarkivet (egennavn, bransjer, steder, selskaper). Ingen tegnsetting, ingen anførselstegn.",
   "brreg": [ 0–3 oppslag i Brønnøysund (enhetsregisteret) ],
-  "tall": { statistikk-plan } eller null
+  "tall": { statistikk-plan } eller null,
+  "ranking": { "metric": "ansatte"|"omsetning"|"annet", "omfang": "region"|"kommune"|"nasjonalt"|"bransje" } eller null
 }
 
 BRREG — hver query er {"label":"...","params":{...},"financials":bool}.
@@ -46,6 +76,11 @@ TALL — {"establishments":bool,"bankruptcies":bool,"labor":bool,"housing":bool,
 - housing: boligpriser, boligbygging, boliglån, boligmarked.
 - kommunenummer: samme regel som over (nasjonale byer kan fylles, MR-steder utelates).
 - days: dager tilbake for etablering/konkurs (default 90, maks 365).
+
+RANKING — sett "ranking" når spørsmålet ber om en rangering eller superlativ over en GRUPPE (størst/flest/mest/topp/største arbeidsgivere/«hvilke … i regionen/bransjen/kommunen»), IKKE om et navngitt selskap.
+- metric: "ansatte" (flest ansatte / største arbeidsgivere / størst arbeidsplass), "omsetning" (størst omsetning/inntekter/lønnsomhet), ellers "annet".
+- omfang: "region" (Møre og Romsdal / regionen), "kommune" (én bestemt kommune), "nasjonalt", eller "bransje".
+Ellers "ranking": null.
 
 Returner BARE JSON, ingen forklaring.`;
 
@@ -90,8 +125,17 @@ export function parsePlannerResponse(raw: string, fallbackQuery: string): Planne
       };
     }
 
-    return { searchTerms, brreg, tall };
+    const r = parsed?.ranking && typeof parsed.ranking === "object" ? parsed.ranking : null;
+    let ranking: Ranking | null = null;
+    if (r && (r.metric || r.omfang)) {
+      ranking = {
+        metric: r.metric === "ansatte" || r.metric === "omsetning" ? r.metric : "annet",
+        omfang: ["region", "kommune", "nasjonalt", "bransje"].includes(r.omfang) ? r.omfang : "region",
+      };
+    }
+
+    return { searchTerms, brreg, tall, ranking };
   } catch {
-    return { searchTerms: fallbackQuery, brreg: null, tall: null };
+    return { searchTerms: fallbackQuery, brreg: null, tall: null, ranking: null };
   }
 }

@@ -22,41 +22,43 @@ Midt/Øst får samme oppførsel uten ny kode per region.
 - Spør kalles fra `src/lib/articles-chat.ts` (klient-wrapper). Den sender ikke
   region i dag; `ConversationView` har tilgang til `useRegion`.
 
-## Forutsetning (blokkering)
-B forutsetter at multi-region-grunnmuren er på plass:
-1. `editorial_regions` seedes (minst Nordvest-raden).
-2. En **region→kommune/fylke-kobling** besluttes og fylles.
-Dette er fase 2.1-beslutninger (forretningsmodell), ikke rene tekniske valg.
+## Besluttet (Magnus, 2026-06-05)
+1. **Region→kommune-kilde:** ny kolonne `fylkesnummer text[]` på
+   `editorial_regions` (Nordvest = `{'15'}`); kommuner utledes fra fylke.
+2. **Nordvest = hele Møre og Romsdal (fylke 15)**, alle 27 kommuner.
+3. **Overføring:** klienten sender region-**slug**; `articles-chat` slår opp
+   kommunelista server-side. Default Nordvest hvis utelatt.
+4. **Tillit:** stol på klient-sendt region (kun geo-scoping, ikke tilgangs-
+   kontroll — Spør leser publisert + offentlig BRREG).
 
-## Designvalg (åpne spørsmål til Magnus)
-1. **Region→kommune-kilde:**
-   - (a) Ny kolonne på `editorial_regions`, f.eks. `fylkesnummer text[]` (Nordvest
-     = `{'15'}`) — kommuner utledes via `regions.ts`/SSB. Enkelt, fylkesgranulært.
-   - (b) Statisk config i kode, `slug → fylke(r)`, gjenbruker `regions.ts FYLKER`.
-     Ingen DB-endring, men region-definisjon i kode.
-   - (c) Egen `region_kommuner`-koblingstabell (mest fleksibelt; tillater regioner
-     som ikke følger fylkesgrenser, f.eks. en delmengde av et fylke).
-2. **Hva er Nordvest presist?** Hele fylke 15 (Møre og Romsdal)? (Dagens MR-liste
-   = ja.) Hvilke fylker utgjør Nord/Midt/Øst når de kommer?
-3. **Hvordan når regionen edge-funksjonen?** Klienten sender `region`-slug (eller
-   den oppløste kommunelista) i `articles-chat`-requesten. `articles-chat.ts` +
-   `ConversationView` leser `useRegion`. Default Nordvest hvis utelatt.
-4. **Tillit:** Spør leser kun publiserte artikler + offentlig BRREG, så
-   klient-sendt region er lav risiko (kun geo-scoping, ikke tilgangskontroll).
-   Bekreft at det er greit å stole på klient-verdien.
+## Forutsetning (BLOKKERING — multi-region-drift)
+Å kjøre B krever at multi-region-grunnmuren ryddes først:
+- Kanonisk region er `slug='nordvestlandet'` (name 'Nordvestlandet',
+  `subdomain='nordvest'`, `is_active=true`). Multi-region-migrasjonen
+  (`20260518200000`) **UPDATE-er** denne raden — den forutsetter at den finnes.
+- Men `editorial_regions` har **0 rader i prod** (snapshot-rebuild fjernet den),
+  så UPDATE-en traff ingenting, og en rekke tabeller har FK `region_slug →
+  editorial_regions(slug)`. Å seede raden må reconcile denne driften (samme drift
+  som blokkerer næringsbarometeret, jf. memory).
 
-## Skisse av implementasjon (når valgene er tatt)
-- `articles-chat`-request får `{ region?: { slug, kommunenummer: string[] } }`
-  (eller bare slug + oppslag server-side).
-- `mr-kommuner.ts` generaliseres til region-parametrisert: `regionKommuner(region)`,
-  `resolveKommuneFromText(text, region)`, `applyRegionScope(..., region)`. Nordvest
-  blir én instans; MR-konstantene beholdes som default.
-- Planner-prompten får regionnavnet injisert («… for [Region] ([fylke])») i stedet
-  for hardkodet «Møre og Romsdal».
-- `mr_companies`/rangering generaliseres til regionens kommuneliste (eller en
-  `region`-kolonne på tabellen ved flere regioner).
+Dette er en bevisst **fase 2 multi-region**-opprydding (seede `editorial_regions`
++ verifisere FK/region_slug-tilstand), ikke noe som bør boltes på Spør-stabelen.
+
+## Skisse av implementasjon (når grunnmuren er ryddet)
+- Migrasjon: `ALTER editorial_regions ADD COLUMN fylkesnummer text[]`; sett
+  `{'15'}` på Nordvest-raden (som da finnes).
+- Deno-helper `fylke-kommuner.ts`: `fylkesnummer[] → kommuneliste` (fylke 15 =
+  dagens MR-liste; flere fylker legges til når Nord/Midt/Øst lanseres).
+- `articles-chat`-request får `{ region?: slug }`; funksjonen slår opp
+  `fylkesnummer` fra `editorial_regions` og utleder kommunelista. Default fylke
+  15 (MR) ved manglende/ukjent region.
+- `mr-kommuner.ts` generaliseres til region-parametrisert; MR blir Nordvest-
+  instansen.
+- Klient: `articles-chat.ts` + `ConversationView` sender `current.slug` fra
+  `useRegion`.
 
 ## Sekvensering
-Avhenger av at fase 2-grunnmuren (seede `editorial_regions` + region→kommune-modell)
-besluttes og ryddes (multi-region-drift). Inntil da leverer **del A** den
-brukernære oppførselen hardkodet til Nordvest. B implementeres når valg 1–4 er tatt.
+Del A (implementert, PR #115) dekker oppførselen hardkodet til Nordvest. Del B
+implementeres som del av fase 2 multi-region-oppryddingen — den som også seeder
+`editorial_regions` og låser opp barometeret. Designet over er ferdig besluttet og
+venter kun på den grunnmuren.

@@ -10,6 +10,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { aiChatCompletion, aiFetch } from "../_shared/ai-client.ts";
 import { collectFinancialTargets } from "./financial-targets.ts";
+import { PLANNER_SYSTEM_PROMPT, parsePlannerResponse, type PlannerResult } from "./planner.ts";
+import { applyMrKommune } from "./mr-kommuner.ts";
 
 const CHAT_MODEL = "google/gemini-3-flash-preview";
 const QUERY_REWRITE_MODEL = "google/gemini-2.5-flash-lite";
@@ -54,74 +56,25 @@ function stripHtml(html: string): string {
 }
 
 /**
- * Use a small, fast LLM to extract the most distinctive search keywords
- * from the conversation. This dramatically improves recall for Postgres
- * full-text search compared to feeding the raw question (which is full of
- * stop-words and conversational filler).
+ * Single LLM call that plans everything Spør needs from the question: archive
+ * search terms, any BRREG (enhetsregisteret) lookups, and a Tall-statistics
+ * plan. Replaces three separate round-trips (search-term extraction + BRREG
+ * plan + Tall plan). Degrades to a plain archive search on any failure.
  */
-async function extractSearchTerms(question: string): Promise<string> {
+async function planQuery(question: string): Promise<PlannerResult> {
   try {
     const json = await aiChatCompletion({
       model: QUERY_REWRITE_MODEL,
       messages: [
-        {
-          role: "system",
-          content:
-            "Du hjelper med å lage søk i en norsk avisarkivdatabase. Returner KUN 3–8 nøkkelord (egennavn, bransjer, steder, selskaper) fra brukerens spørsmål, atskilt med mellomrom. Ingen forklaring, ingen tegnsetting, ingen anførselstegn.",
-        },
+        { role: "system", content: PLANNER_SYSTEM_PROMPT },
         { role: "user", content: question },
       ],
     });
-    const terms = json?.choices?.[0]?.message?.content as string | undefined;
-    return (terms || question).trim();
-  } catch {
-    return question;
-  }
-}
-
-/**
- * Ask a small LLM whether the question would benefit from a Brønnøysund
- * (BRREG) company lookup, and if so produce search parameters. Returns
- * `null` when no company context is useful.
- */
-async function planBrregQueries(
-  question: string,
-): Promise<Array<{ label: string; params: Record<string, string>; financials?: boolean }> | null> {
-  try {
-    const json = await aiChatCompletion({
-      model: QUERY_REWRITE_MODEL,
-      messages: [
-        {
-          role: "system",
-          content: `Du planlegger oppslag i Brønnøysundregistrene (enhetsregisteret) for å berike svar fra en norsk lokalavis. Returner ETT JSON-objekt: {"queries":[...]} hvor hver query er {"label":"...","params":{...},"financials":bool}.
-
-Bruk parametere: navn, kommunenummer, organisasjonsform (default AS,ASA), naeringskode, sort (f.eks "antallAnsatte,desc"), size (maks 10), konkurs.
-
-Viktige kommunenumre: Oslo 0301, Bergen 4601, Trondheim 5001, Stavanger 1103, Molde 1506, Ålesund 1507, Kristiansund 1505, Tromsø 5501, Bodø 1804.
-
-Sett "financials":true på en query når spørsmålet handler om økonomi for et NAVNGITT selskap — omsetning, driftsresultat, årsresultat, lønnsomhet, overskudd, underskudd, regnskap, inntekter. Da hentes årsregnskap fra Regnskapsregisteret. Ellers "financials":false.
-
-Hvis spørsmålet handler om et NAVNGITT selskap, en bransje eller "største/nyeste/konkurs" i et sted: lag 1–3 queries.
-Hvis spørsmålet IKKE handler om selskapsdata (politikk, kultur, generelle nyheter osv.): returner {"queries":[]}.
-Returner BARE JSON.`,
-        },
-        { role: "user", content: question },
-      ],
-    });
-    const content = ((json?.choices?.[0]?.message?.content as string) || "").trim();
-    const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-    const parsed = JSON.parse(cleaned);
-    const queries = Array.isArray(parsed?.queries) ? parsed.queries : [];
-    return queries.length
-      ? queries.slice(0, 3).map((q: any) => ({
-          label: q.label,
-          params: q.params || {},
-          financials: !!q.financials,
-        }))
-      : null;
+    const content = (json?.choices?.[0]?.message?.content as string) || "";
+    return parsePlannerResponse(content, question);
   } catch (e) {
-    console.error("planBrregQueries failed:", e);
-    return null;
+    console.error("planQuery failed:", e);
+    return { searchTerms: question, brreg: null, tall: null };
   }
 }
 
@@ -246,59 +199,6 @@ async function fetchEnhet(orgnr: string): Promise<any | null> {
     };
   } catch (e) {
     console.error(`fetchEnhet ${orgnr} failed:`, e);
-    return null;
-  }
-}
-
-/**
- * Decide whether the question would benefit from "Tall"-data (etablering,
- * konkurs, arbeidsmarked, boligmarked) and return a small plan.
- */
-async function planTallQueries(
-  question: string,
-): Promise<{
-  establishments: boolean;
-  bankruptcies: boolean;
-  labor: boolean;
-  housing: boolean;
-  kommunenummer?: string;
-  days?: number;
-} | null> {
-  try {
-    const json = await aiChatCompletion({
-      model: QUERY_REWRITE_MODEL,
-      messages: [
-        {
-          role: "system",
-          content: `Du planlegger oppslag i offentlige datakilder for Nær Nærings "Tall"-database. Returner ETT JSON-objekt:
-{"establishments":bool,"bankruptcies":bool,"labor":bool,"housing":bool,"kommunenummer":"....","days":N}
-
-- establishments=true hvis spørsmålet handler om nye selskaper/etableringer/oppstart.
-- bankruptcies=true hvis spørsmålet handler om konkurser.
-- labor=true hvis spørsmålet handler om arbeidsledighet, sysselsetting, sykefravær, lønn eller arbeidsmarked.
-- housing=true hvis spørsmålet handler om boligpriser, boligbygging, boliglån eller boligmarked.
-- kommunenummer: fyll inn 4-sifret nummer hvis et bestemt sted nevnes (Oslo 0301, Bergen 4601, Trondheim 5001, Stavanger 1103, Molde 1506, Ålesund 1507, Kristiansund 1505, Tromsø 5501, Bodø 1804). Ellers tom streng.
-- days: hvor mange dager tilbake skal vi se på etableringer/konkurser (default 90, maks 365).
-
-Hvis ingen av kategoriene passer: returner alle false. Returner BARE JSON.`,
-        },
-        { role: "user", content: question },
-      ],
-    });
-    const content = ((json?.choices?.[0]?.message?.content as string) || "").trim();
-    const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-    const parsed = JSON.parse(cleaned);
-    if (!parsed.establishments && !parsed.bankruptcies && !parsed.labor && !parsed.housing) return null;
-    return {
-      establishments: !!parsed.establishments,
-      bankruptcies: !!parsed.bankruptcies,
-      labor: !!parsed.labor,
-      housing: !!parsed.housing,
-      kommunenummer: typeof parsed.kommunenummer === "string" ? parsed.kommunenummer : "",
-      days: Math.min(365, Math.max(7, Number(parsed.days) || 90)),
-    };
-  } catch (e) {
-    console.error("planTallQueries failed:", e);
     return null;
   }
 }
@@ -450,22 +350,28 @@ serve(async (req) => {
 
     if (queryText.trim().length > 2) {
       try {
-        const searchTerms = await extractSearchTerms(queryText);
-        console.log("articles-chat: search terms =", searchTerms);
+        const plan = await planQuery(queryText);
+        const searchTerms = plan.searchTerms;
+        brregPlan = plan.brreg;
+        const tallPlan = plan.tall;
+        // Deterministic Møre og Romsdal kommune-targeting: full 27-kommune
+        // coverage with correct current codes (incl. Ålesund 1508). Fills in the
+        // kommunenummer the planner was told to leave blank for MR places.
+        const mr = applyMrKommune(brregPlan, tallPlan, queryText);
+        console.log(
+          "articles-chat: planner =",
+          JSON.stringify({ searchTerms, brreg: brregPlan?.length ?? 0, tall: !!tallPlan, mr: mr?.navn ?? null }),
+        );
+
         const [
           { data: matches, error: matchErr },
           { data: trusted, error: trustedErr },
-          brregPlanRes,
-          tallPlan,
         ] = await Promise.all([
           supabase.rpc("search_articles", { query_text: searchTerms, match_count: MATCH_COUNT }),
           supabase.rpc("search_trusted_sources", { query_text: searchTerms, match_count: TRUSTED_MATCH_COUNT }),
-          planBrregQueries(queryText),
-          planTallQueries(queryText),
         ]);
         if (matchErr) console.error("search_articles error:", matchErr);
         if (trustedErr) console.error("search_trusted_sources error:", trustedErr);
-        brregPlan = brregPlanRes;
 
         if (brregPlan && brregPlan.length) {
           brregResults = await fetchBrreg(brregPlan);

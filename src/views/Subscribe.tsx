@@ -35,18 +35,18 @@ const PLANS: PlanDef[] = [
   {
     id: "quarterly",
     name: "Kvartal",
-    price: "199 kr",
+    price: "249 kr",
     period: "/ 3 måneder",
-    monthly: "≈ 66 kr/mnd",
+    monthly: "≈ 83 kr/mnd",
     bullets: SHARED_PERSONAL_BULLETS,
     icon: User,
   },
   {
     id: "yearly",
     name: "År",
-    price: "699 kr",
+    price: "890 kr",
     period: "/ år",
-    monthly: "≈ 58 kr/mnd · Spar 97 kr/år vs kvartal",
+    monthly: "≈ 74 kr/mnd · Spar 106 kr/år vs kvartal",
     bullets: SHARED_PERSONAL_BULLETS,
     highlight: true,
     icon: User,
@@ -54,13 +54,13 @@ const PLANS: PlanDef[] = [
   {
     id: "business_seat",
     name: "Bedrift",
-    price: "fra 399 kr",
+    price: "fra 490 kr",
     period: "/ sete / år",
     monthly: "Volumrabatt fra 10 og 30 seter · Faktureres årlig",
     tiers: [
-      { range: "1–9 seter", price: "599 kr/sete/år" },
-      { range: "10–29 seter", price: "499 kr/sete/år" },
-      { range: "30+ seter", price: "399 kr/sete/år" },
+      { range: "1–9 seter", price: "690 kr/sete/år" },
+      { range: "10–29 seter", price: "590 kr/sete/år" },
+      { range: "30+ seter", price: "490 kr/sete/år" },
     ],
     bullets: [
       "Alle ansatte får full tilgang",
@@ -233,7 +233,7 @@ export default function Subscribe() {
                   />
                   {/* Live tier-feedback so the buyer sees the unit price they're locking in */}
                   {(() => {
-                    const perSeat = seatCount >= 30 ? 399 : seatCount >= 10 ? 499 : 599;
+                    const perSeat = seatCount >= 30 ? 490 : seatCount >= 10 ? 590 : 690;
                     const total = perSeat * seatCount;
                     return (
                       <p className="text-[11px] text-muted-foreground mt-1">

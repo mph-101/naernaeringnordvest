@@ -4,6 +4,26 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Stripe-priser: 249/kvartal + 890/år (2026-06-08) — KRITISK, ellers belastes feil beløp
+Jeg har endret all UI-tekst og `docs/paywall.md` til de nye prisene (kvartal
+199 → **249 kr**, år 699 → **890 kr**). Men beløpene som faktisk belastes ligger
+**ikke i koden** — de bor på Stripe Price-objektene som `create-checkout` slår opp
+via `lookup_key`. Til du oppdaterer Stripe vil kassen fortsatt trekke 199/699,
+mens siden viser 249/890.
+- **Gjør i Stripe-dashbordet (både sandbox OG live):** Stripe Price-objekter er
+  immutable på beløp — du kan ikke redigere prisen. Opprett **nytt** Price på de
+  to produktene (249 kr kvartalsvis, 890 kr årlig), arkivér de gamle, og **flytt
+  `lookup_key`-ene `personal_quarterly` / `personal_yearly`** over til de nye
+  (fjern key fra gammel pris først, ellers nekter Stripe duplikat). Da plukker
+  `create-checkout` automatisk opp riktig beløp uten kodeendring.
+- **Business-seter også økt** (2026-06-08): 1–9 599 → **690**, 10–29 499 → **590**,
+  30+ 399 → **490** kr/sete/år. Samme Stripe-grep for lookup-keyene
+  `business_seat_1_9` / `business_seat_10_29` / `business_seat_30_plus`. Til sammen
+  fem priser å oppdatere (2 personlige + 3 business), i både sandbox og live.
+- **Eksisterende abonnenter:** nye priser gjelder kun nye checkouts. Vil du
+  prisjustere løpende abonnement må det gjøres som egen migrering i Stripe (si fra,
+  så lager jeg evt. en plan — krever varsling til kundene).
+
 ### Spør: lokal arbeidsgiver-rangering (2026-06-05) — etter merge av PR-stabelen
 Design: [`docs/spor-storste-arbeidsgivere-design.md`](spor-storste-arbeidsgivere-design.md).
 Krever din handling etter at #112 → #113 → arbeidsgiver-PR-en er merget:

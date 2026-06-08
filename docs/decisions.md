@@ -72,3 +72,10 @@ Kontekst: maskinlesbar journalistisk proveniens for AI-agenter og søkemotorer
    `article_provenance_*` — `article_sources` var allerede tatt (trusted-sources
    for Spør/extract-source), oppdaget via tsc mot genererte typer. Korrekthetsfiks,
    ikke designendring; API-kontrakt uendret.
+
+   **Sikkerhetsfiks (2026-06-08, prod-verifisert):** den opprinnelige
+   `REVOKE SELECT (note)` var en no-op — anon/authenticated hadde TABELL-nivå
+   SELECT (Supabase-default), som en kolonne-revoke ikke kan hulle. Korrigert i
+   migrasjon 20260608130000: revoke tabell-SELECT + grant kolonne-SELECT på alt
+   unntatt `note`. Lærdom: for å skjerme én kolonne i Supabase må man revoke hele
+   tabell-SELECT og re-grante de tillatte kolonnene — ikke kolonne-revoke alene.

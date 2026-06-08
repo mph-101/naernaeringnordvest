@@ -72,3 +72,16 @@ Kontekst: maskinlesbar journalistisk proveniens for AI-agenter og søkemotorer
    `article_provenance_*` — `article_sources` var allerede tatt (trusted-sources
    for Spør/extract-source), oppdaget via tsc mot genererte typer. Korrekthetsfiks,
    ikke designendring; API-kontrakt uendret.
+
+   **Trinn 3+4 — endepunkt + instrumentering (2026-06-08):**
+   1. Edge function `article-provenance`, helt åpen (`*` CORS, verify_jwt=false),
+      rate-limitet 300/time/IP (hash med service-role-salt, IP aldri lagret rått).
+   2. `machine_note` i right_of_reply er status-utledet (fast norsk streng), ALDRI
+      den interne `note`. `independent_source_count` = distinkte intervjuobjekter.
+   3. `provenance_access_log` logger user-agent + seksjoner + eksponering, INGEN IP
+      (Trinn 4). Mål: måle om agent-trafikk konverterer til abonnement.
+   4. Logg-retensjon: daglig pg_cron sletter logg >90 dager + rate-limit-vinduer
+      >1 døgn. Holder den eneste fritt-voksende posten flat (kostnadskontroll).
+   5. Kostnad: rate-limiten begrenser misbruk, ikke normal volum. Reell driver er
+      logg-lagring (nå løst) + invokasjoner (innenfor 2M/mnd Pro-kvote i lang tid).
+      Fremtid: flytt rate-limiting til Cloudflare (Fase 4.4) → fjerner 2 DB-skriv/req.

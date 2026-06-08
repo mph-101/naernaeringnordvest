@@ -46,3 +46,29 @@ Kontekst: implementering av næringsbarometeret (`docs/naeringsbarometer-design.
    med æ-mappe). Derfor er kanonisk rute ASCII `/naeringspuls`, og `/næringspuls`
    redirecter dit (Next `next.config` + Vite `<Navigate>`). Begge URL-er virker;
    bruk `/naeringspuls` i lenker. Erstatter `/barometer` / `/naeringspulsen`.
+
+## 2026-06-08 — Agent-proveniens / metadata-lag
+
+Kontekst: maskinlesbar journalistisk proveniens for AI-agenter og søkemotorer
+(`docs/agent-provenance-design.md`). To lag: schema.org/NewsArticle (JSON-LD, SSR)
++ eget `provenance`-endepunkt.
+
+1. **To lag, ingen erstatter den andre.** JSON-LD = standardlaget agenter/søk leser
+   i dag; eget `provenance`-objekt = det journalistisk unike schema.org ikke dekker
+   («part avslo å kommentere», antall uavhengige kilder). IKKE C2PA (fil-/bilde-
+   proveniens, stripes i transitt — feil verktøy for artikkel-metadata).
+2. **Proveniens-feltene er offentlige** (RLS `USING(true)`), men `article_responses.note`
+   er intern — column-level `REVOKE SELECT` fra anon+authenticated, kun service_role.
+3. **Bygger på `id` (uuid), ikke slug.** `articles.id` er uuid, ingen slug-kolonne.
+   Endepunktet er identifikator-agnostisk så slug kan legges til i Fase 3.3 (som
+   uansett planlegger `/sak/[slug]` + 301 fra uuid-URL) uten kontraktsbrudd. (Magnus, A.)
+4. **`/provenance` helt åpent + rate-limit** (Magnus). Maks synlighet nå; user-agent
+   logges (Trinn 4) så API-nøkkel kan innføres senere. `api_keys`-infra finnes alt.
+5. **`source_count`/`document_count` beregnes live**, ikke lagret — ingen sync-triggere.
+6. **Drift-forbehold:** MCP lesesperret i økten; migrasjon idempotent, bygd på
+   genererte typer, må verifiseres mot prod før kjøring.
+
+   **Renavn (2026-06-08, under bygging):** proveniens-tabellene prefikses
+   `article_provenance_*` — `article_sources` var allerede tatt (trusted-sources
+   for Spør/extract-source), oppdaget via tsc mot genererte typer. Korrekthetsfiks,
+   ikke designendring; API-kontrakt uendret.

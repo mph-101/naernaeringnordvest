@@ -138,3 +138,16 @@ i artikkeleditoren (default av, kun redaksjonelle roller).
 
 > Personvern: Liveblocks er US-basert og mottar artikkel-body. Hvis det er et
 > problem, velg Hocuspocus-stien (punkt 1).
+
+## Agent-proveniens (2026-06-08)
+
+- [ ] **Kjør migrasjonen** `20260608120000_agent_provenance_schema.sql` mot prod
+      (`supabase db push` eller dashboard). MCP var lesesperret i økten, så Claude
+      kunne ikke verifisere skjema eller kjøre selv.
+- [ ] **Regenerer typer** etter migrasjon: `supabase gen types` → oppdater
+      `src/integrations/supabase/types.ts`. Da kan den midlertidige untyped-aksessoren
+      i `src/lib/agent-provenance/server.ts` byttes til typede kall.
+- [ ] **Sett `NEXT_PUBLIC_SITE_URL`** i Vercel (prod + preview) til faktisk domene.
+      Default i koden er `https://naernaering.no` — JSON-LD `url`/canonical bruker den.
+- [ ] **Rich Results Test:** etter deploy, kjør en premium-artikkel-URL gjennom
+      https://search.google.com/test/rich-results og bekreft NewsArticle + paywall.

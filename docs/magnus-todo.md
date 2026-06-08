@@ -171,3 +171,12 @@ i artikkeleditoren (default av, kun redaksjonelle roller).
       Default i koden er `https://naernaering.no` — JSON-LD `url`/canonical bruker den.
 - [ ] **Rich Results Test:** etter deploy, kjør en premium-artikkel-URL gjennom
       https://search.google.com/test/rich-results og bekreft NewsArticle + paywall.
+
+## Proveniens-endepunkt (Trinn 3+4, 2026-06-08)
+
+- [ ] **Kjør migrasjon** `20260608140000_provenance_endpoint_infra.sql` (rate-limit
+      + tilgangslogg) mot prod — venter på din godkjenning av skjemaet.
+- [ ] **Deploy edge function** `article-provenance` (config.toml har verify_jwt=false).
+- [ ] **Sett `SITE_URL`** som secret på edge functions (full URL, f.eks.
+      `https://naernaering.no`) — brukes i `article.url` og `editorial_standards`.
+      Default i koden er `https://naernaering.no`.

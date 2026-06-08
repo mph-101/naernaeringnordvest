@@ -1,5 +1,8 @@
 project_id = "pidndnsjsbzefshlgfqw"
 
+[functions.article-provenance]
+verify_jwt = false
+
 [functions.idrett-chat]
 verify_jwt = false
 

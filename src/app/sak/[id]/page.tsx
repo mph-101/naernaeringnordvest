@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { createSupabaseServer } from "@/lib/supabase-next/server";
+import { getArticleJsonLd } from "@/lib/agent-provenance/server";
 import { PageClient } from "./_loader";
 
 export const dynamic = "force-dynamic";
@@ -42,5 +43,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ArticlePage({ params }: Props) {
   const { id } = await params;
-  return <PageClient id={id} />;
+
+  // Layer 1 — schema.org/NewsArticle JSON-LD, injected SSR so agents and search
+  // engines read journalistic provenance even though the body renders client-side.
+  const jsonLd = await getArticleJsonLd(id).catch(() => null);
+
+  return (
+    <>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          // Server-rendered, no user-controlled HTML — values are JSON-encoded.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      <PageClient id={id} />
+    </>
+  );
 }

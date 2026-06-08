@@ -1,4 +1,8 @@
-project_id = "pidndnsjsbzefshlgfqw"
+# Prod-prosjektet. NB: kjør IKKE `supabase db push` — repo og prod er ute av
+# synk (se docs/migration-drift-warning.md). Migrasjoner kjøres manuelt via
+# SQL Editor. CLI-kommandoer som leser prod (gen types, secrets, functions
+# deploy) er trygge.
+project_id = "oemzrhlybemakwpyhcno"
 
 [functions.article-provenance]
 verify_jwt = false

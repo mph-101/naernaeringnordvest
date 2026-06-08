@@ -96,3 +96,29 @@
   - Hjelpefunksjoner: `has_editorial_role` + region-scopet `has_barometer_access` (SECURITY DEFINER). Muren håndheves server-side i RLS (bevisst avvik fra EF-paywallen — `docs/decisions.md`).
   - Seed: 11 moduler for nordvestlandet. Verifisert: 11 rader, 4 åpne, funksjoner+policies på plass.
   - Rute besluttet: `/næringspuls`. Design: `docs/naeringsbarometer-design.md`. **Gjenstår:** PR 2 (SSB-henting + avviksdetektor-EF-er + cron), PR 3 (`/næringspuls`-frontend), PR 4 (metered-RPC + teaser), PR 5–7.
+
+## Agent-proveniens (agent-metadata-lag)
+
+Maskinlesbar journalistisk proveniens for AI-agenter og søkemotorer, uten å lekke
+betalt brødtekst. To lag: schema.org/NewsArticle (JSON-LD, SSR) + eget åpent
+`provenance`-endepunkt. Design: `docs/agent-provenance-design.md`. Beslutninger +
+tre bug-funn: `docs/decisions.md` (2026-06-08). IKKE C2PA (eget senere spor).
+
+- **Lag 1 — datamodell + JSON-LD** — 2026-06-08, branch `feat/agent-provenance` (PR #118, **merget**)
+  - Migrasjon `20260608120000` kjørt mot prod (`oemzrhlybemakwpyhcno`): `article_provenance_sources` / `_responses` / `_corrections` + `articles.agent_exposure` (enum, default `headline_plus_dek`). Offentlig lese-policy; `note` skjermet.
+  - Sikkerhetsfiks `20260608130000` kjørt: column-`REVOKE (note)` var no-op mot tabell-nivå SELECT → revoke tabell-SELECT + grant kolonne-SELECT på alt unntatt `note`. Verifisert i prod (0 SELECT for anon/authenticated). Minne: `supabase-column-protection`.
+  - JSON-LD: ren builder `src/lib/agent-provenance/` + SSR-injeksjon i `src/app/sak/[id]/page.tsx`. `agent_exposure` gater tekst; premium → `isAccessibleForFree:false` + `hasPart .article-body`. 8 vitest.
+  - Bug-funn: `articles.id` er uuid (ikke text); `article_sources` var navnet opptatt (Spør) → prefiks `article_provenance_*`.
+  - Typer regenerert mot prod og committet.
+
+- **Lag 2 — endepunkt + instrumentering** — 2026-06-08, branch `feat/proveniens-endepunkt` (PR #119, **venter merge**)
+  - Migrasjon `20260608140000` kjørt mot prod: `provenance_rate_limits` (speiler tip_rate_limits) + `provenance_access_log` (user-agent + seksjoner + eksponering, INGEN IP). pg_cron-retensjon: logg >90d + rate-limit-vinduer >1d slettes daglig.
+  - Edge function `article-provenance` deployet (`verify_jwt=false`, `*` CORS): `GET ?id=<uuid>`, rate-limitet 300/time/IP-hash, respekterer `agent_exposure`, `machine_note` status-utledet (aldri intern `note`). 5 Deno-tester (20/20 totalt).
+  - `SITE_URL`-secret satt = `https://naernaeringnordvest.vercel.app`.
+  - Røyktestet i prod: endepunkt svarer riktig, instrumentering fanget forespørselen (verifisert i `provenance_access_log`).
+
+- **config.toml prod-ref-fiks** — 2026-06-08, branch `fix/config-prod-ref` (PR #120, **venter merge**). `project_id` rettet til `oemzrhlybemakwpyhcno` + advarsel mot `db push` (drift).
+
+**Gjenstår (Magnus, utenfor kode):** merge #119 + #120 · `NEXT_PUBLIC_SITE_URL` i Vercel (= SITE_URL) · Rich Results Test på premium-artikkel · evt. rette config-ref-merknad. Se `docs/magnus-todo.md`.
+
+**Neste oppgave (ikke startet):** admin-UI i artikkeleditoren for å fylle inn `article_provenance_*`-rader (intervjuobjekter, tilsvar-status, rettelser). Datamodell + begge lese-lag står klare; mangler kun redaksjonell inngang.

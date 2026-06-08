@@ -44,7 +44,7 @@ export const translations = {
     // Paywall
     subscribeTitle: "Abonner for å lese videre",
     subscribeDesc: "Få ubegrenset tilgang til alle analyser, data og innsikt om lokalt næringsliv.",
-    subscribeButton: "Bli abonnent — fra 199 kr/kvartal",
+    subscribeButton: "Bli abonnent — fra 249 kr/kvartal",
     signIn: "Allerede medlem? Logg inn",
 
     // Conversation
@@ -216,7 +216,7 @@ export const translations = {
     // Paywall
     subscribeTitle: "Subscribe to Continue Reading",
     subscribeDesc: "Get unlimited access to all analysis, data, and insights about local business.",
-    subscribeButton: "Subscribe — from 199 NOK / quarter",
+    subscribeButton: "Subscribe — from 249 NOK / quarter",
     signIn: "Already a member? Sign in",
 
     // Conversation

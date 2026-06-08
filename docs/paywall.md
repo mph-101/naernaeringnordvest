@@ -28,11 +28,11 @@ Definert som Stripe-produkter med `lookup_key`. Lookup gjør at produkt-ID-er ik
 
 | Plan | Pris | Lookup-key | Type |
 |---|---|---|---|
-| Personlig — kvartal | 199 kr / 3 mnd (~66 kr/mnd) | `personal_quarterly` | Recurring |
-| Personlig — år | 699 kr / år (~58 kr/mnd, spar 97 kr/år vs kvartal) | `personal_yearly` | Recurring |
-| Bedrift — 1–9 seter | 599 kr / sete / år | `business_seat_1_9` | Recurring |
-| Bedrift — 10–29 seter | 499 kr / sete / år | `business_seat_10_29` | Recurring |
-| Bedrift — 30+ seter | 399 kr / sete / år | `business_seat_30_plus` | Recurring |
+| Personlig — kvartal | 249 kr / 3 mnd (~83 kr/mnd) | `personal_quarterly` | Recurring |
+| Personlig — år | 890 kr / år (~74 kr/mnd, spar 106 kr/år vs kvartal) | `personal_yearly` | Recurring |
+| Bedrift — 1–9 seter | 690 kr / sete / år | `business_seat_1_9` | Recurring |
+| Bedrift — 10–29 seter | 590 kr / sete / år | `business_seat_10_29` | Recurring |
+| Bedrift — 30+ seter | 490 kr / sete / år | `business_seat_30_plus` | Recurring |
 | Bedrift — legacy (deprecated) | 199 kr / sete / mnd | `business_seat_monthly` | Recurring |
 | Job Premium | 499 kr | `job_premium_one_time` | Engangs |
 | Event Featured | 1 990 kr | `event_featured_one_time` | Engangs |

@@ -27,8 +27,9 @@ skal være tilgjengelig for alle abonnenter uansett hvilken redaksjon de betaler
 
 ### Datamodell
 - Behold ett abonnement = én rad i `subscriptions`, med `region_slug` som **påkrevd**
-  (NOT NULL) framover. Én bruker kan ha **flere** rader (én per redaksjon) — det er
-  slik «Nordvest-abo + Øst-abo separat» modelleres (jf. multi-region-design §3.3).
+  framover (NOT NULL for enkelt-region-abo; for bunt se beslutning 4). Én bruker kan ha
+  **flere** rader (én per redaksjon) — det er slik «Nordvest-abo + Øst-abo separat»
+  modelleres (jf. multi-region-design §3.3).
 - Tilgangsregel for en gitt artikkel:
   - `region_slug = 'nasjonal'` → tilgjengelig for **alle** med et hvilket som helst
     aktivt abonnement.
@@ -41,8 +42,8 @@ skal være tilgjengelig for alle abonnenter uansett hvilken redaksjon de betaler
   (`useRegion().current`) på metadata, og webhooken (`payments-webhook`) skriver den
   inn på `subscriptions`-raden. Dette er en **endring i Stripe-flyten** og skal etter
   arbeidsreglene foreligges/PR-es isolert.
-- Åpent spørsmål: egne Stripe-priser per region, eller samme pris og kun
-  `region_slug`-metadata? (Se beslutninger under.)
+- Besluttet (se under): **felles pris + `region_slug`-metadata** for enkelt-region,
+  pluss et eget **bunt**-produkt for «hele kjeden».
 
 ### Håndheving (defense-in-depth)
 1. **RLS** på `articles` (og evt. en `can_read_premium(article)`-funksjon) som tar
@@ -51,21 +52,36 @@ skal være tilgjengelig for alle abonnenter uansett hvilken redaksjon de betaler
 2. **Frontend** (`useSubscription`) utvides til `hasAccessToRegion(slug)` slik at
    paywall-UI matcher serveren.
 
-## Beslutninger jeg trenger fra deg før kode
+## Beslutninger — BESLUTTET 2026-06-09
 
-1. **Prising:** Egne Stripe-priser per redaksjon (gir fleksibilitet per region), eller
-   felles pris + `region_slug` som metadata (enklere)? Påvirker hvor mange
-   Price/lookup_key-objekter som må opprettes.
-2. **Bunt/«hele kjeden»-abo:** Skal det finnes et abonnement som gir tilgang til
-   **alle** regioner (f.eks. en dyrere «Nasjonal+»-pakke), eller er alt strengt
-   per-region i fase 1?
-3. **Nasjonalt innhold:** Bekreft regelen «ethvert aktivt abonnement låser opp
-   `nasjonal`-saker». Alternativet er at nasjonalt også er gratis/åpent.
-4. **Migrering av dagens default:** Siden det er 0 abonnement, kan vi sette
-   `region_slug` NOT NULL uten datavask. OK?
-5. **Rekkefølge:** Dette er Fase 2/3-arbeid og rører Stripe + RLS (begge «spør først»
-   i CLAUDE.md). Skal det vente til multi-region-skallet og Stripe-direkte (1.6) er
-   landet, eller vil du ha en minimal RLS-gate nå?
+1. **Prising:** ✅ **Felles pris + `region_slug` som metadata.** Ett sett Stripe-priser
+   for et enkelt-redaksjons-abo; region merkes på abonnementet (ikke egne priser per
+   region). Per-region-priser kan innføres senere hvis en redaksjon vil ha annen pris.
+2. **Bunt/«hele kjeden»-abo:** ✅ **Ja — inkluder bunt nå.** Det skal finnes et
+   abonnement som gir tilgang til **alle** regioner (egen «Nasjonal+»/kjede-pakke,
+   eget Stripe-produkt/pris i tillegg til enkelt-redaksjons-prisen).
+3. **Nasjonalt innhold:** ✅ **Ethvert aktivt abonnement (enkelt-region ELLER bunt)
+   låser opp premium `nasjonal`-saker.** Ikke-premium nasjonalt er åpent for alle.
+4. **`region_slug` NOT NULL:** ⚠️ **Revidert pga. bunt-beslutningen.** Et bunt-abo
+   tilhører ikke én region, så `region_slug` kan ikke være en enkel NOT NULL-region for
+   de radene. Modell (avgjøres i implementasjon): enten
+   - `subscriptions.access_scope text` (`'region'` | `'all'`) + `region_slug` NOT NULL
+     kun når scope = `'region'`, eller
+   - behold `region_slug` nullbar der **NULL = bunt/all-tilgang**, NOT NULL ellers.
+   Første alternativ er tydeligst og anbefales. (0 abonnement i prod, så ingen datavask.)
+5. **Rekkefølge:** ✅ **Bygges sammen med Stripe-direkte (1.6) + multi-region**, ikke
+   som bolt-on nå. Checkout/webhook er det naturlige stedet å skrive `region_slug` /
+   `access_scope` på abonnementet, og Stripe-direkte er forutsetning for å røre den
+   flyten rent.
 
-Når disse er avklart lager jeg egne PR-er: (a) skjema/NOT NULL + RLS,
-(b) checkout/webhook-region, (c) frontend `hasAccessToRegion`.
+### Oppdatert tilgangsregel (gitt beslutningene)
+En bruker har tilgang til en premium-artikkel hvis hen har et aktivt abonnement som
+enten (a) er et **bunt** (`access_scope = 'all'`), (b) matcher artikkelens
+`region_slug`, eller (c) `region_slug = 'nasjonal'`, eller (d) artikkelen er delt til
+en region brukeren har abo for via `article_shared_regions`.
+
+### Når dette bygges (fase 1.6 / 2) lager jeg egne PR-er:
+- (a) Skjema: `access_scope` (+ evt. NOT NULL-betinging) + RLS / `can_read_premium()`.
+- (b) Checkout/webhook: sett `region_slug` + `access_scope` fra valgt plan/region.
+- (c) Frontend: `useSubscription.hasAccessToRegion(slug)` så paywall-UI matcher server.
+- (d) Stripe: opprett bunt-produkt/pris i tillegg til enkelt-redaksjons-prisene.

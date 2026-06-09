@@ -9,6 +9,8 @@ export interface ChecklistItem {
   hint: string;
   /** True when the requirement is satisfied. */
   done: boolean;
+  /** Advisory (soft) items nudge but never block publishing or the count. */
+  advisory?: boolean;
 }
 
 interface PrePublishChecklistProps {
@@ -24,7 +26,9 @@ interface PrePublishChecklistProps {
  * both the inline guard and the visible status panel.
  */
 export const PrePublishChecklist = ({ items, variant = "card" }: PrePublishChecklistProps) => {
-  const remaining = items.filter((i) => !i.done).length;
+  // Advisory items nudge but never block: exclude them from the blocking count.
+  const blocking = items.filter((i) => !i.advisory);
+  const remaining = blocking.filter((i) => !i.done).length;
   const allDone = remaining === 0;
 
   if (variant === "compact") {
@@ -68,7 +72,7 @@ export const PrePublishChecklist = ({ items, variant = "card" }: PrePublishCheck
           <p className="text-xs text-muted-foreground mt-0.5">
             {allDone
               ? "Alle krav er oppfylt. Sett status til «Publisert» og lagre."
-              : `${remaining} av ${items.length} krav gjenstår.`}
+              : `${remaining} av ${blocking.length} krav gjenstår.`}
           </p>
         </div>
       </div>
@@ -78,6 +82,8 @@ export const PrePublishChecklist = ({ items, variant = "card" }: PrePublishCheck
           <li key={item.id} className="flex items-start gap-3">
             {item.done ? (
               <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+            ) : item.advisory ? (
+              <AlertCircle className="w-4 h-4 text-sky-500 dark:text-sky-400 mt-0.5 shrink-0" />
             ) : (
               <div className="w-4 h-4 rounded-full border-2 border-amber-400 dark:border-amber-500 mt-0.5 shrink-0" />
             )}
@@ -88,6 +94,11 @@ export const PrePublishChecklist = ({ items, variant = "card" }: PrePublishCheck
                 }`}
               >
                 {item.label}
+                {item.advisory && !item.done && (
+                  <span className="ml-2 text-[10px] uppercase tracking-wide text-sky-600 dark:text-sky-400">
+                    Anbefalt
+                  </span>
+                )}
               </div>
               {!item.done && (
                 <div className="text-xs text-muted-foreground mt-0.5">{item.hint}</div>
@@ -111,6 +122,8 @@ export function buildPublishChecklist(input: {
   excerpt: string;
   tagCount: number;
   body: string;
+  sourceCount: number;
+  responseCount: number;
   regionSlug: string | null | undefined;
 }): ChecklistItem[] {
   const excerptTrimmed = input.excerpt.trim();
@@ -151,6 +164,13 @@ export function buildPublishChecklist(input: {
       label: "Brødtekst er fylt ut",
       hint: "Skriv selve artikkelteksten før du publiserer.",
       done: bodyTrimmed.length >= 100,
+    },
+    {
+      id: "provenance",
+      label: "Kildebelegg for agenter (anbefalt)",
+      hint: "Legg til kilder eller tilsvar-status i «Proveniens»-panelet, så AI-agenter ser hvor godt saken er belagt. Frivillig.",
+      done: input.sourceCount + input.responseCount > 0,
+      advisory: true,
     },
   ];
 }

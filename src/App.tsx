@@ -10,6 +10,7 @@ import { RegionProvider } from "@/hooks/useRegion";
 import { AudioPlayerProvider } from "./hooks/useAudioPlayer";
 import { MiniPlayer } from "./components/audio/MiniPlayer";
 import { MascotTour } from "./components/mascot/MascotTour";
+import { SporAIChat } from "./components/SporAIChat";
 import { FeatureWalkthrough } from "./components/onboarding/FeatureWalkthrough";
 import { FEATURES } from "@/lib/features";
 
@@ -22,8 +23,6 @@ const Article = lazy(() => import("./views/Article"));
 const Team = lazy(() => import("./views/Team"));
 const Admin = lazy(() => import("./views/Admin"));
 const Tall = lazy(() => import("./views/Tall"));
-const KlubbProfil = lazy(() => import("./views/KlubbProfil"));
-const Sammenlign = lazy(() => import("./views/Sammenlign"));
 const Groups = lazy(() => import("./views/Groups"));
 const GroupDetail = lazy(() => import("./views/GroupDetail"));
 const MineDelteNotater = lazy(() => import("./views/MineDelteNotater"));
@@ -56,9 +55,6 @@ const Lytt = lazy(() => import("./views/Lytt"));
 const ComingSoon = lazy(() => import("./views/ComingSoon"));
 const Naeringspuls = lazy(() => import("./views/Naeringspuls"));
 
-// Idrett is only used for redirects — no need to lazy-load a redirect
-const Idrett = lazy(() => import("./views/Idrett"));
-
 const queryClient = new QueryClient();
 
 /** Minimal full-screen spinner shown while a lazy chunk loads */
@@ -79,6 +75,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <MascotTour />
+              <SporAIChat />
               <FeatureWalkthrough />
               <Suspense fallback={<PageLoader />}>
               <Routes>
@@ -87,12 +84,10 @@ const App = () => (
               <Route path="/team" element={<Team />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/tall" element={<Tall />} />
-              <Route path="/tall/klubb/:id" element={<KlubbProfil />} />
-              <Route path="/tall/sammenlign" element={<Sammenlign />} />
-              {/* Legacy redirects */}
+              {/* Legacy redirects — the old sports/club section was folded into /tall */}
               <Route path="/idrett" element={<Navigate to="/tall" replace />} />
               <Route path="/idrett/klubb/:id" element={<Navigate to="/tall" replace />} />
-              <Route path="/idrett/sammenlign" element={<Navigate to="/tall/sammenlign" replace />} />
+              <Route path="/idrett/sammenlign" element={<Navigate to="/tall" replace />} />
               <Route path="/grupper" element={<Groups />} />
               <Route path="/grupper/:id" element={<GroupDetail />} />
               <Route path="/mine-delte-notater" element={<MineDelteNotater />} />

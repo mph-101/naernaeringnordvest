@@ -20,6 +20,28 @@ const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 const DEFAULT_SITE_URL = "https://naernaeringnordvest.vercel.app";
 const DEFAULT_APP_NAME = "Nær Næring Nordvest";
 
+/**
+ * Cost guardrail: cap output tokens on every non-streaming completion so a
+ * runaway prompt (or a future model swap that drops the implicit limit)
+ * cannot generate unbounded — and unbounded billing. Chosen high enough to
+ * cover article-length output (a full draft/translation of ~20k input chars
+ * is ~5-6k output tokens), low enough to stop a loop. Callers that need a
+ * tighter cap pass their own `max_tokens`; an override comes from
+ * AI_MAX_TOKENS. Streaming callers (aiFetch) must set their own cap.
+ */
+const DEFAULT_MAX_TOKENS = 8000;
+
+/** Resolve the output-token cap for a request. Pure — covered by unit test. */
+export function resolveMaxTokens(
+  requested: number | undefined,
+  envValue: string | undefined,
+): number {
+  if (typeof requested === "number" && requested > 0) return requested;
+  const fromEnv = envValue ? Number(envValue) : NaN;
+  if (Number.isFinite(fromEnv) && fromEnv > 0) return fromEnv;
+  return DEFAULT_MAX_TOKENS;
+}
+
 export interface ChatMessage {
   role: "system" | "user" | "assistant" | "tool";
   content: string | unknown;
@@ -78,6 +100,11 @@ function getConfig() {
 export async function aiChatCompletion(req: ChatCompletionRequest): Promise<ChatCompletionResponse> {
   const { baseUrl, apiKey, siteUrl, appName } = getConfig();
 
+  const body: ChatCompletionRequest = {
+    ...req,
+    max_tokens: resolveMaxTokens(req.max_tokens, Deno.env.get("AI_MAX_TOKENS")),
+  };
+
   const resp = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
@@ -86,7 +113,7 @@ export async function aiChatCompletion(req: ChatCompletionRequest): Promise<Chat
       "HTTP-Referer": siteUrl,
       "X-Title": appName,
     },
-    body: JSON.stringify(req),
+    body: JSON.stringify(body),
   });
 
   if (!resp.ok) {

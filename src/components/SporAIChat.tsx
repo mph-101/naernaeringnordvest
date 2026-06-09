@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { MessageCircle, X, Send, Bot, User, Loader2, FileText, ExternalLink, Rss, Database, Globe } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { streamArticlesChat, type ArticleSource, type TrustedSource } from "@/lib/articles-chat";
+import { FabSlot } from "@/components/FabSlot";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Message {
   role: "user" | "assistant";
@@ -11,8 +14,64 @@ interface Message {
   trustedSources?: TrustedSource[];
 }
 
-export function IdrettAIChat() {
+const LOCAL_KEY = "nn_spor_enabled";
+
+function readEnabled(): boolean {
+  try {
+    const raw = localStorage.getItem(LOCAL_KEY);
+    return raw === null ? true : raw === "true";
+  } catch {
+    return true;
+  }
+}
+function writeEnabled(v: boolean) {
+  try {
+    localStorage.setItem(LOCAL_KEY, String(v));
+  } catch {}
+}
+
+/**
+ * Global floating "Spør" assistant — a quick-access popover form of the
+ * article-archive chat (the full-page version lives in ConversationView).
+ * Joins the shared FAB stack (order=2, above the compass guide and article
+ * notes) and can be hidden per user via the toggle in profile settings,
+ * synced across devices through profiles.spor_enabled.
+ */
+export function SporAIChat() {
+  const { userId } = useAuth();
+  const [enabled, setEnabled] = useState<boolean>(() => readEnabled());
   const [open, setOpen] = useState(false);
+
+  // Sync the on/off preference from the user's profile (cross-device).
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("spor_enabled")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const pref = (data as any)?.spor_enabled;
+      if (typeof pref === "boolean") {
+        setEnabled(pref);
+        writeEnabled(pref);
+      }
+    })();
+  }, [userId]);
+
+  // React to the settings toggle fired from ProfileEditor.
+  useEffect(() => {
+    const onToggle = (e: Event) => {
+      const en = (e as CustomEvent).detail?.enabled;
+      if (typeof en === "boolean") {
+        setEnabled(en);
+        writeEnabled(en);
+        if (!en) setOpen(false);
+      }
+    };
+    window.addEventListener("nn:spor-toggle", onToggle as any);
+    return () => window.removeEventListener("nn:spor-toggle", onToggle as any);
+  }, []);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -88,14 +147,20 @@ export function IdrettAIChat() {
 
   return (
     <>
-      {/* Flytende knapp */}
-      <button
-        onClick={() => setOpen(true)}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-warm shadow-elevated flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${open ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-        aria-label="Åpne AI-assistent"
-      >
-        <MessageCircle className="w-6 h-6 text-accent-foreground" />
-      </button>
+      {/* Flytende knapp — del av den delte FAB-stabelen (order=2, over
+          kompass-guiden og artikkelnotater). Skjules når brukeren har slått
+          av Spør i innstillinger, eller mens chat-vinduet er åpent. */}
+      {enabled && !open && (
+        <FabSlot order={2}>
+          <button
+            onClick={() => setOpen(true)}
+            className="w-14 h-14 rounded-full bg-gradient-warm shadow-elevated flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+            aria-label="Åpne Spør-assistenten"
+          >
+            <MessageCircle className="w-6 h-6 text-accent-foreground" />
+          </button>
+        </FabSlot>
+      )}
 
       {/* Chat-vindu */}
       {open && (

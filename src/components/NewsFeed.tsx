@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X, MapPin, Megaphone } from "lucide-react";
+import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X, MapPin, Megaphone, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/articles";
@@ -232,6 +232,43 @@ export const NewsFeed = () => {
       prev.includes(name) ? prev.filter((x) => x !== name) : [...prev, name],
     );
 
+  // Horizontal scroll for the section filter: the scrollbar is hidden, so we
+  // show left/right chevrons + fade only when there is more content that way.
+  const sectionScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateSectionScroll = () => {
+    const el = sectionScrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 1);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  };
+
+  useEffect(() => {
+    const el = sectionScrollRef.current;
+    if (!el) return;
+    updateSectionScroll();
+    // Re-measure after paint: the pills' final width (and thus overflow) isn't
+    // settled on the synchronous pass, and a ResizeObserver on the scroller
+    // won't fire when only the content overflows (its own box stays the same).
+    const raf = requestAnimationFrame(updateSectionScroll);
+    const ro = new ResizeObserver(updateSectionScroll);
+    ro.observe(el);
+    window.addEventListener("resize", updateSectionScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      window.removeEventListener("resize", updateSectionScroll);
+    };
+  }, [categoryOptions.length, language]);
+
+  const scrollSections = (dir: -1 | 1) => {
+    const el = sectionScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.max(160, el.clientWidth * 0.6), behavior: "smooth" });
+  };
+
   // Reorder so that pinned articles land at their requested 1-based slot in
   // the feed. Position 1 effectively becomes the featured article.
   const orderedDbArticles = (() => {
@@ -379,37 +416,74 @@ export const NewsFeed = () => {
           </div>
         </div>
 
-        {/* Section filter — wraps to multiple rows (no horizontal scroll) and
-            supports selecting one OR several sections at once. */}
+        {/* Section filter — one horizontally scrollable row. The native
+            scrollbar is hidden; left/right chevrons + fades indicate that more
+            sections are available in that direction. Multi-select stays. */}
         {categoryOptions.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            <button
-              onClick={() => setSelectedCategories([])}
-              className={`px-4 py-2 rounded-full text-sm font-subhead whitespace-nowrap transition-all duration-200 ${
-                selectedCategories.length === 0
-                  ? "bg-accent text-accent-foreground shadow-soft"
-                  : "bg-card border border-border text-foreground hover:bg-secondary hover:border-accent/20"
-              }`}
-            >
-              {allLabel}
-            </button>
-            {categoryOptions.map((c) => {
-              const active = selectedCategories.includes(c.name);
-              return (
+          <div className="relative mb-4">
+            {/* Left indicator */}
+            {canScrollLeft && (
+              <>
+                <div className="pointer-events-none absolute inset-y-0 left-0 w-10 z-10 bg-gradient-to-r from-background to-transparent" />
                 <button
-                  key={c.name}
-                  onClick={() => toggleCategory(c.name)}
-                  aria-pressed={active}
-                  className={`px-4 py-2 rounded-full text-sm font-subhead whitespace-nowrap transition-all duration-200 ${
-                    active
-                      ? "bg-accent text-accent-foreground shadow-soft"
-                      : "bg-card border border-border text-foreground hover:bg-secondary hover:border-accent/20"
-                  }`}
+                  type="button"
+                  aria-label="Bla til venstre"
+                  onClick={() => scrollSections(-1)}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-card/95 border border-border shadow-soft flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
                 >
-                  {c.label}
+                  <ChevronLeft className="w-4 h-4" />
                 </button>
-              );
-            })}
+              </>
+            )}
+
+            <div
+              ref={sectionScrollRef}
+              onScroll={updateSectionScroll}
+              className="flex gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            >
+              <button
+                onClick={() => setSelectedCategories([])}
+                className={`px-4 py-2 rounded-full text-sm font-subhead whitespace-nowrap shrink-0 transition-all duration-200 ${
+                  selectedCategories.length === 0
+                    ? "bg-accent text-accent-foreground shadow-soft"
+                    : "bg-card border border-border text-foreground hover:bg-secondary hover:border-accent/20"
+                }`}
+              >
+                {allLabel}
+              </button>
+              {categoryOptions.map((c) => {
+                const active = selectedCategories.includes(c.name);
+                return (
+                  <button
+                    key={c.name}
+                    onClick={() => toggleCategory(c.name)}
+                    aria-pressed={active}
+                    className={`px-4 py-2 rounded-full text-sm font-subhead whitespace-nowrap shrink-0 transition-all duration-200 ${
+                      active
+                        ? "bg-accent text-accent-foreground shadow-soft"
+                        : "bg-card border border-border text-foreground hover:bg-secondary hover:border-accent/20"
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right indicator */}
+            {canScrollRight && (
+              <>
+                <div className="pointer-events-none absolute inset-y-0 right-0 w-10 z-10 bg-gradient-to-l from-background to-transparent" />
+                <button
+                  type="button"
+                  aria-label="Bla til høyre"
+                  onClick={() => scrollSections(1)}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-card/95 border border-border shadow-soft flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
           </div>
         )}
 

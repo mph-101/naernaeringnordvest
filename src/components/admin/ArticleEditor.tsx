@@ -29,6 +29,9 @@ import { encodeSourceCard, type SourceCardData } from "@/components/source-card/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ArticleTagInput } from "./ArticleTagInput";
 import { CollapsibleSection } from "./CollapsibleSection";
+import { ArticleProvenancePanel } from "./ArticleProvenancePanel";
+import { useArticleProvenance } from "@/hooks/useArticleProvenance";
+import type { AgentExposure } from "@/lib/agent-provenance/types";
 import { RegionPicker } from "./RegionPicker";
 import { AuthorSelect } from "./AuthorSelect";
 import { InlineImagePicker, type InlineImageResult } from "./InlineImagePicker";
@@ -120,6 +123,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     image_source: "",
     scheduled_publish_at: null as string | null,
     collab_enabled: false,
+    agent_exposure: "headline_plus_dek" as AgentExposure,
   });
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
@@ -135,14 +139,22 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const [allRegions, setAllRegions] = useState<EditorialRegion[]>([]);
   const [forking, setForking] = useState(false);
 
+  // Agent-provenance child rows (sources/responses/corrections). Self-loads on
+  // currentArticleId; persisted in handleSave via provenance.save(id).
+  const provenance = useArticleProvenance(currentArticleId);
+
   const publishChecklist = buildPublishChecklist({
     author: form.author,
     imageUrl: form.image_url,
     excerpt: form.excerpt,
     tagCount: articleTags.length,
     body: form.body,
+    sourceCount: provenance.sources.length,
+    responseCount: provenance.responses.length,
   });
-  const canPublish = publishChecklist.every((i) => i.done);
+  // Advisory items (e.g. provenance) nudge but never block publishing.
+  const canPublish = publishChecklist.every((i) => i.advisory || i.done);
+  const hasAdvisoryNudge = publishChecklist.some((i) => i.advisory && !i.done);
 
   // --- Hooks for AI and proofreading ---
   const getBody = useCallback(() => formRef.current?.body || "", []);
@@ -410,6 +422,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         image_source: ((data as any).image_source as string | null) ?? "",
         scheduled_publish_at: ((data as any).scheduled_publish_at as string | null) ?? null,
         collab_enabled: ((data as any).collab_enabled as boolean | null) ?? false,
+        agent_exposure: ((data as any).agent_exposure as AgentExposure) ?? "headline_plus_dek",
       });
       setLastPublishedBody(data.published ? (data.body || "") : "");
       setLastPublishedTitle(data.published ? (data.title || "") : "");
@@ -489,6 +502,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
         image_source: form.image_source?.trim() || null,
         scheduled_publish_at: form.scheduled_publish_at || null,
         collab_enabled: form.collab_enabled,
+        agent_exposure: form.agent_exposure,
       } as any;
 
       const syncSharedRegions = async (id: string) => {
@@ -569,6 +583,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           );
         }
         await syncSharedRegions(idForUpdate);
+        await provenance.save(idForUpdate);
         if (!originalPublishedAt && articleData.published_at) {
           setOriginalPublishedAt(articleData.published_at);
         }
@@ -584,6 +599,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
           setCurrentArticleId(inserted.id);
           if (articleData.published_at) setOriginalPublishedAt(articleData.published_at);
           await syncSharedRegions(inserted.id);
+          await provenance.save(inserted.id);
         }
         toast({ title: "Opprettet", description: "Artikkelen er opprettet" });
         onBack();
@@ -987,7 +1003,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             />
           </div>
         )}
-        {form.status !== "published" && !canPublish && (
+        {form.status !== "published" && (!canPublish || hasAdvisoryNudge) && (
           <PrePublishChecklist items={publishChecklist} variant="card" />
         )}
 
@@ -1544,6 +1560,19 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
             onChange={setArticleTags}
             articleTitle={form.title}
             articleBody={form.body}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Proveniens (for agenter)" storageKey="provenance">
+          <ArticleProvenancePanel
+            sources={provenance.sources}
+            setSources={provenance.setSources}
+            responses={provenance.responses}
+            setResponses={provenance.setResponses}
+            corrections={provenance.corrections}
+            setCorrections={provenance.setCorrections}
+            exposure={form.agent_exposure}
+            onExposureChange={(e) => updateForm({ agent_exposure: e })}
           />
         </CollapsibleSection>
 

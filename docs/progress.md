@@ -96,3 +96,11 @@
   - Hjelpefunksjoner: `has_editorial_role` + region-scopet `has_barometer_access` (SECURITY DEFINER). Muren håndheves server-side i RLS (bevisst avvik fra EF-paywallen — `docs/decisions.md`).
   - Seed: 11 moduler for nordvestlandet. Verifisert: 11 rader, 4 åpne, funksjoner+policies på plass.
   - Rute besluttet: `/næringspuls`. Design: `docs/naeringsbarometer-design.md`. **Gjenstår:** PR 2 (SSB-henting + avviksdetektor-EF-er + cron), PR 3 (`/næringspuls`-frontend), PR 4 (metered-RPC + teaser), PR 5–7.
+
+- **Admin-UI for proveniens** — 2026-06-09, branch `feat/proveniens-admin-ui`
+  - `ArticleProvenancePanel` (CollapsibleSection) + `useArticleProvenance`-hook (last/lagre, delete+insert som article_tags). Redaksjonen fyller inn kilder/tilsvar/rettelser + `agent_exposure` per sak.
+  - Note-tilbakelesing: `provenance-admin-notes` edge function (service-role, editorial-rolle-gate) — `note` er REVOKE-et for authenticated, så lesing tilbake krever service-role. Skriving går via vanlig klient.
+  - Soft-advarsel i `PrePublishChecklist` (advisory-flagg, blokkerer ikke publisering).
+  - Ingen migrasjon — gjenbruker eksisterende tabeller/RLS fra lag 1.
+  - Fanget at main sin `types.ts` manglet alle proveniens-tabellene (regenerering tapt i tidligere merge) → regenerert mot prod.
+  - Verifisert: vitest 110/110, deno 23/23, eslint 0 errors, tsc rent. **Gjenstår (Magnus):** deploy `provenance-admin-notes`-funksjonen; klikk gjennom panelet etter deploy.

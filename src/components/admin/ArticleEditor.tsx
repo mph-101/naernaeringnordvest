@@ -141,6 +141,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     excerpt: form.excerpt,
     tagCount: articleTags.length,
     body: form.body,
+    regionSlug: form.region_slug,
   });
   const canPublish = publishChecklist.every((i) => i.done);
 

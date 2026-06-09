@@ -4,6 +4,22 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Kostnadskontroll på AI/APIer (2026-06-09) — ingen akutt $-lekkasje, men hull
+Full analyse i [`docs/kostnadsoversikt.md`](kostnadsoversikt.md). Prod-verifisert:
+alle dyre AI-endepunkter krever JWT (ikke vidåpne). Restrisiko = innlogget/anon-nøkkel-
+bruker som spammer AI, siden følgende mangler:
+- **Krever din handling (utenfor kode):** sett **budsjett-alarm** i OpenRouter,
+  ElevenLabs og Supabase-dashbordene. Ingenting i koden varsler på forbruk i dag
+  (Sentry fanger kun feil).
+- **Beslutning du må ta:** skal `improve-article-body` fortsette på `gemini-2.5-pro`
+  (dyrest modell, ~3× flash), eller settes til flash? Og er feature-flag-av nok for
+  `idrett-chat` (eneste åpne AI-endepunkt), eller vil du at jeg stenger/rate-limiter det?
+- **Kode jeg kan ta når du sier fra:** default `max_tokens` i `_shared/ai-client.ts`,
+  per-IP rate-limit på `brreg-proxy`, og evt. per-bruker AI-kvote.
+- **Drift-funn:** prod har en edge function som ikke finnes i repoet —
+  `detect-barometer-signals` (`verify_jwt=false`). Vurder å slette den fra Supabase
+  hvis den er utdatert, ev. legg kilden tilbake i repoet (jf. `brreg-query`-saken under).
+
 ### Stripe-priser: 249/kvartal + 890/år (2026-06-08) — KRITISK, ellers belastes feil beløp
 Jeg har endret all UI-tekst og `docs/paywall.md` til de nye prisene (kvartal
 199 → **249 kr**, år 699 → **890 kr**). Men beløpene som faktisk belastes ligger

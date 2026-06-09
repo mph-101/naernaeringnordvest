@@ -6,7 +6,7 @@ import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/articles";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tag } from "@/lib/tag-utils";
-import { fetchRegions, type EditorialRegion } from "@/lib/regions";
+import { useRegion } from "@/hooks/useRegion";
 import { cropToBackgroundStyle, parseCrop, parseFocal } from "@/lib/image-crop";
 
 interface TagWithCount extends Tag {
@@ -76,6 +76,11 @@ function estimateReadTime(body: string, type: string, lang: "no" | "en"): string
 export const NewsFeed = () => {
   const { language, region } = useTheme();
   const t = translations[language];
+  // The feed follows whichever region is active in the header (useRegion).
+  // Switching region there now re-filters the feed; "all" only when no region
+  // context is available yet.
+  const { current: currentRegion } = useRegion();
+  const selectedRegionSlug: string = currentRegion?.slug ?? "all";
   const [dbArticles, setDbArticles] = useState<DbArticle[]>([]);
   const [loading, setLoading] = useState(true);
   // Section filter — empty array means "Alle" (no filter). Holds canonical
@@ -85,9 +90,6 @@ export const NewsFeed = () => {
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [topTags, setTopTags] = useState<TagWithCount[]>([]);
   const [articleTagMap, setArticleTagMap] = useState<Map<string, string[]>>(new Map());
-  const [editorialRegions, setEditorialRegions] = useState<EditorialRegion[]>([]);
-  const [selectedRegionSlug, setSelectedRegionSlug] = useState<string | "all">("all");
-  const [userEditorialRegion, setUserEditorialRegion] = useState<string | null>(null);
   const [articleSharedRegions, setArticleSharedRegions] = useState<Map<string, string[]>>(new Map());
   const [nativeAds, setNativeAds] = useState<NativeAd[]>([]);
   const navigate = useNavigate();
@@ -111,25 +113,6 @@ export const NewsFeed = () => {
       setLoadingMore(false);
     }, 350);
   };
-
-  // Load region list + the signed-in user's primary region (used as default filter)
-  useEffect(() => {
-    fetchRegions().then(setEditorialRegions).catch(() => {});
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("editorial_region")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      const slug = (data as any)?.editorial_region as string | null | undefined;
-      if (slug) {
-        setUserEditorialRegion(slug);
-        setSelectedRegionSlug(slug);
-      }
-    })();
-  }, []);
 
   useEffect(() => {
     const fetchArticles = async () => {

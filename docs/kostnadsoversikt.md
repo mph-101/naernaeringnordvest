@@ -48,8 +48,8 @@ AI-endepunkter krever en gyldig JWT (ikke vidåpne for internett). Restrisikoen 
 ## 3. Hvor grenser MANGLER (korrigert etter prod-verifisering)
 
 ### 🟠 Reell AI-eksponering
-- **`idrett-chat`** — eneste åpne (`verify_jwt=false`) AI-endepunktet. Bak feature-flag (av i
-  prod), men endepunktet lever. Bør stenges eller rate-limites.
+- ~~**`idrett-chat`** — eneste åpne (`verify_jwt=false`) AI-endepunktet.~~ **Slettet fra repoet
+  2026-06-09** (venter på prod-av-deploy, se `magnus-todo.md`). Ingen åpne AI-endepunkter igjen.
 
 ### 🟡 Manglende rate-limit på offentlige data
 - **`brreg-proxy`** — åpen, ingen per-IP-grense. `batch_financials` tar 50 orgnr/kall men
@@ -82,11 +82,14 @@ AI-endepunkter krever en gyldig JWT (ikke vidåpne for internett). Restrisikoen 
 
 Rangert etter effekt/innsats:
 
-1. **Sett `max_tokens` som default** i `_shared/ai-client.ts` (stopper løpsk output på alle
-   funksjoner i én endring). — *kode, Claude kan gjøre*
-2. **Per-IP rate-limit på `brreg-proxy`** (gjenbruk mønster fra `submit-tip`). — *kode*
-3. **Steng/rate-limit `idrett-chat`** (eller bekreft at feature-flag-av er nok). — *kode/beslutning*
+1. ✅ **`max_tokens`-default i `_shared/ai-client.ts`** (8000, `AI_MAX_TOKENS`-overstyring) —
+   *gjort 2026-06-09*. Dekker alle ikke-strømmende AI-kall. Merk: strømmende `aiFetch`
+   (articles-chat) setter sin egen grense og er IKKE dekket av denne — egen oppfølging.
+2. ✅ **`idrett-chat` slettet** (eneste åpne AI-endepunkt) — *repo gjort 2026-06-09, prod-av-deploy
+   gjenstår (magnus-todo)*.
+3. **Per-IP rate-limit på `brreg-proxy`** (gjenbruk mønster fra `submit-tip`). — *kode*
 4. **Per-bruker AI-kvote** (rate_limits-tabell, evt. rolle-basert tak). — *kode, større*
-5. **Budsjett-alarm** i OpenRouter, ElevenLabs og Supabase dashboards. — *Magnus, utenfor kode*
-6. **Vurder `improve-article-body` → flash** med mindre Pro er bevisst. — *beslutning*
+5. **`max_tokens` på articles-chat streaming-kall** (`aiFetch`-stien). — *kode*
+6. **Budsjett-alarm** i OpenRouter, ElevenLabs og Supabase dashboards. — *Magnus, utenfor kode*
+7. **Vurder `improve-article-body` → flash** med mindre Pro er bevisst. — *beslutning*
 </content>

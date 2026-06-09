@@ -36,7 +36,7 @@ React (src/)  →  supabase.functions.invoke()  →  Edge Functions  →  ekster
 
 ---
 
-## 2. Edge Functions (47) — gruppert
+## 2. Edge Functions (46) — gruppert
 
 ### AI / innholdsgenerering (18)
 Alle POST. De fleste `verify_jwt=false`, men kalles primært fra admin-UI.
@@ -57,9 +57,9 @@ cron: `refresh-financials-cache`, `refresh-roles-and-status`, `refresh-mr-employ
 ### Statistikk / barometer (3)
 `barometer-refresh` (cron), `ssb-housing`, `ssb-labor`
 
-### Nyheter / feeds (5)
+### Nyheter / feeds (4)
 `article-provenance` (offentlig, rate-limited), `daily-edition`, `feed-api` (API-nøkkel),
-`idrett-chat`, `newsletter-manage`
+`newsletter-manage`
 
 ### Media (3)
 `cloudflare-stream`, `cloudflare-stream-webhook`, `generate-article-audio`
@@ -152,7 +152,7 @@ funksjonen.
 - **Alle dyre AI-funksjoner er `verify_jwt=true`** i prod: `articles-chat`, `improve-article-body`,
   alle `generate-*`, `extract-source(-async)`, `suggest-companies`, `proofread-article`,
   `translate-article`, `transcribe-audio`, `generate-article-audio`, `clone-author-voice`.
-- **Eneste åpne AI-endepunkt:** `idrett-chat` (`verify_jwt=false`, men feature-flagget av i prod).
+- **Ingen åpne AI-endepunkter igjen** (`idrett-chat` slettet 2026-06-09; var det eneste).
 - **Åpne, men med egen auth inne i funksjonen:** `create-checkout`, `create-portal-session`,
   `check-article-access`, `invite-business-seat`, `verify-business-domain`,
   `create-job-premium-checkout`.

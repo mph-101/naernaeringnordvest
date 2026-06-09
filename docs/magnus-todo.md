@@ -20,6 +20,18 @@ bruker som spammer AI, siden følgende mangler:
   `detect-barometer-signals` (`verify_jwt=false`). Vurder å slette den fra Supabase
   hvis den er utdatert, ev. legg kilden tilbake i repoet (jf. `brreg-query`-saken under).
 
+### Av-deploy `idrett-chat` fra prod (2026-06-09)
+`idrett-chat` (eneste åpne AI-endepunkt, utdatert Eliteserien-data 2020–2023) er
+**slettet fra repoet** + fjernet fra `config.toml`. Men å slette kilden av-deployer
+den **ikke** fra Supabase — funksjonen ligger igjen i prod (samme som `brreg-query`).
+- **Gjør:** Slett i Supabase-dashbordet (Edge Functions → `idrett-chat` → delete),
+  ev. `supabase functions delete idrett-chat --project-ref oemzrhlybemakwpyhcno`.
+  Lav risiko: ingen frontend-kode kaller slug-en (verifisert med grep).
+- **NB CLAUDE.md:** dette overstyrer antagelse #2 ("Ikke slett" for idrett). Den
+  bredere idrett-frontfeaturen (FEATURE_IDRETT-flagg, evt. Idrett-side) er IKKE rørt —
+  kun chat-backenden. Si fra om du vil at jeg også oppdaterer CLAUDE.md / fjerner
+  resten av idrett-frontend.
+
 ### Stripe-priser: 249/kvartal + 890/år (2026-06-08) — KRITISK, ellers belastes feil beløp
 Jeg har endret all UI-tekst og `docs/paywall.md` til de nye prisene (kvartal
 199 → **249 kr**, år 699 → **890 kr**). Men beløpene som faktisk belastes ligger

@@ -78,7 +78,10 @@ export const NewsFeed = () => {
   const t = translations[language];
   const [dbArticles, setDbArticles] = useState<DbArticle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTopic, setSelectedTopic] = useState("Alle");
+  // Section filter — empty array means "Alle" (no filter). Holds canonical
+  // category names (the Norwegian `categories.name`), so filtering is correct
+  // regardless of the display language.
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [topTags, setTopTags] = useState<TagWithCount[]>([]);
   const [articleTagMap, setArticleTagMap] = useState<Map<string, string[]>>(new Map());
@@ -97,7 +100,7 @@ export const NewsFeed = () => {
   useEffect(() => {
     setVisibleCount(INITIAL_COUNT);
     setLoadingMore(false);
-  }, [selectedTopic, selectedTagId, selectedRegionSlug]);
+  }, [selectedCategories, selectedTagId, selectedRegionSlug]);
 
   const handleLoadMore = () => {
     if (loadingMore) return;
@@ -217,10 +220,17 @@ export const NewsFeed = () => {
     });
   }, []);
 
-  const topics = language === "no"
-    ? ["Alle", ...categories.map(c => c.name)]
-    : ["All", ...categories.map(c => c.name_en || c.name)];
-  const allTopic = topics[0];
+  // Pills carry the canonical category name plus a language-aware display label.
+  const categoryOptions = categories.map((c) => ({
+    name: c.name,
+    label: language === "no" ? c.name : c.name_en || c.name,
+  }));
+  const allLabel = language === "no" ? "Alle" : "All";
+
+  const toggleCategory = (name: string) =>
+    setSelectedCategories((prev) =>
+      prev.includes(name) ? prev.filter((x) => x !== name) : [...prev, name],
+    );
 
   // Reorder so that pinned articles land at their requested 1-based slot in
   // the feed. Position 1 effectively becomes the featured article.
@@ -254,9 +264,9 @@ export const NewsFeed = () => {
     featured: index === 0,
   }));
 
-  let filteredNews = selectedTopic === allTopic
+  let filteredNews = selectedCategories.length === 0
     ? articles
-    : articles.filter((item) => item.category === selectedTopic);
+    : articles.filter((item) => selectedCategories.includes(item.category));
 
   if (selectedTagId) {
     filteredNews = filteredNews.filter((item) => articleTagMap.get(item.id)?.includes(selectedTagId));
@@ -369,22 +379,37 @@ export const NewsFeed = () => {
           </div>
         </div>
 
-        {/* Filters */}
-        {topics.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 mb-4">
-            {topics.map((topic) => (
-              <button
-                key={topic}
-                onClick={() => setSelectedTopic(topic)}
-                className={`px-4 py-2 rounded-full text-sm font-subhead whitespace-nowrap transition-all duration-200 ${
-                  selectedTopic === topic
-                    ? "bg-accent text-accent-foreground shadow-soft"
-                    : "bg-card border border-border text-foreground hover:bg-secondary hover:border-accent/20"
-                }`}
-              >
-                {topic}
-              </button>
-            ))}
+        {/* Section filter — wraps to multiple rows (no horizontal scroll) and
+            supports selecting one OR several sections at once. */}
+        {categoryOptions.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            <button
+              onClick={() => setSelectedCategories([])}
+              className={`px-4 py-2 rounded-full text-sm font-subhead whitespace-nowrap transition-all duration-200 ${
+                selectedCategories.length === 0
+                  ? "bg-accent text-accent-foreground shadow-soft"
+                  : "bg-card border border-border text-foreground hover:bg-secondary hover:border-accent/20"
+              }`}
+            >
+              {allLabel}
+            </button>
+            {categoryOptions.map((c) => {
+              const active = selectedCategories.includes(c.name);
+              return (
+                <button
+                  key={c.name}
+                  onClick={() => toggleCategory(c.name)}
+                  aria-pressed={active}
+                  className={`px-4 py-2 rounded-full text-sm font-subhead whitespace-nowrap transition-all duration-200 ${
+                    active
+                      ? "bg-accent text-accent-foreground shadow-soft"
+                      : "bg-card border border-border text-foreground hover:bg-secondary hover:border-accent/20"
+                  }`}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
           </div>
         )}
 

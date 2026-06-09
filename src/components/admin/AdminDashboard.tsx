@@ -22,7 +22,8 @@ import {
   Megaphone,
   Vote,
   CalendarDays,
-  Activity
+  Activity,
+  LayoutGrid
 } from "lucide-react";
 import { ArticlesList } from "./ArticlesList";
 import { ArticleEditor } from "./ArticleEditor";
@@ -34,6 +35,7 @@ import { JobInvoiceRequests } from "./JobInvoiceRequests";
 import { NativeAdsManager } from "./NativeAdsManager";
 import { FactBoxesManager } from "./FactBoxesManager";
 import { TagsManager } from "./TagsManager";
+import { SectionsManager } from "./SectionsManager";
 import { SourcesManager } from "./SourcesManager";
 import { TrustedSourcesManager } from "./TrustedSourcesManager";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
@@ -51,7 +53,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "job-listings" | "job-invoices" | "fact-boxes" | "tags" | "sources" | "trusted-sources" | "analytics" | "users" | "media" | "authors" | "native-ads" | "polls" | "events" | "barometer";
+type View = "dashboard" | "articles" | "editor" | "tips" | "job-changes" | "job-listings" | "job-invoices" | "fact-boxes" | "tags" | "sections" | "sources" | "trusted-sources" | "analytics" | "users" | "media" | "authors" | "native-ads" | "polls" | "events" | "barometer";
 
 export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
   const { hasRole } = useAuth();
@@ -81,6 +83,7 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
     { id: "media" as View, label: "Mediearkiv", icon: ImageIcon },
     { id: "authors" as View, label: "Forfattere", icon: PenLine },
     { id: "tags" as View, label: "Tags", icon: TagIcon },
+    ...(isAdmin ? [{ id: "sections" as View, label: "Seksjoner", icon: LayoutGrid }] : []),
     { id: "tips" as View, label: "Tips", icon: MessageSquare },
     { id: "job-changes" as View, label: "Jobbytter", icon: Users },
     { id: "barometer" as View, label: "Næringsbarometer", icon: Activity },
@@ -324,6 +327,10 @@ export const AdminDashboard = ({ session, onLogout }: AdminDashboardProps) => {
 
         {view === "tags" && (
           <TagsManager />
+        )}
+
+        {view === "sections" && (
+          <SectionsManager />
         )}
 
         {view === "sources" && (

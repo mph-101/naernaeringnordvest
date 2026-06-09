@@ -4,6 +4,24 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Seksjons-admin + region-filter (2026-06-09)
+Fire fikser i denne runden (egne PR-er):
+- **Kjør migrasjon** `20260609120000_category_admin_rpcs.sql` mot prod. Den legger
+  til `rename_category()` + `merge_categories()` (SECURITY DEFINER, admin-only).
+  **Seksjons-admin (rediger/slå sammen) virker ikke før denne er kjørt** — RPC-ene
+  finnes ikke i prod ennå.
+- **Regenerer typer** etterpå: `supabase gen types` → `src/integrations/supabase/types.ts`.
+  Da kan `(supabase as any).rpc(...)`-castene i `SectionsManager.tsx` byttes til typede kall.
+- **Region-data (din opprydding):** byttet-til-region viser nå riktig innhold i
+  feeden, men dataene matcher ikke «resten skal være tomme». Prod 2026-06-09:
+  7 publiserte artikler har `region_slug = NULL`, og `article_shared_regions` sprer
+  saker til midt-norge (5), østlandet (2), vestlandet/nord-norge/sørlandet (1 hver).
+  Rydd via admin/SQL: sett de 7 NULL-artiklene til riktig region, og fjern delinger
+  unntatt den ene Nordvestlandet+Midt-Norge-saken du nevnte. (Jeg rører ikke prod-data.)
+- **Per-region abonnement:** designnotat skrevet i
+  [`docs/per-region-subscription-design.md`](per-region-subscription-design.md) —
+  trenger dine svar på 5 beslutninger før kode (Stripe + RLS, begge «spør først»).
+
 ### Stripe-priser: 249/kvartal + 890/år (2026-06-08) — KRITISK, ellers belastes feil beløp
 Jeg har endret all UI-tekst og `docs/paywall.md` til de nye prisene (kvartal
 199 → **249 kr**, år 699 → **890 kr**). Men beløpene som faktisk belastes ligger

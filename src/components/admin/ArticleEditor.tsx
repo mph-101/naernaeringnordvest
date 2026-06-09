@@ -151,6 +151,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
     body: form.body,
     sourceCount: provenance.sources.length,
     responseCount: provenance.responses.length,
+    regionSlug: form.region_slug,
   });
   // Advisory items (e.g. provenance) nudge but never block publishing.
   const canPublish = publishChecklist.every((i) => i.advisory || i.done);

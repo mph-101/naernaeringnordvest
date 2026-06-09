@@ -124,10 +124,17 @@ export function buildPublishChecklist(input: {
   body: string;
   sourceCount: number;
   responseCount: number;
+  regionSlug: string | null | undefined;
 }): ChecklistItem[] {
   const excerptTrimmed = input.excerpt.trim();
   const bodyTrimmed = input.body.trim();
   return [
+    {
+      id: "region",
+      label: "Hovedredaksjon er valgt",
+      hint: "Velg hvilken redaksjon saken tilhører i sidepanelet. En sak må tilhøre én hovedredaksjon før den kan publiseres.",
+      done: !!input.regionSlug && input.regionSlug.trim().length > 0,
+    },
     {
       id: "author",
       label: "Forfatter er valgt",

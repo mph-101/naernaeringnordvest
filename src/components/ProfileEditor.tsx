@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Camera, Pencil, X, Check, Loader2, User, MapPin, Building, Compass, Sparkles, ArrowRight } from "lucide-react";
+import { Camera, Pencil, X, Check, Loader2, User, MapPin, Building, Compass, Sparkles, ArrowRight, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
@@ -34,6 +34,7 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
   const [editorialRegion, setEditorialRegion] = useState<string>("");
   const [editorialRegions, setEditorialRegions] = useState<EditorialRegion[]>([]);
   const [mascotEnabled, setMascotEnabled] = useState<boolean>(true);
+  const [sporEnabled, setSporEnabled] = useState<boolean>(true);
   const fileRef = useRef<HTMLInputElement>(null);
   const isNo = language === "no";
 
@@ -46,13 +47,15 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("editorial_region, mascot_enabled")
+        .select("editorial_region, mascot_enabled, spor_enabled")
         .eq("user_id", userId)
         .maybeSingle();
       const slug = (data as any)?.editorial_region as string | null | undefined;
       if (slug) setEditorialRegion(slug);
       const me = (data as any)?.mascot_enabled;
       if (typeof me === "boolean") setMascotEnabled(me);
+      const se = (data as any)?.spor_enabled;
+      if (typeof se === "boolean") setSporEnabled(se);
     })();
   }, [userId]);
 
@@ -107,6 +110,17 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
       // Restart the tour from the beginning immediately
       window.dispatchEvent(new CustomEvent("nn:mascot-start"));
     }
+    toast.success(t.saved);
+  };
+
+  const handleSporToggle = async (next: boolean) => {
+    setSporEnabled(next);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ spor_enabled: next } as any)
+      .eq("user_id", userId);
+    if (error) { toast.error(error.message); return; }
+    window.dispatchEvent(new CustomEvent("nn:spor-toggle", { detail: { enabled: next } }));
     toast.success(t.saved);
   };
 
@@ -219,6 +233,21 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
           className={`relative w-11 h-6 rounded-full transition-colors ${mascotEnabled ? "bg-accent" : "bg-muted"}`}
         >
           <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${mascotEnabled ? "translate-x-5" : ""}`} />
+        </button>
+      </div>
+
+      {/* Spør floating-button toggle */}
+      <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl mt-2 mb-2">
+        <MessageCircle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        <span className="text-sm font-subhead font-medium text-muted-foreground flex-1">
+          {isNo ? "Vis Spør-knappen" : "Show Spør button"}
+        </span>
+        <button
+          onClick={() => handleSporToggle(!sporEnabled)}
+          aria-pressed={sporEnabled}
+          className={`relative w-11 h-6 rounded-full transition-colors ${sporEnabled ? "bg-accent" : "bg-muted"}`}
+        >
+          <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${sporEnabled ? "translate-x-5" : ""}`} />
         </button>
       </div>
 

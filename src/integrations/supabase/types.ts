@@ -3588,6 +3588,10 @@ export type Database = {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
+      merge_categories: {
+        Args: { _source_ids: string[]; _target_id: string }
+        Returns: number
+      }
       merge_tags: {
         Args: { _source_id: string; _target_id: string }
         Returns: undefined
@@ -3603,6 +3607,10 @@ export type Database = {
       poll_user_choice: {
         Args: { _poll_id: string; _session_id?: string }
         Returns: string
+      }
+      rename_category: {
+        Args: { _id: string; _name: string; _name_en: string | null; _slug: string }
+        Returns: undefined
       }
       revoke_api_key: { Args: { _id: string }; Returns: undefined }
       search_articles: {

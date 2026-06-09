@@ -148,8 +148,19 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
   const getBody = useCallback(() => formRef.current?.body || "", []);
   const updateBodyFromProof = useCallback((body: string) => {
     setForm((prev) => ({ ...prev, body }));
+    // Push the new body straight into the editor as well. RichTextEditor only
+    // syncs its `content` prop into the view while the editor is NOT focused
+    // (to avoid yanking the caret during typing). The inline proofreading chips
+    // (✓ / ✕) live inside the editor DOM and keep focus on mousedown, so a
+    // prop-only update never reaches the view — making "godta" (✓) look
+    // identical to "avvis" (✕): the highlight vanishes but the text is unchanged.
+    // Skip in collaborative mode, where the Yjs document owns the content.
+    const editor = editorInstanceRef.current;
+    if (editor && !editor.isDestroyed && !formRef.current?.collab_enabled) {
+      editor.commands.setContent(body, { emitUpdate: false });
+    }
     triggerAutoSave();
-  }, []);
+  }, [triggerAutoSave]);
 
   const proofHook = useArticleProofreading(getBody, updateBodyFromProof);
 

@@ -22,6 +22,34 @@ Fire fikser i denne runden (egne PR-er):
   [`docs/per-region-subscription-design.md`](per-region-subscription-design.md) —
   trenger dine svar på 5 beslutninger før kode (Stripe + RLS, begge «spør først»).
 
+### Kostnadskontroll på AI/APIer (2026-06-09) — ingen akutt $-lekkasje, men hull
+Full analyse i [`docs/kostnadsoversikt.md`](kostnadsoversikt.md). Prod-verifisert:
+alle dyre AI-endepunkter krever JWT (ikke vidåpne). Restrisiko = innlogget/anon-nøkkel-
+bruker som spammer AI, siden følgende mangler:
+- **Krever din handling (utenfor kode):** sett **budsjett-alarm** i OpenRouter,
+  ElevenLabs og Supabase-dashbordene. Ingenting i koden varsler på forbruk i dag
+  (Sentry fanger kun feil).
+- **Beslutning du må ta:** skal `improve-article-body` fortsette på `gemini-2.5-pro`
+  (dyrest modell, ~3× flash), eller settes til flash? Og er feature-flag-av nok for
+  `idrett-chat` (eneste åpne AI-endepunkt), eller vil du at jeg stenger/rate-limiter det?
+- **Kode jeg kan ta når du sier fra:** default `max_tokens` i `_shared/ai-client.ts`,
+  per-IP rate-limit på `brreg-proxy`, og evt. per-bruker AI-kvote.
+- **Drift-funn:** prod har en edge function som ikke finnes i repoet —
+  `detect-barometer-signals` (`verify_jwt=false`). Vurder å slette den fra Supabase
+  hvis den er utdatert, ev. legg kilden tilbake i repoet (jf. `brreg-query`-saken under).
+
+### Av-deploy `idrett-chat` fra prod (2026-06-09)
+`idrett-chat` (eneste åpne AI-endepunkt, utdatert Eliteserien-data 2020–2023) er
+**slettet fra repoet** + fjernet fra `config.toml`. Men å slette kilden av-deployer
+den **ikke** fra Supabase — funksjonen ligger igjen i prod (samme som `brreg-query`).
+- **Gjør:** Slett i Supabase-dashbordet (Edge Functions → `idrett-chat` → delete),
+  ev. `supabase functions delete idrett-chat --project-ref oemzrhlybemakwpyhcno`.
+  Lav risiko: ingen frontend-kode kaller slug-en (verifisert med grep).
+- **NB CLAUDE.md:** dette overstyrer antagelse #2 ("Ikke slett" for idrett). Den
+  bredere idrett-frontfeaturen (FEATURE_IDRETT-flagg, evt. Idrett-side) er IKKE rørt —
+  kun chat-backenden. Si fra om du vil at jeg også oppdaterer CLAUDE.md / fjerner
+  resten av idrett-frontend.
+
 ### Stripe-priser: 249/kvartal + 890/år (2026-06-08) — KRITISK, ellers belastes feil beløp
 Jeg har endret all UI-tekst og `docs/paywall.md` til de nye prisene (kvartal
 199 → **249 kr**, år 699 → **890 kr**). Men beløpene som faktisk belastes ligger

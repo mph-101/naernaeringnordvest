@@ -8,7 +8,6 @@ const envBool = (key: string, fallback: boolean): boolean => {
 
 export const FEATURES = {
   AUDIO_FIRST: envBool("VITE_FEATURE_AUDIO_FIRST", true),
-  IDRETT: envBool("VITE_FEATURE_IDRETT", false),
   HJERNEVELV: envBool("VITE_FEATURE_HJERNEVELV", false),
   MASCOT: envBool("VITE_FEATURE_MASCOT", false),
   GAMES: envBool("VITE_FEATURE_GAMES", false),

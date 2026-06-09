@@ -272,6 +272,132 @@ export type Database = {
         }
         Relationships: []
       }
+      article_provenance_corrections: {
+        Row: {
+          article_id: string
+          corrected_at: string
+          created_at: string
+          id: string
+          summary: string
+        }
+        Insert: {
+          article_id: string
+          corrected_at?: string
+          created_at?: string
+          id?: string
+          summary: string
+        }
+        Update: {
+          article_id?: string
+          corrected_at?: string
+          created_at?: string
+          id?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_provenance_corrections_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_provenance_responses: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          note: string | null
+          party_name: string
+          party_role: string | null
+          sort_order: number
+          status: Database["public"]["Enums"]["article_response_status"]
+          updated_at: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          party_name: string
+          party_role?: string | null
+          sort_order?: number
+          status: Database["public"]["Enums"]["article_response_status"]
+          updated_at?: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          party_name?: string
+          party_role?: string | null
+          sort_order?: number
+          status?: Database["public"]["Enums"]["article_response_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_provenance_responses_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_provenance_sources: {
+        Row: {
+          article_id: string
+          created_at: string
+          doc_type: string | null
+          id: string
+          kind: Database["public"]["Enums"]["article_source_kind"]
+          name: string
+          org: string | null
+          org_orgnr: string | null
+          role: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          doc_type?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["article_source_kind"]
+          name: string
+          org?: string | null
+          org_orgnr?: string | null
+          role?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          doc_type?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["article_source_kind"]
+          name?: string
+          org?: string | null
+          org_orgnr?: string | null
+          role?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_provenance_sources_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       article_revisions: {
         Row: {
           article_id: string
@@ -557,6 +683,7 @@ export type Database = {
       }
       articles: {
         Row: {
+          agent_exposure: Database["public"]["Enums"]["article_agent_exposure"]
           author: string
           body: string
           body_en: string | null
@@ -593,6 +720,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agent_exposure?: Database["public"]["Enums"]["article_agent_exposure"]
           author: string
           body: string
           body_en?: string | null
@@ -629,6 +757,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agent_exposure?: Database["public"]["Enums"]["article_agent_exposure"]
           author?: string
           body?: string
           body_en?: string | null
@@ -2382,6 +2511,33 @@ export type Database = {
         }
         Relationships: []
       }
+      mr_companies: {
+        Row: {
+          antall_ansatte: number
+          kommunenummer: string | null
+          naeringsbeskriv: string | null
+          navn: string | null
+          orgnr: string
+          refreshed_at: string
+        }
+        Insert: {
+          antall_ansatte?: number
+          kommunenummer?: string | null
+          naeringsbeskriv?: string | null
+          navn?: string | null
+          orgnr: string
+          refreshed_at?: string
+        }
+        Update: {
+          antall_ansatte?: number
+          kommunenummer?: string | null
+          naeringsbeskriv?: string | null
+          navn?: string | null
+          orgnr?: string
+          refreshed_at?: string
+        }
+        Relationships: []
+      }
       native_ads: {
         Row: {
           active: boolean
@@ -2740,6 +2896,7 @@ export type Database = {
           proofread_settings: Json | null
           region: string | null
           social_urls: Json
+          spor_enabled: boolean
           title: string | null
           tour_completed_at: string | null
           updated_at: string
@@ -2762,6 +2919,7 @@ export type Database = {
           proofread_settings?: Json | null
           region?: string | null
           social_urls?: Json
+          spor_enabled?: boolean
           title?: string | null
           tour_completed_at?: string | null
           updated_at?: string
@@ -2784,6 +2942,7 @@ export type Database = {
           proofread_settings?: Json | null
           region?: string | null
           social_urls?: Json
+          spor_enabled?: boolean
           title?: string | null
           tour_completed_at?: string | null
           updated_at?: string
@@ -2799,6 +2958,63 @@ export type Database = {
             referencedColumns: ["slug"]
           },
         ]
+      }
+      provenance_access_log: {
+        Row: {
+          accessed_at: string
+          article_id: string | null
+          exposure: Database["public"]["Enums"]["article_agent_exposure"] | null
+          id: number
+          sections: string[] | null
+          user_agent: string | null
+        }
+        Insert: {
+          accessed_at?: string
+          article_id?: string | null
+          exposure?:
+            | Database["public"]["Enums"]["article_agent_exposure"]
+            | null
+          id?: never
+          sections?: string[] | null
+          user_agent?: string | null
+        }
+        Update: {
+          accessed_at?: string
+          article_id?: string | null
+          exposure?:
+            | Database["public"]["Enums"]["article_agent_exposure"]
+            | null
+          id?: never
+          sections?: string[] | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provenance_access_log_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provenance_rate_limits: {
+        Row: {
+          ip_hash: string
+          request_count: number
+          window_start: string
+        }
+        Insert: {
+          ip_hash: string
+          request_count?: number
+          window_start?: string
+        }
+        Update: {
+          ip_hash?: string
+          request_count?: number
+          window_start?: string
+        }
+        Relationships: []
       }
       region_hidden_articles: {
         Row: {
@@ -3436,6 +3652,13 @@ export type Database = {
         | "subscriber"
         | "contributor"
         | "business"
+      article_agent_exposure: "headline_only" | "headline_plus_dek" | "summary"
+      article_response_status:
+        | "responded"
+        | "declined"
+        | "no_reply"
+        | "not_applicable"
+      article_source_kind: "interviewee" | "document" | "dataset"
       barometer_tilgang: "åpen" | "metered" | "lukket"
       tip_status: "new" | "reviewing" | "followed_up" | "dismissed"
     }
@@ -3574,6 +3797,14 @@ export const Constants = {
         "contributor",
         "business",
       ],
+      article_agent_exposure: ["headline_only", "headline_plus_dek", "summary"],
+      article_response_status: [
+        "responded",
+        "declined",
+        "no_reply",
+        "not_applicable",
+      ],
+      article_source_kind: ["interviewee", "document", "dataset"],
       barometer_tilgang: ["åpen", "metered", "lukket"],
       tip_status: ["new", "reviewing", "followed_up", "dismissed"],
     },

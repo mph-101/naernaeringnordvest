@@ -20,7 +20,6 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   const { language, defaultView, setDefaultView, hiddenElements } = useTheme();
   const t = translations[language];
   const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
-  const isIdrett = false; // legacy, kept for safety
   const isTall = pathname.startsWith("/tall");
   const isHjernevelvet = pathname.startsWith("/hjernevelvet");
 
@@ -39,7 +38,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
       if (pathname !== target) window.location.href = target;
       return;
     }
-    if (isTall || isIdrett || isHjernevelvet) {
+    if (isTall || isHjernevelvet) {
       window.location.href = `/?view=${tabId}`;
       return;
     }
@@ -50,7 +49,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
     if (tabId === "tall") return isTall;
     if (tabId === "hjernevelvet") return isHjernevelvet;
     if (isTall || isHjernevelvet) return false;
-    return !isIdrett && view === tabId;
+    return view === tabId;
   };
 
   return (

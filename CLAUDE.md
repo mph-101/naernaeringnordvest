@@ -19,7 +19,7 @@ Stack vi flytter mot: Next.js App Router (Vercel) + samme Supabase + Stripe dire
 Disse er besluttet sammen med Magnus før Claude Code begynner. Hvis noen av disse endrer seg, må dokumentet oppdateres FØR videre arbeid.
 
 1. **Tipskanal i fase 1:** Ærlig downgrade — fjern løftet om kildebeskyttelse, erstatt med Signal-nummer for sensitive saker. GlobaLeaks vurderes i fase 4.
-2. **Idrett, Hjernevelvet, mascot, games:** Parkeres bak feature flags. Koden beholdes, men rutene skjules ved lansering. Ikke slett.
+2. **Hjernevelvet, mascot, games:** Parkeres bak feature flags. Koden beholdes, men rutene skjules ved lansering. Ikke slett. **Idrett er unntaket:** sports-/fotballfeaturen var rester av et tidligere prosjekt og er fjernet helt (2026-06-09) — `idrett-chat`-edge-funksjonen, Idrett/KlubbProfil/Sammenlign-visningene, `clubs.ts` og `FEATURE_IDRETT`. `/idrett*`-URL-er redirecter til `/tall`.
 3. **Multi-region:** Bygges nå, før lansering. Nordvest blir første region i et multi-tenant skjema.
 4. **Lovable:** Vi forlater plattformen. Stripe-kall går direkte til Stripe (ikke via `connector-gateway.lovable.dev`). Lovable-spesifikke pakker fases ut.
 5. **Arbeidsflyt:** PR-basert. Aldri push direkte til `main`. Hver PR er fokusert på én oppgave fra arbeidslisten under.
@@ -361,3 +361,4 @@ Magnus reviewer alle PR-er før merge. Det betyr: ikke press for stor PR. 200-50
 ## Versjonshistorikk for dette dokumentet
 
 - **2026-05-16:** Initial versjon. Etablerer fase 1-5 plan og arbeidsregler.
+- **2026-06-09:** Antagelse #2 oppdatert — idrett fullt fjernet (var rester av tidligere prosjekt); hjernevelv/mascot/games fortsatt parkert.

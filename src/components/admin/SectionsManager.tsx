@@ -118,9 +118,7 @@ export const SectionsManager = () => {
     const slug = slugifyCategory(editForm.slug || editForm.name);
     // rename_category updates the row AND propagates the new name onto every
     // article that used the old name (articles.category is denormalized text).
-    // rename_category / merge_categories are defined in 20260609120000 but are
-    // not in the generated types until they are regenerated post-deploy.
-    const { error } = await (supabase as any).rpc("rename_category", {
+    const { error } = await supabase.rpc("rename_category", {
       _id: editing.id,
       _name: editForm.name.trim(),
       _name_en: editForm.name_en.trim() || null,
@@ -181,7 +179,7 @@ export const SectionsManager = () => {
   const handleMerge = async () => {
     if (!merging || !mergeTarget) return;
     setMergeBusy(true);
-    const { data, error } = await (supabase as any).rpc("merge_categories", {
+    const { data, error } = await supabase.rpc("merge_categories", {
       _target_id: mergeTarget,
       _source_ids: [merging.id],
     });

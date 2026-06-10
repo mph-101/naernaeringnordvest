@@ -26,30 +26,23 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 - Klienten sender ikke lenger `environment` — ingen handling der.
 
 ### Tips-e-post kryptering F2 (2026-06-10)
-- **Bekreft at `TIP_ENCRYPTION_PUBLIC_KEY`** er satt som edge-secret. `submit-tip`
-  krever den nå for å ta imot tips med oppfølgings-e-post (feiler med 503 ellers —
-  aldri klartekst). `decrypt-tip-email` bruker samme nøkkelpar.
-- **Privatnøkkelen** må distribueres til journalister manuelt (ikke i kode). Den
-  limes inn i «Dekrypter e-post»-dialogen i admin → Tips.
-- **Deploy `submit-tip`** (kryptering) på nytt.
-- **Regenerer typer** (`supabase gen types`) så `follow_up_email_encrypted` kommer
-  inn i `types.ts` — da kan `(supabase.from("tips") as any)`-castet i `TipsList.tsx`
-  fjernes.
-- **Senere opprydding:** når kryptering er verifisert i drift, kan klartekst-kolonnen
-  `tips.follow_up_email` droppes i en egen migrasjon (den nulles allerede og skrives
-  ikke lenger). Egen PR — schema-endring krever din godkjenning.
+- ✅ **GJORT 2026-06-10:** `TIP_ENCRYPTION_PUBLIC_KEY` satt (nytt nøkkelpar generert),
+  `encrypt_tip_email`-migrasjonen kjørt mot prod (1 klartekst-e-post nullet etter
+  Magnus' beslutning), `submit-tip` deployet, røyk-test OK (kryptert insert
+  verifisert i DB), dekrypt-rundtur i admin verifisert av Magnus, typer regenerert.
+- **Gjenstår: privatnøkkelen** distribueres til journalister når flere skal kunne
+  dekryptere (sikker kanal — Signal/fysisk; vurder delt Bitwarden-collection).
+  Ligger nå kun i Magnus' passordmanager.
+- **Senere opprydding:** klartekst-kolonnen `tips.follow_up_email` kan droppes i
+  egen migrasjon (nulles alt og skrives aldri). Egen PR — krever din godkjenning.
 
 ### Sikkerhetsherding F3+F4 (2026-06-10)
-- **Sett `RATE_LIMIT_SALT`** som secret på edge functions (en lang tilfeldig
-  streng). Brukes nå til IP-hashing for rate-limiting i `submit-tip` og
-  `article-provenance` i stedet for `SUPABASE_SERVICE_ROLE_KEY` (F4). Hvis den
-  ikke settes, faller koden tilbake til tom salt — rate-limiting virker fortsatt,
-  men er ikke nøklet til en hemmelighet. Sett den før prod.
-- **Deploy edge functions** som ble endret i CORS-konsolideringen (F3):
-  `decrypt-tip-email`, `newsletter-manage`, `generate-article-audio`,
-  `clone-author-voice`, `daily-edition` — de bruker nå allowlist-CORS
-  (`_shared/cors.ts`) i stedet for `*`. Bekreft at `ALLOWED_ORIGINS` dekker
-  prod-domenet når det settes.
+- ✅ **GJORT 2026-06-10:** `RATE_LIMIT_SALT` satt, alle 13 endrede funksjoner
+  deployet (CORS-allowlist + salt-hygiene live). `stripe_events`-tabellen
+  (webhook-idempotens, migrasjonsdrift) også kjørt mot prod.
+- **Gjenstår:** når eget domene settes opp — sett `ALLOWED_ORIGINS`-secreten slik
+  at CORS-allowlisten dekker prod-domenet (i dag: fallback localhost +
+  naernaeringnordvest.vercel.app).
 
 ### Seksjons-admin + region-filter (2026-06-09)
 Fire fikser i denne runden (egne PR-er):

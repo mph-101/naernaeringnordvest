@@ -3079,6 +3079,30 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          payload: Json
+          processed_at: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          payload: Json
+          processed_at?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          payload?: Json
+          processed_at?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean
@@ -3200,6 +3224,7 @@ export type Database = {
           content: string
           created_at: string
           follow_up_email: string | null
+          follow_up_email_encrypted: string | null
           id: string
           is_anonymous: boolean
           journalist_id: string
@@ -3213,6 +3238,7 @@ export type Database = {
           content: string
           created_at?: string
           follow_up_email?: string | null
+          follow_up_email_encrypted?: string | null
           id?: string
           is_anonymous?: boolean
           journalist_id: string
@@ -3226,6 +3252,7 @@ export type Database = {
           content?: string
           created_at?: string
           follow_up_email?: string | null
+          follow_up_email_encrypted?: string | null
           id?: string
           is_anonymous?: boolean
           journalist_id?: string
@@ -3609,7 +3636,7 @@ export type Database = {
         Returns: string
       }
       rename_category: {
-        Args: { _id: string; _name: string; _name_en: string | null; _slug: string }
+        Args: { _id: string; _name: string; _name_en: string; _slug: string }
         Returns: undefined
       }
       revoke_api_key: { Args: { _id: string }; Returns: undefined }

@@ -21,6 +21,16 @@ export function createStripeClient(env: StripeEnv): Stripe {
   });
 }
 
+// Server-decided Stripe environment (security review F1). The client must NOT
+// choose this: if it could, a user could run a checkout with a Stripe test card
+// (environment=sandbox) and have the webhook grant real access in prod. Set
+// STRIPE_ENVIRONMENT per deploy ("live" in prod, "sandbox" in staging/preview).
+// Defaults to "sandbox" so a misconfigured deploy can never accidentally touch
+// live keys/data.
+export function stripeEnvironment(): StripeEnv {
+  return Deno.env.get("STRIPE_ENVIRONMENT") === "live" ? "live" : "sandbox";
+}
+
 export async function verifyWebhook(req: Request, env: StripeEnv): Promise<{ id: string; type: string; data: { object: any } }> {
   const signature = req.headers.get("stripe-signature");
   const body = await req.text();

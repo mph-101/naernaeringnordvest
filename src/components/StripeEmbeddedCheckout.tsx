@@ -1,5 +1,5 @@
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
-import { getStripe, getStripeEnvironment } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { PAYMENTS_CLIENT_TOKEN } from "@/lib/env";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -39,7 +39,6 @@ export function StripeEmbeddedCheckout(props: Props) {
         orgnr: props.orgnr,
         emailDomain: props.emailDomain,
         returnUrl,
-        environment: getStripeEnvironment(),
       },
     });
     if (error || !data?.clientSecret) {

@@ -1,10 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { z } from "npm:zod@3.23.8";
-import { type StripeEnv, createStripeClient, corsHeaders } from "../_shared/stripe.ts";
+import { type StripeEnv, createStripeClient, corsHeaders, stripeEnvironment } from "../_shared/stripe.ts";
 
 const BodySchema = z.object({
   returnUrl: z.string().url(),
-  environment: z.enum(["sandbox", "live"]),
 });
 
 Deno.serve(async (req) => {
@@ -47,7 +46,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
-    const env: StripeEnv = parsed.data.environment;
+    const env: StripeEnv = stripeEnvironment();
 
     const sb = createClient(
       Deno.env.get("SUPABASE_URL")!,

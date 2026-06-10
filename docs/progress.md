@@ -1,5 +1,14 @@
 # Progress
 
+## Sikkerhetsgjennomgang abonnement/API/paywall (2026-06-10)
+
+- **F2 — krypter tips-e-post ved innsending + dekrypt-UI i admin** — 2026-06-10, branch `security/f2-encrypt-tip-email`
+  - Bakgrunn: `submit-tip` skrev `follow_up_email` i klartekst selv om kryptert kolonne (`follow_up_email_encrypted bytea`) og `decrypt-tip-email` allerede fantes. Kildebeskyttelse (CLAUDE.md fase 1.2).
+  - Ny `_shared/tip-crypto.ts` (`sealEmailToBytea` — libsodium `crypto_box_seal`, returnerer Postgres bytea-hex `\x…`). `submit-tip` krypterer nå e-posten til `follow_up_email_encrypted` og skriver aldri klartekst. Feiler lukket (503) hvis `TIP_ENCRYPTION_PUBLIC_KEY` mangler — aldri klartekst-fallback.
+  - `TipsList.tsx`: erstattet klartekst-`mailto` med «Dekrypter e-post»-dialog (lim inn privatnøkkel → `decrypt-tip-email` → viser e-post + mailto). Vises kun når tipset har kryptert e-post.
+  - Tester: `_shared/tip-crypto.test.ts` (deno, manuell — kjør `deno test --node-modules-dir=auto …`): seal→open rundtur + at feil nøkkel ikke åpner. `tsc --noEmit` rent, eslint 0 errors, vitest 115/115.
+  - Ikke verifisert i browser: dekrypt-dialogen krever innlogget admin + et tips med kryptert e-post (deploy + privatnøkkel). Krypto-korrektheten er dekket av deno-rundturtesten.
+
 ## Spør — regnskapstall (2026-06-04)
 
 - **Skjerpet Spør med regnskapstall fra Regnskapsregisteret** — 2026-06-04, branch `feat/spor-regnskapstall`

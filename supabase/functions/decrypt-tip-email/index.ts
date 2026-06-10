@@ -1,20 +1,16 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import sodium from "npm:libsodium-wrappers-sumo@0.7.15";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders(req) });
   }
 
   if (req.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed" }),
-      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 405, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 
@@ -24,7 +20,7 @@ Deno.serve(async (req) => {
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: "Missing authorization" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 401, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -39,7 +35,7 @@ Deno.serve(async (req) => {
     if (userError || !user) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 401, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -54,7 +50,7 @@ Deno.serve(async (req) => {
     if (!roles || roles.length === 0) {
       return new Response(
         JSON.stringify({ error: "Forbidden: admin or journalist role required" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 403, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -63,7 +59,7 @@ Deno.serve(async (req) => {
     if (!tip_id || !private_key) {
       return new Response(
         JSON.stringify({ error: "tip_id and private_key are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -77,14 +73,14 @@ Deno.serve(async (req) => {
     if (tipError || !tip) {
       return new Response(
         JSON.stringify({ error: "Tip not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 404, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
     if (!tip.follow_up_email_encrypted) {
       return new Response(
         JSON.stringify({ error: "No encrypted email for this tip" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 404, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -94,7 +90,7 @@ Deno.serve(async (req) => {
     if (!publicKeyB64) {
       return new Response(
         JSON.stringify({ error: "Server misconfiguration" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -112,13 +108,13 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({ email }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Decryption error:", error);
     return new Response(
       JSON.stringify({ error: "Decryption failed — invalid key or corrupted data" }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 });

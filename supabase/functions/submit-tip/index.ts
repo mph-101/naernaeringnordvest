@@ -1,19 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { hashIp, rateLimitSalt } from "../_shared/hash.ts";
 
 // Rate limit configuration
 const MAX_SUBMISSIONS_PER_HOUR = 5;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour in milliseconds
-
-// Hash IP for privacy (one-way hash)
-async function hashIP(ip: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(ip + Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
 
 // Input validation
 function validateInput(data: unknown): { 
@@ -106,7 +98,7 @@ Deno.serve(async (req) => {
     const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
                      req.headers.get("x-real-ip") || 
                      "unknown";
-    const ipHash = await hashIP(clientIP);
+    const ipHash = await hashIp(clientIP, rateLimitSalt());
 
     // Initialize Supabase with service role (bypasses RLS)
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

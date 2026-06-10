@@ -4,6 +4,20 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Tips-e-post kryptering F2 (2026-06-10)
+- **Bekreft at `TIP_ENCRYPTION_PUBLIC_KEY`** er satt som edge-secret. `submit-tip`
+  krever den nå for å ta imot tips med oppfølgings-e-post (feiler med 503 ellers —
+  aldri klartekst). `decrypt-tip-email` bruker samme nøkkelpar.
+- **Privatnøkkelen** må distribueres til journalister manuelt (ikke i kode). Den
+  limes inn i «Dekrypter e-post»-dialogen i admin → Tips.
+- **Deploy `submit-tip`** (kryptering) på nytt.
+- **Regenerer typer** (`supabase gen types`) så `follow_up_email_encrypted` kommer
+  inn i `types.ts` — da kan `(supabase.from("tips") as any)`-castet i `TipsList.tsx`
+  fjernes.
+- **Senere opprydding:** når kryptering er verifisert i drift, kan klartekst-kolonnen
+  `tips.follow_up_email` droppes i en egen migrasjon (den nulles allerede og skrives
+  ikke lenger). Egen PR — schema-endring krever din godkjenning.
+
 ### Sikkerhetsherding F3+F4 (2026-06-10)
 - **Sett `RATE_LIMIT_SALT`** som secret på edge functions (en lang tilfeldig
   streng). Brukes nå til IP-hashing for rate-limiting i `submit-tip` og

@@ -1,9 +1,18 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageSquare, Mail, User, Clock, CheckCircle, Eye, XCircle } from "lucide-react";
+import { MessageSquare, Mail, User, Clock, CheckCircle, Eye, XCircle, Lock, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 type TipStatus = "new" | "reviewing" | "followed_up" | "dismissed";
 
@@ -12,7 +21,7 @@ interface Tip {
   journalist_id: string;
   journalist_name: string;
   content: string;
-  follow_up_email: string | null;
+  has_encrypted_email: boolean;
   status: TipStatus;
   reviewed_by: string | null;
   reviewed_at: string | null;
@@ -40,23 +49,99 @@ export const TipsList = () => {
   const [statusFilter, setStatusFilter] = useState<TipStatus | "all">("all");
   const { toast } = useToast();
 
+  // Decrypt dialog state
+  const [decryptTip, setDecryptTip] = useState<Tip | null>(null);
+  const [privateKey, setPrivateKey] = useState("");
+  const [decrypting, setDecrypting] = useState(false);
+  const [decryptedEmail, setDecryptedEmail] = useState<string | null>(null);
+  const [decryptError, setDecryptError] = useState<string | null>(null);
+
   useEffect(() => {
     fetchTips();
   }, []);
 
   const fetchTips = async () => {
     try {
-      const { data, error } = await supabase
-        .from("tips")
-        .select("id, journalist_id, journalist_name, content, follow_up_email, status, reviewed_by, reviewed_at, created_at")
+      // follow_up_email_encrypted is bytea and not yet in the generated types,
+      // so the query builder is cast to any (interim pattern, see magnus-todo:
+      // regenerate types). We only read whether an encrypted email exists — the
+      // ciphertext itself is decrypted server-side via decrypt-tip-email.
+      const { data, error } = await (supabase.from("tips") as any)
+        .select(
+          "id, journalist_id, journalist_name, content, follow_up_email_encrypted, status, reviewed_by, reviewed_at, created_at",
+        )
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setTips((data as Tip[]) ?? []);
+      const rows = (data as Array<Record<string, unknown>>) ?? [];
+      setTips(
+        rows.map((r) => ({
+          id: r.id as string,
+          journalist_id: r.journalist_id as string,
+          journalist_name: r.journalist_name as string,
+          content: r.content as string,
+          has_encrypted_email: r.follow_up_email_encrypted != null,
+          status: r.status as TipStatus,
+          reviewed_by: (r.reviewed_by as string | null) ?? null,
+          reviewed_at: (r.reviewed_at as string | null) ?? null,
+          created_at: r.created_at as string,
+        })),
+      );
     } catch (error) {
       console.error("Error fetching tips:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openDecrypt = (tip: Tip) => {
+    setDecryptTip(tip);
+    setPrivateKey("");
+    setDecryptedEmail(null);
+    setDecryptError(null);
+  };
+
+  const closeDecrypt = () => {
+    setDecryptTip(null);
+    setPrivateKey("");
+    setDecryptedEmail(null);
+    setDecryptError(null);
+    setDecrypting(false);
+  };
+
+  const runDecrypt = async () => {
+    if (!decryptTip || !privateKey.trim()) return;
+    setDecrypting(true);
+    setDecryptError(null);
+    setDecryptedEmail(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("decrypt-tip-email", {
+        body: { tip_id: decryptTip.id, private_key: privateKey.trim() },
+      });
+      if (error) {
+        // Try to surface the edge function's error message.
+        let message = "Dekryptering feilet. Sjekk at du limte inn riktig privatnøkkel.";
+        try {
+          const ctx = (error as { context?: Response }).context;
+          if (ctx) {
+            const body = await ctx.json();
+            if (body?.error) message = body.error;
+          }
+        } catch {
+          /* keep default message */
+        }
+        setDecryptError(message);
+        return;
+      }
+      if (data?.email) {
+        setDecryptedEmail(data.email as string);
+      } else {
+        setDecryptError("Ingen e-post returnert for dette tipset.");
+      }
+    } catch {
+      setDecryptError("Uventet feil under dekryptering.");
+    } finally {
+      setDecrypting(false);
     }
   };
 
@@ -195,13 +280,15 @@ export const TipsList = () => {
                   <span className={`px-2 py-1 rounded text-xs font-medium ${STATUS_COLORS[tip.status]}`}>
                     {STATUS_LABELS[tip.status]}
                   </span>
-                  {tip.follow_up_email && (
-                    <a
-                      href={`mailto:${tip.follow_up_email}`}
+                  {tip.has_encrypted_email && (
+                    <button
+                      onClick={() => openDecrypt(tip)}
+                      title="Tipseren oppga en oppfølgings-e-post (kryptert). Krever privatnøkkel for å lese."
                       className="flex items-center gap-1 text-sm text-primary hover:underline"
                     >
+                      <Lock className="w-4 h-4" />
                       <Mail className="w-4 h-4" />
-                    </a>
+                    </button>
                   )}
                 </div>
               </div>
@@ -249,6 +336,58 @@ export const TipsList = () => {
           ))}
         </div>
       )}
+
+      {/* Decrypt follow-up email dialog */}
+      <Dialog open={decryptTip !== null} onOpenChange={(open) => !open && closeDecrypt()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Dekrypter oppfølgings-e-post</DialogTitle>
+            <DialogDescription>
+              Tipsernes e-post lagres kryptert (sealed box). Lim inn din private
+              dekrypteringsnøkkel for å lese den. Nøkkelen sendes til en sikker
+              edge-funksjon og lagres aldri i nettleseren.
+            </DialogDescription>
+          </DialogHeader>
+
+          {decryptedEmail ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">E-post for dette tipset:</p>
+              <a
+                href={`mailto:${decryptedEmail}`}
+                className="flex items-center gap-2 text-primary font-medium hover:underline break-all"
+              >
+                <Mail className="w-4 h-4 shrink-0" />
+                {decryptedEmail}
+              </a>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <Input
+                type="password"
+                autoComplete="off"
+                placeholder="Privat dekrypteringsnøkkel"
+                value={privateKey}
+                onChange={(e) => setPrivateKey(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") runDecrypt();
+                }}
+              />
+              {decryptError && (
+                <p className="text-sm text-destructive">{decryptError}</p>
+              )}
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={closeDecrypt} disabled={decrypting}>
+                  Avbryt
+                </Button>
+                <Button onClick={runDecrypt} disabled={decrypting || !privateKey.trim()}>
+                  {decrypting && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+                  Dekrypter
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

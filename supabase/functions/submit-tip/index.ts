@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { sealEmailToBytea } from "../_shared/tip-crypto.ts";
 import { hashIp, rateLimitSalt } from "../_shared/hash.ts";
 
 // Rate limit configuration
@@ -155,15 +156,35 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Insert the tip (email stored in plaintext until task 1.2 encryption is implemented)
+    // Source protection (F2): encrypt the follow-up email with a libsodium
+    // sealed box so the stored row can never be read back without the
+    // journalists' secret key. We never write the plaintext column anymore.
+    const email = validation.parsed.follow_up_email;
+    let followUpEmailEncrypted: string | null = null;
+    if (email) {
+      const publicKeyB64 = Deno.env.get("TIP_ENCRYPTION_PUBLIC_KEY");
+      if (!publicKeyB64) {
+        // Fail closed: refuse rather than fall back to plaintext storage.
+        console.error("TIP_ENCRYPTION_PUBLIC_KEY not configured — refusing plaintext email");
+        return new Response(
+          JSON.stringify({
+            error:
+              "Oppfølgings-e-post kan ikke krypteres akkurat nå. Send tipset uten e-post, eller kontakt redaksjonen via Signal.",
+          }),
+          { status: 503, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
+        );
+      }
+      followUpEmailEncrypted = await sealEmailToBytea(email, publicKeyB64);
+    }
+
     const { error: insertError } = await supabase
       .from("tips")
       .insert({
         journalist_id: validation.parsed.journalist_id,
         journalist_name: validation.parsed.journalist_name,
         content: validation.parsed.content,
-        follow_up_email: validation.parsed.follow_up_email,
-        is_anonymous: !validation.parsed.follow_up_email,
+        follow_up_email_encrypted: followUpEmailEncrypted,
+        is_anonymous: !email,
       });
 
     if (insertError) {

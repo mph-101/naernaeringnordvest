@@ -213,10 +213,24 @@ async function handleWebhook(req: Request, env: StripeEnv) {
 
   if (insertError) {
     if (insertError.code === "23505") {
-      console.log("Duplicate webhook, skipping:", event.id);
-      return;
+      // Already seen. Only skip if the previous attempt fully completed
+      // (processed_at set). If a prior attempt crashed after this insert but
+      // before processing, processed_at is still NULL — fall through and
+      // re-process. All handlers below are idempotent (upserts keyed on
+      // provider_subscription_id), so re-processing is safe. (F6)
+      const { data: existing } = await sb
+        .from("stripe_events")
+        .select("processed_at")
+        .eq("event_id", event.id)
+        .maybeSingle();
+      if (existing?.processed_at) {
+        console.log("Duplicate already-processed webhook, skipping:", event.id);
+        return;
+      }
+      console.warn("Re-processing webhook whose prior attempt did not complete:", event.id);
+    } else {
+      console.error("Failed to record stripe event:", insertError);
     }
-    console.error("Failed to record stripe event:", insertError);
   }
 
   switch (event.type) {

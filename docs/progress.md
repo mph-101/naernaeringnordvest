@@ -9,6 +9,17 @@
   - `payments-webhook`: ny guard som ignorerer events hvis `?env` ≠ `STRIPE_ENVIRONMENT` (blokkerer sandbox-events i prod selv om korrekt signert).
   - Klient: fjernet `environment: getStripeEnvironment()` fra alle 5 checkout/portal-kall (SubscriptionSection, StripeEmbeddedCheckout, JobPremiumCheckout, EventFeaturedCheckout, BusinessPanel). `getStripeEnvironment` beholdt for lese-filter i `useSubscription` + testbanner.
   - Verifisert: `tsc --noEmit` rent, eslint 0 errors, vitest grønt. Ingen lese-side migrasjon (alt. 1 ⇒ prod = kun live).
+- **F2 — krypter tips-e-post ved innsending + dekrypt-UI i admin** — 2026-06-10, branch `security/f2-encrypt-tip-email`
+  - Bakgrunn: `submit-tip` skrev `follow_up_email` i klartekst selv om kryptert kolonne (`follow_up_email_encrypted bytea`) og `decrypt-tip-email` allerede fantes. Kildebeskyttelse (CLAUDE.md fase 1.2).
+  - Ny `_shared/tip-crypto.ts` (`sealEmailToBytea` — libsodium `crypto_box_seal`, returnerer Postgres bytea-hex `\x…`). `submit-tip` krypterer nå e-posten til `follow_up_email_encrypted` og skriver aldri klartekst. Feiler lukket (503) hvis `TIP_ENCRYPTION_PUBLIC_KEY` mangler — aldri klartekst-fallback.
+  - `TipsList.tsx`: erstattet klartekst-`mailto` med «Dekrypter e-post»-dialog (lim inn privatnøkkel → `decrypt-tip-email` → viser e-post + mailto). Vises kun når tipset har kryptert e-post.
+  - Tester: `_shared/tip-crypto.test.ts` (deno, manuell — kjør `deno test --node-modules-dir=auto …`): seal→open rundtur + at feil nøkkel ikke åpner. `tsc --noEmit` rent, eslint 0 errors, vitest 115/115.
+  - Ikke verifisert i browser: dekrypt-dialogen krever innlogget admin + et tips med kryptert e-post (deploy + privatnøkkel). Krypto-korrektheten er dekket av deno-rundturtesten.
+- **F3 + F4 — CORS-konsolidering + salt-hygiene** — 2026-06-10, branch `security/f3-f4-cors-salt-hygiene`
+  - F3: Erstattet hardkodet wildcard-CORS (`Access-Control-Allow-Origin: *`) med allowlist via `_shared/cors.ts` i `decrypt-tip-email`, `newsletter-manage`, `generate-article-audio`, `clone-author-voice`, `daily-edition`. `article-provenance` beholder bevisst åpen CORS (offentlig endepunkt, dokumentert). `json`-hjelperne flyttet inn i handleren (per-request `corsHeaders(req)`, trygt under samtidighet).
+  - F4: Ny `_shared/hash.ts` (`hashIp(ip, salt)` + `rateLimitSalt()`); `submit-tip` og `article-provenance` bruker nå `RATE_LIMIT_SALT` i stedet for `SUPABASE_SERVICE_ROLE_KEY` i IP-hashen.
+  - Tester: `src/test/rate-limit-hash.test.ts` (vitest, kjører i CI). Magnus-TODO: sett `RATE_LIMIT_SALT`, deploy de fem funksjonene.
+  - Del av sikkerhetsgjennomgangen 2026-06-10 (funn F3/F4). Se plan i økt-notat.
 
 ## Region-filtrering, seksjoner & redaksjons-krav (2026-06-09)
 

@@ -16,6 +16,7 @@
 // `machine_note` is derived from `status`, not from the internal note.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hashIp, rateLimitSalt } from "../_shared/hash.ts";
 
 // ----------------------------------------------------------------------
 // Pure, testable shaping logic (exported for deno test in ./index.test.ts)
@@ -182,16 +183,6 @@ const PUBLIC_CORS: Record<string, string> = {
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const MAX_REQUESTS_PER_WINDOW = 300; // generous; crawlers hit many articles
 
-async function hashIP(ip: string): Promise<string> {
-  const data = new TextEncoder().encode(
-    ip + Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
-  );
-  const buf = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 export const handler = async (req: Request): Promise<Response> => {
   const json = (b: unknown, status = 200, extra: Record<string, string> = {}) =>
     new Response(JSON.stringify(b), {
@@ -216,7 +207,7 @@ export const handler = async (req: Request): Promise<Response> => {
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     req.headers.get("x-real-ip") ||
     "unknown";
-  const ipHash = await hashIP(clientIP);
+  const ipHash = await hashIp(clientIP, rateLimitSalt());
   const now = new Date();
 
   const { data: rl } = await supabase

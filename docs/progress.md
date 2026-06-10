@@ -2,6 +2,11 @@
 
 ## Sikkerhetsgjennomgang abonnement/API/paywall (2026-06-10)
 
+- **F5 + F6 — herding (input-validering + webhook-idempotens)** — 2026-06-10, branch `security/f5-f7-hardening`
+  - **F5:** ny `_shared/validate-chat.ts` (`validateChatMessages` — form + størrelsesgrenser: maks 50 meldinger, 8000 tegn/melding, 24000 totalt). `articles-chat` bruker den før kall til AI-gatewayen, så ugyldig form/stort fritekst-input avvises (DoS/kost-misbruk). Vitest: `src/test/validate-chat.test.ts`.
+  - **F6:** `payments-webhook` re-prosesserer nå en webhook hvis et tidligere forsøk crashet etter `stripe_events`-insert men før `processed_at` ble satt (skipper kun når `processed_at` finnes). Handlerne er idempotente (upserts), så re-prosessering er trygt.
+  - **F7 (feed-api per-nøkkel rate-limit): IKKE gjort — krever DB-migrasjon (din godkjenning).** Se magnus-todo. `api_keys` har `request_count`/`last_used_at` men ingen vindusteller; en ekte rate-limit trenger ny tabell eller endring av `validate_api_key`-RPC. Lav severity (krever gyldig abonnent-nøkkel).
+  - Verifisert: `tsc` rent, eslint 0 errors, vitest grønt.
 - **F1 — Stripe-miljø bestemmes server-side (ikke av klienten)** — 2026-06-10, branch `security/f1-stripe-env-server-side`
   - Bakgrunn: klienten sendte selv `environment` til checkout/portal, så en bruker kunne (når Stripe er live) kjøre sandbox-checkout med testkort og få ekte tilgang i prod. Ingen aktiv risiko i dag (Stripe ikke satt opp), men pre-launch-gate.
   - Beslutning (Magnus): valg A = alt. 1 (egen sandbox-DB/blokker i prod), fjern environment fra klient nå.

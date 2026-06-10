@@ -9,6 +9,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { aiChatCompletion, aiFetch } from "../_shared/ai-client.ts";
+import { validateChatMessages } from "../_shared/validate-chat.ts";
 import { collectFinancialTargets } from "./financial-targets.ts";
 import { PLANNER_SYSTEM_PROMPT, parsePlannerResponse, decideRankingRoute, type PlannerResult } from "./planner.ts";
 import { applyMrKommune, applyRegionScope, MR_KOMMUNE_NUMBERS, kommuneNavnByNummer } from "./mr-kommuner.ts";
@@ -335,8 +336,11 @@ serve(async (req) => {
 
   try {
     const { messages } = await req.json();
-    if (!Array.isArray(messages) || messages.length === 0) {
-      return new Response(JSON.stringify({ error: "messages mangler" }), {
+    // Input-validering (F5): avvis ugyldig form + cap klient-kontrollert input
+    // før det sendes til AI-gatewayen (DoS/kost-misbruk).
+    const validationError = validateChatMessages(messages);
+    if (validationError) {
+      return new Response(JSON.stringify({ error: validationError }), {
         status: 400,
         headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });

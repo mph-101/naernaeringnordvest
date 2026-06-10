@@ -5,13 +5,12 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 ## Åpne
 
 ### Herding F5–F7 (2026-06-10)
-- **Deploy** `articles-chat` (F5 input-validering) og `payments-webhook` (F6 idempotens-fiks).
-- **F7 — beslutning kreves:** `feed-api` mangler per-nøkkel rate-limit. Brute-force
-  er urealistisk (krever gyldig abonnent-API-nøkkel), så dette er fair-use-vern, lav
-  severity. To alternativer, begge DB-migrasjon (= din godkjenning):
-  (a) ny `api_key_rate_limits`-tabell (vindusteller, som `tip_rate_limits`), eller
-  (b) endre `validate_api_key`-RPC til å returnere `last_used_at` + håndheve et
-  minimumsintervall. Si fra hvilken, så lager jeg migrasjon + edge-endring som egen PR.
+- ✅ F5/F6 deployet 2026-06-10 (`articles-chat`, `payments-webhook`).
+- ✅ **F7 implementert (Magnus valgte alt. a):** ny `api_key_rate_limits`-tabell
+  (migrasjon `20260610150000`) + vindusteller i `feed-api` (300 kall/time per
+  nøkkel, 429 + Retry-After). **Gjenstår: deploy `feed-api`** etter merge av
+  F7-PR-en (migrasjonen er kjørt mot prod; funksjonen feiler åpent til deploy —
+  ingen brudd, bare ingen begrensning).
 
 ### Stripe-miljøisolering F1 (2026-06-10)
 - **Sett `STRIPE_ENVIRONMENT`** som edge-secret per deploy: `live` i prod,

@@ -1,5 +1,13 @@
 # Progress
 
+## Sikkerhetsgjennomgang abonnement/API/paywall (2026-06-10)
+
+- **F3 + F4 — CORS-konsolidering + salt-hygiene** — 2026-06-10, branch `security/f3-f4-cors-salt-hygiene`
+  - F3: Erstattet hardkodet wildcard-CORS (`Access-Control-Allow-Origin: *`) med allowlist via `_shared/cors.ts` i `decrypt-tip-email`, `newsletter-manage`, `generate-article-audio`, `clone-author-voice`, `daily-edition`. `article-provenance` beholder bevisst åpen CORS (offentlig endepunkt, dokumentert). `json`-hjelperne flyttet inn i handleren (per-request `corsHeaders(req)`, trygt under samtidighet).
+  - F4: Ny `_shared/hash.ts` (`hashIp(ip, salt)` + `rateLimitSalt()`); `submit-tip` og `article-provenance` bruker nå `RATE_LIMIT_SALT` i stedet for `SUPABASE_SERVICE_ROLE_KEY` i IP-hashen.
+  - Tester: `src/test/rate-limit-hash.test.ts` (vitest, kjører i CI). Magnus-TODO: sett `RATE_LIMIT_SALT`, deploy de fem funksjonene.
+  - Del av sikkerhetsgjennomgangen 2026-06-10 (funn F3/F4). Se plan i økt-notat.
+
 ## Spør — regnskapstall (2026-06-04)
 
 - **Skjerpet Spør med regnskapstall fra Regnskapsregisteret** — 2026-06-04, branch `feat/spor-regnskapstall`

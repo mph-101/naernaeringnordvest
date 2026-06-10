@@ -62,29 +62,27 @@ export const TipsList = () => {
 
   const fetchTips = async () => {
     try {
-      // follow_up_email_encrypted is bytea and not yet in the generated types,
-      // so the query builder is cast to any (interim pattern, see magnus-todo:
-      // regenerate types). We only read whether an encrypted email exists — the
-      // ciphertext itself is decrypted server-side via decrypt-tip-email.
-      const { data, error } = await (supabase.from("tips") as any)
+      // We only read whether an encrypted email exists — the ciphertext itself
+      // is decrypted server-side via decrypt-tip-email.
+      const { data, error } = await supabase
+        .from("tips")
         .select(
           "id, journalist_id, journalist_name, content, follow_up_email_encrypted, status, reviewed_by, reviewed_at, created_at",
         )
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      const rows = (data as Array<Record<string, unknown>>) ?? [];
       setTips(
-        rows.map((r) => ({
-          id: r.id as string,
-          journalist_id: r.journalist_id as string,
-          journalist_name: r.journalist_name as string,
-          content: r.content as string,
+        (data ?? []).map((r) => ({
+          id: r.id,
+          journalist_id: r.journalist_id,
+          journalist_name: r.journalist_name,
+          content: r.content,
           has_encrypted_email: r.follow_up_email_encrypted != null,
           status: r.status as TipStatus,
-          reviewed_by: (r.reviewed_by as string | null) ?? null,
-          reviewed_at: (r.reviewed_at as string | null) ?? null,
-          created_at: r.created_at as string,
+          reviewed_by: r.reviewed_by,
+          reviewed_at: r.reviewed_at,
+          created_at: r.created_at,
         })),
       );
     } catch (error) {

@@ -13,6 +13,44 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
   (b) endre `validate_api_key`-RPC til å returnere `last_used_at` + håndheve et
   minimumsintervall. Si fra hvilken, så lager jeg migrasjon + edge-endring som egen PR.
 
+### Stripe-miljøisolering F1 (2026-06-10)
+- **Sett `STRIPE_ENVIRONMENT`** som edge-secret per deploy: `live` i prod,
+  `sandbox` i staging/preview. Koden defaulter til `sandbox` (trygt) hvis usatt —
+  så prod MÅ settes til `live` før Stripe live-mode, ellers brukes test-nøkler.
+- **Egen sandbox-DB (valg A/alt.1):** ved Stripe-oppsett, la sandbox-webhooken
+  peke på en egen Supabase-instans (eller la den prod-deployede webhooken stå med
+  `STRIPE_ENVIRONMENT=live` — kode-guarden ignorerer da sandbox-events). Prod-DB
+  skal være ren live-data; derfor er det IKKE lagt til miljøfilter på lese-siden.
+- **Deploy** `create-checkout`, `create-portal-session`,
+  `create-job-premium-checkout`, `create-event-featured-checkout`, `payments-webhook`.
+- Klienten sender ikke lenger `environment` — ingen handling der.
+
+### Tips-e-post kryptering F2 (2026-06-10)
+- **Bekreft at `TIP_ENCRYPTION_PUBLIC_KEY`** er satt som edge-secret. `submit-tip`
+  krever den nå for å ta imot tips med oppfølgings-e-post (feiler med 503 ellers —
+  aldri klartekst). `decrypt-tip-email` bruker samme nøkkelpar.
+- **Privatnøkkelen** må distribueres til journalister manuelt (ikke i kode). Den
+  limes inn i «Dekrypter e-post»-dialogen i admin → Tips.
+- **Deploy `submit-tip`** (kryptering) på nytt.
+- **Regenerer typer** (`supabase gen types`) så `follow_up_email_encrypted` kommer
+  inn i `types.ts` — da kan `(supabase.from("tips") as any)`-castet i `TipsList.tsx`
+  fjernes.
+- **Senere opprydding:** når kryptering er verifisert i drift, kan klartekst-kolonnen
+  `tips.follow_up_email` droppes i en egen migrasjon (den nulles allerede og skrives
+  ikke lenger). Egen PR — schema-endring krever din godkjenning.
+
+### Sikkerhetsherding F3+F4 (2026-06-10)
+- **Sett `RATE_LIMIT_SALT`** som secret på edge functions (en lang tilfeldig
+  streng). Brukes nå til IP-hashing for rate-limiting i `submit-tip` og
+  `article-provenance` i stedet for `SUPABASE_SERVICE_ROLE_KEY` (F4). Hvis den
+  ikke settes, faller koden tilbake til tom salt — rate-limiting virker fortsatt,
+  men er ikke nøklet til en hemmelighet. Sett den før prod.
+- **Deploy edge functions** som ble endret i CORS-konsolideringen (F3):
+  `decrypt-tip-email`, `newsletter-manage`, `generate-article-audio`,
+  `clone-author-voice`, `daily-edition` — de bruker nå allowlist-CORS
+  (`_shared/cors.ts`) i stedet for `*`. Bekreft at `ALLOWED_ORIGINS` dekker
+  prod-domenet når det settes.
+
 ### Seksjons-admin + region-filter (2026-06-09)
 Fire fikser i denne runden (egne PR-er):
 - **Kjør migrasjon** `20260609120000_category_admin_rpcs.sql` mot prod. Den legger

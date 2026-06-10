@@ -1,5 +1,5 @@
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
-import { getStripe, getStripeEnvironment } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
@@ -13,7 +13,6 @@ export function JobPremiumCheckout({ jobListingId, returnUrl }: Props) {
       body: {
         jobListingId,
         returnUrl,
-        environment: getStripeEnvironment(),
       },
     });
     if (error || !data?.clientSecret) {

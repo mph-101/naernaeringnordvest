@@ -5,6 +5,7 @@ import {
   createStripeClient,
   corsHeaders,
   getPriceId,
+  stripeEnvironment,
 } from "../_shared/stripe.ts";
 
 const BodySchema = z.object({
@@ -18,7 +19,6 @@ const BodySchema = z.object({
     .regex(/^[a-z0-9.-]+\.[a-z]{2,}$/i)
     .optional(),
   returnUrl: z.string().url(),
-  environment: z.enum(["sandbox", "live"]),
 });
 
 Deno.serve(async (req) => {
@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       );
     }
     const body = parsed.data;
-    const env: StripeEnv = body.environment;
+    const env: StripeEnv = stripeEnvironment();
     const stripe = createStripeClient(env);
 
     // Resolve human-readable price ID -> Stripe price via lookup_keys.

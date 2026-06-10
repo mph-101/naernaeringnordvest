@@ -1,11 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { z } from "npm:zod@3.23.8";
-import { type StripeEnv, createStripeClient, corsHeaders } from "../_shared/stripe.ts";
+import { createStripeClient, corsHeaders, stripeEnvironment } from "../_shared/stripe.ts";
 
 const BodySchema = z.object({
   eventId: z.string().uuid(),
   returnUrl: z.string().url(),
-  environment: z.enum(["sandbox", "live"]),
 });
 
 const PRICE_LOOKUP_KEY = "event_featured_one_time";
@@ -52,7 +51,8 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" } },
       );
     }
-    const { eventId, returnUrl, environment } = parsed.data;
+    const { eventId, returnUrl } = parsed.data;
+    const environment = stripeEnvironment();
 
     const { data: ev, error: evErr } = await supabase
       .from("events")
@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const stripe = createStripeClient(environment as StripeEnv);
+    const stripe = createStripeClient(environment);
     const prices = await stripe.prices.list({ lookup_keys: [PRICE_LOOKUP_KEY], limit: 1 });
     if (!prices.data.length) {
       return new Response(JSON.stringify({ error: "Featured price not configured" }), {

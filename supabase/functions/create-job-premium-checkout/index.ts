@@ -1,11 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { z } from "npm:zod@3.23.8";
-import { type StripeEnv, createStripeClient, corsHeaders } from "../_shared/stripe.ts";
+import { createStripeClient, corsHeaders, stripeEnvironment } from "../_shared/stripe.ts";
 
 const BodySchema = z.object({
   jobListingId: z.string().uuid(),
   returnUrl: z.string().url(),
-  environment: z.enum(["sandbox", "live"]),
 });
 
 const PRICE_LOOKUP_KEY = "job_premium_one_time";
@@ -52,7 +51,8 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" } },
       );
     }
-    const { jobListingId, returnUrl, environment } = parsed.data;
+    const { jobListingId, returnUrl } = parsed.data;
+    const environment = stripeEnvironment();
 
     // Confirm the job belongs to this user
     const { data: job, error: jobErr } = await supabase
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const stripe = createStripeClient(environment as StripeEnv);
+    const stripe = createStripeClient(environment);
     const prices = await stripe.prices.list({ lookup_keys: [PRICE_LOOKUP_KEY], limit: 1 });
     if (!prices.data.length) {
       return new Response(JSON.stringify({ error: "Premium price not configured" }), {

@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { type StripeEnv, verifyWebhook } from "../_shared/stripe.ts";
+import { type StripeEnv, verifyWebhook, stripeEnvironment } from "../_shared/stripe.ts";
 
 let _supabase: ReturnType<typeof createClient> | null = null;
 function getSupabase() {
@@ -289,6 +289,18 @@ Deno.serve(async (req) => {
   if (rawEnv !== "sandbox" && rawEnv !== "live") {
     console.error("Webhook missing env:", rawEnv);
     return new Response(JSON.stringify({ received: true, ignored: "invalid env" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  // Environment isolation (F1, design choice A): this deploy only processes its
+  // own environment's events. A sandbox event hitting the prod (live) webhook —
+  // even if correctly signed with the sandbox secret — is ignored, so sandbox
+  // data can never land in the prod database.
+  const deployEnv = stripeEnvironment();
+  if (rawEnv !== deployEnv) {
+    console.warn(`Webhook env mismatch: event env=${rawEnv}, deploy env=${deployEnv} — ignoring`);
+    return new Response(JSON.stringify({ received: true, ignored: "env mismatch" }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });

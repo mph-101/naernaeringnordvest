@@ -1,19 +1,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { sealEmailToBytea } from "../_shared/tip-crypto.ts";
+import { hashIp, rateLimitSalt } from "../_shared/hash.ts";
 
 // Rate limit configuration
 const MAX_SUBMISSIONS_PER_HOUR = 5;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour in milliseconds
-
-// Hash IP for privacy (one-way hash)
-async function hashIP(ip: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(ip + Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
 
 // Input validation
 function validateInput(data: unknown): { 
@@ -106,7 +99,7 @@ Deno.serve(async (req) => {
     const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
                      req.headers.get("x-real-ip") || 
                      "unknown";
-    const ipHash = await hashIP(clientIP);
+    const ipHash = await hashIp(clientIP, rateLimitSalt());
 
     // Initialize Supabase with service role (bypasses RLS)
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -163,15 +156,35 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Insert the tip (email stored in plaintext until task 1.2 encryption is implemented)
+    // Source protection (F2): encrypt the follow-up email with a libsodium
+    // sealed box so the stored row can never be read back without the
+    // journalists' secret key. We never write the plaintext column anymore.
+    const email = validation.parsed.follow_up_email;
+    let followUpEmailEncrypted: string | null = null;
+    if (email) {
+      const publicKeyB64 = Deno.env.get("TIP_ENCRYPTION_PUBLIC_KEY");
+      if (!publicKeyB64) {
+        // Fail closed: refuse rather than fall back to plaintext storage.
+        console.error("TIP_ENCRYPTION_PUBLIC_KEY not configured — refusing plaintext email");
+        return new Response(
+          JSON.stringify({
+            error:
+              "Oppfølgings-e-post kan ikke krypteres akkurat nå. Send tipset uten e-post, eller kontakt redaksjonen via Signal.",
+          }),
+          { status: 503, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
+        );
+      }
+      followUpEmailEncrypted = await sealEmailToBytea(email, publicKeyB64);
+    }
+
     const { error: insertError } = await supabase
       .from("tips")
       .insert({
         journalist_id: validation.parsed.journalist_id,
         journalist_name: validation.parsed.journalist_name,
         content: validation.parsed.content,
-        follow_up_email: validation.parsed.follow_up_email,
-        is_anonymous: !validation.parsed.follow_up_email,
+        follow_up_email_encrypted: followUpEmailEncrypted,
+        is_anonymous: !email,
       });
 
     if (insertError) {

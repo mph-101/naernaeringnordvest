@@ -3,7 +3,6 @@ import { CreditCard, Loader2, ExternalLink, CheckCircle2, AlertCircle, Sparkles 
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
-import { getStripeEnvironment } from "@/lib/stripe";
 import { toast } from "sonner";
 
 interface SubscriptionSectionProps {
@@ -60,7 +59,6 @@ export function SubscriptionSection({ isNo }: SubscriptionSectionProps) {
       const { data, error } = await supabase.functions.invoke("create-portal-session", {
         body: {
           returnUrl: window.location.href,
-          environment: getStripeEnvironment(),
         },
       });
       if (error || !data?.url) {

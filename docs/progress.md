@@ -1,5 +1,15 @@
 # Progress
 
+## Sikkerhetsgjennomgang abonnement/API/paywall (2026-06-10)
+
+- **F1 — Stripe-miljø bestemmes server-side (ikke av klienten)** — 2026-06-10, branch `security/f1-stripe-env-server-side`
+  - Bakgrunn: klienten sendte selv `environment` til checkout/portal, så en bruker kunne (når Stripe er live) kjøre sandbox-checkout med testkort og få ekte tilgang i prod. Ingen aktiv risiko i dag (Stripe ikke satt opp), men pre-launch-gate.
+  - Beslutning (Magnus): valg A = alt. 1 (egen sandbox-DB/blokker i prod), fjern environment fra klient nå.
+  - Ny `stripeEnvironment()` i `_shared/stripe.ts` (leser `STRIPE_ENVIRONMENT`, default `sandbox`). Fjernet `environment` fra `BodySchema` i `create-checkout`, `create-portal-session`, `create-job-premium-checkout`, `create-event-featured-checkout`; alle utleder nå miljø server-side.
+  - `payments-webhook`: ny guard som ignorerer events hvis `?env` ≠ `STRIPE_ENVIRONMENT` (blokkerer sandbox-events i prod selv om korrekt signert).
+  - Klient: fjernet `environment: getStripeEnvironment()` fra alle 5 checkout/portal-kall (SubscriptionSection, StripeEmbeddedCheckout, JobPremiumCheckout, EventFeaturedCheckout, BusinessPanel). `getStripeEnvironment` beholdt for lese-filter i `useSubscription` + testbanner.
+  - Verifisert: `tsc --noEmit` rent, eslint 0 errors, vitest grønt. Ingen lese-side migrasjon (alt. 1 ⇒ prod = kun live).
+
 ## Spør — regnskapstall (2026-06-04)
 
 - **Skjerpet Spør med regnskapstall fra Regnskapsregisteret** — 2026-06-04, branch `feat/spor-regnskapstall`

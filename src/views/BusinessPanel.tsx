@@ -33,7 +33,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { getStripeEnvironment } from "@/lib/stripe";
 import { toast } from "@/components/ui/sonner";
 
 interface BusinessAccount {
@@ -211,7 +210,6 @@ export default function BusinessPanel() {
       const { data, error } = await supabase.functions.invoke("create-portal-session", {
         body: {
           returnUrl: `${window.location.origin}/abonnement/bedrift/${id}`,
-          environment: getStripeEnvironment(),
         },
       });
       if (error || !(data as { url?: string })?.url) {

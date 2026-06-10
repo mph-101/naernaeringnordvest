@@ -4,6 +4,18 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Stripe-miljøisolering F1 (2026-06-10)
+- **Sett `STRIPE_ENVIRONMENT`** som edge-secret per deploy: `live` i prod,
+  `sandbox` i staging/preview. Koden defaulter til `sandbox` (trygt) hvis usatt —
+  så prod MÅ settes til `live` før Stripe live-mode, ellers brukes test-nøkler.
+- **Egen sandbox-DB (valg A/alt.1):** ved Stripe-oppsett, la sandbox-webhooken
+  peke på en egen Supabase-instans (eller la den prod-deployede webhooken stå med
+  `STRIPE_ENVIRONMENT=live` — kode-guarden ignorerer da sandbox-events). Prod-DB
+  skal være ren live-data; derfor er det IKKE lagt til miljøfilter på lese-siden.
+- **Deploy** `create-checkout`, `create-portal-session`,
+  `create-job-premium-checkout`, `create-event-featured-checkout`, `payments-webhook`.
+- Klienten sender ikke lenger `environment` — ingen handling der.
+
 ### Seksjons-admin + region-filter (2026-06-09)
 Fire fikser i denne runden (egne PR-er):
 - **Kjør migrasjon** `20260609120000_category_admin_rpcs.sql` mot prod. Den legger

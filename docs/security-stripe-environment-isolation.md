@@ -1,6 +1,12 @@
 # Designnotat — miljøisolasjon for Stripe (sandbox vs live)
 
-> Status: **forslag, venter på Magnus' godkjenning før kode skrives.**
+> Status: **DELVIS IMPLEMENTERT 2026-06-10** (branch `security/f1-stripe-env-server-side`).
+> Magnus' beslutning: valg **A = alt. 1** (egen sandbox-DB / blokker i prod), og
+> «fjern environment fra klient nå». Server bestemmer miljø via `STRIPE_ENVIRONMENT`.
+> Gjenstår på Magnus: sett `STRIPE_ENVIRONMENT` per deploy, og sett opp egen
+> sandbox-Supabase / -webhook ved Stripe-oppsett (kode-guarden blokkerer
+> feil-miljø i mellomtiden). Lese-side miljøfilter er IKKE lagt til, fordi
+> prod-DB skal være ren live-data (alt. 1).
 > Bakgrunn: sikkerhetsgjennomgang 2026-06-03, funn #1 (kritisk).
 > Berører Stripe-integrasjonen → skal foreligges deg før implementasjon (jf. CLAUDE.md).
 

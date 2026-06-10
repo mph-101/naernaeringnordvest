@@ -2,6 +2,12 @@
 
 ## Sikkerhetsgjennomgang abonnement/API/paywall (2026-06-10)
 
+- **F7 — per-nøkkel rate-limit på feed-api** — 2026-06-10, branch `security/f7-feed-api-rate-limit` (Magnus valgte alt. a)
+  - Ny tabell `api_key_rate_limits` (migrasjon `20260610150000`): vindusteller per API-nøkkel, FK → `api_keys` med CASCADE, RLS uten policies (kun service-role) — samme mønster som `tip_rate_limits`.
+  - Ny `_shared/rate-window.ts` (`evaluateRateWindow` — ren, testbar fixed-window-logikk). `feed-api` håndhever 300 kall/time per nøkkel; over grensen → 429 med `Retry-After`. Feiler åpent hvis tabellen mangler (ingen brudd for abonnenter).
+  - Tester: `src/test/rate-window.test.ts` (5 stk — bump, cap, vindusreset, grenseverdi, avrunding). `deno check` rent.
+  - Utrulling: migrasjon kjørt mot prod 2026-06-10; `feed-api` deployes etter merge.
+
 - **F5 + F6 — herding (input-validering + webhook-idempotens)** — 2026-06-10, branch `security/f5-f7-hardening`
   - **F5:** ny `_shared/validate-chat.ts` (`validateChatMessages` — form + størrelsesgrenser: maks 50 meldinger, 8000 tegn/melding, 24000 totalt). `articles-chat` bruker den før kall til AI-gatewayen, så ugyldig form/stort fritekst-input avvises (DoS/kost-misbruk). Vitest: `src/test/validate-chat.test.ts`.
   - **F6:** `payments-webhook` re-prosesserer nå en webhook hvis et tidligere forsøk crashet etter `stripe_events`-insert men før `processed_at` ble satt (skipper kun når `processed_at` finnes). Handlerne er idempotente (upserts), så re-prosessering er trygt.

@@ -13,6 +13,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { evaluateRateWindow } from "../_shared/rate-window.ts";
+
+// Per-key fair-use cap (F7). Generous: a feed reader polling every minute
+// stays well under it; scripted scraping/hammering does not.
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const MAX_REQUESTS_PER_WINDOW = 300;
 
 async function sha256Hex(text: string): Promise<string> {
   const buf = await crypto.subtle.digest(
@@ -82,6 +88,49 @@ Deno.serve(async (req) => {
       },
       401,
     );
+  }
+
+  // 2b) Per-key rate limit (F7) — service-role table, no client access.
+  const keyId = validRow.key_id as string;
+  const now = Date.now();
+  const { data: rl } = await supabase
+    .from("api_key_rate_limits")
+    .select("request_count, window_start")
+    .eq("key_id", keyId)
+    .maybeSingle();
+
+  if (rl) {
+    const decision = evaluateRateWindow(
+      rl.request_count,
+      new Date(rl.window_start).getTime(),
+      now,
+      MAX_REQUESTS_PER_WINDOW,
+      RATE_LIMIT_WINDOW_MS,
+    );
+    if (decision.limited) {
+      return new Response(
+        JSON.stringify({ error: "Rate limit exceeded. Try again later." }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders(req),
+            "Content-Type": "application/json",
+            "Retry-After": String(decision.retryAfterSeconds),
+          },
+        },
+      );
+    }
+    await supabase
+      .from("api_key_rate_limits")
+      .update({
+        request_count: decision.nextCount,
+        ...(decision.resetWindow && { window_start: new Date(now).toISOString() }),
+      })
+      .eq("key_id", keyId);
+  } else {
+    await supabase
+      .from("api_key_rate_limits")
+      .insert({ key_id: keyId, request_count: 1, window_start: new Date(now).toISOString() });
   }
 
   // 3) Parse query params

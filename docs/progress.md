@@ -9,6 +9,33 @@
   - Tester: `_shared/tip-crypto.test.ts` (deno, manuell — kjør `deno test --node-modules-dir=auto …`): seal→open rundtur + at feil nøkkel ikke åpner. `tsc --noEmit` rent, eslint 0 errors, vitest 115/115.
   - Ikke verifisert i browser: dekrypt-dialogen krever innlogget admin + et tips med kryptert e-post (deploy + privatnøkkel). Krypto-korrektheten er dekket av deno-rundturtesten.
 
+## Region-filtrering, seksjoner & redaksjons-krav (2026-06-09)
+
+Økt med flere uavhengige fikser, alle merget til `main` (deployes via Vercel).
+Rekkefølge-tabbe oppdaget og rettet underveis (se nederst).
+
+- **#124 `fix/spraakvask-godta-forslag`** — Inline språkvask: «godta» (✓) virket likt som «avvis» (✕). Chip-knappene ligger inne i ProseMirror og holder fokus (mousedown+preventDefault), og `RichTextEditor` synker ikke `content`-propen mens editoren har fokus → den godtatte teksten nådde `form.body` men aldri visningen. Fix: `updateBodyFromProof` pusher nå rett inn i editor-instansen (`setContent`, `emitUpdate:false`), hopper over i collab-modus. Fil: `src/components/admin/ArticleEditor.tsx`.
+- **#125 `feat/utforsk-multiseksjon-filter`** — Utforsk-seksjonslinjen: multi-select (én ELLER flere seksjoner samtidig), filteret holder kanoniske kategorinavn (treffer riktig også på engelsk). Fil: `src/components/NewsFeed.tsx`.
+- **#130 `fix/utforsk-skjult-scrollbar-indikatorer`** — Oppfølger på #125 etter tilbakemelding: tilbake til én horisontal rad, men **skjult scrollbar** + **venstre/høyre chevron + fade** som kun vises når det finnes mer i den retningen. Måler overflow på nytt etter paint (`requestAnimationFrame`). Fil: `src/components/NewsFeed.tsx`.
+- **#126 `feat/admin-seksjoner`** — Ny **Seksjoner**-manager i admin (admin-only): rediger/slå sammen kategorier. Siden `articles.category` er denormalisert TEXT, propageres endringer via to `SECURITY DEFINER`-RPC-er (`rename_category`, `merge_categories`, speiler `merge_tags`). Migrasjon `20260609120000_category_admin_rpcs.sql` **kjørt i prod av Magnus** (manuelt via SQL Editor). Typene lagt inn kirurgisk i `types.ts` (ikke full regen, pga. migrasjons-drift). Filer: `src/components/admin/SectionsManager.tsx` (ny), `AdminDashboard.tsx`, `src/integrations/supabase/types.ts`, migrasjon.
+- **#127/#131 region-bytte filtrerer forsiden** — `NewsFeed` følger nå `useRegion().current` i stedet for sin egen profil-seedede region; fjerner død profil-seeding + ubrukt region-state. (Se rekkefølge-tabben under — endte som #131.) Fil: `src/components/NewsFeed.tsx`.
+- **#129 `fix/hovedredaksjon-paakrevd-for-publisering`** — En sak kan ikke lenger publiseres uten hovedredaksjon: nytt blokkerende punkt «Hovedredaksjon er valgt» i publiseringssjekklisten. Auto-utfylling fra `profiles.editorial_region` fantes alt (ProfileEditor setter, ArticleEditor seeder nye saker). Filer: `src/components/admin/PrePublishChecklist.tsx`, `ArticleEditor.tsx`.
+- **#128 `docs/per-region-abonnement`** — Designnotat for per-region abonnement + besluttede valg (se åpen tråd under). Fil: `docs/per-region-subscription-design.md`.
+
+**Prod-data (gjort av Magnus):** alle saker uten hovedredaksjon tilegnet `nordvestlandet` — nå har alle 19 artikler `region_slug=nordvestlandet`, 0 står uten. Delingene i `article_shared_regions` (midt-norge 5, østlandet 2, m.fl.) er **bevisste** (Magnus bekreftet at «resten skal være tomme» var feilhukommelse). Ingen dataopprydding gjenstår.
+
+**Læring — stablet-PR-tabbe:** #127 (region) var stablet på #125-branchen. #125 ble merget til `main` *først*, så #127 ble merget inn i den nå-døde #125-branchen og nådde **aldri `main`**. Oppdaget ved å sjekke `main` etterpå; re-landet ved å cherry-picke commiten rett på `main` som **#131**. Lærdom: merg base-PR-en og la GitHub retarge­te den stablede FØR du merger den stablede.
+
+### Åpen tråd — per-region abonnement (ikke startet, venter på Stripe-direkte 1.6)
+Designnotat: `docs/per-region-subscription-design.md`. Beslutninger tatt 2026-06-09:
+1. **Prising:** felles pris + `region_slug` som metadata (ikke egne priser per region).
+2. **Bunt:** ja — eget «hele kjeden»/«Nasjonal+»-abo som gir alle regioner (eget Stripe-produkt).
+3. **Nasjonalt:** ethvert aktivt abo (enkelt-region ELLER bunt) låser opp premium `nasjonal`-saker; ikke-premium nasjonalt er åpent.
+4. **Datamodell:** `subscriptions.access_scope` (`'region'` | `'all'`); `region_slug` NOT NULL kun når scope=`'region'`. (0 abonnement i prod → ingen datavask.)
+5. **Rekkefølge:** bygges sammen med Stripe-direkte (1.6) + multi-region, ikke som bolt-on.
+
+Når det startes, blir det egne PR-er: (a) skjema `access_scope` + RLS/`can_read_premium()`, (b) checkout/webhook setter region+scope, (c) frontend `useSubscription.hasAccessToRegion(slug)`, (d) Stripe bunt-produkt. Begge (Stripe + RLS) er «spør først» i CLAUDE.md.
+
 ## Spør — regnskapstall (2026-06-04)
 
 - **Skjerpet Spør med regnskapstall fra Regnskapsregisteret** — 2026-06-04, branch `feat/spor-regnskapstall`

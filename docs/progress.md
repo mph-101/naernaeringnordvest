@@ -1,5 +1,15 @@
 # Progress
 
+## Full code review + bolk 1-herding (2026-07-06)
+
+- **Code review (kartlegging, ingen kode)** — 2026-07-06
+  - Full gjennomgang av 47 edge functions, ~95 migrasjoner, frontend + Python-script over 6 kategorier (sikkerhet, datamodell, feilhåndtering, arkitektur, ytelse, vedlikehold). 5 parallelle review-strømmer + direkte verifisering mot prod (`oemzrhlybemakwpyhcno`): RLS-policyer, advisors, cron, storage-bøtter, `validate_api_key`, rate-limit-race.
+  - Hovedfunn (topp 5): Stripe-webhook returnerer 200 ved feilet skriv; `profiles` UPDATE mangler WITH CHECK; «kun mennesker publiserer» ikke håndhevet i kode; `feed-api` lekker premium-body (validate_api_key sjekker ikke aktiv sub); ingen timeout på eksterne kall. Kildevern, admin-tilgang og Stripe-idempotens-fundament bekreftet solide.
+  - Bekreftet mot prod: `supabase_realtime`-publiseringen er tom (tips streamer ikke — bra; admin-badge-realtime er dødt; CLAUDE.md-påstand utdatert). Lagret i minne.
+- **Bolk 1 — live, lav-risiko herding** — 2026-07-06, branch `security/bolk1-live-hardening` (PR #139)
+  - Én migrasjon `20260706120000_bolk1_live_hardening.sql`: (1) `profiles` UPDATE får `WITH CHECK (auth.uid() = user_id)` (lukker row-hijack); (2) fjerner brede list-SELECT-policyer på alle 6 public storage-bøtter (stopper enumerering av upubliserte utkast-bilder); (3) fast `search_path` på `slugify_display_name`.
+  - Designnotat: `docs/security-bolk1-live-hardening.md`. Verifisert: eslint 0 errors, vitest 130/130. **Gjenstår:** anvend migrasjon mot prod etter review (venter på Magnus' go); slå på Leaked Password Protection (magnus-todo).
+
 ## Sikkerhetsgjennomgang abonnement/API/paywall (2026-06-10)
 
 - **F7 — per-nøkkel rate-limit på feed-api** — 2026-06-10, branch `security/f7-feed-api-rate-limit` (Magnus valgte alt. a)

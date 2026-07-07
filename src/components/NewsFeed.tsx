@@ -19,7 +19,9 @@ interface DbArticle {
   title_en: string | null;
   excerpt: string;
   excerpt_en: string | null;
-  body: string;
+  // body is intentionally NOT fetched for the feed (largest column; cards only
+  // need excerpt/key_points). Optional so the read-time fallback stays safe.
+  body?: string;
   category: string;
   author: string;
   type: string;
@@ -118,7 +120,7 @@ export const NewsFeed = () => {
     const fetchArticles = async () => {
       const { data } = await supabase
         .from("articles")
-        .select("id, title, title_en, excerpt, excerpt_en, body, category, author, type, premium, read_time, image_url, image_crop, image_focal, published_at, key_points, region_slug, pinned_position")
+        .select("id, title, title_en, excerpt, excerpt_en, category, author, type, premium, read_time, image_url, image_crop, image_focal, published_at, key_points, region_slug, pinned_position")
         .eq("published", true)
         .order("published_at", { ascending: false })
         .limit(40);
@@ -272,7 +274,7 @@ export const NewsFeed = () => {
     title: language === "en" && a.title_en ? a.title_en : a.title,
     excerpt: language === "en" && a.excerpt_en ? a.excerpt_en : a.excerpt,
     category: a.category,
-    readTime: a.read_time || estimateReadTime(a.body, a.type, language),
+    readTime: a.read_time || estimateReadTime(a.body ?? a.excerpt ?? "", a.type, language),
     publishedAt: a.published_at ? timeAgo(a.published_at, language) : "",
     author: a.author,
     type: a.type as "article" | "video" | "podcast",

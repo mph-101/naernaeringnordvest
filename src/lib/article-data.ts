@@ -4,14 +4,14 @@ import { getArticleImage } from "@/lib/articles";
 type ArticleRow = Tables<"articles">;
 type ArticleType = "article" | "video" | "podcast";
 
-export const PUBLISHED_ARTICLE_SELECT = [
+// List views (cards, trending) don't render the article body — body/body_en are
+// the largest columns in the table, so list queries must not fetch them.
+export const PUBLISHED_ARTICLE_LIST_SELECT = [
   "id",
   "title",
   "title_en",
   "excerpt",
   "excerpt_en",
-  "body",
-  "body_en",
   "category",
   "author",
   "type",
@@ -22,6 +22,8 @@ export const PUBLISHED_ARTICLE_SELECT = [
   "published_at",
   "image_url",
 ].join(", ");
+
+export const PUBLISHED_ARTICLE_SELECT = [PUBLISHED_ARTICLE_LIST_SELECT, "body", "body_en"].join(", ");
 
 export interface UiArticle {
   id: string;
@@ -95,8 +97,15 @@ export const formatPublishedAt = (publishedAt: string | null, language: "no" | "
   });
 };
 
-export const toUiArticle = (article: ArticleRow, language: "no" | "en"): UiArticle => {
-  const body = language === "en" && article.body_en ? article.body_en : article.body;
+// Accepts rows from both selects: list rows arrive without body/body_en, so all
+// body-derived fields fall back gracefully (excerpt from column, readTime "1 min").
+type ArticleRowMaybeBody = Omit<ArticleRow, "body" | "body_en"> & {
+  body?: string | null;
+  body_en?: string | null;
+};
+
+export const toUiArticle = (article: ArticleRowMaybeBody, language: "no" | "en"): UiArticle => {
+  const body = (language === "en" && article.body_en ? article.body_en : article.body) ?? "";
   const excerpt =
     (language === "en" && article.excerpt_en ? article.excerpt_en : article.excerpt) || stripHtml(body).slice(0, 180);
   const keyPoints =

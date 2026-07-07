@@ -1,7 +1,11 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
-import { type StripeEnv, verifyWebhook, stripeEnvironment } from "../_shared/stripe.ts";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { type StripeEnv, verifyWebhook, stripeEnvironment, createStripeClient } from "../_shared/stripe.ts";
+import { decideWebhookGuard } from "../_shared/webhook-idempotency.ts";
 
-let _supabase: ReturnType<typeof createClient> | null = null;
+// Permissive default generics (SupabaseClient<any,...>) so table writes type-check
+// under `deno check`; the strict ReturnType<typeof createClient> resolved every
+// .from(...).update(...) to `never`. Runtime behaviour is unchanged.
+let _supabase: SupabaseClient | null = null;
 function getSupabase() {
   if (!_supabase) {
     _supabase = createClient(
@@ -25,18 +29,20 @@ function genToken(): string {
 
 async function grantSubscriberRole(userId: string) {
   const sb = getSupabase();
-  await sb.from("user_roles").upsert(
+  const { error } = await sb.from("user_roles").upsert(
     { user_id: userId, role: "subscriber" },
     { onConflict: "user_id,role", ignoreDuplicates: true }
   );
+  if (error) throw new Error(`grantSubscriberRole failed: ${error.message}`);
 }
 
 async function grantBusinessRole(userId: string) {
   const sb = getSupabase();
-  await sb.from("user_roles").upsert(
+  const { error } = await sb.from("user_roles").upsert(
     { user_id: userId, role: "business" },
     { onConflict: "user_id,role", ignoreDuplicates: true }
   );
+  if (error) throw new Error(`grantBusinessRole failed: ${error.message}`);
 }
 
 async function handleSubscriptionUpsert(subscription: any, env: StripeEnv) {
@@ -62,12 +68,13 @@ async function handleSubscriptionUpsert(subscription: any, env: StripeEnv) {
 
   if (plan === "business_seat") {
     // Upsert business account by (provider, provider_subscription_id)
-    const { data: existing } = await sb
+    const { data: existing, error: selErr } = await sb
       .from("business_accounts")
       .select("id, domain_verification_token, email_domain")
       .eq("provider", "stripe")
       .eq("provider_subscription_id", subscription.id)
       .maybeSingle();
+    if (selErr) throw new Error(`business_accounts lookup failed: ${selErr.message}`);
 
     const seatCount = parseInt(subscription.metadata?.seat_count || "1", 10);
     const companyName = subscription.metadata?.company_name || "Bedrift";
@@ -92,16 +99,15 @@ async function handleSubscriptionUpsert(subscription: any, env: StripeEnv) {
       updated_at: new Date().toISOString(),
     };
 
-    if (existing) {
-      await sb.from("business_accounts").update(accountRow).eq("id", existing.id);
-    } else {
-      await sb.from("business_accounts").insert(accountRow);
-    }
+    const { error: accErr } = existing
+      ? await sb.from("business_accounts").update(accountRow).eq("id", existing.id)
+      : await sb.from("business_accounts").insert(accountRow);
+    if (accErr) throw new Error(`business_accounts write failed: ${accErr.message}`);
 
     await grantBusinessRole(userId);
     await grantSubscriberRole(userId);
   } else {
-    await sb.from("subscriptions").upsert(
+    const { error: subErr } = await sb.from("subscriptions").upsert(
       {
         user_id: userId,
         provider: "stripe",
@@ -120,6 +126,7 @@ async function handleSubscriptionUpsert(subscription: any, env: StripeEnv) {
       },
       { onConflict: "provider,provider_subscription_id" }
     );
+    if (subErr) throw new Error(`subscriptions upsert failed: ${subErr.message}`);
 
     if (["trialing", "active", "past_due"].includes(status)) {
       await grantSubscriberRole(userId);
@@ -131,19 +138,18 @@ async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
   const sb = getSupabase();
   const plan = subscription.metadata?.plan as string | undefined;
 
-  if (plan === "business_seat") {
-    await sb
-      .from("business_accounts")
-      .update({ status: "canceled", updated_at: new Date().toISOString() })
-      .eq("provider", "stripe")
-      .eq("provider_subscription_id", subscription.id);
-  } else {
-    await sb
-      .from("subscriptions")
-      .update({ status: "canceled", updated_at: new Date().toISOString() })
-      .eq("provider", "stripe")
-      .eq("provider_subscription_id", subscription.id);
-  }
+  const { error } = plan === "business_seat"
+    ? await sb
+        .from("business_accounts")
+        .update({ status: "canceled", updated_at: new Date().toISOString() })
+        .eq("provider", "stripe")
+        .eq("provider_subscription_id", subscription.id)
+    : await sb
+        .from("subscriptions")
+        .update({ status: "canceled", updated_at: new Date().toISOString() })
+        .eq("provider", "stripe")
+        .eq("provider_subscription_id", subscription.id);
+  if (error) throw new Error(`handleSubscriptionDeleted write failed: ${error.message}`);
 }
 
 async function handleJobPremiumCheckout(session: any, env: StripeEnv) {
@@ -155,7 +161,7 @@ async function handleJobPremiumCheckout(session: any, env: StripeEnv) {
     return;
   }
   const sb = getSupabase();
-  await sb
+  const { error } = await sb
     .from("job_listings")
     .update({
       is_premium: true,
@@ -167,6 +173,7 @@ async function handleJobPremiumCheckout(session: any, env: StripeEnv) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", jobListingId);
+  if (error) throw new Error(`job_premium update failed: ${error.message}`);
   console.log("Marked job as premium:", jobListingId, "env:", env);
 }
 
@@ -179,13 +186,14 @@ async function handleEventFeaturedCheckout(session: any, env: StripeEnv) {
     return;
   }
   const sb = getSupabase();
-  const { data: ev } = await sb
+  const { data: ev, error: evErr } = await sb
     .from("events")
     .select("start_at")
     .eq("id", eventId)
     .maybeSingle();
+  if (evErr) throw new Error(`event lookup failed: ${evErr.message}`);
   const featuredUntil = ev?.start_at ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-  await sb
+  const { error } = await sb
     .from("events")
     .update({
       is_featured: true,
@@ -196,7 +204,47 @@ async function handleEventFeaturedCheckout(session: any, env: StripeEnv) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", eventId);
+  if (error) throw new Error(`event_featured update failed: ${error.message}`);
   console.log("Marked event as featured:", eventId, "env:", env);
+}
+
+// Chargeback handling (3-D1): flag the disputing customer's subscription and
+// business account as "disputed" so has_active_subscription() stops counting them
+// (that function treats trialing/active/past_due — and canceled-until-period-end —
+// as active, but not "disputed"). Best-effort customer resolution.
+async function flagDisputedCustomer(dispute: any, env: StripeEnv) {
+  let customerId: string | null = (dispute.customer as string) ?? null;
+  // Dispute payloads don't always carry the customer; resolve via the charge.
+  if (!customerId && dispute.charge) {
+    try {
+      const charge = await createStripeClient(env).charges.retrieve(String(dispute.charge));
+      customerId = (charge.customer as string) ?? null;
+    } catch (e) {
+      // Stripe keys may be unset (pre-launch) or the retrieve failed — degrade to
+      // a loud log rather than throwing; a missing customer isn't retryable.
+      console.error("Could not resolve customer for dispute:", dispute.id, e);
+    }
+  }
+  if (!customerId) {
+    console.warn("Dispute has no resolvable customer; needs manual review:", dispute.id);
+    return;
+  }
+  const sb = getSupabase();
+  const { error: sErr } = await sb
+    .from("subscriptions")
+    .update({ status: "disputed", updated_at: new Date().toISOString() })
+    .eq("provider", "stripe")
+    .eq("provider_customer_id", customerId)
+    .eq("environment", env);
+  if (sErr) throw new Error(`dispute subscriptions update failed: ${sErr.message}`);
+  const { error: bErr } = await sb
+    .from("business_accounts")
+    .update({ status: "disputed", updated_at: new Date().toISOString() })
+    .eq("provider", "stripe")
+    .eq("provider_customer_id", customerId)
+    .eq("environment", env);
+  if (bErr) throw new Error(`dispute business_accounts update failed: ${bErr.message}`);
+  console.warn("Flagged customer as disputed for manual review:", customerId, "env:", env);
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {
@@ -211,26 +259,33 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       payload: event,
     });
 
-  if (insertError) {
-    if (insertError.code === "23505") {
-      // Already seen. Only skip if the previous attempt fully completed
-      // (processed_at set). If a prior attempt crashed after this insert but
-      // before processing, processed_at is still NULL — fall through and
-      // re-process. All handlers below are idempotent (upserts keyed on
-      // provider_subscription_id), so re-processing is safe. (F6)
-      const { data: existing } = await sb
-        .from("stripe_events")
-        .select("processed_at")
-        .eq("event_id", event.id)
-        .maybeSingle();
-      if (existing?.processed_at) {
-        console.log("Duplicate already-processed webhook, skipping:", event.id);
-        return;
-      }
-      console.warn("Re-processing webhook whose prior attempt did not complete:", event.id);
-    } else {
-      console.error("Failed to record stripe event:", insertError);
-    }
+  // Only look up processed_at when the insert hit a duplicate — otherwise the
+  // row we just inserted is fresh (processed_at is NULL by definition).
+  let existingProcessedAt: string | null = null;
+  if (insertError?.code === "23505") {
+    const { data: existing } = await sb
+      .from("stripe_events")
+      .select("processed_at")
+      .eq("event_id", event.id)
+      .maybeSingle();
+    existingProcessedAt = (existing?.processed_at as string | null) ?? null;
+  }
+
+  const guard = decideWebhookGuard(insertError, existingProcessedAt);
+  if (guard.action === "skip") {
+    console.log("Duplicate already-processed webhook, skipping:", event.id);
+    return;
+  }
+  if (guard.action === "fail") {
+    // No dedup record written; processing now would risk double-processing on
+    // Stripe's retry. Throw so the outer handler returns 400 → Stripe retries.
+    throw new Error(`Failed to record stripe event ${event.id}: ${guard.reason}`);
+  }
+  if (guard.action === "reprocess") {
+    // Prior attempt crashed after insert but before processed_at was set. All
+    // handlers are idempotent (upserts keyed on provider_subscription_id), so
+    // re-processing is safe. (F6)
+    console.warn("Re-processing webhook whose prior attempt did not complete:", event.id);
   }
 
   switch (event.type) {
@@ -263,9 +318,11 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       console.log("Charge refunded:", event.data.object.id);
       break;
     case "charge.dispute.created":
-      // A chargeback was opened. Mark sensitive — Magnus should review
-      // the user and possibly revoke access manually. We log loudly.
-      console.warn("DISPUTE CREATED:", event.data.object.id, event.data.object.customer);
+      // A chargeback was opened. Flag the customer's subscription/business account
+      // as "disputed" so has_active_subscription() stops returning true, and log
+      // loudly for manual review (3-D1, minimal handling).
+      console.warn("DISPUTE CREATED:", event.data.object.id, "charge:", event.data.object.charge);
+      await flagDisputedCustomer(event.data.object, env);
       break;
     case "checkout.session.completed":
       await handleJobPremiumCheckout(event.data.object, env);
@@ -275,10 +332,13 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       console.log("Unhandled event:", event.type);
   }
 
-  await sb
+  const { error: procErr } = await sb
     .from("stripe_events")
     .update({ processed_at: new Date().toISOString() })
     .eq("event_id", event.id);
+  // If marking fails after successful processing, throw so Stripe retries; the
+  // retry finds processed_at still NULL and safely re-processes (idempotent).
+  if (procErr) throw new Error(`Failed to mark event processed ${event.id}: ${procErr.message}`);
 }
 
 Deno.serve(async (req) => {

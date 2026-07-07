@@ -7,7 +7,24 @@
   - 6c: `NewsFeed` (40 rader) og `TrendingSection` (via ny `PUBLISHED_ARTICLE_LIST_SELECT`) henter ikke lenger `body`/`body_en`; `fetchPublishedJobs` bytter `select("*")` → navngitte kolonner uten `description_html`. `toUiArticle` tåler radene uten body (excerpt-fallback); `description_html` er valgfri i `JobListing`-typen med guards i `StillingDetail`/JSON-LD. `feed-api` beholder body bevisst (API-kontrakt; premium alt gated i bolk 3b).
   - Verifisert: `tsc --noEmit` rent, eslint 0 errors, vitest 127/127. Browser-verifisert i preview: forside-queryene går uten `body` (begge selects inspisert i nettverket), «Trending nå»/«Siste nyheter» rendrer, `/stillinger` uten `description_html`, null konsollfeil.
   - **Gjenstår:** migrasjon mot prod (Magnus' go) — deretter `explain` mot feed/tips/domene-query for å bekrefte indeksbruk. 6d (71 ubrukte indekser) bevisst urørt til etter launch.
+## Bolk 5 — dataintegritet + gjenstående RLS (2026-07-07)
 
+- **Bolk 5 (beslutninger: 5-D1 ja, 5-D2 ja)** — 2026-07-07, branch `security/bolk5-data-integrity`
+  - Migrasjon `20260707140000_bolk5_data_integrity.sql` (additiv, policy-navn verifisert mot prod):
+    - **5a:** partial unique index `(user_id, environment) WHERE status IN (trialing,active,past_due)` på `subscriptions` — håndhever «én aktiv personlig sub per bruker»; dobbel-checkout gir nå 23505 → webhook 400 → Stripe-retry i stedet for stille dobbeltrad.
+    - **5b:** `claim_business_seat()`-RPC (SECURITY DEFINER, service-role-only) — `FOR UPDATE`-lås på kontoraden gjør eierskap+kapasitet+insert atomisk (lukker TOCTOU der to samtidige invitasjoner sprengte `seat_count`); e-post-oppslag direkte i `auth.users` erstatter `listUsers({perPage:1000})`-scan som bommet stille forbi 1000 brukere.
+    - **5c:** `notifications`-immutabilitets-trigger (kun `read_at` kan endres av brukere; service-role unntatt); `group_invitations` UPDATE får `WITH CHECK` (hindrer re-parenting til fremmed gruppe); `newsletter_subscriptions` INSERT-trigger tvinger `confirmed=false` + servergenererte tokens for ikke-stab (klient kunne forfalske bekreftet abonnement for andres e-post — skjemaet hadde allerede double-opt-in-felt, default var trygg, men `WITH CHECK true` lot klienten overstyre).
+  - `invite-business-seat`: omskrevet til å kalle RPC-en; mapper `not_found`/`forbidden`/`full` → 404/403/400. Uendret respons-kontrakt mot frontend.
+  - Verifisert: `deno check` rent, eslint 0 errors, vitest 127/127. Ingen frontend-endring nødvendig.
+  - **Gjenstår:** migrasjon mot prod (Magnus' go; 5a krever duplikat-sjekk først — forventet 0 rader) → deploy `invite-business-seat`.
+## Bolk 4 — myk publiseringsregel + Plattform/avis-proveniens (2026-07-07)
+
+- **Bolk 4 (myk, per Magnus' D1-valg)** — 2026-07-07, branch `security/bolk4-publish-provenance`
+  - Migrasjon `20260707130000_bolk4_publish_provenance.sql`: (1) ny tabell `agent_runs` (hvem *bestilte* AI-arbeid — `ordered_by`, funksjon, modell; service-role skriver, stab leser) — lukker gapet «ingen maskinlesbar spor av instruksjonskjeden» i Plattform/avis-skillet; (2) `articles.scheduled_by` + `BEFORE`-trigger `set_scheduled_by()` som stempler `auth.uid()` server-side når `scheduled_publish_at` (re)settes — kan ikke forfalskes fra klient; NULL = «ingen menneske planla» (revisjonssignal for auto-publish-cronen).
+  - `generate-article-draft`: caller-auth (userClient + `getUser()`, mønster fra `admin-create-user`) + eksplisitt admin/editor/journalist-rollesjekk (lukker «enhver innlogget bruker kan brenne AI-kreditt og lese kildemateriale») + best-effort `agent_runs`-logging av hvert utkast.
+  - Bevisst IKKE gjort (D1 = myk): ingen tvungen `publish_article`-RPC, ingen restriktiv `WITH CHECK` på `published` — publisering forblir rolle-gated som i dag.
+  - Verifisert: `deno check` rent, eslint 0 errors, vitest 127/127. `.gitignore`: + `supabase/.temp/`, `deno.lock`.
+  - **Gjenstår:** migrasjon mot prod (Magnus' go) → deretter deploy `generate-article-draft` + regenerer TS-typer.
 ## Bolk 2 — robusthet: timeouts mot eksterne API-er (2026-07-07)
 
 - **Robusthet/timeouts** — 2026-07-07, branch `robustness/external-api-timeouts` (fra code review 2026-07-06)

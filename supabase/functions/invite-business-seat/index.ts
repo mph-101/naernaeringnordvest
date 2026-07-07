@@ -66,63 +66,47 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: account } = await sbAdmin
-      .from("business_accounts")
-      .select("id, owner_user_id, seat_count, status")
-      .eq("id", parsed.data.businessAccountId)
-      .maybeSingle();
+    const email = parsed.data.email.toLowerCase().trim();
+    const inviteToken = genToken();
 
-    if (!account) {
+    // Atomic claim: ownership check, capacity check, existing-user lookup and
+    // seat insert/update happen in ONE statement behind a row lock on the
+    // account (claim_business_seat RPC). Replaces the racy count-then-upsert
+    // and the O(all-users) listUsers scan.
+    const { data: claim, error: claimErr } = await sbAdmin.rpc("claim_business_seat", {
+      _account_id: parsed.data.businessAccountId,
+      _owner_id: ownerId,
+      _email: email,
+      _invite_token: inviteToken,
+    });
+    if (claimErr) throw new Error(`claim_business_seat failed: ${claimErr.message}`);
+
+    const result = Array.isArray(claim) ? claim[0] : claim;
+    if (!result || result.status === "not_found") {
       return new Response(JSON.stringify({ error: "Not found" }), {
         status: 404,
         headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
-    if (account.owner_user_id !== ownerId) {
+    if (result.status === "forbidden") {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
         headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
-
-    // Check seat capacity
-    const { count } = await sbAdmin
-      .from("business_seats")
-      .select("*", { count: "exact", head: true })
-      .eq("business_account_id", account.id);
-    if ((count ?? 0) >= (account.seat_count ?? 1)) {
+    if (result.status === "full") {
       return new Response(
-        JSON.stringify({ error: `Du har brukt alle ${account.seat_count} seter. Oppgrader for flere.` }),
+        JSON.stringify({ error: "Du har brukt alle setene dine. Oppgrader for flere." }),
         { status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
-    const email = parsed.data.email.toLowerCase().trim();
-
-    // Look up existing user by email
-    const { data: usersList } = await sbAdmin.auth.admin.listUsers({ perPage: 1000 });
-    const existingUser = (usersList?.users ?? []).find(
-      (u) => (u.email ?? "").toLowerCase() === email
-    );
-
-    const inviteToken = genToken();
-    await sbAdmin.from("business_seats").upsert(
-      {
-        business_account_id: account.id,
-        email,
-        user_id: existingUser?.id ?? null,
-        invite_token: existingUser ? null : inviteToken,
-        accepted_at: existingUser ? new Date().toISOString() : null,
-        source: "invite",
-      },
-      { onConflict: "business_account_id,email" }
-    );
-
+    const linkedDirectly = !!result.linked;
     return new Response(
       JSON.stringify({
         success: true,
-        linkedDirectly: !!existingUser,
-        inviteToken: existingUser ? null : inviteToken,
+        linkedDirectly,
+        inviteToken: linkedDirectly ? null : inviteToken,
       }),
       { status: 200, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
     );

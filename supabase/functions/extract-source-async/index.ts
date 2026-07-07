@@ -60,6 +60,10 @@ async function processSource(sourceId: string) {
     if (sourceType === "url" && src.source_url) {
       const res = await fetch(src.source_url, {
         headers: { "User-Agent": "Mozilla/5.0 NaerNaering/1.0" },
+        // Bound the fetch so a slow/hostile target can't hold the background
+        // task open until the platform kill (which would strand the row in
+        // status:"processing"). The catch below writes a terminal status.
+        signal: AbortSignal.timeout(10_000),
       });
       if (!res.ok) throw new Error(`Failed to fetch URL: ${res.status}`);
       const html = await res.text();

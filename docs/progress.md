@@ -1,5 +1,13 @@
 # Progress
 
+## Bolk 2 — robusthet: timeouts mot eksterne API-er (2026-07-07)
+
+- **Robusthet/timeouts** — 2026-07-07, branch `robustness/external-api-timeouts` (fra code review 2026-07-06)
+  - Deno-`fetch` har ingen default-timeout → et hengt oppstrøms (socket åpen, ingen respons) blokkerte hele edge-invokasjonen til plattformen drepte den. La til `AbortSignal.timeout()` på de delte hjelperne som arves av ~15 funksjoner: `_shared/ai-client.ts` (chat 60s / streaming 120s, env-overstyrbar) og `_shared/ssb.ts` (10s). Env leses inne i funksjonene (ikke på modulnivå) så vitest-suiten som importerer `resolveMaxTokens` ikke brekker.
+  - `brreg-proxy`: ny lokal `brregGet()` som setter 8s-timeout, guarder `res.ok` og fanger `res.json()`-parsefeil (BRREG-feilside kastet før rå `SyntaxError`); alle 9 fetch-steder rutet gjennom den. `while(true)`-regnskapsloopen fikk hard `BRREG_MAX_PAGES`-cap (speiler Python-scriptets `PAGINATION_CAP`). BRREG-heng kaskaderte tidligere inn i hengt `articles-chat`.
+  - `extract-source` + `extract-source-async`: 10s-timeout på URL-hentingen (async-varianten strandet ellers kilde-rader i `status:"processing"`).
+  - Verifisert: eslint 0 errors (uendret warning-count), vitest 130/130, `deno check` rent på alle 5 filer.
+  - **Bolk 2b (gjenstår, egen PR):** streaming-feil-event i `articles-chat` (avkortet svar svelges), timeout på interne chat-hopp, retry/backoff i `scripts/jobbytte_diff.py`, Sentry breadcrumb-scrubbing, `refresh-mr-employers` paginerings-cap.
 ## Full code review + bolk 1-herding (2026-07-06)
 
 - **Code review (kartlegging, ingen kode)** — 2026-07-06

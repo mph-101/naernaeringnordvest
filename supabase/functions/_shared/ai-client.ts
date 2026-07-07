@@ -31,6 +31,19 @@ const DEFAULT_APP_NAME = "Nær Næring Nordvest";
  */
 const DEFAULT_MAX_TOKENS = 8000;
 
+/**
+ * Request timeouts (ms). Deno's fetch has no default timeout, so a hung upstream
+ * (socket open, no response) blocks the whole edge invocation until the platform
+ * wall-clock kills it. Bound it with an AbortSignal instead. Overridable via env.
+ * Non-streaming completions must finish within CHAT; streaming (aiFetch) gets a
+ * larger bound since it reads the body over time — long enough for any realistic
+ * answer, short enough to catch a true hang before the platform kill.
+ * NB: read the env inside the functions, never at module top-level — this module
+ * is imported by the vitest suite where `Deno` is undefined.
+ */
+const DEFAULT_CHAT_TIMEOUT_MS = 60_000;
+const DEFAULT_STREAM_TIMEOUT_MS = 120_000;
+
 /** Resolve the output-token cap for a request. Pure — covered by unit test. */
 export function resolveMaxTokens(
   requested: number | undefined,
@@ -105,6 +118,7 @@ export async function aiChatCompletion(req: ChatCompletionRequest): Promise<Chat
     max_tokens: resolveMaxTokens(req.max_tokens, Deno.env.get("AI_MAX_TOKENS")),
   };
 
+  const timeoutMs = Number(Deno.env.get("AI_TIMEOUT_MS")) || DEFAULT_CHAT_TIMEOUT_MS;
   const resp = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
@@ -114,6 +128,7 @@ export async function aiChatCompletion(req: ChatCompletionRequest): Promise<Chat
       "X-Title": appName,
     },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(timeoutMs),
   });
 
   if (!resp.ok) {
@@ -135,7 +150,11 @@ export async function aiFetch(path: string, init: RequestInit): Promise<Response
   if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   headers.set("HTTP-Referer", siteUrl);
   headers.set("X-Title", appName);
-  return fetch(`${baseUrl}${path.startsWith("/") ? path : `/${path}`}`, { ...init, headers });
+  // Respect a caller-supplied signal; otherwise bound the request so a hung
+  // upstream can't stall the invocation until the platform kill.
+  const timeoutMs = Number(Deno.env.get("AI_STREAM_TIMEOUT_MS")) || DEFAULT_STREAM_TIMEOUT_MS;
+  const signal = init.signal ?? AbortSignal.timeout(timeoutMs);
+  return fetch(`${baseUrl}${path.startsWith("/") ? path : `/${path}`}`, { ...init, headers, signal });
 }
 
 export class AiGatewayError extends Error {

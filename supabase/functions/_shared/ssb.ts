@@ -26,6 +26,11 @@ export interface SsbResult {
 
 const SSB_BASE = "https://data.ssb.no/api/v0/no/table";
 
+// SSB's PxWebApi is periodically slow/unresponsive; Deno's fetch has no default
+// timeout, so bound it so a single hung socket can't stall the caller (e.g. the
+// barometer cron or an articles-chat hop) until the platform wall-clock kill.
+const SSB_TIMEOUT_MS = 10_000;
+
 export async function ssbFetch(
   tableId: string,
   query: SsbSelection[],
@@ -34,6 +39,7 @@ export async function ssbFetch(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, response: { format: "json-stat2" } }),
+    signal: AbortSignal.timeout(SSB_TIMEOUT_MS),
   });
   if (!res.ok) {
     const body = await res.text();

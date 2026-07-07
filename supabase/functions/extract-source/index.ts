@@ -96,6 +96,8 @@ Deno.serve(async (req) => {
       const res = await fetch(safeUrl.toString(), {
         headers: { "User-Agent": "Mozilla/5.0 NaerNaering/1.0" },
         redirect: "manual",
+        // Bound the fetch so a slow/hostile target can't hold the connection open.
+        signal: AbortSignal.timeout(10_000),
       });
       if (res.status >= 300 && res.status < 400) {
         throw new Error("Omdirigeringer er ikke tillatt for kildehenting");

@@ -3,6 +3,35 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 const BRREG_BASE = "https://data.brreg.no";
 
+// Deno's fetch has no default timeout; BRREG can be slow or return an HTML/error
+// page. Bound every upstream call and guard res.json() so a non-2xx or non-JSON
+// body degrades to { ok:false } instead of hanging or throwing a raw SyntaxError.
+// brreg-proxy is called synchronously by articles-chat, so a hang here cascades
+// into a hung chat request.
+const BRREG_TIMEOUT_MS = 8000;
+// Hard cap on the regnskap pagination loop (mirrors the Python PAGINATION_CAP)
+// so a malformed totalPages can't loop until the platform kill.
+const BRREG_MAX_PAGES = 40;
+
+async function brregGet(apiUrl: string): Promise<{ ok: boolean; status: number; data: any }> {
+  let res: Response;
+  try {
+    res = await fetch(apiUrl, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(BRREG_TIMEOUT_MS),
+    });
+  } catch (e) {
+    console.error("brreg-proxy upstream fetch failed:", apiUrl, e);
+    return { ok: false, status: 0, data: null };
+  }
+  if (!res.ok) return { ok: false, status: res.status, data: null };
+  try {
+    return { ok: true, status: res.status, data: await res.json() };
+  } catch {
+    return { ok: false, status: res.status, data: null };
+  }
+}
+
 function getSupabaseAdmin() {
   return createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -38,8 +67,7 @@ Deno.serve(async (req) => {
       if (isOrgnr) {
         let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsnummer=${query.trim()}&page=${page}&size=${size}`;
         if (kommune) apiUrl += `&kommunenummer=${kommune}`;
-        const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
-        const data = await res.json();
+        const { data } = await brregGet(apiUrl);
         enheter = data?._embedded?.enheter || [];
         totalElements = data?.page?.totalElements || 0;
         totalPages = data?.page?.totalPages || 0;
@@ -65,8 +93,7 @@ Deno.serve(async (req) => {
           if (withOrgFormFilter) apiUrl += `&organisasjonsform=AS,ASA`;
           if (kommune) apiUrl += `&kommunenummer=${kommune}`;
           if (naeringskode) apiUrl += `&naeringskode=${naeringskode}`;
-          const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
-          const data = await res.json();
+          const { data } = await brregGet(apiUrl);
           return data?._embedded?.enheter || [];
         };
 
@@ -140,13 +167,11 @@ Deno.serve(async (req) => {
       let allRegnskaper: any[] = [];
       let page = 0;
       const size = 50;
-      while (true) {
-        const res = await fetch(
+      while (page < BRREG_MAX_PAGES) {
+        const { ok, data } = await brregGet(
           `${BRREG_BASE}/regnskapsregisteret/regnskap/${orgnr}?size=${size}&page=${page}`,
-          { headers: { Accept: "application/json" } }
         );
-        if (!res.ok) break;
-        const data = await res.json();
+        if (!ok) break;
         const items = Array.isArray(data) ? data : data?._embedded?.regnskaper || [];
         if (items.length === 0) break;
         allRegnskaper = allRegnskaper.concat(items);
@@ -220,17 +245,12 @@ Deno.serve(async (req) => {
         });
       }
 
-      const res = await fetch(`${BRREG_BASE}/enhetsregisteret/api/enheter/${orgnr}/roller`, {
-        headers: { Accept: "application/json" },
-      });
-
-      if (!res.ok) {
+      const { ok, data } = await brregGet(`${BRREG_BASE}/enhetsregisteret/api/enheter/${orgnr}/roller`);
+      if (!ok) {
         return new Response(JSON.stringify({ roles: [] }), {
           headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
-
-      const data = await res.json();
       const rollegrupper = data?.rollegrupper || [];
       const roles = rollegrupper.flatMap((g: any) =>
         (g.roller || []).map((r: any) => ({
@@ -261,18 +281,13 @@ Deno.serve(async (req) => {
         });
       }
 
-      const res = await fetch(`${BRREG_BASE}/enhetsregisteret/api/enheter/${orgnr}`, {
-        headers: { Accept: "application/json" },
-      });
-
-      if (!res.ok) {
+      const { ok, status: httpStatus, data } = await brregGet(`${BRREG_BASE}/enhetsregisteret/api/enheter/${orgnr}`);
+      if (!ok) {
         return new Response(JSON.stringify({ error: "Not found", orgnr }), {
-          status: res.status,
+          status: httpStatus || 502,
           headers: { ...corsHeaders(req), "Content-Type": "application/json" },
         });
       }
-
-      const data = await res.json();
       const status = {
         orgnr,
         navn: data?.navn || null,
@@ -298,8 +313,7 @@ Deno.serve(async (req) => {
       if (tilDate) apiUrl += `&tilStiftelsesdato=${tilDate}`;
       if (kommune) apiUrl += `&kommunenummer=${kommune}`;
 
-      const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
-      const data = await res.json();
+      const { data } = await brregGet(apiUrl);
       const enheter = data?._embedded?.enheter || [];
       const total = data?.page?.totalElements || 0;
 
@@ -328,8 +342,7 @@ Deno.serve(async (req) => {
       let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsform=AS,ASA&konkurs=true&size=200&sort=registreringsdatoEnhetsregisteret,desc`;
       if (kommune) apiUrl += `&kommunenummer=${kommune}`;
 
-      const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
-      const data = await res.json();
+      const { data } = await brregGet(apiUrl);
       let enheter = data?._embedded?.enheter || [];
 
       // Filter on konkursdato if a range is provided
@@ -378,12 +391,10 @@ Deno.serve(async (req) => {
       await Promise.all(
         orgnrList.map(async (orgnr) => {
           try {
-            const res = await fetch(
+            const { ok, data } = await brregGet(
               `${BRREG_BASE}/regnskapsregisteret/regnskap/${orgnr}?size=1&page=0`,
-              { headers: { Accept: "application/json" } }
             );
-            if (!res.ok) { results[orgnr] = null; return; }
-            const data = await res.json();
+            if (!ok) { results[orgnr] = null; return; }
             const items = Array.isArray(data) ? data : data?._embedded?.regnskaper || [];
             if (!items.length) { results[orgnr] = null; return; }
             const r = items[0];
@@ -436,8 +447,7 @@ Deno.serve(async (req) => {
       let apiUrl = `${BRREG_BASE}/enhetsregisteret/api/enheter?organisasjonsform=AS,ASA&page=${page}&size=${size}&sort=${sort},${order}`;
       if (kommune) apiUrl += `&kommunenummer=${kommune}`;
 
-      const res = await fetch(apiUrl, { headers: { Accept: "application/json" } });
-      const data = await res.json();
+      const { data } = await brregGet(apiUrl);
       const enheter = data?._embedded?.enheter || [];
       const totalElements = data?.page?.totalElements || 0;
 

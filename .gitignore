@@ -46,3 +46,7 @@ next-env.d.ts
 # TypeScript incremental build cache
 *.tsbuildinfo
 .vercel
+
+# Supabase CLI temp + Deno lockfile (generated locally)
+supabase/.temp/
+deno.lock

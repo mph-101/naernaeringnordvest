@@ -1,5 +1,16 @@
 # Progress
 
+## Bolk 5 — dataintegritet + gjenstående RLS (2026-07-07)
+
+- **Bolk 5 (beslutninger: 5-D1 ja, 5-D2 ja)** — 2026-07-07, branch `security/bolk5-data-integrity`
+  - Migrasjon `20260707140000_bolk5_data_integrity.sql` (additiv, policy-navn verifisert mot prod):
+    - **5a:** partial unique index `(user_id, environment) WHERE status IN (trialing,active,past_due)` på `subscriptions` — håndhever «én aktiv personlig sub per bruker»; dobbel-checkout gir nå 23505 → webhook 400 → Stripe-retry i stedet for stille dobbeltrad.
+    - **5b:** `claim_business_seat()`-RPC (SECURITY DEFINER, service-role-only) — `FOR UPDATE`-lås på kontoraden gjør eierskap+kapasitet+insert atomisk (lukker TOCTOU der to samtidige invitasjoner sprengte `seat_count`); e-post-oppslag direkte i `auth.users` erstatter `listUsers({perPage:1000})`-scan som bommet stille forbi 1000 brukere.
+    - **5c:** `notifications`-immutabilitets-trigger (kun `read_at` kan endres av brukere; service-role unntatt); `group_invitations` UPDATE får `WITH CHECK` (hindrer re-parenting til fremmed gruppe); `newsletter_subscriptions` INSERT-trigger tvinger `confirmed=false` + servergenererte tokens for ikke-stab (klient kunne forfalske bekreftet abonnement for andres e-post — skjemaet hadde allerede double-opt-in-felt, default var trygg, men `WITH CHECK true` lot klienten overstyre).
+  - `invite-business-seat`: omskrevet til å kalle RPC-en; mapper `not_found`/`forbidden`/`full` → 404/403/400. Uendret respons-kontrakt mot frontend.
+  - Verifisert: `deno check` rent, eslint 0 errors, vitest 127/127. Ingen frontend-endring nødvendig.
+  - **Gjenstår:** migrasjon mot prod (Magnus' go; 5a krever duplikat-sjekk først — forventet 0 rader) → deploy `invite-business-seat`.
+
 ## Bolk 2 — robusthet: timeouts mot eksterne API-er (2026-07-07)
 
 - **Robusthet/timeouts** — 2026-07-07, branch `robustness/external-api-timeouts` (fra code review 2026-07-06)

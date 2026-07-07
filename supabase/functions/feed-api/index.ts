@@ -13,7 +13,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { corsHeaders } from "../_shared/cors.ts";
-import { evaluateRateWindow } from "../_shared/rate-window.ts";
 
 // Per-key fair-use cap (F7). Generous: a feed reader polling every minute
 // stays well under it; scripted scraping/hammering does not.
@@ -90,24 +89,21 @@ Deno.serve(async (req) => {
     );
   }
 
-  // 2b) Per-key rate limit (F7) — service-role table, no client access.
+  // 2b) Per-key rate limit (F7 + bolk 3c) — atomic bump in one DB statement so
+  // concurrent requests can't bypass the cap via a read-modify-write race.
   const keyId = validRow.key_id as string;
-  const now = Date.now();
-  const { data: rl } = await supabase
-    .from("api_key_rate_limits")
-    .select("request_count, window_start")
-    .eq("key_id", keyId)
-    .maybeSingle();
-
-  if (rl) {
-    const decision = evaluateRateWindow(
-      rl.request_count,
-      new Date(rl.window_start).getTime(),
-      now,
-      MAX_REQUESTS_PER_WINDOW,
-      RATE_LIMIT_WINDOW_MS,
-    );
-    if (decision.limited) {
+  const { data: rlData, error: rlErr } = await supabase.rpc("bump_api_key_rate_limit", {
+    _key_id: keyId,
+    _max: MAX_REQUESTS_PER_WINDOW,
+    _window_ms: RATE_LIMIT_WINDOW_MS,
+  });
+  if (rlErr) {
+    // Fail open (as before): a rate-limiter outage must not break the feed for
+    // paying subscribers.
+    console.error("bump_api_key_rate_limit error", rlErr);
+  } else {
+    const decision = Array.isArray(rlData) ? rlData[0] : rlData;
+    if (decision?.limited) {
       return new Response(
         JSON.stringify({ error: "Rate limit exceeded. Try again later." }),
         {
@@ -115,23 +111,22 @@ Deno.serve(async (req) => {
           headers: {
             ...corsHeaders(req),
             "Content-Type": "application/json",
-            "Retry-After": String(decision.retryAfterSeconds),
+            "Retry-After": String(decision.retry_after_seconds ?? 60),
           },
         },
       );
     }
-    await supabase
-      .from("api_key_rate_limits")
-      .update({
-        request_count: decision.nextCount,
-        ...(decision.resetWindow && { window_start: new Date(now).toISOString() }),
-      })
-      .eq("key_id", keyId);
-  } else {
-    await supabase
-      .from("api_key_rate_limits")
-      .insert({ key_id: keyId, request_count: 1, window_start: new Date(now).toISOString() });
   }
+
+  // 2c) Premium gating (bolk 3b): validate_api_key only checks the subscriber
+  // ROLE, which isn't revoked on cancellation. Gate premium bodies on
+  // has_active_subscription() (same as the web paywall / check-article-access) so a
+  // lapsed key can't pull full premium content in bulk. Fails closed for premium.
+  const ownerId = validRow.user_id as string;
+  const { data: activeData } = await supabase.rpc("has_active_subscription", {
+    _user_id: ownerId,
+  });
+  const ownerActive = activeData === true;
 
   // 3) Parse query params
   const url = new URL(req.url);
@@ -189,7 +184,9 @@ Deno.serve(async (req) => {
     id: a.id,
     title: lang === "en" && a.title_en ? a.title_en : a.title,
     excerpt: lang === "en" && a.excerpt_en ? a.excerpt_en : a.excerpt,
-    body: lang === "en" && a.body_en ? a.body_en : a.body,
+    // Premium bodies only for active subscribers (bolk 3b); excerpt/key_points
+    // remain as the teaser for everyone.
+    body: a.premium && !ownerActive ? null : (lang === "en" && a.body_en ? a.body_en : a.body),
     category: a.category,
     author: a.author,
     type: a.type,

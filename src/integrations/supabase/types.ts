@@ -14,6 +14,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_runs: {
+        Row: {
+          article_id: string | null
+          created_at: string
+          function: string
+          id: string
+          model: string | null
+          ordered_by: string | null
+        }
+        Insert: {
+          article_id?: string | null
+          created_at?: string
+          function: string
+          id?: string
+          model?: string | null
+          ordered_by?: string | null
+        }
+        Update: {
+          article_id?: string | null
+          created_at?: string
+          function?: string
+          id?: string
+          model?: string | null
+          ordered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_runs_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_key_rate_limits: {
+        Row: {
+          key_id: string
+          request_count: number
+          window_start: string
+        }
+        Insert: {
+          key_id: string
+          request_count?: number
+          window_start?: string
+        }
+        Update: {
+          key_id?: string
+          request_count?: number
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_key_rate_limits_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: true
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_keys: {
         Row: {
           created_at: string
@@ -711,6 +772,7 @@ export type Database = {
           published_at: string | null
           read_time: string | null
           region_slug: string | null
+          scheduled_by: string | null
           scheduled_publish_at: string | null
           search_tsv: unknown
           status: string
@@ -748,6 +810,7 @@ export type Database = {
           published_at?: string | null
           read_time?: string | null
           region_slug?: string | null
+          scheduled_by?: string | null
           scheduled_publish_at?: string | null
           search_tsv?: unknown
           status?: string
@@ -785,6 +848,7 @@ export type Database = {
           published_at?: string | null
           read_time?: string | null
           region_slug?: string | null
+          scheduled_by?: string | null
           scheduled_publish_at?: string | null
           search_tsv?: unknown
           status?: string
@@ -3568,7 +3632,26 @@ export type Database = {
           variant_key: string
         }[]
       }
+      bump_api_key_rate_limit: {
+        Args: { _key_id: string; _max: number; _window_ms: number }
+        Returns: {
+          limited: boolean
+          retry_after_seconds: number
+        }[]
+      }
       can_moderate_comments: { Args: { _user_id: string }; Returns: boolean }
+      claim_business_seat: {
+        Args: {
+          _account_id: string
+          _email: string
+          _invite_token: string
+          _owner_id: string
+        }
+        Returns: {
+          linked: boolean
+          status: string
+        }[]
+      }
       create_api_key: {
         Args: {
           _expires_at?: string

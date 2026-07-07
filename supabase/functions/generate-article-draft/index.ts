@@ -8,16 +8,47 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
 
   try {
-    const { sourceIds, articleType = "news", extraInstructions = "" } = await req.json();
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
+    // Caller must be a human editorial user — verify the JWT + role before doing
+    // any work (also closes the "any authenticated user can burn AI credits" gap).
+    // The verified id is recorded as the AI run's ordered_by (bolk 4).
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
+        status: 401, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userRes } = await userClient.auth.getUser();
+    const callerId = userRes?.user?.id;
+    if (!callerId) {
+      return new Response(JSON.stringify({ error: "Not authenticated" }), {
+        status: 401, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: roleRows } = await supabase
+      .from("user_roles").select("role").eq("user_id", callerId);
+    const allowed = (roleRows ?? []).some(
+      (r: { role: string }) => r.role === "admin" || r.role === "editor" || r.role === "journalist",
+    );
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Forbidden: editorial role required" }), {
+        status: 403, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
+    const { sourceIds, articleType = "news", extraInstructions = "" } = await req.json();
     if (!Array.isArray(sourceIds) || sourceIds.length === 0) {
       return new Response(JSON.stringify({ error: "sourceIds required" }), {
         status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Load sources
     const { data: sources, error: srcErr } = await supabase
@@ -130,6 +161,15 @@ Returner svaret som JSON med følgende felt:
     const toolCall = (data.choices?.[0]?.message?.tool_calls as any)?.[0];
     if (!toolCall) throw new Error("No tool call in AI response");
     const draft = JSON.parse(toolCall.function.arguments);
+
+    // Provenance (bolk 4): record who ordered this AI draft. Best-effort — never
+    // fail the draft on a logging error.
+    const { error: logErr } = await supabase.from("agent_runs").insert({
+      function: "generate-article-draft",
+      ordered_by: callerId,
+      model: "google/gemini-2.5-flash",
+    });
+    if (logErr) console.error("agent_runs insert failed:", logErr.message);
 
     return new Response(JSON.stringify({ draft }), {
       headers: { ...corsHeaders(req), "Content-Type": "application/json" },

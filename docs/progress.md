@@ -1,5 +1,14 @@
 # Progress
 
+## Bolk 4 — myk publiseringsregel + Plattform/avis-proveniens (2026-07-07)
+
+- **Bolk 4 (myk, per Magnus' D1-valg)** — 2026-07-07, branch `security/bolk4-publish-provenance`
+  - Migrasjon `20260707130000_bolk4_publish_provenance.sql`: (1) ny tabell `agent_runs` (hvem *bestilte* AI-arbeid — `ordered_by`, funksjon, modell; service-role skriver, stab leser) — lukker gapet «ingen maskinlesbar spor av instruksjonskjeden» i Plattform/avis-skillet; (2) `articles.scheduled_by` + `BEFORE`-trigger `set_scheduled_by()` som stempler `auth.uid()` server-side når `scheduled_publish_at` (re)settes — kan ikke forfalskes fra klient; NULL = «ingen menneske planla» (revisjonssignal for auto-publish-cronen).
+  - `generate-article-draft`: caller-auth (userClient + `getUser()`, mønster fra `admin-create-user`) + eksplisitt admin/editor/journalist-rollesjekk (lukker «enhver innlogget bruker kan brenne AI-kreditt og lese kildemateriale») + best-effort `agent_runs`-logging av hvert utkast.
+  - Bevisst IKKE gjort (D1 = myk): ingen tvungen `publish_article`-RPC, ingen restriktiv `WITH CHECK` på `published` — publisering forblir rolle-gated som i dag.
+  - Verifisert: `deno check` rent, eslint 0 errors, vitest 127/127. `.gitignore`: + `supabase/.temp/`, `deno.lock`.
+  - **Gjenstår:** migrasjon mot prod (Magnus' go) → deretter deploy `generate-article-draft` + regenerer TS-typer.
+
 ## Bolk 2 — robusthet: timeouts mot eksterne API-er (2026-07-07)
 
 - **Robusthet/timeouts** — 2026-07-07, branch `robustness/external-api-timeouts` (fra code review 2026-07-06)

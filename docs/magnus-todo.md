@@ -4,6 +4,12 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Code review bolk 1 — sikkerhetsherding (2026-07-06)
+- **Slå på «Leaked Password Protection»** i Supabase → Auth → Password protection
+  (HaveIBeenPwned-sjekk). Ren dashboard-toggle, ingen kode. Advisor-flagget.
+- Resten av bolk 1 er kode (RLS-migrasjon) — venter på din godkjenning av
+  `docs/security-bolk1-live-hardening.md` før implementasjon.
+
 ### Herding F5–F7 (2026-06-10)
 - ✅ F5/F6 deployet 2026-06-10 (`articles-chat`, `payments-webhook`).
 - ✅ **F7 implementert (Magnus valgte alt. a):** ny `api_key_rate_limits`-tabell

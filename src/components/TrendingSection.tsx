@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Clock, Flame } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
-import { PUBLISHED_ARTICLE_SELECT, toUiArticle, type UiArticle } from "@/lib/article-data";
+import { PUBLISHED_ARTICLE_LIST_SELECT, toUiArticle, type UiArticle } from "@/lib/article-data";
 
 export function TrendingSection() {
   const { language } = useTheme();
@@ -36,7 +36,7 @@ export function TrendingSection() {
       if (topIds.length > 0) {
         const { data } = await supabase
           .from("articles")
-          .select(PUBLISHED_ARTICLE_SELECT)
+          .select(PUBLISHED_ARTICLE_LIST_SELECT)
           .eq("published", true)
           .in("id", topIds);
         const order = new Map(topIds.map((id, i) => [id, i]));
@@ -49,7 +49,7 @@ export function TrendingSection() {
       if (articles.length < 4) {
         const { data: recent } = await supabase
           .from("articles")
-          .select(PUBLISHED_ARTICLE_SELECT)
+          .select(PUBLISHED_ARTICLE_LIST_SELECT)
           .eq("published", true)
           .order("published_at", { ascending: false })
           .limit(8);

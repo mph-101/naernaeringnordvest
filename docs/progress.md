@@ -1,5 +1,12 @@
 # Progress
 
+## Bolk 6 — ytelse: indekser + liste-select-innsnevring (2026-07-07)
+
+- **Bolk 6 (beslutninger: 6a/6c ja, 6b init-plan utsatt til etter launch, 6d noteres kun)** — 2026-07-07, branch `perf/bolk6-indexes-and-selects`
+  - Migrasjon `20260707150000_bolk6_performance_indexes.sql` (additiv): de 13 uindekserte FK-ene fra prod-advisor (bl.a. `tips.reviewed_by`, `group_messages.group_id/article_id`, `job_listings.employer_profile_id`, `articles.created_by`); partial `tips(status) WHERE status='new'` (admin-badge); partial `articles(published_at DESC) WHERE published` (kanonisk feed-query); funksjonell `business_accounts(lower(email_domain))` (matcher `has_active_subscription`-oppslaget som ellers seq-scanner inne i RLS).
+  - 6c: `NewsFeed` (40 rader) og `TrendingSection` (via ny `PUBLISHED_ARTICLE_LIST_SELECT`) henter ikke lenger `body`/`body_en`; `fetchPublishedJobs` bytter `select("*")` → navngitte kolonner uten `description_html`. `toUiArticle` tåler radene uten body (excerpt-fallback); `description_html` er valgfri i `JobListing`-typen med guards i `StillingDetail`/JSON-LD. `feed-api` beholder body bevisst (API-kontrakt; premium alt gated i bolk 3b).
+  - Verifisert: `tsc --noEmit` rent, eslint 0 errors, vitest 127/127. Browser-verifisert i preview: forside-queryene går uten `body` (begge selects inspisert i nettverket), «Trending nå»/«Siste nyheter» rendrer, `/stillinger` uten `description_html`, null konsollfeil.
+  - **Gjenstår:** migrasjon mot prod (Magnus' go) — deretter `explain` mot feed/tips/domene-query for å bekrefte indeksbruk. 6d (71 ubrukte indekser) bevisst urørt til etter launch.
 ## Bolk 5 — dataintegritet + gjenstående RLS (2026-07-07)
 
 - **Bolk 5 (beslutninger: 5-D1 ja, 5-D2 ja)** — 2026-07-07, branch `security/bolk5-data-integrity`
@@ -18,7 +25,6 @@
   - Bevisst IKKE gjort (D1 = myk): ingen tvungen `publish_article`-RPC, ingen restriktiv `WITH CHECK` på `published` — publisering forblir rolle-gated som i dag.
   - Verifisert: `deno check` rent, eslint 0 errors, vitest 127/127. `.gitignore`: + `supabase/.temp/`, `deno.lock`.
   - **Gjenstår:** migrasjon mot prod (Magnus' go) → deretter deploy `generate-article-draft` + regenerer TS-typer.
-
 ## Bolk 2 — robusthet: timeouts mot eksterne API-er (2026-07-07)
 
 - **Robusthet/timeouts** — 2026-07-07, branch `robustness/external-api-timeouts` (fra code review 2026-07-06)

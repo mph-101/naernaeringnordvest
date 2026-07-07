@@ -35,7 +35,7 @@ export default function StillingDetail() {
         const meta =
           document.querySelector('meta[name="description"]') ||
           Object.assign(document.head.appendChild(document.createElement("meta")), { name: "description" });
-        const stripped = j.description_html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 155);
+        const stripped = (j.description_html ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 155);
         meta.setAttribute("content", stripped);
 
         if (j.employer_profile_id) {
@@ -149,7 +149,7 @@ export default function StillingDetail() {
 
         <article
           className="prose prose-stone dark:prose-invert max-w-none font-body text-foreground"
-          dangerouslySetInnerHTML={{ __html: job.description_html }}
+          dangerouslySetInnerHTML={{ __html: job.description_html ?? "" }}
         />
 
         <div className="mt-10 p-6 rounded-2xl bg-card border border-border">

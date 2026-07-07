@@ -24,7 +24,9 @@ export type JobListing = {
   industry: string | null;
   salary_range: string | null;
   application_deadline: string | null;
-  description_html: string;
+  // Absent on list queries (largest column; cards never render it) — only the
+  // detail fetch (fetchJobBySlug) selects it.
+  description_html?: string;
   application_url: string | null;
   contact_name: string | null;
   contact_email: string | null;
@@ -44,10 +46,20 @@ export type JobListing = {
   submitted_by: string | null;
 };
 
+const JOB_LIST_SELECT = [
+  "id", "slug", "title", "company_name", "company_orgnr", "company_logo_url",
+  "location", "region_slug", "employment_type", "industry", "salary_range",
+  "application_deadline", "application_url", "contact_name", "contact_email",
+  "contact_phone", "status", "is_premium", "premium_payment_method",
+  "premium_paid_at", "additional_regions", "view_count", "apply_click_count",
+  "employer_profile_id", "published_at", "expires_at", "created_at",
+  "updated_at", "submitted_by",
+].join(", ");
+
 export async function fetchPublishedJobs(opts?: { region?: string | null; limit?: number; premiumOnly?: boolean }): Promise<JobListing[]> {
   let q = supabase
     .from("job_listings")
-    .select("*")
+    .select(JOB_LIST_SELECT)
     .eq("status", "published")
     .order("is_premium", { ascending: false })
     .order("published_at", { ascending: false })
@@ -80,7 +92,7 @@ export function jsonLdJobPosting(job: JobListing, baseUrl: string): Record<strin
     "@context": "https://schema.org",
     "@type": "JobPosting",
     title: job.title,
-    description: job.description_html,
+    description: job.description_html ?? "",
     datePosted: job.published_at ?? job.created_at,
     validThrough: job.expires_at ?? job.application_deadline ?? undefined,
     employmentType: job.employment_type?.toUpperCase(),

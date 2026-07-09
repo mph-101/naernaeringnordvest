@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Clock, Flame } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,6 @@ import { PUBLISHED_ARTICLE_LIST_SELECT, toUiArticle, type UiArticle } from "@/li
 
 export function TrendingSection() {
   const { language } = useTheme();
-  const navigate = useNavigate();
   const [trending, setTrending] = useState<UiArticle[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -73,10 +72,6 @@ export function TrendingSection() {
 
   if (loading || trending.length === 0) return null;
 
-  const handleClick = (item: UiArticle) => {
-    navigate(`/article/${item.id}`);
-  };
-
   return (
     <section className="py-[20px]">
       <div className="max-w-5xl mx-auto px-6">
@@ -100,9 +95,9 @@ export function TrendingSection() {
         {/* Horizontal scroll on mobile, grid on desktop */}
         <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 md:mx-0 md:px-0 md:grid md:grid-cols-4 md:overflow-visible">
           {trending.map((item, index) => (
-            <button
+            <Link
               key={item.id}
-              onClick={() => handleClick(item)}
+              to={`/article/${item.id}`}
               className="group flex-shrink-0 w-[260px] md:w-auto text-left bg-card rounded-2xl border border-border hover:border-accent/30 hover:shadow-elevated transition-all duration-300 overflow-hidden animate-fade-up"
               style={{ animationDelay: `${index * 75}ms`, animationFillMode: 'both' }}
             >
@@ -130,7 +125,7 @@ export function TrendingSection() {
                   <span>{item.author}</span>
                 </div>
               </div>
-            </button>
+            </Link>
           ))}
         </div>
       </div>

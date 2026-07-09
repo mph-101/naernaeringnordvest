@@ -79,12 +79,11 @@ export const JobChangeFeed = () => {
     const canExpand = Boolean(body || item.image_url);
 
     return (
-      <li className="border-b border-border last:border-0">
-        <button
-          type="button"
-          onClick={() => canExpand && setExpandedId(isExpanded ? null : item.id)}
-          className={`w-full flex items-start gap-3 py-3 text-left ${canExpand ? "hover:bg-muted/30 cursor-pointer" : "cursor-default"} transition-colors`}
-          aria-expanded={isExpanded}
+      <li key={item.id} className="border-b border-border last:border-0">
+        {/* Stretched-button row: the chevron <button> covers the collapsed row
+            via after:inset-0; the source link sits above it with z-10. */}
+        <div
+          className={`relative flex items-start gap-3 py-3 ${canExpand ? "hover:bg-muted/30" : ""} transition-colors`}
         >
           <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-0.5">
             <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
@@ -112,8 +111,7 @@ export const JobChangeFeed = () => {
                   href={item.source_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-xs text-primary-ink hover:underline flex items-center gap-1"
+                  className="relative z-10 text-xs text-primary-ink hover:underline flex items-center gap-1"
                 >
                   <ExternalLink className="w-3 h-3" /> {isNo ? "Kilde" : "Source"}
                 </a>
@@ -121,11 +119,19 @@ export const JobChangeFeed = () => {
             </div>
           </div>
           {canExpand && (
-            <ChevronDown
-              className={`w-4 h-4 text-muted-foreground flex-shrink-0 mt-1 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-            />
+            <button
+              type="button"
+              onClick={() => setExpandedId(isExpanded ? null : item.id)}
+              aria-expanded={isExpanded}
+              aria-label={isNo ? `Vis detaljer for ${name}` : `Show details for ${name}`}
+              className="flex-shrink-0 p-2 -m-1 mt-0 rounded-md text-muted-foreground after:absolute after:inset-0 after:content-[''] after:cursor-pointer"
+            >
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+              />
+            </button>
           )}
-        </button>
+        </div>
         {isExpanded && canExpand && (
           <div className="pl-10 pr-2 pb-4 -mt-1 space-y-3 animate-fade-up">
             {item.image_url && (
@@ -148,7 +154,6 @@ export const JobChangeFeed = () => {
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}&summary=${encodeURIComponent(`${name} – ${role || ""}${role && company ? " · " : ""}${company || ""}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
                 className="inline-flex items-center gap-1.5 text-xs font-subhead font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 rounded-md transition-colors"
                 aria-label={isNo ? "Del på LinkedIn" : "Share on LinkedIn"}
               >
@@ -167,7 +172,7 @@ export const JobChangeFeed = () => {
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Briefcase className="w-4.5 h-4.5 text-primary-ink" />
+            <Briefcase className="w-[18px] h-[18px] text-primary-ink" />
           </div>
           <h2 className="font-headline text-lg font-semibold text-headline">
             {isNo ? "Jobbytter" : "Job Changes"}
@@ -193,9 +198,7 @@ export const JobChangeFeed = () => {
         </p>
       ) : (
         <ul className="-my-3">
-          {items.map((item) => (
-            <div key={item.id}>{renderRow(item)}</div>
-          ))}
+          {items.map((item) => renderRow(item))}
         </ul>
       )}
     </section>

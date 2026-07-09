@@ -89,6 +89,9 @@ const Index = () => {
 
         {view === "search" ? <SearchHero onSearch={handleSearch} /> : (
           <>
+            <h1 className="sr-only">
+              {t.brandName} {t.brandSub} — {language === "no" ? "Siste nyheter" : "Latest news"}
+            </h1>
             <MarketTicker />
             <TrendingSection />
             {audioModeEnabled && <DailyEditionCTA />}

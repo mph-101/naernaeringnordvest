@@ -67,7 +67,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
 
           if (tab.to) {
             return (
-              <a key={tab.id} href={tab.to} className={className} title={tab.label}>
+              <a key={tab.id} href={tab.to} className={className} title={tab.label} aria-label={tab.label} aria-current={active ? "page" : undefined}>
                 <Icon className="w-4 h-4 shrink-0" />
                 <span className={labelClass}>{tab.label}</span>
                 {defaultView === tab.id && (
@@ -83,6 +83,8 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
               onClick={() => handleClick(tab.id)}
               className={className}
               title={tab.label}
+              aria-label={tab.label}
+              aria-pressed={active}
             >
               <Icon className="w-4 h-4 shrink-0" />
               <span className={labelClass}>{tab.label}</span>
@@ -98,6 +100,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
             <button
               className="ml-0.5 sm:ml-1 p-1.5 sm:p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-card/50 transition-all duration-200 shrink-0"
               title={language === "no" ? "Velg startside" : "Choose landing page"}
+              aria-label={language === "no" ? "Velg startside" : "Choose landing page"}
             >
               <Star className="w-3.5 h-3.5" />
             </button>

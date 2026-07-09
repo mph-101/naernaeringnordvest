@@ -360,7 +360,11 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-3xl mx-auto px-6 pt-4 pb-3 flex items-center gap-4">
-          <button onClick={onBack} className="p-2.5 hover:bg-secondary rounded-full transition-colors">
+          <button
+            onClick={onBack}
+            aria-label={language === "no" ? "Tilbake" : "Back"}
+            className="p-2.5 hover:bg-secondary rounded-full transition-colors"
+          >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <span className="font-headline text-lg font-bold text-headline flex-1">{t.brandName} {t.brandSub}</span>
@@ -395,7 +399,11 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
         {activeTab === "timeline" ? (
           <ConversationSourceTimeline turns={assistantTurns} />
         ) : (
-        <div className="space-y-8">
+        <div
+          className="space-y-8"
+          role="log"
+          aria-label={language === "no" ? "Samtale" : "Conversation"}
+        >
           {messages.map((message, index) => (
             <div key={message.id} className="animate-fade-up" style={{ animationDelay: `${index * 100}ms` }}>
               <div className="flex gap-4">
@@ -1008,8 +1016,8 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
           <div className="relative bg-card border border-border rounded-2xl shadow-soft focus-within:border-accent">
             <div className="flex items-center px-5 py-3">
               <Search className="w-5 h-5 text-muted-foreground mr-4" />
-              <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder={t.followUp} className="flex-1 bg-transparent outline-none font-body text-foreground placeholder:text-muted-foreground" disabled={isLoading} />
-              <button type="submit" disabled={!input.trim() || isLoading} className="ml-3 p-2.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40 transition-all">
+              <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder={t.followUp} aria-label={t.followUp} className="flex-1 bg-transparent outline-none font-body text-foreground placeholder:text-muted-foreground" disabled={isLoading} />
+              <button type="submit" disabled={!input.trim() || isLoading} aria-label={language === "no" ? "Send spørsmål" : "Send question"} className="ml-3 p-2.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40 transition-all">
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

@@ -82,12 +82,12 @@ export const EventsFeed = () => {
   const statusStyles: Record<"today" | "soon" | "later", { label: string; cls: string; dot: string }> = {
     today: {
       label: isNo ? "I dag" : "Today",
-      cls: "bg-destructive/15 text-destructive ring-1 ring-destructive/30",
+      cls: "bg-destructive/15 text-destructive-ink ring-1 ring-destructive/30",
       dot: "bg-destructive animate-pulse",
     },
     soon: {
       label: isNo ? "Snart" : "Soon",
-      cls: "bg-primary/15 text-primary ring-1 ring-primary/30",
+      cls: "bg-primary/15 text-primary-ink ring-1 ring-primary/30",
       dot: "bg-primary",
     },
     later: {
@@ -143,7 +143,7 @@ export const EventsFeed = () => {
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Calendar className="w-4 h-4 text-primary" />
+            <Calendar className="w-4 h-4 text-primary-ink" />
           </div>
           <h2 className="font-headline text-lg font-semibold text-headline">
             {isNo ? "Arrangementer" : "Events"}
@@ -151,7 +151,7 @@ export const EventsFeed = () => {
         </div>
         <button
           onClick={() => navigate("/arrangementer")}
-          className="text-sm text-primary font-subhead font-medium hover:underline inline-flex items-center gap-1"
+          className="text-sm text-primary-ink font-subhead font-medium hover:underline inline-flex items-center gap-1"
         >
           {isNo ? "Se alle" : "See all"} <ArrowRight className="w-3.5 h-3.5" />
         </button>
@@ -242,9 +242,9 @@ export const EventsFeed = () => {
                     <div
                       className={`w-14 flex-shrink-0 rounded-lg border flex flex-col items-center justify-center py-1 leading-none ${
                         isToday
-                          ? "bg-destructive/10 border-destructive/30 text-destructive"
+                          ? "bg-destructive/10 border-destructive/30 text-destructive-ink"
                           : status === "soon"
-                          ? "bg-primary/10 border-primary/30 text-primary"
+                          ? "bg-primary/10 border-primary/30 text-primary-ink"
                           : "bg-secondary border-border text-foreground"
                       }`}
                       aria-hidden
@@ -295,7 +295,7 @@ export const EventsFeed = () => {
                   )}
                 </div>
                 {item.category && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-subhead font-medium rounded bg-primary/10 text-primary flex-shrink-0">
+                  <span className="px-1.5 py-0.5 text-[10px] font-subhead font-medium rounded bg-primary/10 text-primary-ink flex-shrink-0">
                     {item.category}
                   </span>
                 )}
@@ -311,7 +311,7 @@ export const EventsFeed = () => {
                   }}
                   title={isNo ? "Legg til i kalender" : "Add to calendar"}
                   aria-label={isNo ? "Legg til i kalender" : "Add to calendar"}
-                  className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-primary-ink hover:bg-primary/10 transition-colors flex-shrink-0"
                 >
                   <CalendarPlus className="w-4 h-4" />
                 </span>

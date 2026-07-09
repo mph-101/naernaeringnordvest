@@ -79,7 +79,7 @@ export function RelatedArticles({ sources }: RelatedArticlesProps = {}) {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
-                <FileText className="w-5 h-5 text-accent" />
+                <FileText className="w-5 h-5 text-accent-ink" />
               </div>
               <h2 className="font-headline text-lg font-bold text-headline">
                 {usingLiveSources
@@ -89,7 +89,7 @@ export function RelatedArticles({ sources }: RelatedArticlesProps = {}) {
             </div>
             <a
               href="#"
-              className="font-subhead text-sm text-accent hover:text-link-hover transition-colors flex items-center gap-1 group"
+              className="font-subhead text-sm text-accent-ink hover:text-link-hover transition-colors flex items-center gap-1 group"
             >
               {t.viewAll}
               <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -101,7 +101,7 @@ export function RelatedArticles({ sources }: RelatedArticlesProps = {}) {
               const inner = (
                 <>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="font-subhead text-sm text-accent font-medium">
+                  <span className="font-subhead text-sm text-accent-ink font-medium">
                     {article.category}
                   </span>
                   {!usingLiveSources && (
@@ -117,7 +117,7 @@ export function RelatedArticles({ sources }: RelatedArticlesProps = {}) {
                   )}
                 </div>
 
-                <h3 className="font-headline text-base font-bold text-headline group-hover:text-accent transition-colors mb-2 leading-snug line-clamp-2">
+                <h3 className="font-headline text-base font-bold text-headline group-hover:text-accent-ink transition-colors mb-2 leading-snug line-clamp-2">
                   {article.title}
                 </h3>
 
@@ -160,7 +160,7 @@ export function RelatedArticles({ sources }: RelatedArticlesProps = {}) {
           <div className="relative bg-card rounded-2xl shadow-elevated max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
             <div className="p-6 border-b border-border">
               <div className="flex items-center gap-2 mb-3">
-                <span className="font-subhead text-sm text-accent font-medium">
+                <span className="font-subhead text-sm text-accent-ink font-medium">
                   {selectedArticle.category}
                 </span>
               </div>
@@ -188,7 +188,7 @@ export function RelatedArticles({ sources }: RelatedArticlesProps = {}) {
             <div className="p-6 bg-surface-subtle rounded-b-2xl border-t border-border">
               <div className="text-center mb-6">
                 <div className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Lock className="w-6 h-6 text-accent" />
+                  <Lock className="w-6 h-6 text-accent-ink" />
                 </div>
                 <h4 className="font-headline text-lg font-bold text-headline mb-2">
                   {t.subscribeTitle}

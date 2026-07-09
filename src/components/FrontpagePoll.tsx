@@ -102,7 +102,7 @@ export function FrontpagePoll({ variant = "page" }: FrontpagePollProps = {}) {
     <section data-tour="frontpage-poll" className={wrapperClass}>
       <div className="bg-card border border-border rounded-3xl shadow-soft p-6 md:p-8">
         <div className="flex items-center gap-2 mb-4">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 text-accent text-[11px] font-subhead font-semibold uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 text-accent-ink text-[11px] font-subhead font-semibold uppercase tracking-wider">
             <Vote className="w-3 h-3" />
             {t.ukens}
           </span>
@@ -139,7 +139,7 @@ export function FrontpagePoll({ variant = "page" }: FrontpagePollProps = {}) {
               return (
                 <div key={opt.id} className="space-y-1.5">
                   <div className="flex items-center justify-between text-sm font-body">
-                    <span className={`flex items-center gap-1.5 ${isMine ? "font-semibold text-accent" : "text-foreground"}`}>
+                    <span className={`flex items-center gap-1.5 ${isMine ? "font-semibold text-accent-ink" : "text-foreground"}`}>
                       {isMine && <Check className="w-3.5 h-3.5" />}
                       {opt.label}
                     </span>

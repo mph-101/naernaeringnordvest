@@ -1,5 +1,13 @@
 # Progress
 
+## Design-audit onboard: avisa først — feed som standard, onboarding tøylet (2026-07-09)
+
+- **Onboard-PR fra forside-auditen (handlingsplan punkt 3, retning besluttet av Magnus: «Feed som standard»)** — 2026-07-09, branch `ux/onboard-feed-first` (stablet på perf-branchen)
+  - Feed som standardvisning: `defaultView`-fallback i useTheme «search» → «feed» (også ved resetAllSettings); eksplisitte valg i localStorage vinner fortsatt. `getInitialView` i views/Index + app/frontpage-client: URL-param → eksplisitt «search» → ellers feed.
+  - Tvungen `/velkommen`-redirect fjernet i begge runtimes — førstegangsbesøkende ser avisa umiddelbart. Erstattet av ny `FirstVisitBanner` (lukkbar stripe under fanene): tilbyr region-/startside-valget via lenke til /velkommen; lukking setter hasOnboarded (nager aldri igjen). /velkommen-siden uendret og fortsatt fullt funksjonell som opt-in.
+  - FeatureWalkthrough (11-korts touren) auto-åpner ikke lenger ved første besøk — konkurrerte med selve avisa; startes fortsatt manuelt fra profilinnstillingene via `nn:feature-walkthrough-start`.
+  - Verifisert: eslint 0 errors, vitest 127/127, live i preview som førstegangsbesøkende (ren `/` blir på `/`, feed rendrer, banner synlig, tour åpner ikke; lukking fjerner banner og persisterer).
+
 ## Design-audit perf: ekte <img> i feeden + lazy chunk-splitting (2026-07-09)
 
 - **Bilde-/chunk-PR fra forside-auditen (funn 8–9)** — 2026-07-09, branch `perf/feed-images-lazy-chunk` (stablet på harden-branchen)

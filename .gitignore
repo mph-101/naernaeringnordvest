@@ -50,3 +50,7 @@ next-env.d.ts
 # Supabase CLI temp + Deno lockfile (generated locally)
 supabase/.temp/
 deno.lock
+
+# Impeccable design-tooling runtime state (design.json/critique/config committes bevisst)
+.impeccable/live/server.json
+.impeccable/live/sessions/

@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-08T00:00:00Z",
+  "title": "Design System: Nær Næring Nordvest",
+  "extensions": {
+    "colorMeta": {
+      "fersken-solnedgang": { "role": "primary", "displayName": "Fersken-solnedgang", "canonical": "hsl(28 65% 70%)", "tonalRamp": ["hsl(28 65% 15%)", "hsl(28 65% 26%)", "hsl(28 65% 38%)", "hsl(28 65% 49%)", "hsl(28 65% 61%)", "hsl(28 65% 72%)", "hsl(28 65% 84%)", "hsl(28 65% 95%)"] },
+      "stovet-terrakotta": { "role": "secondary", "displayName": "Støvet terrakotta", "canonical": "hsl(15 55% 68%)", "tonalRamp": ["hsl(15 55% 15%)", "hsl(15 55% 26%)", "hsl(15 55% 38%)", "hsl(15 55% 49%)", "hsl(15 55% 61%)", "hsl(15 55% 72%)", "hsl(15 55% 84%)", "hsl(15 55% 95%)"] },
+      "teglrod": { "role": "secondary", "displayName": "Teglrød (lenker)", "canonical": "hsl(15 50% 58%)", "tonalRamp": ["hsl(15 50% 15%)", "hsl(15 50% 26%)", "hsl(15 50% 38%)", "hsl(15 50% 49%)", "hsl(15 50% 61%)", "hsl(15 50% 72%)", "hsl(15 50% 84%)", "hsl(15 50% 95%)"] },
+      "rustrose": { "role": "tertiary", "displayName": "Rustrose (destruktiv)", "canonical": "hsl(0 55% 65%)", "tonalRamp": ["hsl(0 55% 15%)", "hsl(0 55% 26%)", "hsl(0 55% 38%)", "hsl(0 55% 49%)", "hsl(0 55% 61%)", "hsl(0 55% 72%)", "hsl(0 55% 84%)", "hsl(0 55% 95%)"] },
+      "morgenlys-krem": { "role": "neutral", "displayName": "Morgenlys-krem", "canonical": "hsl(45 40% 97%)", "tonalRamp": ["hsl(45 40% 15%)", "hsl(45 40% 26%)", "hsl(45 40% 38%)", "hsl(45 40% 49%)", "hsl(45 40% 61%)", "hsl(45 40% 72%)", "hsl(45 40% 84%)", "hsl(45 40% 97%)"] },
+      "drivvedbrun": { "role": "neutral", "displayName": "Drivvedbrun (brødtekst)", "canonical": "hsl(30 12% 25%)", "tonalRamp": ["hsl(30 12% 15%)", "hsl(30 12% 26%)", "hsl(30 12% 38%)", "hsl(30 12% 49%)", "hsl(30 12% 61%)", "hsl(30 12% 72%)", "hsl(30 12% 84%)", "hsl(30 12% 95%)"] },
+      "blekkbrun": { "role": "neutral", "displayName": "Blekkbrun (overskrifter)", "canonical": "hsl(30 15% 20%)", "tonalRamp": ["hsl(30 15% 15%)", "hsl(30 15% 26%)", "hsl(30 15% 38%)", "hsl(30 15% 49%)", "hsl(30 15% 61%)", "hsl(30 15% 72%)", "hsl(30 15% 84%)", "hsl(30 15% 95%)"] },
+      "kveldsbrygge": { "role": "neutral", "displayName": "Kveldsbrygge (admin-sidebar)", "canonical": "hsl(30 15% 18%)", "tonalRamp": ["hsl(30 15% 15%)", "hsl(30 15% 26%)", "hsl(30 15% 38%)", "hsl(30 15% 49%)", "hsl(30 15% 61%)", "hsl(30 15% 72%)", "hsl(30 15% 84%)", "hsl(30 15% 95%)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display (Lora 700)", "purpose": "Forsidens hovedoppslag og artikkeltitler." },
+      "headline": { "displayName": "Headline (Lora 600)", "purpose": "Seksjons- og korttitler; alle h1–h6." },
+      "body": { "displayName": "Body (Source Sans 3 400)", "purpose": "Brødtekst, 65–75ch linjelengde." },
+      "label": { "displayName": "Label (Source Sans 3 500)", "purpose": "Knapper, skjemafelt, metadata." }
+    },
+    "shadows": [
+      { "name": "myk", "value": "0 2px 12px -3px hsl(30 15% 20% / 0.06)", "purpose": "Hint av separasjon for kort i ro som trenger det." },
+      { "name": "hevet", "value": "0 8px 24px -6px hsl(30 15% 20% / 0.1)", "purpose": "Overlegg, dropdowns og hoverede interaktive kort." }
+    ],
+    "motion": [
+      { "name": "fade-up", "value": "fadeUp 0.5s ease-out forwards", "purpose": "Innkomst for innholdsblokker; reduced-motion: vis øyeblikkelig." },
+      { "name": "fade-in", "value": "fadeIn 0.3s ease-out forwards", "purpose": "Myk innfasing av flater." },
+      { "name": "scale-in", "value": "scaleIn 0.25s ease-out forwards", "purpose": "Popover/dialog-innkomst (0.98 → 1)." },
+      { "name": "transition-standard", "value": "150ms ease-out", "purpose": "Farge- og kantskift på interaktive elementer. Aldri løft eller skala på hover." }
+    ],
+    "breakpoints": [
+      { "name": "container-max", "value": "1400px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primærknapp",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Hovedhandling — fersken med mørk tekst, fargeskift på hover, ingen bevegelse.",
+      "html": "<button class=\"ds-btn-primary\">Bli abonnent</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 8px 16px; background: hsl(28 65% 70%); color: hsl(30 20% 15%); font: 500 14px/1.4 'Source Sans 3', system-ui, sans-serif; border: none; border-radius: 12px; cursor: pointer; transition: background-color 150ms ease-out; } .ds-btn-primary:hover { background: hsl(28 65% 70% / 0.9); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(45 40% 97%), 0 0 0 4px hsl(15 55% 68%); }"
+    },
+    {
+      "name": "Outline-knapp",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Sekundær handling — drivvedgrå kant på krem, fylles med aksent-tone på hover.",
+      "html": "<button class=\"ds-btn-outline\">Les mer</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 8px 16px; background: hsl(45 40% 97%); color: hsl(30 12% 25%); font: 500 14px/1.4 'Source Sans 3', system-ui, sans-serif; border: 1px solid hsl(38 22% 88%); border-radius: 12px; cursor: pointer; transition: background-color 150ms ease-out, color 150ms ease-out; } .ds-btn-outline:hover { background: hsl(15 55% 68%); color: #fff; } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(45 40% 97%), 0 0 0 4px hsl(15 55% 68%); }"
+    },
+    {
+      "name": "Ghost-knapp",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Tertiær handling — transparent til aksent-tone på hover.",
+      "html": "<button class=\"ds-btn-ghost\">Avbryt</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 8px 16px; background: transparent; color: hsl(30 12% 25%); font: 500 14px/1.4 'Source Sans 3', system-ui, sans-serif; border: none; border-radius: 12px; cursor: pointer; transition: background-color 150ms ease-out; } .ds-btn-ghost:hover { background: hsl(15 55% 68% / 0.15); } .ds-btn-ghost:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(15 55% 68%); }"
+    },
+    {
+      "name": "Skjemafelt",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Tekstfelt — krem flate, drivvedgrå kant, terrakotta fokusring uten glød.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"E-postadresse\" />",
+      "css": ".ds-input { width: 100%; max-width: 320px; padding: 10px 16px; background: hsl(45 40% 97%); color: hsl(30 12% 25%); font: 400 15px/1.5 'Source Sans 3', system-ui, sans-serif; border: 1px solid hsl(38 22% 88%); border-radius: 20px; transition: border-color 150ms ease-out, box-shadow 150ms ease-out; } .ds-input::placeholder { color: hsl(30 12% 25% / 0.7); } .ds-input:focus { outline: none; border-color: hsl(15 55% 68%); box-shadow: 0 0 0 2px hsl(15 55% 68% / 0.3); }"
+    },
+    {
+      "name": "Artikkelkort",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Innholdskort — skumhvit flate med drivvedgrå kant, flat i ro, hevet skygge kun ved hover.",
+      "html": "<article class=\"ds-card\"><p class=\"ds-card-kicker\">Maritim næring</p><h3 class=\"ds-card-title\">Verftet i Ulsteinvik lander milliardkontrakt</h3><p class=\"ds-card-body\">Kontrakten sikrer 200 arbeidsplasser de neste tre årene, ifølge konsernsjefen.</p></article>",
+      "css": ".ds-card { display: block; max-width: 340px; padding: 24px; background: hsl(45 35% 98%); border: 1px solid hsl(38 22% 88%); border-radius: 16px; transition: box-shadow 150ms ease-out; } .ds-card:hover { box-shadow: 0 8px 24px -6px hsl(30 15% 20% / 0.1); } .ds-card-kicker { margin: 0 0 8px; font: 500 13px/1.4 'Source Sans 3', system-ui, sans-serif; color: hsl(15 50% 58%); } .ds-card-title { margin: 0 0 8px; font: 600 20px/1.3 Lora, Georgia, serif; letter-spacing: -0.02em; color: hsl(30 15% 20%); } .ds-card-body { margin: 0; font: 400 15px/1.55 'Source Sans 3', system-ui, sans-serif; color: hsl(30 12% 25%); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Det varme handelshuset",
+    "overview": "Et regionalt handelshus: solid og forretningsmessig, men med åpen dør og varme i veggene. Autoriteten bæres av Lora-serifens redaksjonelle tyngde og et rolig hierarki; varmen bæres av kremhvite papirflater, fersken og støvet terrakotta. Komponentene er presise og stille: de svarer på interaksjon med farge- og kantskift, ikke med hopp, løft eller skala-triks.",
+    "keyCharacteristics": [
+      "Serif-autoritet (Lora) mot sans-varme (Source Sans 3)",
+      "Kremhvitt papir med prikk-tekstur som grunnflate; farge brukes sparsomt",
+      "Flat i ro; myk, diffus skygge kun ved løft",
+      "Presise og stille interaksjoner — ingen bevegelse uten grunn",
+      "Dark mode er et likeverdig tema, ikke et etterslep"
+    ],
+    "rules": [
+      { "name": "Én-stemme-regelen", "body": "Fersken og terrakotta er verter, ikke tapet: saturert farge dekker ≤10–15 % av enhver leserflate. Varmen bæres av kremflatene og typografien, ikke av fargeblokker.", "section": "colors" },
+      { "name": "Kveldsbrygge-regelen", "body": "Den mørke sidebaren tilhører admin/CMS. Leserflaten er alltid lys eller ekte dark mode — aldri en mellomting.", "section": "colors" },
+      { "name": "Lora-først-regelen", "body": "Hierarki bæres av serif-kontrasten og størrelsesskala — aldri av farge, versaler eller utrop. Hvis en tittel trenger farge for å vinne oppmerksomhet, er hierarkiet feil.", "section": "typography" },
+      { "name": "Flat-i-ro-regelen", "body": "Ingen flate har skygge uten grunn. Kan separasjonen løses med tonal lagdeling eller en kantlinje, skal den det.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do sett all brødtekst i Drivvedbrun (#474038) på kremflater — 4.5:1 er gulvet, ikke målet; publikummet inkluderer eldre lesere.",
+      "Do bruk tonal lagdeling (krem → sandbanke → skumhvit) før du griper til skygge.",
+      "Do hold saturert farge under 10–15 % av leserflaten (Én-stemme-regelen).",
+      "Do gi hver animasjon et prefers-reduced-motion-alternativ; eksisterende fade/scale-keyframes skal falle tilbake til øyeblikkelig visning.",
+      "Do vedlikehold dark mode som likeverdig tema ved hvert eneste designtillegg."
+    ],
+    "donts": [
+      "Don't bygg tabloid/klikkjag-mønstre: ingen skrikende overskrifter, røde bannere, tellere eller blinkende elementer.",
+      "Don't bygg generisk SaaS/startup-estetikk: ingen gradient-heroer, hero-metric-maler, identiske kort-grids eller uppercase-eyebrows over hver seksjon.",
+      "Don't la flaten rote seg til som en gammeldags lokalavis, og don't kle den i kald finanspresse-mørkeblå.",
+      "Don't bruk background-clip: text med gradient — --gradient-warm er kun for flater, aldri for tekst.",
+      "Don't bruk fargede side-striper (border-left > 1px) som aksent på kort eller varsler. Utility-klassen .border-accent-left i index.css er et kjent avvik og skal fases ut, ikke gjenbrukes.",
+      "Don't sett hvit tekst på Fersken-solnedgang eller Støvet terrakotta i liten størrelse — kontrasten holder ikke; bruk mørk tekst (#2E261F).",
+      "Don't animer løft, skala eller sprett på hover — komponentene er presise og stille; tilstandsskift skjer i farge og kant."
+    ]
+  }
+}

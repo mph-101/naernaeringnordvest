@@ -358,7 +358,19 @@ Magnus reviewer alle PR-er før merge. Det betyr: ikke press for stor PR. 200-50
 
 ---
 
+## Design Context
+
+Designkonteksten for prosjektet ligger i to filer i roten (generert 2026-07-08 via `/impeccable init`):
+
+- **`PRODUCT.md`** — register (brand), målgruppe, merkevarepersonlighet («varm, nær, etterrettelig»), anti-referanser og strategiske designprinsipper. Tilgjengelighetskrav: WCAG 2.1 AA + ekstra hensyn til eldre lesere.
+- **`DESIGN.md`** — det visuelle systemet («Det varme handelshuset»): Kystlys-paletten, Lora + Source Sans 3, elevasjons- og komponentregler. Frontmatter-tokens er normative.
+
+Les begge før UI-/designarbeid. Ved designoppgaver kan `/impeccable`-kommandoene brukes (critique, audit, polish, m.fl.).
+
+---
+
 ## Versjonshistorikk for dette dokumentet
 
 - **2026-05-16:** Initial versjon. Etablerer fase 1-5 plan og arbeidsregler.
 - **2026-06-09:** Antagelse #2 oppdatert — idrett fullt fjernet (var rester av tidligere prosjekt); hjernevelv/mascot/games fortsatt parkert.
+- **2026-07-08:** Design Context-seksjon lagt til — PRODUCT.md og DESIGN.md etablert via `/impeccable init`.

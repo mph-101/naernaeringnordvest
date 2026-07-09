@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X, MapPin, Megaphone, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -94,7 +94,8 @@ export const NewsFeed = () => {
   const [articleTagMap, setArticleTagMap] = useState<Map<string, string[]>>(new Map());
   const [articleSharedRegions, setArticleSharedRegions] = useState<Map<string, string[]>>(new Map());
   const [nativeAds, setNativeAds] = useState<NativeAd[]>([]);
-  const navigate = useNavigate();
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const INITIAL_COUNT = 10;
   const PAGE_SIZE = 9;
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
@@ -118,17 +119,23 @@ export const NewsFeed = () => {
 
   useEffect(() => {
     const fetchArticles = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("articles")
         .select("id, title, title_en, excerpt, excerpt_en, category, author, type, premium, read_time, image_url, image_crop, image_focal, published_at, key_points, region_slug, pinned_position")
         .eq("published", true)
         .order("published_at", { ascending: false })
         .limit(40);
-      setDbArticles((data || []) as unknown as DbArticle[]);
+      if (error) {
+        setLoadError(true);
+      } else {
+        setLoadError(false);
+        setDbArticles((data || []) as unknown as DbArticle[]);
+      }
       setLoading(false);
     };
+    setLoading(true);
     fetchArticles();
-  }, []);
+  }, [reloadKey]);
 
   // Fetch active native ads (RLS already filters by active + dates)
   useEffect(() => {
@@ -318,10 +325,6 @@ export const NewsFeed = () => {
     }
   };
 
-  const handleArticleClick = (item: typeof articles[0]) => {
-    navigate(`/article/${item.id}`);
-  };
-
   const getBackground = (item: typeof articles[0]) => {
     if (item.image_url) return `url(${item.image_url})`;
     return getArticleImage(item.id, item.category);
@@ -369,6 +372,26 @@ export const NewsFeed = () => {
       <section className="py-[44px]">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+        </div>
+      </section>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <section className="py-[44px]">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <p className="text-muted-foreground font-body mb-4">
+            {language === "no"
+              ? "Kunne ikke laste artiklene. Sjekk tilkoblingen og prøv igjen."
+              : "Could not load the articles. Check your connection and try again."}
+          </p>
+          <button
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="px-5 py-2.5 rounded-full bg-card border border-border text-foreground font-subhead text-sm hover:bg-secondary transition-colors shadow-soft"
+          >
+            {language === "no" ? "Prøv igjen" : "Try again"}
+          </button>
         </div>
       </section>
     );
@@ -484,8 +507,8 @@ export const NewsFeed = () => {
 
         {/* Featured Article */}
         {featuredItem && (
-          <button
-            onClick={() => handleArticleClick(featuredItem)}
+          <Link
+            to={`/article/${featuredItem.id}`}
             className="group block w-full text-left mb-10 bg-card rounded-2xl shadow-soft hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden border border-border hover:border-accent/30"
           >
             <div className="md:flex">
@@ -533,7 +556,7 @@ export const NewsFeed = () => {
                 </div>
               </div>
             </div>
-          </button>
+          </Link>
         )}
 
         {/* News Grid */}
@@ -542,9 +565,9 @@ export const NewsFeed = () => {
             <NativeAdCard key={`ad-${entry.ad.id}`} ad={entry.ad} index={index} language={language} />
           ) : (
             (() => { const item = entry.item; return (
-            <button
+            <Link
               key={item.id}
-              onClick={() => handleArticleClick(item)}
+              to={`/article/${item.id}`}
               className="group block w-full text-left bg-card rounded-2xl border border-border hover:border-accent/30 hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden"
               style={{ animationDelay: `${index * 50}ms` }}
             >
@@ -596,7 +619,7 @@ export const NewsFeed = () => {
                   <span>{item.publishedAt}</span>
                 </div>
               </div>
-            </button>
+            </Link>
             ); })()
           ))}
         </div>

@@ -87,13 +87,13 @@ export function RelatedArticles({ sources }: RelatedArticlesProps = {}) {
                   : t.relatedCoverage}
               </h2>
             </div>
-            <a
-              href="#"
+            <Link
+              to="/?view=feed"
               className="font-subhead text-sm text-accent-ink hover:text-link-hover transition-colors flex items-center gap-1 group"
             >
               {t.viewAll}
               <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </a>
+            </Link>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">

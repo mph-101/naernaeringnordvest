@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Calendar, MapPin, ArrowRight, CalendarPlus, Clock, Sparkles } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -19,7 +19,6 @@ interface EventItem {
 export const EventsFeed = () => {
   const { language } = useTheme();
   const isNo = language === "no";
-  const navigate = useNavigate();
   const [items, setItems] = useState<EventItem[]>([]);
   const [range, setRange] = useState<"30d" | "all">("30d");
 
@@ -103,8 +102,7 @@ export const EventsFeed = () => {
   const escapeIcs = (s: string) =>
     s.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
 
-  const downloadIcs = (e: React.MouseEvent, item: EventItem) => {
-    e.stopPropagation();
+  const downloadIcs = (item: EventItem) => {
     const start = toIcsDate(item.start_at);
     const end = toIcsDate(
       item.end_at || new Date(new Date(item.start_at).getTime() + 60 * 60 * 1000).toISOString(),
@@ -149,12 +147,12 @@ export const EventsFeed = () => {
             {isNo ? "Arrangementer" : "Events"}
           </h2>
         </div>
-        <button
-          onClick={() => navigate("/arrangementer")}
+        <Link
+          to="/arrangementer"
           className="text-sm text-primary-ink font-subhead font-medium hover:underline inline-flex items-center gap-1"
         >
           {isNo ? "Se alle" : "See all"} <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+        </Link>
       </div>
 
       <div className="flex gap-2 mb-4">
@@ -209,30 +207,30 @@ export const EventsFeed = () => {
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             ) : (
-              <button
-                onClick={() => navigate("/tips")}
+              <Link
+                to="/kontakt"
                 className="px-3 py-1.5 rounded-full text-xs font-subhead font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
               >
                 {isNo ? "Tips redaksjonen" : "Tip the editors"}
-              </button>
+              </Link>
             )}
-            <button
-              onClick={() => navigate("/arrangementer")}
+            <Link
+              to="/arrangementer"
               className="px-3 py-1.5 rounded-full text-xs font-subhead font-medium text-foreground hover:bg-secondary transition-colors inline-flex items-center gap-1"
             >
               {isNo ? "Se alle" : "See all"}
               <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            </Link>
           </div>
         </div>
       ) : (
         <ul className="-my-3">
           {items.map((item) => (
             <li key={item.id} className="border-b border-border last:border-0">
-              <button
-                type="button"
-                onClick={() => navigate(`/arrangementer/${item.id}`)}
-                className={`w-full flex items-stretch gap-3 py-3 text-left hover:bg-muted/30 cursor-pointer transition-colors ${item.is_featured ? "px-2 -mx-2 rounded-lg bg-primary/5" : ""}`}
+              {/* Stretched-link row: the title <Link> covers the whole row via
+                  after:inset-0; secondary controls sit above it with z-10. */}
+              <div
+                className={`relative flex items-stretch gap-3 py-3 hover:bg-muted/30 transition-colors ${item.is_featured ? "px-2 -mx-2 rounded-lg bg-primary/5" : ""}`}
               >
                 {(() => {
                   const status = getStatus(item.start_at);
@@ -285,7 +283,12 @@ export const EventsFeed = () => {
                     </span>
                   </div>
                   <p className="font-subhead font-semibold text-sm text-headline truncate mt-1">
-                    {item.title}
+                    <Link
+                      to={`/arrangementer/${item.id}`}
+                      className="after:absolute after:inset-0 after:content-['']"
+                    >
+                      {item.title}
+                    </Link>
                   </p>
                   {item.location && (
                     <p className="text-xs text-muted-foreground font-body mt-0.5 flex items-center gap-1 truncate">
@@ -299,23 +302,16 @@ export const EventsFeed = () => {
                     {item.category}
                   </span>
                 )}
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => downloadIcs(e, item)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      downloadIcs(e as any, item);
-                    }
-                  }}
+                <button
+                  type="button"
+                  onClick={() => downloadIcs(item)}
                   title={isNo ? "Legg til i kalender" : "Add to calendar"}
                   aria-label={isNo ? "Legg til i kalender" : "Add to calendar"}
-                  className="p-1.5 rounded-md text-muted-foreground hover:text-primary-ink hover:bg-primary/10 transition-colors flex-shrink-0"
+                  className="relative z-10 self-center p-2 rounded-md text-muted-foreground hover:text-primary-ink hover:bg-primary/10 transition-colors flex-shrink-0"
                 >
                   <CalendarPlus className="w-4 h-4" />
-                </span>
-              </button>
+                </button>
+              </div>
             </li>
           ))}
         </ul>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 // Logo served from public/ — works in both Vite and Next.js
 const logoImg = "/logo.png";
 import { Menu, X, Search, Moon, Sun, Globe, Users, LogIn, LogOut, UserCircle, Shield, Brain, Briefcase, CalendarDays, MapPin, ChevronDown, AtSign } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { useRegion } from "@/hooks/useRegion";
 import { translations } from "@/lib/translations";
@@ -22,7 +22,6 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
   const [isRegionMenuOpen, setIsRegionMenuOpen] = useState(false);
   const { theme, toggleTheme, language, toggleLanguage } = useTheme();
   const { current: currentRegion, all: regions, switchRegion } = useRegion();
-  const navigate = useNavigate();
   const t = translations[language];
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -103,6 +102,9 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
                   onBlur={() => setTimeout(() => setIsRegionMenuOpen(false), 150)}
                   className="flex items-center gap-1 px-2.5 py-1.5 hover:bg-secondary rounded-full transition-colors"
                   title={language === "no" ? "Bytt region" : "Switch region"}
+                  aria-label={language === "no" ? "Bytt region" : "Switch region"}
+                  aria-expanded={isRegionMenuOpen}
+                  aria-haspopup="menu"
                 >
                   <MapPin className="w-3.5 h-3.5 text-foreground/70" />
                   <span className="text-xs font-medium text-foreground/70">{currentRegion?.name}</span>
@@ -128,6 +130,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
               onClick={toggleLanguage}
               className="hidden md:flex p-2.5 hover:bg-secondary rounded-full transition-colors items-center gap-1.5"
               title={language === "no" ? "Switch to English" : "Bytt til norsk"}
+              aria-label={language === "no" ? "Switch to English" : "Bytt til norsk"}
             >
               <Globe className="w-4 h-4 text-foreground/70" />
               <span className="text-xs font-medium text-foreground/70 uppercase">{language}</span>
@@ -137,6 +140,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
               onClick={toggleTheme}
               className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors"
               title={theme === "light" ? "Dark mode" : "Light mode"}
+              aria-label={theme === "light" ? "Dark mode" : "Light mode"}
             >
               {theme === "light" ? (
                 <Moon className="w-4 h-4 text-foreground/70" />
@@ -149,26 +153,27 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
               <button
                 onClick={onSearchClick}
                 className="p-2 sm:p-2.5 hover:bg-secondary rounded-full transition-colors"
+                aria-label={language === "no" ? "Søk" : "Search"}
               >
                 <Search className="w-5 h-5 text-foreground/70" />
               </button>
             )}
 
-            <button onClick={() => navigate("/hjernetrim")} className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Hjernetrim" : "Brain games"}>
+            <Link to="/hjernetrim" className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Hjernetrim" : "Brain games"} aria-label={language === "no" ? "Hjernetrim" : "Brain games"}>
               <Brain className="w-4 h-4 text-foreground/70" />
-            </button>
+            </Link>
 
-            <button data-tour="nav-groups" onClick={() => navigate("/grupper")} className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Grupper" : "Groups"}>
+            <Link data-tour="nav-groups" to="/grupper" className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Grupper" : "Groups"} aria-label={language === "no" ? "Grupper" : "Groups"}>
               <Users className="w-4 h-4 text-foreground/70" />
-            </button>
+            </Link>
 
-            <button data-tour="nav-jobs" onClick={() => navigate("/stillinger")} className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Stillinger" : "Jobs"}>
+            <Link data-tour="nav-jobs" to="/stillinger" className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Stillinger" : "Jobs"} aria-label={language === "no" ? "Stillinger" : "Jobs"}>
               <Briefcase className="w-4 h-4 text-foreground/70" />
-            </button>
+            </Link>
 
-            <button onClick={() => navigate("/arrangementer")} className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Arrangementer" : "Events"}>
+            <Link to="/arrangementer" className="hidden md:inline-flex p-2.5 hover:bg-secondary rounded-full transition-colors" title={language === "no" ? "Arrangementer" : "Events"} aria-label={language === "no" ? "Arrangementer" : "Events"}>
               <CalendarDays className="w-4 h-4 text-foreground/70" />
-            </button>
+            </Link>
 
             {userId && <NotificationBell />}
 
@@ -176,30 +181,33 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
               <div className="hidden md:flex items-center gap-1">
                 <SubscriptionStatusBadge />
                 {isAdmin && (
-                  <button
-                    onClick={() => navigate("/admin")}
+                  <Link
+                    to="/admin"
                     className="p-2.5 hover:bg-secondary rounded-full transition-colors"
                     title="Admin"
+                    aria-label="Admin"
                   >
                     <Shield className="w-4 h-4 text-foreground/70" />
-                  </button>
+                  </Link>
                 )}
                 {publicUsername && (
-                  <button
-                    onClick={() => navigate(`/@${publicUsername}`)}
+                  <Link
+                    to={`/@${publicUsername}`}
                     className="p-2.5 hover:bg-secondary rounded-full transition-colors"
                     title={language === "no" ? `Min offentlige profil (@${publicUsername})` : `My public profile (@${publicUsername})`}
+                    aria-label={language === "no" ? `Min offentlige profil (@${publicUsername})` : `My public profile (@${publicUsername})`}
                   >
                     <AtSign className="w-4 h-4 text-foreground/70" />
-                  </button>
+                  </Link>
                 )}
-                <button
-                  onClick={() => navigate("/profil")}
+                <Link
+                  to="/profil"
                   className="p-2.5 hover:bg-secondary rounded-full transition-colors"
                   title={language === "no" ? "Min profil" : "My profile"}
+                  aria-label={language === "no" ? "Min profil" : "My profile"}
                 >
                   <UserCircle className="w-4 h-4 text-foreground/70" />
-                </button>
+                </Link>
                 <span className="hidden lg:block text-xs font-body text-muted-foreground max-w-[120px] truncate">
                   {userEmail}
                 </span>
@@ -207,18 +215,19 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
                   onClick={handleLogout}
                   className="p-2.5 hover:bg-secondary rounded-full transition-colors"
                   title={language === "no" ? "Logg ut" : "Log out"}
+                  aria-label={language === "no" ? "Logg ut" : "Log out"}
                 >
                   <LogOut className="w-4 h-4 text-foreground/70" />
                 </button>
               </div>
             ) : (
-              <button
-                onClick={() => navigate("/login")}
+              <Link
+                to="/login"
                 className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft"
               >
                 <LogIn className="w-4 h-4" />
                 {language === "no" ? "Logg inn" : "Log in"}
-              </button>
+              </Link>
             )}
 
             <button
@@ -241,22 +250,22 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
           <div className="md:hidden py-4 border-t border-border animate-fade-in">
             <nav className="flex flex-col gap-1">
               {/* Navigation links */}
-              <button onClick={() => { navigate("/stillinger"); setIsMobileMenuOpen(false); }} className="w-full px-4 py-3 text-left rounded-xl hover:bg-secondary transition-colors flex items-center gap-3 font-subhead text-sm">
+              <Link to="/stillinger" onClick={() => setIsMobileMenuOpen(false)} className="w-full px-4 py-3 text-left rounded-xl hover:bg-secondary transition-colors flex items-center gap-3 font-subhead text-sm">
                 <Briefcase className="w-4 h-4 text-foreground/70" />
                 {language === "no" ? "Stillinger" : "Jobs"}
-              </button>
-              <button onClick={() => { navigate("/grupper"); setIsMobileMenuOpen(false); }} className="w-full px-4 py-3 text-left rounded-xl hover:bg-secondary transition-colors flex items-center gap-3 font-subhead text-sm">
+              </Link>
+              <Link to="/grupper" onClick={() => setIsMobileMenuOpen(false)} className="w-full px-4 py-3 text-left rounded-xl hover:bg-secondary transition-colors flex items-center gap-3 font-subhead text-sm">
                 <Users className="w-4 h-4 text-foreground/70" />
                 {language === "no" ? "Grupper" : "Groups"}
-              </button>
-              <button onClick={() => { navigate("/arrangementer"); setIsMobileMenuOpen(false); }} className="w-full px-4 py-3 text-left rounded-xl hover:bg-secondary transition-colors flex items-center gap-3 font-subhead text-sm">
+              </Link>
+              <Link to="/arrangementer" onClick={() => setIsMobileMenuOpen(false)} className="w-full px-4 py-3 text-left rounded-xl hover:bg-secondary transition-colors flex items-center gap-3 font-subhead text-sm">
                 <CalendarDays className="w-4 h-4 text-foreground/70" />
                 {language === "no" ? "Arrangementer" : "Events"}
-              </button>
-              <button onClick={() => { navigate("/hjernetrim"); setIsMobileMenuOpen(false); }} className="w-full px-4 py-3 text-left rounded-xl hover:bg-secondary transition-colors flex items-center gap-3 font-subhead text-sm">
+              </Link>
+              <Link to="/hjernetrim" onClick={() => setIsMobileMenuOpen(false)} className="w-full px-4 py-3 text-left rounded-xl hover:bg-secondary transition-colors flex items-center gap-3 font-subhead text-sm">
                 <Brain className="w-4 h-4 text-foreground/70" />
                 {language === "no" ? "Hjernetrim" : "Brain games"}
-              </button>
+              </Link>
 
               <div className="h-px bg-border my-2" />
 
@@ -289,25 +298,25 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
                   )}
                   <div className="px-2"><SubscriptionStatusBadge /></div>
                   {isAdmin && (
-                    <button onClick={() => { navigate("/admin"); setIsMobileMenuOpen(false); }} className="w-full mt-2 px-5 py-3 bg-primary text-primary-foreground rounded-full font-subhead text-sm font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+                    <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)} className="w-full mt-2 px-5 py-3 bg-primary text-primary-foreground rounded-full font-subhead text-sm font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
                       <Shield className="w-4 h-4" />
                       Admin
-                    </button>
+                    </Link>
                   )}
-                  <button onClick={() => { navigate("/profil"); setIsMobileMenuOpen(false); }} className="w-full mt-2 px-5 py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center gap-2">
+                  <Link to="/profil" onClick={() => setIsMobileMenuOpen(false)} className="w-full mt-2 px-5 py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center gap-2">
                     <UserCircle className="w-4 h-4" />
                     {language === "no" ? "Min profil" : "My profile"}
-                  </button>
+                  </Link>
                   <button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className="w-full mt-2 px-5 py-3 bg-secondary text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary/80 transition-colors flex items-center justify-center gap-2">
                     <LogOut className="w-4 h-4" />
                     {language === "no" ? "Logg ut" : "Log out"}
                   </button>
                 </>
               ) : (
-                <button onClick={() => { navigate("/login"); setIsMobileMenuOpen(false); }} className="w-full px-5 py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center gap-2">
+                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full px-5 py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center gap-2">
                   <LogIn className="w-4 h-4" />
                   {language === "no" ? "Logg inn" : "Log in"}
-                </button>
+                </Link>
               )}
             </nav>
           </div>

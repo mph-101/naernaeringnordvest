@@ -1,5 +1,16 @@
 # Progress
 
+## Design-audit harden: lenke-semantikk + navngitte kontroller + ærlige feiltilstander (2026-07-09)
+
+- **Harden-PR fra forside-auditen (funn 6–7 + av-nøsting + feiltilstander)** — 2026-07-09, branch `a11y/harden-front-page-semantics`
+  - Lenke-semantikk: alle artikkelkort (NewsFeed featured/grid, TrendingSection) er nå `<Link>` i stedet for `<button>+navigate()` — midtklikk/deling/visited/SEO virker; Header-navigasjonen (desktop-ikoner + mobilmeny + Logg inn) er ekte lenker; RelatedArticles' døde `href="#"` peker til `/?view=feed`. Trygt i begge runtimes (Next kjører komponentene i BrowserRouter + NavigationInterceptor).
+  - Av-nøsting (stretched-mønsteret): EventsFeed-rader = tittel-`<Link>` med `after:inset-0` + kalender som ekte søsken-`<button>` (erstatter `span[role=button]` inni `<button>`); JobChangeFeed-rader = chevron-`<button aria-expanded>` med stretched overlay + Kilde-lenke på `z-10`; `ul > div > li` fikset (key på `<li>`).
+  - Navngitte kontroller: aria-label på chat-tilbake/-send, Header-søk og alle ikon-knapper; aria-label på begge søkefelt; `aria-expanded`/`aria-haspopup` på region-velgeren; `aria-pressed`/`aria-current` + aria-label på ViewToggle-fanene og stjernen; sr-only `<h1>` i feed-visning; `role="log"` på chat-transkriptet.
+  - Ærlige feiltilstander: MarketTicker skjules ved feil (ikke evig «Henter markedstall…»); NewsFeed viser feilmelding + «Prøv igjen»-knapp ved nettverksfeil (ikke «Ingen publiserte artikler ennå»); inert `w-4.5` → `w-[18px]`.
+  - **Flagget for Magnus:** «Tips redaksjonen» i EventsFeed pekte på `/tips` som ikke finnes (404) — omdirigert til `/kontakt` (TipForm bor i TeamSection); si fra hvis annen destinasjon er riktig.
+  - Bevisst utsatt til egen PR: `<img>`-migrering av feed-bildene + ekte lazy-splitting av ConversationView/JobChangeForm (audit-funn 8–9).
+  - Verifisert: eslint 0 errors, vitest 127/127, live i preview (14 artikkel-lenker, 0 nøstede interaktive, expand-toggle og Kilde-lenke fungerer, h1 til stede, siden rendrer rent).
+
 ## Design-audit P0/P1: kontrast-tokens light mode (2026-07-09)
 
 - **Token-PR fra forside-auditen (funn 1–3: P0×2, P1×1)** — 2026-07-09, branch `fix/audit-p0-contrast-tokens`

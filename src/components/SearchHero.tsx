@@ -53,6 +53,7 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t.searchPlaceholder}
+                aria-label={t.searchPlaceholder}
                 className="flex-1 bg-transparent outline-none text-base font-body text-foreground placeholder:text-muted-foreground"
               />
               <button

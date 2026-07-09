@@ -69,7 +69,7 @@ export const MarketTicker = () => {
     };
   }, []);
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <div className="border-b border-border bg-card/40 overflow-hidden">
         <div className="max-w-5xl mx-auto px-6 py-1.5">
@@ -80,6 +80,10 @@ export const MarketTicker = () => {
       </div>
     );
   }
+
+  // Fetch failed or returned nothing: hide the strip instead of showing a
+  // loading message that never resolves. The interval retries in the background.
+  if (!data) return null;
 
   const items: TickerItem[] = [];
 

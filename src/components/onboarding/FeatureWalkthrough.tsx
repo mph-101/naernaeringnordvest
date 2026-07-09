@@ -105,14 +105,6 @@ const CARDS: FeatureCard[] = [
 
 const LOCAL_KEY = "nn_feature_walkthrough";
 
-function readSeen(): boolean {
-  try {
-    const raw = localStorage.getItem(LOCAL_KEY);
-    return raw ? !!JSON.parse(raw).seen : false;
-  } catch {
-    return false;
-  }
-}
 function writeSeen() {
   try {
     localStorage.setItem(LOCAL_KEY, JSON.stringify({ seen: true }));
@@ -137,14 +129,9 @@ export function FeatureWalkthrough() {
     return () => window.removeEventListener("nn:feature-walkthrough-start", onStart);
   }, []);
 
-  // Auto-show once for new users — only on the homepage so it doesn't pop up
-  // on deep-linked auth/utility pages.
-  useEffect(() => {
-    if (readSeen()) return;
-    if (window.location.pathname !== "/") return;
-    const t = setTimeout(() => { setIdx(0); setOpen(true); }, 1200);
-    return () => clearTimeout(t);
-  }, []);
+  // Bevisst ingen auto-visning: touren konkurrerte med selve avisa ved første
+  // besøk (design-audit 2026-07-08). Den startes manuelt fra profilinnstillingene
+  // via nn:feature-walkthrough-start-eventet over.
 
   const t = isNo
     ? { title: "Funksjonsgjennomgang", close: "Lukk", goThere: "Gå dit", skip: "Hopp over", back: "Tilbake", next: "Neste", done: "Ferdig" }

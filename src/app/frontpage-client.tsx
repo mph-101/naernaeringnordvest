@@ -23,9 +23,10 @@ import { DailyEditionCTA } from "@/components/audio/DailyEditionCTA";
 import { useAudioModeEnabled } from "@/hooks/useAudioModeEnabled";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
+import { FirstVisitBanner } from "@/components/onboarding/FirstVisitBanner";
 
 export function FrontpageClient() {
-  const { language, defaultView, hasOnboarded, hiddenElements } = useTheme();
+  const { language, defaultView, hiddenElements } = useTheme();
   const t = translations[language];
   const audioModeEnabled = useAudioModeEnabled();
 
@@ -36,8 +37,8 @@ export function FrontpageClient() {
 
   const getInitialView = (): "search" | "feed" => {
     if (urlView === "feed" || urlView === "search") return urlView;
-    if (defaultView === "feed") return "feed";
-    return "search";
+    // Avisa først: feeden er standard; Spør kun ved eksplisitt valg.
+    return defaultView === "search" ? "search" : "feed";
   };
 
   const [view, setView] = useState<"search" | "feed">(getInitialView);
@@ -50,11 +51,8 @@ export function FrontpageClient() {
     }
   }, []);
 
-  if (!hasOnboarded && !urlView) {
-    if (typeof window !== "undefined") window.location.replace("/velkommen");
-    return null;
-  }
-
+  // Førstegangsbesøkende sendes ikke lenger til /velkommen — avisa vises
+  // umiddelbart, og region-/startside-valget tilbys via FirstVisitBanner.
   const handleSearch = (query: string) => {
     setConversationQuery(query);
     setConversationSources([]);
@@ -87,6 +85,8 @@ export function FrontpageClient() {
         <div data-tour="view-toggle">
           <ViewToggle view={view} onViewChange={setView} />
         </div>
+
+        <FirstVisitBanner />
 
         {view === "search" ? <SearchHero onSearch={handleSearch} /> : (
           <>

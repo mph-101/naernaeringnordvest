@@ -1,5 +1,13 @@
 # Progress
 
+## Design-audit animate: global reduced-motion + ticker-pause (2026-07-09)
+
+- **Animate-PR fra forside-auditen (funn 4–5: siste WCAG Nivå A-brudd)** — 2026-07-09, branch `a11y/animate-reduced-motion` (stablet på onboard-branchen)
+  - Global `@media (prefers-reduced-motion: reduce)`-blokk i index.css: alle animasjoner/overganger fullfører øyeblikkelig (inkl. `animation-delay: 0` så fadeUp-innhold med fill-mode both aldri holdes usynlig). Oppfyller DESIGN.md-kravet «hver animasjon skal ha et reduced-motion-alternativ».
+  - MarketTicker: synlig pause/play-knapp (40×40px, `aria-pressed`, veksler `animation-play-state`) — lukker WCAG 2.2.2-bruddet der marqueen kun kunne pauses med hover; ved redusert bevegelse rendres en statisk, scrollbar enkeltrad uten duplisering; `role="region"` så aria-labelen faktisk eksponeres.
+  - Slettet død `src/App.css` (Vite-boilerplate; inneholdt repoets eneste — villedende — reduced-motion-query).
+  - Verifisert: eslint 0 errors, vitest 127/127 (én flake under maskinbelastning, grønn på re-kjøring ×2), live i preview (region-rolle, 40px-knapp, running→paused + aria-pressed, CSS-blokk aktiv). Reduced-motion-JS-stien (statisk rad) krever OS-innstilling for å se live; CSS-laget dekker uansett som forsvar i dybden.
+
 ## Design-audit onboard: avisa først — feed som standard, onboarding tøylet (2026-07-09)
 
 - **Onboard-PR fra forside-auditen (handlingsplan punkt 3, retning besluttet av Magnus: «Feed som standard»)** — 2026-07-09, branch `ux/onboard-feed-first` (stablet på perf-branchen)

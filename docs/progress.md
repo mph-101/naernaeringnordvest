@@ -1,5 +1,15 @@
 # Progress
 
+## Design-audit perf: ekte <img> i feeden + lazy chunk-splitting (2026-07-09)
+
+- **Bilde-/chunk-PR fra forside-auditen (funn 8–9)** — 2026-07-09, branch `perf/feed-images-lazy-chunk` (stablet på harden-branchen)
+  - Feed-grafikk som ekte `<img>`: featured (eager + `fetchpriority="high"`), grid-kort og annonsekort (`loading="lazy"` + `decoding="async"`), `object-fit: cover` + `object-position` fra crop/focal-matematikken — piksel-identisk rendering (background-size var alltid `cover`, kun posisjon varierer; verifisert live med presisjonsposisjon 56.28%/43.72%). Gradient-fallback beholdt som div for bildeløse artikler. Fjernet `will-change: background-position` + `backfaceVisibility` som lå inert på hvert kort (titalls unødvendige GPU-lag).
+  - Chunk-splitting: ConversationView (m/ react-markdown-treet) er React.lazy i både views/Index.tsx og app/frontpage-client.tsx — lastes først når noen søker; `LazyJobChangeForm` var falsk lazy (`const X = JobChangeForm` etter statisk import) og er nå ekte `lazy(() => import(...))`; SporAIChat-FAB-en (som også drar react-markdown globalt via App.tsx) er egen async-chunk som ikke blokkerer kritisk render.
+  - `getArticleImage` flyttet til ny `lib/article-image.ts` (re-eksportert fra `lib/articles.ts` for bakoverkomp.) — NewsFeed og article-data importerer direkte, så mock-datasettet (~300 linjer artikkel-bodies) er ute av forsidechunken.
+  - Fonter: CSS `@import` i index.css (kjedet font-CSS bak stylesheet-nedlastingen) erstattet med `<link rel="preconnect">` + stylesheet i index.html — samme mønster som app/layout.tsx allerede brukte for Next.
+  - Utsatt: Supabase Storage image-transforms/srcset (krever verifisering av render-endepunktet i prod-planen); dypere SporAIChat-splitt (FAB-skall + lazy panel — meldingsstate bor i toppnivå, egen refaktor for optimize-steget); logo.png-nedskalering (79 KB servert i 40px — asset-jobb).
+  - Verifisert: eslint 0 errors, vitest 127/127, live i preview (10 `<img>`: 1 eager m/ fetchpriority + 9 lazy; ConversationView/JobChangeForm/mock-data lastes ikke ved feed-visning; fonter via link, Lora rendrer).
+
 ## Design-audit harden: lenke-semantikk + navngitte kontroller + ærlige feiltilstander (2026-07-09)
 
 - **Harden-PR fra forside-auditen (funn 6–7 + av-nøsting + feiltilstander)** — 2026-07-09, branch `a11y/harden-front-page-semantics`

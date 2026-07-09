@@ -10,7 +10,6 @@ import { RegionProvider } from "@/hooks/useRegion";
 import { AudioPlayerProvider } from "./hooks/useAudioPlayer";
 import { MiniPlayer } from "./components/audio/MiniPlayer";
 import { MascotTour } from "./components/mascot/MascotTour";
-import { SporAIChat } from "./components/SporAIChat";
 import { FeatureWalkthrough } from "./components/onboarding/FeatureWalkthrough";
 import { FEATURES } from "@/lib/features";
 
@@ -55,6 +54,12 @@ const Lytt = lazy(() => import("./views/Lytt"));
 const ComingSoon = lazy(() => import("./views/ComingSoon"));
 const Naeringspuls = lazy(() => import("./views/Naeringspuls"));
 
+// The global Spør FAB drags react-markdown + the chat stack with it — load it
+// as its own async chunk so it never blocks the critical page render.
+const SporAIChat = lazy(() =>
+  import("./components/SporAIChat").then((m) => ({ default: m.SporAIChat })),
+);
+
 const queryClient = new QueryClient();
 
 /** Minimal full-screen spinner shown while a lazy chunk loads */
@@ -75,7 +80,9 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <MascotTour />
-              <SporAIChat />
+              <Suspense fallback={null}>
+                <SporAIChat />
+              </Suspense>
               <FeatureWalkthrough />
               <Suspense fallback={<PageLoader />}>
               <Routes>

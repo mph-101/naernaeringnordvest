@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X, MapPin, Megaphone, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-import { getArticleImage } from "@/lib/articles";
+import { getArticleImage } from "@/lib/article-image";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tag } from "@/lib/tag-utils";
 import { useRegion } from "@/hooks/useRegion";
@@ -512,10 +512,19 @@ export const NewsFeed = () => {
             className="group block w-full text-left mb-10 bg-card rounded-2xl shadow-soft hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden border border-border hover:border-accent/30"
           >
             <div className="md:flex">
-              <div
-                className="aspect-[16/10] md:aspect-auto md:self-stretch md:w-2/5 flex-shrink-0 flex items-center justify-center relative overflow-hidden"
-                style={(() => { const bg = getBackgroundStyle(featuredItem); return { backgroundImage: getBackground(featuredItem), backgroundRepeat: 'no-repeat', backgroundSize: bg.size, backgroundPosition: bg.position, willChange: 'background-position', backfaceVisibility: 'hidden' as const }; })()}
-              >
+              <div className="aspect-[16/10] md:aspect-auto md:self-stretch md:w-2/5 flex-shrink-0 flex items-center justify-center relative overflow-hidden">
+                {featuredItem.image_url ? (
+                  <img
+                    src={featuredItem.image_url}
+                    alt=""
+                    decoding="async"
+                    {...({ fetchpriority: "high" } as object)}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ objectPosition: getBackgroundStyle(featuredItem).position }}
+                  />
+                ) : (
+                  <div aria-hidden className="absolute inset-0" style={{ background: getBackground(featuredItem) }} />
+                )}
                 <div className="absolute inset-0 bg-black/10" />
                 {!featuredItem.image_url && (
                   <span className="relative text-white/80 font-headline text-3xl font-bold tracking-tight select-none">
@@ -571,10 +580,19 @@ export const NewsFeed = () => {
               className="group block w-full text-left bg-card rounded-2xl border border-border hover:border-accent/30 hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <div
-                className="aspect-[16/9] w-full flex items-center justify-center relative overflow-hidden"
-                style={(() => { const bg = getBackgroundStyle(item); return { backgroundImage: getBackground(item), backgroundRepeat: 'no-repeat', backgroundSize: bg.size, backgroundPosition: bg.position, willChange: 'background-position', backfaceVisibility: 'hidden' as const }; })()}
-              >
+              <div className="aspect-[16/9] w-full flex items-center justify-center relative overflow-hidden">
+                {item.image_url ? (
+                  <img
+                    src={item.image_url}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ objectPosition: getBackgroundStyle(item).position }}
+                  />
+                ) : (
+                  <div aria-hidden className="absolute inset-0" style={{ background: getBackground(item) }} />
+                )}
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
                 {!item.image_url && (
                   <span className="relative text-white/70 font-headline text-2xl font-bold tracking-tight select-none">
@@ -709,10 +727,16 @@ const NativeAdCard = ({ ad, index, language }: NativeAdCardProps) => {
         <Megaphone className="w-3 h-3" />
         {labelText}
       </div>
-      <div
-        className="h-36 w-full bg-muted relative overflow-hidden"
-        style={ad.image_url ? { backgroundImage: `url(${ad.image_url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
-      >
+      <div className="h-36 w-full bg-muted relative overflow-hidden">
+        {ad.image_url && (
+          <img
+            src={ad.image_url}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
         {!ad.image_url && (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             <Megaphone className="w-8 h-8 opacity-40" />

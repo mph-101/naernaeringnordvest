@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { Briefcase, ExternalLink, ChevronDown, Linkedin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
@@ -188,7 +188,9 @@ export const JobChangeFeed = () => {
 
       {showForm && (
         <div className="mb-5">
-          <LazyJobChangeForm onSubmitted={() => setShowForm(false)} />
+          <Suspense fallback={null}>
+            <LazyJobChangeForm onSubmitted={() => setShowForm(false)} />
+          </Suspense>
         </div>
       )}
 
@@ -205,6 +207,7 @@ export const JobChangeFeed = () => {
   );
 };
 
-// Lazy import to avoid loading form for read-only users
-import { JobChangeForm } from "./JobChangeForm";
-const LazyJobChangeForm = JobChangeForm;
+// Loaded on demand — the form chunk is only fetched when a reader opens "Meld inn"
+const LazyJobChangeForm = lazy(() =>
+  import("./JobChangeForm").then((m) => ({ default: m.JobChangeForm })),
+);

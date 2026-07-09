@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown, Minus, Zap, Droplets, Banknote, Percent, Bitcoin, ExternalLink, LineChart } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Zap, Droplets, Banknote, Percent, Bitcoin, ExternalLink, LineChart, Pause, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -44,6 +44,18 @@ export const MarketTicker = () => {
   const isNo = language === "no";
   const [data, setData] = useState<MarketData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [paused, setPaused] = useState(false);
+  // WCAG 2.2.2/2.3.3: ved redusert bevegelse rendres en statisk, scrollbar rad
+  // i stedet for marqueen — ingenting beveger seg, og ingen pauseknapp trengs.
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -166,16 +178,22 @@ export const MarketTicker = () => {
 
   if (items.length === 0) return null;
 
-  // Duplicate for seamless marquee scroll
-  const loop = [...items, ...items];
+  // Duplicate for seamless marquee scroll; static (scrollable) single list
+  // when the reader prefers reduced motion.
+  const loop = reducedMotion ? items : [...items, ...items];
 
   return (
     <div
-      className="border-b border-border bg-card/40 overflow-hidden group"
+      role="region"
+      className="border-b border-border bg-card/40 group"
       aria-label={isNo ? "Markedstall i sanntid" : "Live market data"}
     >
-      <div className="relative flex overflow-hidden whitespace-nowrap">
-        <div className="flex animate-marquee gap-8 py-2 px-6 group-hover:[animation-play-state:paused]">
+      <div className="relative flex items-center">
+        <div className={`flex-1 whitespace-nowrap ${reducedMotion ? "overflow-x-auto" : "overflow-hidden"}`}>
+          <div
+            className={`flex gap-8 py-2 px-6 ${reducedMotion ? "" : "animate-marquee group-hover:[animation-play-state:paused]"}`}
+            style={!reducedMotion && paused ? { animationPlayState: "paused" } : undefined}
+          >
           {loop.map((item, i) => {
             const Icon = item.icon;
             const ChangeIcon =
@@ -222,7 +240,23 @@ export const MarketTicker = () => {
               </div>
             );
           })}
+          </div>
         </div>
+        {!reducedMotion && (
+          <button
+            type="button"
+            onClick={() => setPaused((p) => !p)}
+            aria-pressed={paused}
+            aria-label={
+              paused
+                ? (isNo ? "Start markedstall-rullingen" : "Resume the market ticker")
+                : (isNo ? "Pause markedstall-rullingen" : "Pause the market ticker")
+            }
+            className="shrink-0 w-10 h-10 mx-1 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+          </button>
+        )}
       </div>
     </div>
   );

@@ -496,3 +496,19 @@
   animation: nn-pulse-ring 1.2s ease-out 2;
   scroll-margin-top: 80px;
 }
+
+/* Redusert bevegelse — DESIGN.md krever et reduced-motion-alternativ for hver
+   animasjon. Alt fullfører øyeblikkelig: entrance-animasjoner (fadeUp med
+   fill-mode both + delay) hopper rett til sluttilstanden slik at innhold
+   aldri holdes usynlig, marqueen står stille, og pulse/bounce opphører. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,9 +1,14 @@
-import { useState, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Navigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { SearchHero } from "@/components/SearchHero";
-import { ConversationView } from "@/components/ConversationView";
 import { RelatedArticles } from "@/components/RelatedArticles";
+
+// Only mounts after the user submits a question — keep the whole conversation
+// stack (react-markdown etc.) out of the critical front-page chunk.
+const ConversationView = lazy(() =>
+  import("@/components/ConversationView").then((m) => ({ default: m.ConversationView })),
+);
 import { NewsFeed } from "@/components/NewsFeed";
 import { ViewToggle } from "@/components/ViewToggle";
 import { JobChangeFeed } from "@/components/JobChangeFeed";
@@ -68,11 +73,13 @@ const Index = () => {
   if (conversationQuery) {
     return (
       <div className="min-h-screen bg-background">
-        <ConversationView
-          initialQuery={conversationQuery}
-          onBack={handleBackToSearch}
-          onSourcesChange={setConversationSources}
-        />
+        <Suspense fallback={<div className="min-h-screen" />}>
+          <ConversationView
+            initialQuery={conversationQuery}
+            onBack={handleBackToSearch}
+            onSourcesChange={setConversationSources}
+          />
+        </Suspense>
         <RelatedArticles sources={conversationSources} />
       </div>
     );

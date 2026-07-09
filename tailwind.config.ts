@@ -50,6 +50,9 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
+        "accent-ink": "hsl(var(--accent-ink))",
+        "primary-ink": "hsl(var(--primary-ink))",
+        "destructive-ink": "hsl(var(--destructive-ink))",
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",

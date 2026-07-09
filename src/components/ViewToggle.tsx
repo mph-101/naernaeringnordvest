@@ -71,7 +71,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
                 <Icon className="w-4 h-4 shrink-0" />
                 <span className={labelClass}>{tab.label}</span>
                 {defaultView === tab.id && (
-                  <Star className="w-3 h-3 fill-primary text-primary shrink-0" />
+                  <Star className="w-3 h-3 fill-primary-ink text-primary-ink shrink-0" />
                 )}
               </a>
             );
@@ -87,7 +87,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
               <Icon className="w-4 h-4 shrink-0" />
               <span className={labelClass}>{tab.label}</span>
               {defaultView === tab.id && (
-                <Star className="w-3 h-3 fill-primary text-primary shrink-0" />
+                <Star className="w-3 h-3 fill-primary-ink text-primary-ink shrink-0" />
               )}
             </button>
           );
@@ -117,7 +117,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
                   <Icon className="w-4 h-4" />
                   {tab.label}
                   {defaultView === tab.id && (
-                    <Star className="w-3 h-3 ml-auto fill-primary text-primary" />
+                    <Star className="w-3 h-3 ml-auto fill-primary-ink text-primary-ink" />
                   )}
                 </DropdownMenuItem>
               );

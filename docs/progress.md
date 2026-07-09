@@ -1,5 +1,14 @@
 # Progress
 
+## Design-audit P0/P1: kontrast-tokens light mode (2026-07-09)
+
+- **Token-PR fra forside-auditen (funn 1–3: P0×2, P1×1)** — 2026-07-09, branch `fix/audit-p0-contrast-tokens`
+  - `src/index.css`: light `--accent-foreground` og `--destructive-foreground` hvit → mørk blekk (2,4:1/3,15:1 → 6,7:1/5,1:1 på egne flater; retter DESIGN.md-regelen «aldri hvit tekst på fersken/terrakotta»); `--muted-foreground` 50 % → 42 % L (3,7:1 → 4,9:1). Nye tekst-trygge tokens `--accent-ink`/`--primary-ink`/`--destructive-ink` (light + dark) eksponert i `tailwind.config.ts` — pastellene forbeholdes flater.
+  - Sveip av forsidekomponentene (Header, SearchHero, NewsFeed, ViewToggle, JobChangeFeed, EventsFeed, TrendingSection, FrontpagePoll, ConversationView, RelatedArticles): `text-accent`/`text-primary`/`text-destructive` som tekst-/ikonfarge → ink-variantene (~45 forekomster). Token-endringene alene reparerer alle ~115 `accent-foreground`- og ~1150 `muted-foreground`-brukssteder site-wide.
+  - Bevisst urørt: Flame-ikonet i TrendingSection (rustrose-dekorativt hører til quieter-steget); dark mode-verdier (besto AA fra før).
+  - Verifisert: eslint 0 errors, vitest 127/127, live i preview (Logg inn/Søk-knapp mørk-på-fersken, kategori-piller lesbar terrakotta, dark mode intakt, null konsollfeil).
+  - Audit-rapport og full funnliste: `.impeccable/critique/2026-07-08T12-36-45Z__src-views-index-tsx.md` + chat-økt 2026-07-08.
+
 ## Bolk 6 — ytelse: indekser + liste-select-innsnevring (2026-07-07)
 
 - **Bolk 6 (beslutninger: 6a/6c ja, 6b init-plan utsatt til etter launch, 6d noteres kun)** — 2026-07-07, branch `perf/bolk6-indexes-and-selects`

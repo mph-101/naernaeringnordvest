@@ -112,13 +112,13 @@ export function TrendingSection() {
                   <span className="font-headline text-2xl font-bold text-accent/30">
                     {String(index + 1).padStart(2, '0')}
                   </span>
-                  <span className="px-2.5 py-1 bg-accent/10 text-accent text-xs font-subhead font-medium rounded-full">
+                  <span className="px-2.5 py-1 bg-accent/10 text-accent-ink text-xs font-subhead font-medium rounded-full">
                     {item.category}
                   </span>
                 </div>
 
                 {/* Title */}
-                <h3 className="font-headline text-sm font-bold text-headline group-hover:text-accent transition-colors leading-snug line-clamp-2 mb-3">
+                <h3 className="font-headline text-sm font-bold text-headline group-hover:text-accent-ink transition-colors leading-snug line-clamp-2 mb-3">
                   {item.title}
                 </h3>
 

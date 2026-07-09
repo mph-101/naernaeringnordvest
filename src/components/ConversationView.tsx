@@ -370,7 +370,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
             title={t.shareConversation}
             aria-label={t.shareConversation}
           >
-            {shareCopied ? <Check className="w-4 h-4 text-accent" /> : <Share2 className="w-4 h-4" />}
+            {shareCopied ? <Check className="w-4 h-4 text-accent-ink" /> : <Share2 className="w-4 h-4" />}
             <span className="hidden sm:inline font-subhead">{shareCopied ? t.shareLinkCopied : t.shareConversation}</span>
           </button>
         </div>
@@ -400,7 +400,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
             <div key={message.id} className="animate-fade-up" style={{ animationDelay: `${index * 100}ms` }}>
               <div className="flex gap-4">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${message.role === "user" ? "bg-secondary" : "bg-accent/10"}`}>
-                  {message.role === "user" ? <User className="w-5 h-5 text-foreground/70" /> : <Bot className="w-5 h-5 text-accent" />}
+                  {message.role === "user" ? <User className="w-5 h-5 text-foreground/70" /> : <Bot className="w-5 h-5 text-accent-ink" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-subhead text-sm text-muted-foreground mb-2">
@@ -422,8 +422,8 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                               {highlightCitedSentences(children)}
                             </li>
                           ),
-                          ul: ({ children }) => <ul className="mb-3 space-y-1 pl-5 list-disc marker:text-primary/60">{children}</ul>,
-                          ol: ({ children }) => <ol className="mb-3 space-y-1 pl-5 list-decimal marker:text-primary/60">{children}</ol>,
+                          ul: ({ children }) => <ul className="mb-3 space-y-1 pl-5 list-disc marker:text-primary-ink/60">{children}</ul>,
+                          ol: ({ children }) => <ol className="mb-3 space-y-1 pl-5 list-decimal marker:text-primary-ink/60">{children}</ol>,
                           strong: ({ children }) => <strong className="font-semibold text-headline">{children}</strong>,
                           a: ({ href, children }) => {
                             const isTallRef = href?.startsWith("#tall-");
@@ -439,8 +439,8 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   title={label}
                                   className={`inline-flex items-center gap-0.5 align-super mx-0.5 px-1.5 py-px rounded-full text-[10px] font-subhead font-semibold no-underline transition-colors ${
                                     isTallRef
-                                      ? "bg-primary/10 text-primary hover:bg-primary/20"
-                                      : "bg-accent/10 text-accent hover:bg-accent/20"
+                                      ? "bg-primary/10 text-primary-ink hover:bg-primary/20"
+                                      : "bg-accent/10 text-accent-ink hover:bg-accent/20"
                                   }`}
                                 >
                                   <BarChart3 className="w-2.5 h-2.5" />
@@ -457,7 +457,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                 <a
                                   href={href}
                                   onClick={(e) => handleCitationClick(e, href)}
-                                  className="text-accent font-mono text-xs align-super no-underline hover:underline"
+                                  className="text-accent-ink font-mono text-xs align-super no-underline hover:underline"
                                 >
                                   {children}
                                 </a>
@@ -476,7 +476,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                         <span className="font-mono text-xs text-muted-foreground shrink-0">[{source.n}]</span>
                                         <Link
                                           to={`/article/${source.id}`}
-                                          className="font-headline text-sm font-semibold text-headline hover:text-primary transition-colors leading-snug"
+                                          className="font-headline text-sm font-semibold text-headline hover:text-primary-ink transition-colors leading-snug"
                                         >
                                           {source.title}
                                         </Link>
@@ -519,7 +519,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                               href={trusted.source_url}
                                               target="_blank"
                                               rel="noopener noreferrer"
-                                              className="font-headline text-sm font-semibold text-headline hover:text-primary transition-colors leading-snug inline-flex items-baseline gap-1"
+                                              className="font-headline text-sm font-semibold text-headline hover:text-primary-ink transition-colors leading-snug inline-flex items-baseline gap-1"
                                             >
                                               {trusted.title || trusted.source_name}
                                               <ExternalLink className="w-3 h-3 self-center" />
@@ -552,7 +552,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                               }
                               return link;
                             }
-                            return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{children}</a>;
+                            return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary-ink hover:underline">{children}</a>;
                           },
                         }}
                       >
@@ -563,7 +563,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                   {message.role === "assistant" && (message.brregResults?.length ?? 0) > 0 && (
                     <div id={`brreg-${message.id}`} className="mt-5 rounded-2xl border border-border bg-card overflow-hidden">
                       <div className="flex items-center gap-2 px-4 py-3 bg-primary/5 border-b border-border">
-                        <Building2 className="w-4 h-4 text-primary" />
+                        <Building2 className="w-4 h-4 text-primary-ink" />
                         <span className="font-subhead font-semibold text-sm text-headline">
                           {language === "no" ? "Brønnøysundregistrene" : "Brønnøysund Register"}
                         </span>
@@ -593,7 +593,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                       <p className="font-subhead font-semibold text-sm text-headline truncate">
                                         {c.navn}
                                         {c.konkurs && (
-                                          <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-destructive/15 text-destructive text-[10px] font-semibold align-middle">
+                                          <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-destructive/15 text-destructive-ink text-[10px] font-semibold align-middle">
                                             {language === "no" ? "Konkurs" : "Bankrupt"}
                                           </span>
                                         )}
@@ -606,7 +606,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                           href={`https://virksomhet.brreg.no/nb/oppslag/enheter/${c.orgnr}`}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="hover:text-primary hover:underline"
+                                          className="hover:text-primary-ink hover:underline"
                                         >
                                           org.nr {c.orgnr}
                                         </a>
@@ -627,7 +627,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                             )}
                                             {c.regnskap.aarsresultat != null && (
                                               <> · {language === "no" ? "resultat" : "result"}{" "}
-                                                <span className={`font-semibold ${c.regnskap.aarsresultat < 0 ? "text-destructive" : "text-foreground"}`}>
+                                                <span className={`font-semibold ${c.regnskap.aarsresultat < 0 ? "text-destructive-ink" : "text-foreground"}`}>
                                                   {Math.round(c.regnskap.aarsresultat).toLocaleString(locale)} {unit}
                                                 </span>
                                               </>
@@ -637,7 +637,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                       })()}
                                     </div>
                                     <div className="flex flex-col items-end flex-shrink-0">
-                                      <div className="flex items-center gap-1 font-headline text-xl font-bold text-primary leading-none">
+                                      <div className="flex items-center gap-1 font-headline text-xl font-bold text-primary-ink leading-none">
                                         <UsersIcon className="w-3.5 h-3.5 opacity-60" />
                                         {c.ansatte.toLocaleString(language === "no" ? "nb-NO" : "en-US")}
                                       </div>
@@ -673,7 +673,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                         className="mt-5 rounded-2xl border border-border bg-card overflow-hidden group"
                       >
                         <summary className="flex items-center gap-2 px-4 py-3 bg-primary/5 border-b border-border cursor-pointer list-none">
-                          <BarChart3 className="w-4 h-4 text-primary" />
+                          <BarChart3 className="w-4 h-4 text-primary-ink" />
                           <span className="font-subhead font-semibold text-sm text-headline">
                             {language === "no" ? "Tall-databasen" : "Tall database"}
                           </span>
@@ -715,7 +715,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                         href={`https://virksomhet.brreg.no/nb/oppslag/enheter/${c.orgnr}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="font-subhead font-semibold text-headline hover:text-primary hover:underline"
+                                        className="font-subhead font-semibold text-headline hover:text-primary-ink hover:underline"
                                       >
                                         {c.navn}
                                       </a>
@@ -753,7 +753,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                         href={`https://virksomhet.brreg.no/nb/oppslag/enheter/${c.orgnr}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="font-subhead font-semibold text-headline hover:text-primary hover:underline"
+                                        className="font-subhead font-semibold text-headline hover:text-primary-ink hover:underline"
                                       >
                                         {c.navn}
                                       </a>
@@ -903,7 +903,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   <p className="font-subhead font-semibold text-sm text-headline truncate">
                                     {c.navn}
                                     {c.konkurs && (
-                                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-destructive/15 text-destructive text-[10px] font-semibold align-middle">
+                                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-destructive/15 text-destructive-ink text-[10px] font-semibold align-middle">
                                         {language === "no" ? "Konkurs" : "Bankrupt"}
                                       </span>
                                     )}
@@ -917,7 +917,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   </p>
                                 </div>
                                 <div className="flex flex-col items-end flex-shrink-0">
-                                  <div className="flex items-center gap-1 font-headline text-lg font-bold text-primary leading-none">
+                                  <div className="flex items-center gap-1 font-headline text-lg font-bold text-primary-ink leading-none">
                                     <UsersIcon className="w-3.5 h-3.5 opacity-60" />
                                     {c.ansatte.toLocaleString(language === "no" ? "nb-NO" : "en-US")}
                                   </div>
@@ -952,7 +952,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors font-subhead"
                         aria-label={t.copyAnswer}
                       >
-                        {copiedId === message.id ? <Check className="w-3.5 h-3.5 text-accent" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedId === message.id ? <Check className="w-3.5 h-3.5 text-accent-ink" /> : <Copy className="w-3.5 h-3.5" />}
                         <span>{copiedId === message.id ? t.copied : t.copyAnswer}</span>
                       </button>
                     </div>
@@ -991,7 +991,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
           ))}
           {isLoading && (
             <div className="flex gap-4 animate-fade-in">
-              <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center"><Bot className="w-5 h-5 text-accent" /></div>
+              <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center"><Bot className="w-5 h-5 text-accent-ink" /></div>
               <div className="flex gap-1.5 pt-4">
                 <span className="w-2 h-2 bg-accent/50 rounded-full animate-bounce" />
                 <span className="w-2 h-2 bg-accent/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -1039,7 +1039,7 @@ const TabButton = ({
     aria-pressed={active}
     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-subhead font-medium transition-colors ${
       active
-        ? "bg-accent/10 text-accent"
+        ? "bg-accent/10 text-accent-ink"
         : "text-muted-foreground hover:text-foreground hover:bg-secondary"
     }`}
   >
@@ -1107,7 +1107,7 @@ const TallParamRow = ({
           href={sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-primary hover:underline"
+          className="inline-flex items-center gap-1 text-primary-ink hover:underline"
         >
           <ExternalLink className="w-3 h-3" />
           {sourceLabel}
@@ -1118,7 +1118,7 @@ const TallParamRow = ({
             href={s.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-primary/80 hover:underline"
+            className="inline-flex items-center gap-1 text-primary-ink/80 hover:underline"
           >
             <ExternalLink className="w-3 h-3" />
             {s.label}

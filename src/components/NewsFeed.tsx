@@ -390,7 +390,7 @@ export const NewsFeed = () => {
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-accent" />
+              <TrendingUp className="w-6 h-6 text-accent-ink" />
             </div>
             <div>
               <h2 className="font-headline text-2xl font-bold text-headline">{t.latestAnalysis}</h2>
@@ -510,15 +510,15 @@ export const NewsFeed = () => {
               <div className="p-7 md:p-9 flex-1 flex flex-col justify-center">
                 <div className="flex items-center gap-3 mb-4">
                   {featuredItem.premium && (
-                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 text-accent text-xs font-subhead font-semibold rounded-full">
+                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 text-accent-ink text-xs font-subhead font-semibold rounded-full">
                       <Lock className="w-3 h-3" />
                       {t.premium}
                     </span>
                   )}
-                  <span className="font-subhead text-sm text-accent font-medium">{featuredItem.category}</span>
+                  <span className="font-subhead text-sm text-accent-ink font-medium">{featuredItem.category}</span>
                   <span className="text-sm text-muted-foreground font-body">{featuredItem.publishedAt}</span>
                 </div>
-                <h3 className="font-headline text-xl md:text-2xl font-bold text-headline group-hover:text-accent transition-colors mb-3 leading-snug">
+                <h3 className="font-headline text-xl md:text-2xl font-bold text-headline group-hover:text-accent-ink transition-colors mb-3 leading-snug">
                   {featuredItem.title}
                 </h3>
                 <p className="text-muted-foreground font-body leading-relaxed mb-5 max-w-3xl line-clamp-3">
@@ -576,13 +576,13 @@ export const NewsFeed = () => {
 
               <div className="p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="flex items-center gap-1.5 text-sm text-accent font-subhead font-medium">
+                  <span className="flex items-center gap-1.5 text-sm text-accent-ink font-subhead font-medium">
                     {getTypeIcon(item.type)}
                     {item.category}
                   </span>
                   {item.premium && <Lock className="w-3 h-3 text-muted-foreground ml-auto" />}
                 </div>
-                <h3 className="font-headline text-base font-bold text-headline group-hover:text-accent transition-colors mb-2.5 leading-snug line-clamp-2">
+                <h3 className="font-headline text-base font-bold text-headline group-hover:text-accent-ink transition-colors mb-2.5 leading-snug line-clamp-2">
                   {item.title}
                 </h3>
                 <p className="text-sm text-muted-foreground font-body leading-relaxed mb-4 line-clamp-2">
@@ -712,7 +712,7 @@ const NativeAdCard = ({ ad, index, language }: NativeAdCardProps) => {
           {ad.excerpt}
         </p>
         {ad.cta_url && (
-          <div className="text-sm font-subhead font-semibold text-accent group-hover:underline">
+          <div className="text-sm font-subhead font-semibold text-accent-ink group-hover:underline">
             {cta} →
           </div>
         )}

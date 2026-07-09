@@ -64,8 +64,8 @@ export const JobChangeFeed = () => {
   };
 
   const typeBg = (type: string) => {
-    if (type === "promotion") return "bg-accent/10 text-accent";
-    if (type === "job_change") return "bg-primary/10 text-primary";
+    if (type === "promotion") return "bg-accent/10 text-accent-ink";
+    if (type === "job_change") return "bg-primary/10 text-primary-ink";
     return "bg-secondary text-muted-foreground";
   };
 
@@ -113,7 +113,7 @@ export const JobChangeFeed = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="text-xs text-primary hover:underline flex items-center gap-1"
+                  className="text-xs text-primary-ink hover:underline flex items-center gap-1"
                 >
                   <ExternalLink className="w-3 h-3" /> {isNo ? "Kilde" : "Source"}
                 </a>
@@ -149,7 +149,7 @@ export const JobChangeFeed = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1.5 text-xs font-subhead font-medium text-primary hover:bg-primary/10 px-2 py-1 rounded-md transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-subhead font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 rounded-md transition-colors"
                 aria-label={isNo ? "Del på LinkedIn" : "Share on LinkedIn"}
               >
                 <Linkedin className="w-3.5 h-3.5" />
@@ -167,7 +167,7 @@ export const JobChangeFeed = () => {
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Briefcase className="w-4.5 h-4.5 text-primary" />
+            <Briefcase className="w-4.5 h-4.5 text-primary-ink" />
           </div>
           <h2 className="font-headline text-lg font-semibold text-headline">
             {isNo ? "Jobbytter" : "Job Changes"}
@@ -175,7 +175,7 @@ export const JobChangeFeed = () => {
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="text-sm text-primary font-subhead font-medium hover:underline"
+          className="text-sm text-primary-ink font-subhead font-medium hover:underline"
         >
           {isNo ? "Meld inn" : "Report"}
         </button>

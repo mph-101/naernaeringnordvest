@@ -33,7 +33,7 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
             {t.heroTitle1}
           </span>
           <br />
-          <span className="inline-block text-accent animate-fade-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
+          <span className="inline-block text-accent-ink animate-fade-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
             {t.heroTitle2}
           </span>
         </h1>

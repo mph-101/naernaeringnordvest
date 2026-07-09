@@ -30,14 +30,20 @@
     --secondary-foreground: 30 12% 30%;
 
     --muted: 38 25% 91%;
-    --muted-foreground: 30 8% 50%;
+    --muted-foreground: 30 8% 42%;
 
     /* Dusty rose accent */
     --accent: 15 55% 68%;
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 30 20% 15%;
+
+    /* Text-safe ink variants of the brand hues — use for text/icons on light
+       surfaces where the pastel surface tokens fail WCAG contrast */
+    --accent-ink: 15 55% 40%;
+    --primary-ink: 28 60% 36%;
+    --destructive-ink: 0 55% 42%;
 
     --destructive: 0 55% 65%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 30 20% 15%;
 
     --border: 38 22% 88%;
     --input: 38 22% 88%;
@@ -87,6 +93,10 @@
 
     --accent: 15 45% 60%;
     --accent-foreground: 30 18% 10%;
+
+    --accent-ink: 15 45% 62%;
+    --primary-ink: 28 55% 65%;
+    --destructive-ink: 0 50% 65%;
 
     --destructive: 0 50% 55%;
     --destructive-foreground: 0 0% 100%;

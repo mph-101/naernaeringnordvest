@@ -101,12 +101,11 @@ export function FrontpagePoll({ variant = "page" }: FrontpagePollProps = {}) {
   return (
     <section data-tour="frontpage-poll" className={wrapperClass}>
       <div className="bg-card border border-border rounded-3xl shadow-soft p-6 md:p-8">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 text-accent-ink text-[11px] font-subhead font-semibold uppercase tracking-wider">
-            <Vote className="w-3 h-3" />
-            {t.ukens}
-          </span>
-        </div>
+        {/* Rolig etikett i stedet for uppercase-eyebrow-badge */}
+        <p className="flex items-center gap-1.5 text-sm font-subhead font-medium text-accent-ink mb-3">
+          <Vote className="w-3.5 h-3.5" />
+          {t.ukens}
+        </p>
         <h2 className="font-headline text-xl md:text-2xl font-bold text-headline leading-snug mb-2">
           {poll.question}
         </h2>

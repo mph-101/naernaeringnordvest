@@ -53,6 +53,12 @@ export default {
         "accent-ink": "hsl(var(--accent-ink))",
         "primary-ink": "hsl(var(--primary-ink))",
         "destructive-ink": "hsl(var(--destructive-ink))",
+        positive: "hsl(var(--positive))",
+        negative: "hsl(var(--negative))",
+        sponsored: {
+          DEFAULT: "hsl(var(--sponsored))",
+          foreground: "hsl(var(--sponsored-foreground))",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",

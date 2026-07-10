@@ -170,14 +170,9 @@ export const JobChangeFeed = () => {
   return (
     <section className="bg-card border border-border rounded-2xl p-6">
       <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Briefcase className="w-[18px] h-[18px] text-primary-ink" />
-          </div>
-          <h2 className="font-headline text-lg font-semibold text-headline">
-            {isNo ? "Jobbytter" : "Job Changes"}
-          </h2>
-        </div>
+        <h2 className="font-headline text-lg font-semibold text-headline">
+          {isNo ? "Jobbytter" : "Job Changes"}
+        </h2>
         <button
           onClick={() => setShowForm(!showForm)}
           className="text-sm text-primary-ink font-subhead font-medium hover:underline"

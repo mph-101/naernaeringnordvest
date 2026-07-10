@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown, Minus, Zap, Droplets, Banknote, Percent, Bitcoin, ExternalLink, LineChart, Pause, Play } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -42,8 +43,6 @@ const SOURCES = {
 export const MarketTicker = () => {
   const { language } = useTheme();
   const isNo = language === "no";
-  const [data, setData] = useState<MarketData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [paused, setPaused] = useState(false);
   // WCAG 2.2.2/2.3.3: ved redusert bevegelse rendres en statisk, scrollbar rad
   // i stedet for marqueen — ingenting beveger seg, og ingen pauseknapp trengs.
@@ -57,29 +56,19 @@ export const MarketTicker = () => {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const { data: result, error } = await supabase.functions.invoke("market-data");
-        if (cancelled) return;
-        if (error) {
-          console.warn("market-data error", error);
-          setData(null);
-        } else {
-          setData(result as MarketData);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    load();
-    const id = setInterval(load, REFRESH_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, []);
+  // React Query eier både cachen og oppfrisknings-intervallet: fanebytte
+  // gjenbruker siste svar i stedet for å vise lasteteksten på nytt.
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["market-data"],
+    staleTime: REFRESH_MS,
+    refetchInterval: REFRESH_MS,
+    retry: 1,
+    queryFn: async () => {
+      const { data: result, error } = await supabase.functions.invoke("market-data");
+      if (error) throw error;
+      return result as MarketData;
+    },
+  });
 
   if (loading) {
     return (

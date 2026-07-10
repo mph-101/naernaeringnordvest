@@ -1,5 +1,13 @@
 # Progress
 
+## Design-audit optimize A+B: Trending-RPC + React Query i forside-widgetene (2026-07-10)
+
+- **Data-lags-PR fra re-auditen (optimize del A+B; del C blokkert på free plan → magnus-todo)** — 2026-07-10, branch `perf/data-layer-rpc-react-query`
+  - **Del A:** Ny RPC `get_trending_articles(days, max_rows)` (migrasjon `20260710120000`, applisert mot prod via MCP og verifisert med testkall) — SECURITY DEFINER/STABLE/låst search_path per husmønster; aggregerer «Mest lest» server-side så klienten mottar ≤12 rader i stedet for rå `article_views`-dump (payload vokste lineært med trafikken). `viewed_at DESC`-indeks fantes fra bolk 6. NB: `article_views.article_id` er TEXT, ikke uuid. TrendingSection språk-refetch fjernet — rå rader caches språknøytralt, `toUiArticle` i `useMemo`.
+  - **Del B:** Alle seks forside-widgets (NewsFeed ×5 spørringer, TrendingSection, EventsFeed, JobChangeFeed, FrontpagePoll ×3, MarketTicker) konvertert fra rå useEffect+useState til `useQuery` med nøkler og staleTime per datatype; MarketTickers setInterval → `refetchInterval`; poll-stemme invaliderer resultat-query; NewsFeeds avledede maps (tags/shared-regions/topTags) → `useMemo`. «Prøv igjen» → `refetch()`.
+  - **Målt i preview:** 0 nye Supabase-kall ved Spør↔Utforsk-bytte begge veier (før: ~8–10 refyrte kall med spinnere); RPC-en i bruk, rå article_views-fetch borte; null konsollfeil. eslint 0 errors, vitest 127/127.
+  - Typer: `supabase gen types` bør regenereres (RPC-kallet er `as any`-castet inntil da, samme mønster som `native_ads`).
+
 ## Design-audit clarify: språk og tillitstekster (2026-07-10)
 
 - **Clarify-PR fra forside-auditen (alle fire tekstvalg tatt av Magnus i økt)** — 2026-07-10, branch `copy/clarify-front-page` (stablet på quieter-branchen)

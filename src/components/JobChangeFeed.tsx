@@ -1,5 +1,6 @@
-import { lazy, Suspense, useState, useEffect } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Briefcase, ExternalLink, ChevronDown, Linkedin } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -35,22 +36,23 @@ const parseNotice = (notice: string | null): StructuredNotice | null => {
 export const JobChangeFeed = () => {
   const { language } = useTheme();
   const isNo = language === "no";
-  const [items, setItems] = useState<JobChange[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data } = await supabase
+  const { data: items = [] } = useQuery({
+    queryKey: ["job-changes"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("job_changes")
         .select("id, person_name, new_role, new_company, change_type, generated_notice, source_url, published_at, image_url, photo_credit")
         .eq("status", "published")
         .order("published_at", { ascending: false })
         .limit(10);
-      setItems((data as any[]) || []);
-    };
-    fetchData();
-  }, []);
+      if (error) throw error;
+      return ((data as any[]) || []) as JobChange[];
+    },
+  });
 
   const typeLabel = (type: string) => {
     if (isNo) {

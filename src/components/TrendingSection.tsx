@@ -1,76 +1,66 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Clock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
-import { PUBLISHED_ARTICLE_LIST_SELECT, toUiArticle, type UiArticle } from "@/lib/article-data";
+import { PUBLISHED_ARTICLE_LIST_SELECT, toUiArticle } from "@/lib/article-data";
+
+async function fetchTrendingArticles(): Promise<any[]> {
+  // Aggregeringen skjer server-side (get_trending_articles-RPC) — klienten
+  // mottar maks 12 (id, views)-rader i stedet for rå article_views-dumpen.
+  const { data: top, error } = await (supabase.rpc as any)("get_trending_articles");
+  if (error) throw error;
+  const topIds: string[] = ((top ?? []) as any[]).map((r) => r.article_id);
+
+  let articles: any[] = [];
+  if (topIds.length > 0) {
+    const { data } = await supabase
+      .from("articles")
+      .select(PUBLISHED_ARTICLE_LIST_SELECT)
+      .eq("published", true)
+      .in("id", topIds);
+    const order = new Map(topIds.map((id, i) => [id, i]));
+    articles = (data ?? []).sort(
+      (a: any, b: any) => (order.get(a.id) ?? 99) - (order.get(b.id) ?? 99),
+    );
+  }
+
+  // Fallback / fyll opp med sist publiserte
+  if (articles.length < 4) {
+    const { data: recent } = await supabase
+      .from("articles")
+      .select(PUBLISHED_ARTICLE_LIST_SELECT)
+      .eq("published", true)
+      .order("published_at", { ascending: false })
+      .limit(8);
+    const have = new Set(articles.map((a) => a.id));
+    (recent ?? []).forEach((a: any) => {
+      if (!have.has(a.id) && articles.length < 4) {
+        articles.push(a);
+        have.add(a.id);
+      }
+    });
+  }
+  return articles.slice(0, 4);
+}
 
 export function TrendingSection() {
   const { language } = useTheme();
-  const [trending, setTrending] = useState<UiArticle[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Rå rader caches språknøytralt; NO/EN-bytte koster null nettverk fordi
+  // lokaliseringen skjer i toUiArticle-mappingen under.
+  const { data: rawArticles, isLoading } = useQuery({
+    queryKey: ["trending"],
+    queryFn: fetchTrendingArticles,
+    staleTime: 60_000,
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      // 1) Top viewed in last 7 days
-      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const { data: views } = await supabase
-        .from("article_views")
-        .select("article_id")
-        .gte("viewed_at", since);
+  const trending = useMemo(
+    () => (rawArticles ?? []).map((a) => toUiArticle(a, language)),
+    [rawArticles, language],
+  );
 
-      const counts = new Map<string, number>();
-      (views ?? []).forEach((v: any) => {
-        if (!v.article_id) return;
-        counts.set(v.article_id, (counts.get(v.article_id) ?? 0) + 1);
-      });
-      const topIds = Array.from(counts.entries())
-        .sort((a, b) => b[1] - a[1])
-        .map(([id]) => id)
-        .slice(0, 12);
-
-      let articles: any[] = [];
-      if (topIds.length > 0) {
-        const { data } = await supabase
-          .from("articles")
-          .select(PUBLISHED_ARTICLE_LIST_SELECT)
-          .eq("published", true)
-          .in("id", topIds);
-        const order = new Map(topIds.map((id, i) => [id, i]));
-        articles = (data ?? []).sort(
-          (a: any, b: any) => (order.get(a.id) ?? 99) - (order.get(b.id) ?? 99),
-        );
-      }
-
-      // 2) Fallback / fill with most recently published
-      if (articles.length < 4) {
-        const { data: recent } = await supabase
-          .from("articles")
-          .select(PUBLISHED_ARTICLE_LIST_SELECT)
-          .eq("published", true)
-          .order("published_at", { ascending: false })
-          .limit(8);
-        const have = new Set(articles.map((a) => a.id));
-        (recent ?? []).forEach((a: any) => {
-          if (!have.has(a.id) && articles.length < 4) {
-            articles.push(a);
-            have.add(a.id);
-          }
-        });
-      }
-
-      if (cancelled) return;
-      setTrending(articles.slice(0, 4).map((a) => toUiArticle(a, language)));
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [language]);
-
-  if (loading || trending.length === 0) return null;
+  if (isLoading || trending.length === 0) return null;
 
   return (
     <section className="py-[20px]">

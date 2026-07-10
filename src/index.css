@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+/* Fonts are loaded via <link> tags (index.html for Vite, app/layout.tsx for
+   Next) instead of a CSS @import, which chained the font-CSS fetch behind the
+   stylesheet download and delayed first text render. */
 
 @tailwind base;
 @tailwind components;
@@ -41,6 +43,14 @@
     --accent-ink: 15 55% 40%;
     --primary-ink: 28 60% 36%;
     --destructive-ink: 0 55% 42%;
+
+    /* Semantiske farger utenfor redaksjonspaletten: markedsretning (opp/ned,
+       hue-forskjøvet fra destructive så rødt-som-feil ikke utvannes) og
+       annonsemerking (presse-etisk påkrevd å skille seg fra redaksjonelt) */
+    --positive: 150 45% 30%;
+    --negative: 5 55% 40%;
+    --sponsored: 42 85% 52%;
+    --sponsored-foreground: 35 80% 12%;
 
     --destructive: 0 55% 65%;
     --destructive-foreground: 30 20% 15%;
@@ -97,6 +107,11 @@
     --accent-ink: 15 45% 62%;
     --primary-ink: 28 55% 65%;
     --destructive-ink: 0 50% 65%;
+
+    --positive: 150 40% 62%;
+    --negative: 5 50% 62%;
+    --sponsored: 42 55% 45%;
+    --sponsored-foreground: 35 80% 10%;
 
     --destructive: 0 50% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -493,4 +508,20 @@
 .nn-pulse-ring {
   animation: nn-pulse-ring 1.2s ease-out 2;
   scroll-margin-top: 80px;
+}
+
+/* Redusert bevegelse — DESIGN.md krever et reduced-motion-alternativ for hver
+   animasjon. Alt fullfører øyeblikkelig: entrance-animasjoner (fadeUp med
+   fill-mode both + delay) hopper rett til sluttilstanden slik at innhold
+   aldri holdes usynlig, marqueen står stille, og pulse/bounce opphører. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

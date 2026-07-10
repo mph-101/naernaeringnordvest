@@ -33,7 +33,8 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
             {t.heroTitle1}
           </span>
           <br />
-          <span className="inline-block text-accent-ink animate-fade-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
+          {/* Lora-først-regelen: hierarki bæres av serifen, ikke av farge */}
+          <span className="inline-block animate-fade-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
             {t.heroTitle2}
           </span>
         </h1>
@@ -71,7 +72,7 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
 
       {/* Prompts */}
       <div className="w-full max-w-xl animate-fade-up" style={{ animationDelay: '600ms', animationFillMode: 'both' }}>
-        <p className="font-subhead text-xs text-muted-foreground mb-3 text-center uppercase tracking-widest">
+        <p className="font-subhead text-sm text-muted-foreground mb-3 text-center">
           {t.popularQuestions}
         </p>
         <div className="flex flex-wrap justify-center gap-2">

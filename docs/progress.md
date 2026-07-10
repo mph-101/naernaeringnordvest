@@ -1,5 +1,50 @@
 # Progress
 
+## Design-audit clarify: språk og tillitstekster (2026-07-10)
+
+- **Clarify-PR fra forside-auditen (alle fire tekstvalg tatt av Magnus i økt)** — 2026-07-10, branch `copy/clarify-front-page` (stablet på quieter-branchen)
+  - «Trending nå» → **«Mest lest»** (EN «Most read»); redundant undertekst droppet.
+  - «Tall»-fanen beholdes (etablert produktnavn; tooltip/aria forklarer).
+  - AI-lyd-påstanden beholdt, men med **innholdsmerking-kobling**: «Slik merker vi AI-innhold» → /innholdsmerking under DailyEditionCTA-kortet (egen linje — unngår nøstet interaktivt) og i AudioModeSection i profilinnstillingene. Headphones-ikonene → accent-ink i samme slengen.
+  - Hero-løftet «Få svar basert på verifiserte data» → **«Svarene siterer kildene rett fra artikkelarkivet»** (NO+EN) — presist og etterprøvbart; beskriver hva Spør faktisk gjør.
+  - Verifisert: eslint 0 errors, vitest 127/127, live i preview («Mest lest» rendrer, merkelenken synlig i feed, ny hero-tekst i søkevisning, gammel formulering borte).
+
+## Design-audit quieter: rustrose-reservasjon, scaffolding-fjerning, semantiske tokens (2026-07-10)
+
+- **Quieter-PR fra forside-auditen (P2-funn: mal-scaffolding + Én-stemme-brudd)** — 2026-07-10, branch `design/quieter-front-page` (stablet på animate-branchen)
+  - Ikon-i-tonet-flis-seksjonsheaderen fjernet alle 4 steder (NewsFeed, TrendingSection, JobChangeFeed, EventsFeed) — Lora-titlene bærer seksjonene alene (Lora-først-regelen); NewsFeeds redundante «Siste nyheter og analyser»-undertekst droppet.
+  - Rustrose reservert feil: Flame-flisen borte; EventsFeeds «I dag»-status og dato-flis bruker aksent i stedet for destructive; pulserende dot fjernet (uro uten informasjon).
+  - Uppercase-eyebrows nøytralisert: «Populære spørsmål» (SearchHero) og «Ukens spørsmål» (FrontpagePoll) er nå rolige normal-case-etiketter; hero-linje 2 mistet aksentfargen (hierarki via serif, ikke farge).
+  - Nye semantiske tokens `--positive`/`--negative` (markedsretning, hue-forskjøvet fra destructive) og `--sponsored`/`--sponsored-foreground` (annonsemerking, dempet i dark mode) — erstatter rå emerald/rose/amber-klasser i MarketTicker og NativeAdCard.
+  - Fallback-artikkelkunsten dempet (S ≤ 30 % i stedet for 60–80 %) — kategorikoding uten å sprenge Én-stemme-regelen ved bildeløse artikler.
+  - Verifisert: eslint 0 errors, vitest 127/127, live i preview (0 ikon-fliser, 0 destructive-elementer på leserflaten, 0 eyebrows, 0 rå palettklasser; positive/negative-tokens i bruk i tickeren).
+
+## Design-audit animate: global reduced-motion + ticker-pause (2026-07-09)
+
+- **Animate-PR fra forside-auditen (funn 4–5: siste WCAG Nivå A-brudd)** — 2026-07-09, branch `a11y/animate-reduced-motion` (stablet på onboard-branchen)
+  - Global `@media (prefers-reduced-motion: reduce)`-blokk i index.css: alle animasjoner/overganger fullfører øyeblikkelig (inkl. `animation-delay: 0` så fadeUp-innhold med fill-mode both aldri holdes usynlig). Oppfyller DESIGN.md-kravet «hver animasjon skal ha et reduced-motion-alternativ».
+  - MarketTicker: synlig pause/play-knapp (40×40px, `aria-pressed`, veksler `animation-play-state`) — lukker WCAG 2.2.2-bruddet der marqueen kun kunne pauses med hover; ved redusert bevegelse rendres en statisk, scrollbar enkeltrad uten duplisering; `role="region"` så aria-labelen faktisk eksponeres.
+  - Slettet død `src/App.css` (Vite-boilerplate; inneholdt repoets eneste — villedende — reduced-motion-query).
+  - Verifisert: eslint 0 errors, vitest 127/127 (én flake under maskinbelastning, grønn på re-kjøring ×2), live i preview (region-rolle, 40px-knapp, running→paused + aria-pressed, CSS-blokk aktiv). Reduced-motion-JS-stien (statisk rad) krever OS-innstilling for å se live; CSS-laget dekker uansett som forsvar i dybden.
+
+## Design-audit onboard: avisa først — feed som standard, onboarding tøylet (2026-07-09)
+
+- **Onboard-PR fra forside-auditen (handlingsplan punkt 3, retning besluttet av Magnus: «Feed som standard»)** — 2026-07-09, branch `ux/onboard-feed-first` (stablet på perf-branchen)
+  - Feed som standardvisning: `defaultView`-fallback i useTheme «search» → «feed» (også ved resetAllSettings); eksplisitte valg i localStorage vinner fortsatt. `getInitialView` i views/Index + app/frontpage-client: URL-param → eksplisitt «search» → ellers feed.
+  - Tvungen `/velkommen`-redirect fjernet i begge runtimes — førstegangsbesøkende ser avisa umiddelbart. Erstattet av ny `FirstVisitBanner` (lukkbar stripe under fanene): tilbyr region-/startside-valget via lenke til /velkommen; lukking setter hasOnboarded (nager aldri igjen). /velkommen-siden uendret og fortsatt fullt funksjonell som opt-in.
+  - FeatureWalkthrough (11-korts touren) auto-åpner ikke lenger ved første besøk — konkurrerte med selve avisa; startes fortsatt manuelt fra profilinnstillingene via `nn:feature-walkthrough-start`.
+  - Verifisert: eslint 0 errors, vitest 127/127, live i preview som førstegangsbesøkende (ren `/` blir på `/`, feed rendrer, banner synlig, tour åpner ikke; lukking fjerner banner og persisterer).
+
+## Design-audit perf: ekte <img> i feeden + lazy chunk-splitting (2026-07-09)
+
+- **Bilde-/chunk-PR fra forside-auditen (funn 8–9)** — 2026-07-09, branch `perf/feed-images-lazy-chunk` (stablet på harden-branchen)
+  - Feed-grafikk som ekte `<img>`: featured (eager + `fetchpriority="high"`), grid-kort og annonsekort (`loading="lazy"` + `decoding="async"`), `object-fit: cover` + `object-position` fra crop/focal-matematikken — piksel-identisk rendering (background-size var alltid `cover`, kun posisjon varierer; verifisert live med presisjonsposisjon 56.28%/43.72%). Gradient-fallback beholdt som div for bildeløse artikler. Fjernet `will-change: background-position` + `backfaceVisibility` som lå inert på hvert kort (titalls unødvendige GPU-lag).
+  - Chunk-splitting: ConversationView (m/ react-markdown-treet) er React.lazy i både views/Index.tsx og app/frontpage-client.tsx — lastes først når noen søker; `LazyJobChangeForm` var falsk lazy (`const X = JobChangeForm` etter statisk import) og er nå ekte `lazy(() => import(...))`; SporAIChat-FAB-en (som også drar react-markdown globalt via App.tsx) er egen async-chunk som ikke blokkerer kritisk render.
+  - `getArticleImage` flyttet til ny `lib/article-image.ts` (re-eksportert fra `lib/articles.ts` for bakoverkomp.) — NewsFeed og article-data importerer direkte, så mock-datasettet (~300 linjer artikkel-bodies) er ute av forsidechunken.
+  - Fonter: CSS `@import` i index.css (kjedet font-CSS bak stylesheet-nedlastingen) erstattet med `<link rel="preconnect">` + stylesheet i index.html — samme mønster som app/layout.tsx allerede brukte for Next.
+  - Utsatt: Supabase Storage image-transforms/srcset (krever verifisering av render-endepunktet i prod-planen); dypere SporAIChat-splitt (FAB-skall + lazy panel — meldingsstate bor i toppnivå, egen refaktor for optimize-steget); logo.png-nedskalering (79 KB servert i 40px — asset-jobb).
+  - Verifisert: eslint 0 errors, vitest 127/127, live i preview (10 `<img>`: 1 eager m/ fetchpriority + 9 lazy; ConversationView/JobChangeForm/mock-data lastes ikke ved feed-visning; fonter via link, Lora rendrer).
+
 ## Design-audit harden: lenke-semantikk + navngitte kontroller + ærlige feiltilstander (2026-07-09)
 
 - **Harden-PR fra forside-auditen (funn 6–7 + av-nøsting + feiltilstander)** — 2026-07-09, branch `a11y/harden-front-page-semantics`

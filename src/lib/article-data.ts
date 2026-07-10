@@ -1,5 +1,5 @@
 import type { Tables } from "@/integrations/supabase/types";
-import { getArticleImage } from "@/lib/articles";
+import { getArticleImage } from "@/lib/article-image";
 
 type ArticleRow = Tables<"articles">;
 type ArticleType = "article" | "video" | "podcast";

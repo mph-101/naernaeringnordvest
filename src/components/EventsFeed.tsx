@@ -79,10 +79,12 @@ export const EventsFeed = () => {
   };
 
   const statusStyles: Record<"today" | "soon" | "later", { label: string; cls: string; dot: string }> = {
+    // «I dag» er positivt innhold, ikke en feil — rustrose er reservert
+    // faktiske feil (DESIGN.md), og pulsering er unødvendig uro.
     today: {
       label: isNo ? "I dag" : "Today",
-      cls: "bg-destructive/15 text-destructive-ink ring-1 ring-destructive/30",
-      dot: "bg-destructive animate-pulse",
+      cls: "bg-accent/20 text-accent-ink ring-1 ring-accent/40",
+      dot: "bg-accent-ink",
     },
     soon: {
       label: isNo ? "Snart" : "Soon",
@@ -139,14 +141,9 @@ export const EventsFeed = () => {
   return (
     <section className="bg-card border border-border rounded-2xl p-6">
       <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Calendar className="w-4 h-4 text-primary-ink" />
-          </div>
-          <h2 className="font-headline text-lg font-semibold text-headline">
-            {isNo ? "Arrangementer" : "Events"}
-          </h2>
-        </div>
+        <h2 className="font-headline text-lg font-semibold text-headline">
+          {isNo ? "Arrangementer" : "Events"}
+        </h2>
         <Link
           to="/arrangementer"
           className="text-sm text-primary-ink font-subhead font-medium hover:underline inline-flex items-center gap-1"
@@ -240,7 +237,7 @@ export const EventsFeed = () => {
                     <div
                       className={`w-14 flex-shrink-0 rounded-lg border flex flex-col items-center justify-center py-1 leading-none ${
                         isToday
-                          ? "bg-destructive/10 border-destructive/30 text-destructive-ink"
+                          ? "bg-accent/15 border-accent/40 text-accent-ink"
                           : status === "soon"
                           ? "bg-primary/10 border-primary/30 text-primary-ink"
                           : "bg-secondary border-border text-foreground"

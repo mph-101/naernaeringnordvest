@@ -42,9 +42,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const [defaultView, setDefaultViewState] = useState<DefaultView>(() => {
     if (typeof window !== "undefined") {
-      return (localStorage.getItem("defaultView") as DefaultView) || "search";
+      // Avisa først: lesere som aldri har valgt startside lander i nyhetsfeeden.
+      // Eksplisitte valg (onboarding/stjerne-menyen) ligger i localStorage og vinner.
+      return (localStorage.getItem("defaultView") as DefaultView) || "feed";
     }
-    return "search";
+    return "feed";
   });
 
   const [hasOnboarded, setHasOnboarded] = useState<boolean>(() => {
@@ -153,12 +155,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const resetAllSettings = () => {
     setTheme("light");
     setLanguage("no");
-    setDefaultViewState("search");
+    setDefaultViewState("feed");
     setHiddenElements([]);
     setRegionState(null);
     localStorage.setItem("theme", "light");
     localStorage.setItem("language", "no");
-    localStorage.setItem("defaultView", "search");
+    localStorage.setItem("defaultView", "feed");
     localStorage.setItem("hiddenElements", "[]");
     localStorage.removeItem("region");
     syncToDb([]);

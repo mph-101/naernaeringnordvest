@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { Briefcase, ExternalLink, ChevronDown, Linkedin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
@@ -170,14 +170,9 @@ export const JobChangeFeed = () => {
   return (
     <section className="bg-card border border-border rounded-2xl p-6">
       <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Briefcase className="w-[18px] h-[18px] text-primary-ink" />
-          </div>
-          <h2 className="font-headline text-lg font-semibold text-headline">
-            {isNo ? "Jobbytter" : "Job Changes"}
-          </h2>
-        </div>
+        <h2 className="font-headline text-lg font-semibold text-headline">
+          {isNo ? "Jobbytter" : "Job Changes"}
+        </h2>
         <button
           onClick={() => setShowForm(!showForm)}
           className="text-sm text-primary-ink font-subhead font-medium hover:underline"
@@ -188,7 +183,9 @@ export const JobChangeFeed = () => {
 
       {showForm && (
         <div className="mb-5">
-          <LazyJobChangeForm onSubmitted={() => setShowForm(false)} />
+          <Suspense fallback={null}>
+            <LazyJobChangeForm onSubmitted={() => setShowForm(false)} />
+          </Suspense>
         </div>
       )}
 
@@ -205,6 +202,7 @@ export const JobChangeFeed = () => {
   );
 };
 
-// Lazy import to avoid loading form for read-only users
-import { JobChangeForm } from "./JobChangeForm";
-const LazyJobChangeForm = JobChangeForm;
+// Loaded on demand — the form chunk is only fetched when a reader opens "Meld inn"
+const LazyJobChangeForm = lazy(() =>
+  import("./JobChangeForm").then((m) => ({ default: m.JobChangeForm })),
+);

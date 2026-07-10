@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Clock, Play, Headphones, FileText, Lock, TrendingUp, Tag as TagIcon, X, MapPin, Megaphone, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, Play, Headphones, FileText, Lock, Tag as TagIcon, X, MapPin, Megaphone, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
-import { getArticleImage } from "@/lib/articles";
+import { getArticleImage } from "@/lib/article-image";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tag } from "@/lib/tag-utils";
 import { useRegion } from "@/hooks/useRegion";
@@ -410,18 +410,9 @@ export const NewsFeed = () => {
   return (
     <section className="py-[44px]">
       <div className="max-w-5xl mx-auto px-6">
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-accent-ink" />
-            </div>
-            <div>
-              <h2 className="font-headline text-2xl font-bold text-headline">{t.latestAnalysis}</h2>
-              <p className="text-sm text-muted-foreground font-body mt-0.5">
-                {language === "no" ? "Siste nyheter og analyser" : "Latest news and analysis"}
-              </p>
-            </div>
-          </div>
+        {/* Lora-først-regelen: seksjonstittelen bærer seg selv — ingen ikon-flis */}
+        <div className="mb-8">
+          <h2 className="font-headline text-2xl font-bold text-headline">{t.latestAnalysis}</h2>
         </div>
 
         {/* Section filter — one horizontally scrollable row. The native
@@ -512,10 +503,19 @@ export const NewsFeed = () => {
             className="group block w-full text-left mb-10 bg-card rounded-2xl shadow-soft hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden border border-border hover:border-accent/30"
           >
             <div className="md:flex">
-              <div
-                className="aspect-[16/10] md:aspect-auto md:self-stretch md:w-2/5 flex-shrink-0 flex items-center justify-center relative overflow-hidden"
-                style={(() => { const bg = getBackgroundStyle(featuredItem); return { backgroundImage: getBackground(featuredItem), backgroundRepeat: 'no-repeat', backgroundSize: bg.size, backgroundPosition: bg.position, willChange: 'background-position', backfaceVisibility: 'hidden' as const }; })()}
-              >
+              <div className="aspect-[16/10] md:aspect-auto md:self-stretch md:w-2/5 flex-shrink-0 flex items-center justify-center relative overflow-hidden">
+                {featuredItem.image_url ? (
+                  <img
+                    src={featuredItem.image_url}
+                    alt=""
+                    decoding="async"
+                    {...({ fetchpriority: "high" } as object)}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ objectPosition: getBackgroundStyle(featuredItem).position }}
+                  />
+                ) : (
+                  <div aria-hidden className="absolute inset-0" style={{ background: getBackground(featuredItem) }} />
+                )}
                 <div className="absolute inset-0 bg-black/10" />
                 {!featuredItem.image_url && (
                   <span className="relative text-white/80 font-headline text-3xl font-bold tracking-tight select-none">
@@ -571,10 +571,19 @@ export const NewsFeed = () => {
               className="group block w-full text-left bg-card rounded-2xl border border-border hover:border-accent/30 hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <div
-                className="aspect-[16/9] w-full flex items-center justify-center relative overflow-hidden"
-                style={(() => { const bg = getBackgroundStyle(item); return { backgroundImage: getBackground(item), backgroundRepeat: 'no-repeat', backgroundSize: bg.size, backgroundPosition: bg.position, willChange: 'background-position', backfaceVisibility: 'hidden' as const }; })()}
-              >
+              <div className="aspect-[16/9] w-full flex items-center justify-center relative overflow-hidden">
+                {item.image_url ? (
+                  <img
+                    src={item.image_url}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ objectPosition: getBackgroundStyle(item).position }}
+                  />
+                ) : (
+                  <div aria-hidden className="absolute inset-0" style={{ background: getBackground(item) }} />
+                )}
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
                 {!item.image_url && (
                   <span className="relative text-white/70 font-headline text-2xl font-bold tracking-tight select-none">
@@ -702,17 +711,23 @@ const NativeAdCard = ({ ad, index, language }: NativeAdCardProps) => {
   return (
     <Wrapper
       {...wrapperProps}
-      className="group block w-full text-left bg-card rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/50 hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden relative"
+      className="group block w-full text-left bg-card rounded-2xl border-2 border-sponsored/60 hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden relative"
       style={{ animationDelay: `${index * 50}ms` }}
     >
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400 text-amber-950 text-[10px] font-subhead font-bold uppercase tracking-wide shadow-sm">
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sponsored text-sponsored-foreground text-[10px] font-subhead font-bold uppercase tracking-wide shadow-sm">
         <Megaphone className="w-3 h-3" />
         {labelText}
       </div>
-      <div
-        className="h-36 w-full bg-muted relative overflow-hidden"
-        style={ad.image_url ? { backgroundImage: `url(${ad.image_url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
-      >
+      <div className="h-36 w-full bg-muted relative overflow-hidden">
+        {ad.image_url && (
+          <img
+            src={ad.image_url}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
         {!ad.image_url && (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             <Megaphone className="w-8 h-8 opacity-40" />

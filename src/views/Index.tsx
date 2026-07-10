@@ -1,9 +1,15 @@
-import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate, Navigate } from "react-router-dom";
+import { lazy, Suspense, useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { FirstVisitBanner } from "@/components/onboarding/FirstVisitBanner";
 import { Header } from "@/components/Header";
 import { SearchHero } from "@/components/SearchHero";
-import { ConversationView } from "@/components/ConversationView";
 import { RelatedArticles } from "@/components/RelatedArticles";
+
+// Only mounts after the user submits a question — keep the whole conversation
+// stack (react-markdown etc.) out of the critical front-page chunk.
+const ConversationView = lazy(() =>
+  import("@/components/ConversationView").then((m) => ({ default: m.ConversationView })),
+);
 import { NewsFeed } from "@/components/NewsFeed";
 import { ViewToggle } from "@/components/ViewToggle";
 import { JobChangeFeed } from "@/components/JobChangeFeed";
@@ -20,7 +26,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 
 const Index = () => {
-  const { language, defaultView, hasOnboarded, hiddenElements } = useTheme();
+  const { language, defaultView, hiddenElements } = useTheme();
   const t = translations[language];
   const audioModeEnabled = useAudioModeEnabled();
   const [searchParams] = useSearchParams();
@@ -29,8 +35,8 @@ const Index = () => {
   const getInitialView = (): "search" | "feed" => {
     const urlView = searchParams.get("view");
     if (urlView === "feed" || urlView === "search") return urlView;
-    if (defaultView === "feed") return "feed";
-    return "search";
+    // Avisa først: feeden er standard; Spør kun ved eksplisitt valg.
+    return defaultView === "search" ? "search" : "feed";
   };
 
   const [view, setView] = useState<"search" | "feed">(getInitialView);
@@ -49,11 +55,8 @@ const Index = () => {
     }
   }, []);
 
-  // Redirect to onboarding if user hasn't chosen a start page yet
-  if (!hasOnboarded && !searchParams.get("view")) {
-    return <Navigate to="/velkommen" replace />;
-  }
-
+  // Førstegangsbesøkende sendes ikke lenger til /velkommen — avisa vises
+  // umiddelbart, og region-/startside-valget tilbys via FirstVisitBanner.
   const handleSearch = (query: string) => {
     setConversationQuery(query);
     setConversationSources([]);
@@ -68,11 +71,13 @@ const Index = () => {
   if (conversationQuery) {
     return (
       <div className="min-h-screen bg-background">
-        <ConversationView
-          initialQuery={conversationQuery}
-          onBack={handleBackToSearch}
-          onSourcesChange={setConversationSources}
-        />
+        <Suspense fallback={<div className="min-h-screen" />}>
+          <ConversationView
+            initialQuery={conversationQuery}
+            onBack={handleBackToSearch}
+            onSourcesChange={setConversationSources}
+          />
+        </Suspense>
         <RelatedArticles sources={conversationSources} />
       </div>
     );
@@ -86,6 +91,8 @@ const Index = () => {
         <div data-tour="view-toggle">
           <ViewToggle view={view} onViewChange={setView} />
         </div>
+
+        <FirstVisitBanner />
 
         {view === "search" ? <SearchHero onSearch={handleSearch} /> : (
           <>

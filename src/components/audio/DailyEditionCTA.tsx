@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAudioPlayer, type QueueArticle } from "@/hooks/useAudioPlayer";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export function DailyEditionCTA() {
   const { language, region } = useTheme();
@@ -58,9 +58,9 @@ export function DailyEditionCTA() {
         <div className="flex items-center gap-4">
           <div className="flex-shrink-0 w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
             {loading ? (
-              <Loader2 className="w-5 h-5 text-accent animate-spin" />
+              <Loader2 className="w-5 h-5 text-accent-ink animate-spin" />
             ) : (
-              <Headphones className="w-5 h-5 text-accent" />
+              <Headphones className="w-5 h-5 text-accent-ink" />
             )}
           </div>
           <div className="flex-1 min-w-0">
@@ -75,6 +75,12 @@ export function DailyEditionCTA() {
           </div>
         </div>
       </button>
+      {/* Innholdsmerking: AI-påstanden skal alltid ha en synlig merke-kobling */}
+      <p className="mt-1.5 px-1 text-xs text-muted-foreground font-body">
+        <Link to="/innholdsmerking" className="underline underline-offset-2 hover:text-foreground transition-colors">
+          {isNo ? "Slik merker vi AI-innhold" : "How we label AI content"}
+        </Link>
+      </p>
     </div>
   );
 }

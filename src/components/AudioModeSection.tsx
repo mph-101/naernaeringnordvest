@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Headphones, Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,7 +60,10 @@ export function AudioModeSection({ userId, isNo }: { userId: string; isNo: boole
           <p className="text-xs text-muted-foreground font-body mt-1">
             {isNo
               ? "AI-leste sammendrag i journalistenes egne stemmer."
-              : "AI-read summaries in the journalists' own voices."}
+              : "AI-read summaries in the journalists' own voices."}{" "}
+            <Link to="/innholdsmerking" className="underline underline-offset-2 hover:text-foreground transition-colors">
+              {isNo ? "Slik merker vi AI-innhold" : "How we label AI content"}
+            </Link>
           </p>
         </div>
         <Switch checked={enabled} onCheckedChange={save} />

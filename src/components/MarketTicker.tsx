@@ -208,9 +208,9 @@ export const MarketTicker = () => {
               item.change == null
                 ? ""
                 : item.change > 0
-                ? "text-emerald-600 dark:text-emerald-400"
+                ? "text-positive"
                 : item.change < 0
-                ? "text-rose-600 dark:text-rose-400"
+                ? "text-negative"
                 : "text-muted-foreground";
             return (
               <div

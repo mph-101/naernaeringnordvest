@@ -23,19 +23,22 @@ export function getArticleImage(id: string, category: string): string {
   if (articleImages[id]) {
     return `url(${articleImages[id]})`;
   }
+  // Dempede toner (S ≤ 30 %): kategorikoding uten å sprenge Én-stemme-regelen —
+  // fullmettede fallback-flater dominerte leserflaten når flere bildeløse
+  // artikler lastet samtidig (design-audit 2026-07-08).
   const gradients: Record<string, string> = {
-    "Eiendom": "linear-gradient(135deg, hsl(220, 70%, 50%), hsl(260, 60%, 40%))",
-    "Real Estate": "linear-gradient(135deg, hsl(220, 70%, 50%), hsl(260, 60%, 40%))",
-    "Handel": "linear-gradient(135deg, hsl(150, 60%, 40%), hsl(180, 50%, 35%))",
-    "Retail": "linear-gradient(135deg, hsl(150, 60%, 40%), hsl(180, 50%, 35%))",
-    "Industri": "linear-gradient(135deg, hsl(25, 80%, 50%), hsl(45, 70%, 45%))",
-    "Industry": "linear-gradient(135deg, hsl(25, 80%, 50%), hsl(45, 70%, 45%))",
-    "Teknologi": "linear-gradient(135deg, hsl(280, 60%, 50%), hsl(310, 50%, 40%))",
-    "Technology": "linear-gradient(135deg, hsl(280, 60%, 50%), hsl(310, 50%, 40%))",
-    "Finans": "linear-gradient(135deg, hsl(200, 70%, 45%), hsl(220, 60%, 35%))",
-    "Finance": "linear-gradient(135deg, hsl(200, 70%, 45%), hsl(220, 60%, 35%))",
-    "Reiseliv": "linear-gradient(135deg, hsl(0, 65%, 50%), hsl(340, 60%, 40%))",
-    "Tourism": "linear-gradient(135deg, hsl(0, 65%, 50%), hsl(340, 60%, 40%))",
+    "Eiendom": "linear-gradient(135deg, hsl(220, 28%, 44%), hsl(255, 22%, 38%))",
+    "Real Estate": "linear-gradient(135deg, hsl(220, 28%, 44%), hsl(255, 22%, 38%))",
+    "Handel": "linear-gradient(135deg, hsl(155, 25%, 36%), hsl(180, 22%, 32%))",
+    "Retail": "linear-gradient(135deg, hsl(155, 25%, 36%), hsl(180, 22%, 32%))",
+    "Industri": "linear-gradient(135deg, hsl(25, 35%, 45%), hsl(40, 30%, 40%))",
+    "Industry": "linear-gradient(135deg, hsl(25, 35%, 45%), hsl(40, 30%, 40%))",
+    "Teknologi": "linear-gradient(135deg, hsl(280, 22%, 42%), hsl(310, 20%, 36%))",
+    "Technology": "linear-gradient(135deg, hsl(280, 22%, 42%), hsl(310, 20%, 36%))",
+    "Finans": "linear-gradient(135deg, hsl(205, 28%, 40%), hsl(220, 24%, 34%))",
+    "Finance": "linear-gradient(135deg, hsl(205, 28%, 40%), hsl(220, 24%, 34%))",
+    "Reiseliv": "linear-gradient(135deg, hsl(0, 30%, 45%), hsl(340, 25%, 38%))",
+    "Tourism": "linear-gradient(135deg, hsl(0, 30%, 45%), hsl(340, 25%, 38%))",
   };
-  return gradients[category] || "linear-gradient(135deg, hsl(30, 70%, 50%), hsl(20, 60%, 40%))";
+  return gradients[category] || "linear-gradient(135deg, hsl(28, 35%, 48%), hsl(15, 30%, 42%))";
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Clock, Flame } from "lucide-react";
+import { Clock } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import { PUBLISHED_ARTICLE_LIST_SELECT, toUiArticle, type UiArticle } from "@/lib/article-data";
@@ -75,21 +75,14 @@ export function TrendingSection() {
   return (
     <section className="py-[20px]">
       <div className="max-w-5xl mx-auto px-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-destructive/10 rounded-xl flex items-center justify-center">
-              <Flame className="w-5 h-5 text-destructive" />
-            </div>
-            <div>
-              <h2 className="font-headline text-lg font-bold text-headline">
-                {language === "no" ? "Trending nå" : "Trending Now"}
-              </h2>
-              <p className="text-xs text-muted-foreground font-body">
-                {language === "no" ? "Mest leste saker akkurat nå" : "Most read stories right now"}
-              </p>
-            </div>
-          </div>
+        {/* Header — Lora-tittelen bærer seksjonen; rustrose er reservert feil */}
+        <div className="mb-6">
+          <h2 className="font-headline text-lg font-bold text-headline">
+            {language === "no" ? "Trending nå" : "Trending Now"}
+          </h2>
+          <p className="text-xs text-muted-foreground font-body">
+            {language === "no" ? "Mest leste saker akkurat nå" : "Most read stories right now"}
+          </p>
         </div>
 
         {/* Horizontal scroll on mobile, grid on desktop */}

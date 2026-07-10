@@ -1,5 +1,15 @@
 # Progress
 
+## Design-audit quieter: rustrose-reservasjon, scaffolding-fjerning, semantiske tokens (2026-07-10)
+
+- **Quieter-PR fra forside-auditen (P2-funn: mal-scaffolding + Én-stemme-brudd)** — 2026-07-10, branch `design/quieter-front-page` (stablet på animate-branchen)
+  - Ikon-i-tonet-flis-seksjonsheaderen fjernet alle 4 steder (NewsFeed, TrendingSection, JobChangeFeed, EventsFeed) — Lora-titlene bærer seksjonene alene (Lora-først-regelen); NewsFeeds redundante «Siste nyheter og analyser»-undertekst droppet.
+  - Rustrose reservert feil: Flame-flisen borte; EventsFeeds «I dag»-status og dato-flis bruker aksent i stedet for destructive; pulserende dot fjernet (uro uten informasjon).
+  - Uppercase-eyebrows nøytralisert: «Populære spørsmål» (SearchHero) og «Ukens spørsmål» (FrontpagePoll) er nå rolige normal-case-etiketter; hero-linje 2 mistet aksentfargen (hierarki via serif, ikke farge).
+  - Nye semantiske tokens `--positive`/`--negative` (markedsretning, hue-forskjøvet fra destructive) og `--sponsored`/`--sponsored-foreground` (annonsemerking, dempet i dark mode) — erstatter rå emerald/rose/amber-klasser i MarketTicker og NativeAdCard.
+  - Fallback-artikkelkunsten dempet (S ≤ 30 % i stedet for 60–80 %) — kategorikoding uten å sprenge Én-stemme-regelen ved bildeløse artikler.
+  - Verifisert: eslint 0 errors, vitest 127/127, live i preview (0 ikon-fliser, 0 destructive-elementer på leserflaten, 0 eyebrows, 0 rå palettklasser; positive/negative-tokens i bruk i tickeren).
+
 ## Design-audit animate: global reduced-motion + ticker-pause (2026-07-09)
 
 - **Animate-PR fra forside-auditen (funn 4–5: siste WCAG Nivå A-brudd)** — 2026-07-09, branch `a11y/animate-reduced-motion` (stablet på onboard-branchen)

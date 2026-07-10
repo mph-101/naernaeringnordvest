@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionId } from "@/lib/analytics";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,22 +25,21 @@ export function FrontpagePoll({ variant = "page" }: FrontpagePollProps = {}) {
   const { userId } = useAuth();
   const { language } = useTheme();
   const isNo = language === "no";
-  const [poll, setPoll] = useState<Poll | null>(null);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [myChoice, setMyChoice] = useState<string | null>(null);
-  const [results, setResults] = useState<PollResult[]>([]);
   const sessionId = getSessionId();
+  const queryClient = useQueryClient();
 
   const t = isNo
     ? { ukens: "Ukens spørsmål", thanks: "Takk for stemmen din", totalVotes: (n: number) => `${n} stemmer`, vote: "Avgi stemme", error: "Kunne ikke registrere stemme" }
     : { ukens: "Question of the week", thanks: "Thanks for your vote", totalVotes: (n: number) => `${n} votes`, vote: "Vote", error: "Could not register vote" };
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
+  const { data: poll = null, isLoading: loading } = useQuery({
+    queryKey: ["poll", "active"],
+    staleTime: 300_000,
+    queryFn: async (): Promise<Poll | null> => {
       const nowIso = new Date().toISOString();
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("polls")
         .select("id, question, description, options, ends_at")
         .eq("active", true)
@@ -48,31 +48,38 @@ export function FrontpagePoll({ variant = "page" }: FrontpagePollProps = {}) {
         .order("starts_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (cancelled) return;
-      if (data) {
-        const options = Array.isArray(data.options) ? (data.options as unknown as PollOption[]) : [];
-        setPoll({ ...(data as any), options });
-      }
-      setLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, []);
+      if (error) throw error;
+      if (!data) return null;
+      const options = Array.isArray(data.options) ? (data.options as unknown as PollOption[]) : [];
+      return { ...(data as any), options };
+    },
+  });
 
+  // Tidligere avgitt stemme (kryssjekkes server-side per bruker/økt)
+  const { data: serverChoice } = useQuery({
+    queryKey: ["poll-choice", poll?.id, sessionId],
+    enabled: !!poll,
+    staleTime: Infinity,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("poll_user_choice", { _poll_id: poll!.id, _session_id: sessionId });
+      if (error) throw error;
+      return (data as unknown as string) ?? null;
+    },
+  });
   useEffect(() => {
-    if (!poll) return;
-    (async () => {
-      const { data } = await supabase.rpc("poll_user_choice", { _poll_id: poll.id, _session_id: sessionId });
-      if (data) {
-        setMyChoice(data as unknown as string);
-        loadResults(poll.id);
-      }
-    })();
-  }, [poll, sessionId]);
+    if (serverChoice) setMyChoice(serverChoice);
+  }, [serverChoice]);
 
-  async function loadResults(pollId: string) {
-    const { data } = await supabase.rpc("poll_results", { _poll_id: pollId });
-    if (data) setResults(data as unknown as PollResult[]);
-  }
+  const { data: results = [] } = useQuery({
+    queryKey: ["poll-results", poll?.id],
+    enabled: !!poll && !!myChoice,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("poll_results", { _poll_id: poll!.id });
+      if (error) throw error;
+      return (data as unknown as PollResult[]) ?? [];
+    },
+  });
 
   async function vote(optionId: string) {
     if (!poll || submitting || myChoice) return;
@@ -87,7 +94,7 @@ export function FrontpagePoll({ variant = "page" }: FrontpagePollProps = {}) {
       return;
     }
     setMyChoice(optionId);
-    loadResults(poll.id);
+    queryClient.invalidateQueries({ queryKey: ["poll-results", poll.id] });
   }
 
   if (loading || !poll || !poll.options.length) return null;

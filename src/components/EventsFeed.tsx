@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Calendar, MapPin, ArrowRight, CalendarPlus, Clock, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -19,11 +20,12 @@ interface EventItem {
 export const EventsFeed = () => {
   const { language } = useTheme();
   const isNo = language === "no";
-  const [items, setItems] = useState<EventItem[]>([]);
   const [range, setRange] = useState<"30d" | "all">("30d");
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const { data: items = [] } = useQuery({
+    queryKey: ["events", range],
+    staleTime: 60_000,
+    queryFn: async () => {
       let q = supabase
         .from("events")
         .select("id, title, start_at, end_at, location, category, image_url, description, is_featured")
@@ -34,14 +36,14 @@ export const EventsFeed = () => {
         in30.setDate(in30.getDate() + 30);
         q = q.lte("start_at", in30.toISOString());
       }
-      const { data } = await q
+      const { data, error } = await q
         .order("is_featured", { ascending: false })
         .order("start_at", { ascending: true })
         .limit(5);
-      setItems((data as any[]) || []);
-    };
-    fetchData();
-  }, [range]);
+      if (error) throw error;
+      return ((data as any[]) || []) as EventItem[];
+    },
+  });
 
   const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString(isNo ? "nb-NO" : "en-US", {

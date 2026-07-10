@@ -4,6 +4,15 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Supabase Pro-oppgradering før lansering (2026-07-10)
+- Prosjektet kjører på **free plan** (bekreftet 2026-07-10). Pro-oppgraderingen
+  løser to pre-launch-krav i én beslutning:
+  1. **Daglige backuper** — CLAUDE.md fase 4.4 antar Pro; antagelsen holder ikke i dag.
+  2. **Storage image transformations** — kreves for srcset/responsive
+     artikkelbilder i feeden (design-audit optimize del C; `render/image`
+     gir 403 FeatureNotEnabled på free). Koden er klar til å ta det i bruk
+     når featuren finnes.
+
 ### Code review bolk 1 — sikkerhetsherding (2026-07-06)
 - **Slå på «Leaked Password Protection»** i Supabase → Auth → Password protection
   (HaveIBeenPwned-sjekk). Ren dashboard-toggle, ingen kode. Advisor-flagget.

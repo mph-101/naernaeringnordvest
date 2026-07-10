@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Clock, Play, Headphones, FileText, Lock, Tag as TagIcon, X, MapPin, Megaphone, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -83,19 +84,11 @@ export const NewsFeed = () => {
   // context is available yet.
   const { current: currentRegion } = useRegion();
   const selectedRegionSlug: string = currentRegion?.slug ?? "all";
-  const [dbArticles, setDbArticles] = useState<DbArticle[]>([]);
-  const [loading, setLoading] = useState(true);
   // Section filter — empty array means "Alle" (no filter). Holds canonical
   // category names (the Norwegian `categories.name`), so filtering is correct
   // regardless of the display language.
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
-  const [topTags, setTopTags] = useState<TagWithCount[]>([]);
-  const [articleTagMap, setArticleTagMap] = useState<Map<string, string[]>>(new Map());
-  const [articleSharedRegions, setArticleSharedRegions] = useState<Map<string, string[]>>(new Map());
-  const [nativeAds, setNativeAds] = useState<NativeAd[]>([]);
-  const [loadError, setLoadError] = useState(false);
-  const [reloadKey, setReloadKey] = useState(0);
   const INITIAL_COUNT = 10;
   const PAGE_SIZE = 9;
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
@@ -117,100 +110,114 @@ export const NewsFeed = () => {
     }, 350);
   };
 
-  useEffect(() => {
-    const fetchArticles = async () => {
+  // Alle fetches går via React Query: fanebytte og tilbake-navigasjon
+  // serverer cache øyeblikkelig i stedet for å refyre hele forsiden.
+  const {
+    data: dbArticles = [],
+    isLoading: loading,
+    isError: loadError,
+    refetch: refetchArticles,
+  } = useQuery({
+    queryKey: ["articles", "feed"],
+    staleTime: 60_000,
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("articles")
         .select("id, title, title_en, excerpt, excerpt_en, category, author, type, premium, read_time, image_url, image_crop, image_focal, published_at, key_points, region_slug, pinned_position")
         .eq("published", true)
         .order("published_at", { ascending: false })
         .limit(40);
-      if (error) {
-        setLoadError(true);
-      } else {
-        setLoadError(false);
-        setDbArticles((data || []) as unknown as DbArticle[]);
-      }
-      setLoading(false);
-    };
-    setLoading(true);
-    fetchArticles();
-  }, [reloadKey]);
+      if (error) throw error;
+      return (data || []) as unknown as DbArticle[];
+    },
+  });
 
-  // Fetch active native ads (RLS already filters by active + dates)
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
+  const articleIds = useMemo(() => dbArticles.map((a) => a.id), [dbArticles]);
+
+  // Active native ads (RLS already filters by active + dates)
+  const { data: nativeAds = [] } = useQuery({
+    queryKey: ["native-ads"],
+    staleTime: 600_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("native_ads" as any)
         .select("id, title, excerpt, image_url, sponsor_name, sponsor_logo_url, cta_label, cta_url, pinned_position")
         .order("pinned_position", { ascending: true });
-      setNativeAds(((data || []) as unknown) as NativeAd[]);
-    })();
-  }, []);
+      if (error) throw error;
+      return ((data || []) as unknown) as NativeAd[];
+    },
+  });
 
-  // Fetch shared regions for loaded articles
-  useEffect(() => {
-    if (dbArticles.length === 0) {
-      setArticleSharedRegions(new Map());
-      return;
-    }
-    const ids = dbArticles.map((a) => a.id);
-    (async () => {
-      const { data } = await supabase
+  // Shared regions for the loaded articles
+  const { data: sharedRegionRows = [] } = useQuery({
+    queryKey: ["article-shared-regions", articleIds],
+    enabled: articleIds.length > 0,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("article_shared_regions" as any)
         .select("article_id, region_slug")
-        .in("article_id", ids);
-      const map = new Map<string, string[]>();
-      ((data || []) as any[]).forEach((row: any) => {
-        const list = map.get(row.article_id) || [];
-        list.push(row.region_slug);
-        map.set(row.article_id, list);
-      });
-      setArticleSharedRegions(map);
-    })();
-  }, [dbArticles]);
+        .in("article_id", articleIds);
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
 
-  // Fetch tag links for the loaded articles + compute top tags
-  useEffect(() => {
-    if (dbArticles.length === 0) {
-      setTopTags([]);
-      setArticleTagMap(new Map());
-      return;
-    }
-    const ids = dbArticles.map((a) => a.id);
-    (async () => {
-      const { data } = await supabase
+  const articleSharedRegions = useMemo(() => {
+    const map = new Map<string, string[]>();
+    sharedRegionRows.forEach((row: any) => {
+      const list = map.get(row.article_id) || [];
+      list.push(row.region_slug);
+      map.set(row.article_id, list);
+    });
+    return map;
+  }, [sharedRegionRows]);
+
+  // Tag links for the loaded articles + derived top tags
+  const { data: tagRows = [] } = useQuery({
+    queryKey: ["article-tags", articleIds],
+    enabled: articleIds.length > 0,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("article_tags")
         .select("article_id, tags(id, name, slug, description)")
-        .in("article_id", ids);
-      const map = new Map<string, string[]>();
-      const counts = new Map<string, { tag: Tag; count: number }>();
-      (data || []).forEach((row: any) => {
-        if (!row.tags) return;
-        const tag = row.tags as Tag;
-        const list = map.get(row.article_id) || [];
-        list.push(tag.id);
-        map.set(row.article_id, list);
-        const cur = counts.get(tag.id);
-        if (cur) cur.count += 1;
-        else counts.set(tag.id, { tag, count: 1 });
-      });
-      setArticleTagMap(map);
-      const sorted = Array.from(counts.values())
-        .sort((a, b) => b.count - a.count || a.tag.name.localeCompare(b.tag.name, "nb"))
-        .slice(0, 12)
-        .map((c) => ({ ...c.tag, count: c.count }));
-      setTopTags(sorted);
-    })();
-  }, [dbArticles]);
+        .in("article_id", articleIds);
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
 
-  // Fetch categories for topic filtering
-  const [categories, setCategories] = useState<{name: string; name_en: string | null}[]>([]);
-  useEffect(() => {
-    supabase.from("categories").select("name, name_en").then(({ data }) => {
-      setCategories(data || []);
+  const { articleTagMap, topTags } = useMemo(() => {
+    const map = new Map<string, string[]>();
+    const counts = new Map<string, { tag: Tag; count: number }>();
+    tagRows.forEach((row: any) => {
+      if (!row.tags) return;
+      const tag = row.tags as Tag;
+      const list = map.get(row.article_id) || [];
+      list.push(tag.id);
+      map.set(row.article_id, list);
+      const cur = counts.get(tag.id);
+      if (cur) cur.count += 1;
+      else counts.set(tag.id, { tag, count: 1 });
     });
-  }, []);
+    const sorted: TagWithCount[] = Array.from(counts.values())
+      .sort((a, b) => b.count - a.count || a.tag.name.localeCompare(b.tag.name, "nb"))
+      .slice(0, 12)
+      .map((c) => ({ ...c.tag, count: c.count }));
+    return { articleTagMap: map, topTags: sorted };
+  }, [tagRows]);
+
+  // Categories for topic filtering (changes rarely)
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    staleTime: 600_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("categories").select("name, name_en");
+      if (error) throw error;
+      return (data || []) as { name: string; name_en: string | null }[];
+    },
+  });
 
   // Pills carry the canonical category name plus a language-aware display label.
   const categoryOptions = categories.map((c) => ({
@@ -387,7 +394,7 @@ export const NewsFeed = () => {
               : "Could not load the articles. Check your connection and try again."}
           </p>
           <button
-            onClick={() => setReloadKey((k) => k + 1)}
+            onClick={() => refetchArticles()}
             className="px-5 py-2.5 rounded-full bg-card border border-border text-foreground font-subhead text-sm hover:bg-secondary transition-colors shadow-soft"
           >
             {language === "no" ? "Prøv igjen" : "Try again"}

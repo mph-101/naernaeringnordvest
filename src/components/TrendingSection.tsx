@@ -78,11 +78,8 @@ export function TrendingSection() {
         {/* Header — Lora-tittelen bærer seksjonen; rustrose er reservert feil */}
         <div className="mb-6">
           <h2 className="font-headline text-lg font-bold text-headline">
-            {language === "no" ? "Trending nå" : "Trending Now"}
+            {language === "no" ? "Mest lest" : "Most read"}
           </h2>
-          <p className="text-xs text-muted-foreground font-body">
-            {language === "no" ? "Mest leste saker akkurat nå" : "Most read stories right now"}
-          </p>
         </div>
 
         {/* Horizontal scroll on mobile, grid on desktop */}

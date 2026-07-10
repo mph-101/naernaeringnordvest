@@ -1,5 +1,14 @@
 # Progress
 
+## Design-audit clarify: språk og tillitstekster (2026-07-10)
+
+- **Clarify-PR fra forside-auditen (alle fire tekstvalg tatt av Magnus i økt)** — 2026-07-10, branch `copy/clarify-front-page` (stablet på quieter-branchen)
+  - «Trending nå» → **«Mest lest»** (EN «Most read»); redundant undertekst droppet.
+  - «Tall»-fanen beholdes (etablert produktnavn; tooltip/aria forklarer).
+  - AI-lyd-påstanden beholdt, men med **innholdsmerking-kobling**: «Slik merker vi AI-innhold» → /innholdsmerking under DailyEditionCTA-kortet (egen linje — unngår nøstet interaktivt) og i AudioModeSection i profilinnstillingene. Headphones-ikonene → accent-ink i samme slengen.
+  - Hero-løftet «Få svar basert på verifiserte data» → **«Svarene siterer kildene rett fra artikkelarkivet»** (NO+EN) — presist og etterprøvbart; beskriver hva Spør faktisk gjør.
+  - Verifisert: eslint 0 errors, vitest 127/127, live i preview («Mest lest» rendrer, merkelenken synlig i feed, ny hero-tekst i søkevisning, gammel formulering borte).
+
 ## Design-audit quieter: rustrose-reservasjon, scaffolding-fjerning, semantiske tokens (2026-07-10)
 
 - **Quieter-PR fra forside-auditen (P2-funn: mal-scaffolding + Én-stemme-brudd)** — 2026-07-10, branch `design/quieter-front-page` (stablet på animate-branchen)

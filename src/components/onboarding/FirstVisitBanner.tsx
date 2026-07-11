@@ -15,26 +15,28 @@ export function FirstVisitBanner() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 pt-4">
-      <div className="flex items-center gap-3 bg-card border border-border rounded-2xl px-4 py-3 shadow-soft">
-        <MapPin className="w-4 h-4 text-accent-ink flex-shrink-0" aria-hidden />
-        <p className="text-sm text-foreground font-body flex-1 min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-card border border-border rounded-2xl px-4 py-3 shadow-soft">
+        <p className="flex items-center gap-3 text-sm text-foreground font-body flex-1 min-w-0">
+          <MapPin className="w-4 h-4 text-accent-ink flex-shrink-0" aria-hidden />
           {isNo
             ? "Ny her? Velg region og startside, så viser vi deg det som er nærmest."
             : "New here? Pick your region and start page and we'll show you what's closest."}
         </p>
-        <Link
-          to="/velkommen"
-          className="px-3 py-2 rounded-full bg-accent text-accent-foreground text-xs font-subhead font-semibold hover:bg-accent/90 transition-colors whitespace-nowrap"
-        >
-          {isNo ? "Tilpass" : "Customize"}
-        </Link>
-        <button
-          onClick={completeOnboarding}
-          aria-label={isNo ? "Lukk" : "Close"}
-          className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors flex-shrink-0"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-3 self-end sm:self-auto">
+          <Link
+            to="/velkommen"
+            className="min-h-10 inline-flex items-center px-3.5 rounded-full bg-accent text-accent-foreground text-xs font-subhead font-semibold hover:bg-accent/90 transition-colors whitespace-nowrap"
+          >
+            {isNo ? "Tilpass" : "Customize"}
+          </Link>
+          <button
+            onClick={completeOnboarding}
+            aria-label={isNo ? "Lukk" : "Close"}
+            className="min-w-10 min-h-10 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors flex-shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

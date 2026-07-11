@@ -435,7 +435,7 @@ export const NewsFeed = () => {
                   type="button"
                   aria-label="Bla til venstre"
                   onClick={() => scrollSections(-1)}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-card/95 border border-border shadow-soft flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-card/95 border border-border shadow-soft flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -449,7 +449,7 @@ export const NewsFeed = () => {
             >
               <button
                 onClick={() => setSelectedCategories([])}
-                className={`px-4 py-2 rounded-full text-sm font-subhead whitespace-nowrap shrink-0 transition-all duration-200 ${
+                className={`px-4 min-h-10 inline-flex items-center rounded-full text-sm font-subhead whitespace-nowrap shrink-0 transition-all duration-200 ${
                   selectedCategories.length === 0
                     ? "bg-accent text-accent-foreground shadow-soft"
                     : "bg-card border border-border text-foreground hover:bg-secondary hover:border-accent/20"
@@ -464,7 +464,7 @@ export const NewsFeed = () => {
                     key={c.name}
                     onClick={() => toggleCategory(c.name)}
                     aria-pressed={active}
-                    className={`px-4 py-2 rounded-full text-sm font-subhead whitespace-nowrap shrink-0 transition-all duration-200 ${
+                    className={`px-4 min-h-10 inline-flex items-center rounded-full text-sm font-subhead whitespace-nowrap shrink-0 transition-all duration-200 ${
                       active
                         ? "bg-accent text-accent-foreground shadow-soft"
                         : "bg-card border border-border text-foreground hover:bg-secondary hover:border-accent/20"
@@ -484,7 +484,7 @@ export const NewsFeed = () => {
                   type="button"
                   aria-label="Bla til høyre"
                   onClick={() => scrollSections(1)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-card/95 border border-border shadow-soft flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-card/95 border border-border shadow-soft flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>

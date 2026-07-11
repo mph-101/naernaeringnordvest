@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Clock, ArrowUpRight, Lock, FileText } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import type { ArticleSource } from "@/lib/articles-chat";
@@ -154,69 +155,65 @@ export function RelatedArticles({ sources }: RelatedArticlesProps = {}) {
         </div>
       </section>
 
-      {/* Paywall Modal */}
-      {showPaywall && selectedArticle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm animate-fade-in">
-          <div className="relative bg-card rounded-2xl shadow-elevated max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="p-6 border-b border-border">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="font-subhead text-sm text-accent-ink font-medium">
-                  {selectedArticle.category}
-                </span>
+      {/* Paywall-modal — Radix Dialog gir dialog-rolle, aria-modal, fokusfelle,
+          Escape og navngitt lukkeknapp; den håndrullede varianten manglet alt. */}
+      <Dialog open={showPaywall && !!selectedArticle} onOpenChange={(open) => { if (!open) setShowPaywall(false); }}>
+        <DialogContent className="max-w-lg p-0 gap-0 max-h-[90vh] overflow-y-auto">
+          {selectedArticle && (
+            <>
+              <div className="p-6 border-b border-border">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="font-subhead text-sm text-accent-ink font-medium">
+                    {selectedArticle.category}
+                  </span>
+                </div>
+                <DialogTitle className="font-headline text-lg font-bold text-headline leading-snug mb-2">
+                  {selectedArticle.title}
+                </DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground font-body">
+                  {language === "no" ? "Av" : "By"} {selectedArticle.author} · {selectedArticle.readTime}
+                </DialogDescription>
               </div>
-              <h3 className="font-headline text-lg font-bold text-headline leading-snug mb-2">
-                {selectedArticle.title}
-              </h3>
-              <p className="text-sm text-muted-foreground font-body">
-                {language === "no" ? "Av" : "By"} {selectedArticle.author} · {selectedArticle.readTime}
-              </p>
-            </div>
-            
-            <div className="p-6">
-              <p className="text-muted-foreground font-body leading-relaxed mb-6">
-                {selectedArticle.excerpt}
-              </p>
-              
-              <div className="relative">
-                <p className="text-foreground font-body leading-relaxed line-clamp-4">
+
+              <div className="p-6">
+                <p className="text-muted-foreground font-body leading-relaxed mb-6">
                   {selectedArticle.excerpt}
                 </p>
-                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-card to-transparent" />
-              </div>
-            </div>
 
-            <div className="p-6 bg-surface-subtle rounded-b-2xl border-t border-border">
-              <div className="text-center mb-6">
-                <div className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Lock className="w-6 h-6 text-accent-ink" />
+                <div className="relative">
+                  <p className="text-foreground font-body leading-relaxed line-clamp-4">
+                    {selectedArticle.excerpt}
+                  </p>
+                  <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-card to-transparent" />
                 </div>
-                <h4 className="font-headline text-lg font-bold text-headline mb-2">
-                  {t.subscribeTitle}
-                </h4>
-                <p className="text-sm text-muted-foreground font-body">
-                  {t.subscribeDesc}
-                </p>
               </div>
-              
-              <div className="space-y-3">
-                <button className="w-full py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
-                  {t.subscribeButton}
-                </button>
-                <button className="w-full py-3 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors">
-                  {t.signIn}
-                </button>
-              </div>
-            </div>
 
-            <button
-              onClick={() => setShowPaywall(false)}
-              className="absolute top-4 right-4 p-2.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-full transition-all"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
+              <div className="p-6 bg-surface-subtle rounded-b-2xl border-t border-border">
+                <div className="text-center mb-6">
+                  <div className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Lock className="w-6 h-6 text-accent-ink" />
+                  </div>
+                  <h4 className="font-headline text-lg font-bold text-headline mb-2">
+                    {t.subscribeTitle}
+                  </h4>
+                  <p className="text-sm text-muted-foreground font-body">
+                    {t.subscribeDesc}
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <button className="w-full py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
+                    {t.subscribeButton}
+                  </button>
+                  <button className="w-full py-3 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors">
+                    {t.signIn}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

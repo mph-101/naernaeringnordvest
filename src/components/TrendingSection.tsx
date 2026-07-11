@@ -84,7 +84,7 @@ export function TrendingSection() {
               <div className="p-5">
                 {/* Rank number */}
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="font-headline text-2xl font-bold text-accent/30">
+                  <span className="font-headline text-2xl font-bold text-accent-ink">
                     {String(index + 1).padStart(2, '0')}
                   </span>
                   <span className="px-2.5 py-1 bg-accent/10 text-accent-ink text-xs font-subhead font-medium rounded-full">

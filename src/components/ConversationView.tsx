@@ -1013,7 +1013,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
 
       <div className="sticky bottom-0 bg-background border-t border-border py-4">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-6">
-          <div className="relative bg-card border border-border rounded-2xl shadow-soft focus-within:border-accent">
+          <div className="relative bg-card border border-border rounded-2xl shadow-soft focus-within:border-accent focus-within:ring-2 focus-within:ring-accent-ink">
             <div className="flex items-center px-5 py-3">
               <Search className="w-5 h-5 text-muted-foreground mr-4" />
               <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder={t.followUp} aria-label={t.followUp} className="flex-1 bg-transparent outline-none font-body text-foreground placeholder:text-muted-foreground" disabled={isLoading} />

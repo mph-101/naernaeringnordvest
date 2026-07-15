@@ -1,5 +1,11 @@
 # Progress
 
+## Re-audit hele leserflaten: 11/20 med bredere scope (2026-07-15)
+
+- 5-dimensjons re-audit kjørt mot main+polish — **scope utvidet fra forsiden til hele leserflaten** (Article, Stillinger, Naeringspuls, Subscribe, footer-sider). Score: a11y 3, ytelse 3, anti-mønstre 1, responsiv 2, klarhet 2 = **11/20**. Ikke direkte sammenlignbar med 13/20 (forside-scope); forside-funnene fra 07-10 er i hovedsak lukket (bekreftet som styrker av skannerne).
+- Full rapport + prioritert backlog i 6 bunker: [`docs/design-audit-2026-07-15.md`](design-audit-2026-07-15.md). Viktigst: 4 klarhet-P1 som treffer etterrettelighets-løftet (mock-artikler bak paywall, kildevern-løfte på kontaktsiden, døde lenker i Article-footer, AI-svar uten AI-merking) + 2 responsiv-P1 (mobilmeny uskrollbar i landskap, ViewToggle under 40px-gulvet).
+- Til magnus-todo: verifiser MBL/NR/PFU-medlemskap før lansering; Signal-nummer; juridiske plassholdere.
+
 ## Impeccable polish-pass mot main etter merge av bunken (2026-07-15)
 
 - **Polish-PR** — 2026-07-15, branch `design/polish-pass`. Flyt per polish.md: kritikk-snapshot 2026-07-08 gjennomgått mot dagens main (P0/P1 alt fikset i #148–#163), detektor kjørt på nytt over kildene (23 funn → 16 utenfor admin, hvorav spinner/regex-treff er kjente falske positive).

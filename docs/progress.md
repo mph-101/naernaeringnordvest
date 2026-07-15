@@ -1,5 +1,16 @@
 # Progress
 
+## Impeccable polish-pass mot main etter merge av bunken (2026-07-15)
+
+- **Polish-PR** — 2026-07-15, branch `design/polish-pass`. Flyt per polish.md: kritikk-snapshot 2026-07-08 gjennomgått mot dagens main (P0/P1 alt fikset i #148–#163), detektor kjørt på nytt over kildene (23 funn → 16 utenfor admin, hvorav spinner/regex-treff er kjente falske positive).
+  - **FeatureWalkthrough → Radix Dialog:** håndrullet overlay manglet dialog-rolle, fokusfelle og Escape (samme klasse feil som paywall-en i #158); bunn-ark-layout på mobil bevart via egne klasser på primitivene; ikonflis `text-accent` → `text-accent-ink`; progress-dots `aria-hidden` (telleren bærer info); lukkeknapp fikk 40px-gulv.
+  - **SubscriptionTrialBanner:** `text-accent` som tekstfarge → `accent-ink`; rå amber-klasser (utenfor Kystlys) → nøytral secondary-flate for «canceled» (brukerens valg ≠ feil); `text-destructive` → `destructive-ink`; inline `rgba(0,0,0,0.06)` som drepte hover-tilstanden på CTA fjernet → `bg-foreground/5 hover:bg-foreground/10`; 40px-gulv på begge knappene.
+  - **Proofread-chips (index.css):** rå `hsl(142 71% …)`-emerald → `var(--positive)`-tokenet; `.dark`-overriden slettet (dark-tokenet tar over automatisk).
+  - **CompanyMiniProfile:** inert `w-4.5 h-4.5` (finnes ikke i Tailwind-skalaen — ikonet rendret på 24px-default) → `w-5 h-5`; `hover:shadow-soft` på ikke-klikkbart kort fjernet (flat-i-ro).
+  - **Arrangementer-skjemaets `.form-input`:** radius `.6rem` → `.75rem` (på skalaen).
+  - Vurdert og bevisst ikke rørt: ViewToggle `window.location.href` (Next-kompat-kommentar + routing er redaksjonelt), featured-etter-filter (bevisst rekomputering), Bitcoin i ticker (redaksjonelt spørsmål), gradient-warm-literals i dark (gradient-stops må være literals), spinner-`border-b-2` (detektor-falskpositiv).
+  - Verifisert: eslint 0 errors, vitest 127/127, build OK; dialog i preview: `role=dialog`, `aria-labelledby`, fokus fanget, dots skjult, accent-ink-ikon.
+
 ## P2/P3-bunken fra re-auditen: PR-stabel #158→#160→#161→#162 + typer (2026-07-15)
 
 - **PR #158 opprettet** for a11y-branchen fra 2026-07-11 (PR-opprettelsen falt ut i forrige økt); rebast mot main etter at #157 (trending-RPC + React Query) ble merget 2026-07-10. CI grønn.

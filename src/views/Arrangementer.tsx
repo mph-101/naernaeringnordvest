@@ -597,7 +597,7 @@ const EventForm = ({ t, onClose, submitting, setSubmitting, userId, onCreated }:
             {t.send}
           </button>
         </div>
-        <style>{`.form-input{width:100%;padding:.55rem .75rem;border-radius:.6rem;background:hsl(var(--background));border:1px solid hsl(var(--border));font-size:.9rem;outline:none;}.form-input:focus{border-color:hsl(var(--primary));}`}</style>
+        <style>{`.form-input{width:100%;padding:.55rem .75rem;border-radius:.75rem;background:hsl(var(--background));border:1px solid hsl(var(--border));font-size:.9rem;outline:none;}.form-input:focus{border-color:hsl(var(--primary));}`}</style>
       </form>
     </div>
   );

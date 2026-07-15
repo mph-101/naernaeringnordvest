@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useTheme } from "@/hooks/useTheme";
 import { isFeatureEnabled, type FeatureKey } from "@/lib/features";
 import {
@@ -148,15 +149,24 @@ export function FeatureWalkthrough() {
   const goThere = () => { writeSeen(); setOpen(false); navigate(card.route); };
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-card rounded-2xl shadow-elevated w-full max-w-md animate-scale-in flex flex-col">
+    /* Radix Dialog gir dialog-rolle, aria-modal, fokusfelle og Escape —
+       den håndrullede overlayen manglet alt (samme grep som paywall-modalen). */
+    <DialogPrimitive.Root open onOpenChange={(o) => { if (!o) finish(); }}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-[80] bg-foreground/40 backdrop-blur-sm animate-fade-in" />
+        <DialogPrimitive.Content
+          aria-describedby={undefined}
+          className="fixed z-[80] inset-x-4 bottom-4 sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full max-w-md mx-auto bg-card rounded-2xl shadow-elevated animate-scale-in flex flex-col focus:outline-none"
+        >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border">
-          <h3 className="font-headline text-lg font-bold text-headline">{t.title}</h3>
+          <DialogPrimitive.Title asChild>
+            <h3 className="font-headline text-lg font-bold text-headline">{t.title}</h3>
+          </DialogPrimitive.Title>
           <button
             onClick={finish}
             aria-label={t.close}
-            className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-full transition-all"
+            className="p-2 min-w-10 min-h-10 inline-flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary rounded-full transition-all"
           >
             <X className="w-5 h-5" />
           </button>
@@ -165,7 +175,7 @@ export function FeatureWalkthrough() {
         {/* Card */}
         <div className="px-6 pt-7 pb-5 flex flex-col items-center text-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center">
-            <Icon className="w-8 h-8 text-accent" />
+            <Icon className="w-8 h-8 text-accent-ink" />
           </div>
           <h4 className="font-headline text-xl font-bold text-headline">
             {isNo ? card.titleNo : card.titleEn}
@@ -182,8 +192,8 @@ export function FeatureWalkthrough() {
           </button>
         </div>
 
-        {/* Progress dots */}
-        <div className="flex items-center justify-center gap-1.5 pb-1">
+        {/* Progress dots — dekorative; telleren under bærer informasjonen */}
+        <div aria-hidden="true" className="flex items-center justify-center gap-1.5 pb-1">
           {cards.map((c, i) => (
             <span
               key={c.key}
@@ -221,7 +231,8 @@ export function FeatureWalkthrough() {
             </button>
           </div>
         </div>
-      </div>
-    </div>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }

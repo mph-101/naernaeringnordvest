@@ -90,12 +90,14 @@ export function CompanyMiniProfile({ orgnr, companyName }: { orgnr: string; comp
     : "";
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 hover:shadow-soft transition-shadow">
+    // Ikke-interaktivt kort: flat i ro med kant (DESIGN.md §5) — hover-skygge
+    // uten klikkbarhet lovet interaksjon som ikke fantes.
+    <div className="bg-card border border-border rounded-xl p-5">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Building2 className="w-4.5 h-4.5 text-primary" />
+            <Building2 className="w-5 h-5 text-primary" />
           </div>
           <div className="min-w-0">
             <h4 className="font-headline text-sm font-semibold text-headline truncate">{name}</h4>

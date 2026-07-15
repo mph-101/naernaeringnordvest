@@ -185,7 +185,7 @@ export const UsersManager = () => {
                       <div className="font-body text-sm text-foreground truncate flex items-center gap-2">
                         {u.display_name || u.email || "(ukjent)"}
                         {isMe && (
-                          <span className="text-[10px] font-subhead px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">deg</span>
+                          <span className="text-[0.625rem] font-subhead px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">deg</span>
                         )}
                       </div>
                       {u.display_name && u.email && (
@@ -234,7 +234,7 @@ export const UsersManager = () => {
                       {u.api_key_count}
                     </span>
                     {u.api_last_used_at && (
-                      <span className="hidden lg:inline text-[10px] text-muted-foreground ml-1">
+                      <span className="hidden lg:inline text-[0.625rem] text-muted-foreground ml-1">
                         · {formatRelative(u.api_last_used_at)}
                       </span>
                     )}

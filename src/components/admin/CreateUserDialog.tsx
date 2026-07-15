@@ -210,7 +210,7 @@ export const CreateUserDialog = ({ open, onClose, onCreated }: Props) => {
                 );
               })}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-1.5">
+            <p className="text-[0.6875rem] text-muted-foreground mt-1.5">
               «Leser» tildeles automatisk. Velg flere roller ved behov.
             </p>
           </div>

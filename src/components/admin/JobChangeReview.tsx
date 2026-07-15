@@ -122,7 +122,7 @@ export const JobChangeReview = () => {
                 <div className="relative">
                   <img src={item.image_url} alt={item.person_name} className="w-full h-40 object-cover" />
                   {item.photo_credit && (
-                    <span className="absolute bottom-2 right-2 bg-background/80 backdrop-blur-sm text-[10px] text-muted-foreground font-body px-2 py-0.5 rounded">
+                    <span className="absolute bottom-2 right-2 bg-background/80 backdrop-blur-sm text-[0.625rem] text-muted-foreground font-body px-2 py-0.5 rounded">
                       {item.photo_credit}
                     </span>
                   )}
@@ -149,7 +149,7 @@ export const JobChangeReview = () => {
 
                 {filter === "pending" && (
                   <div className="mb-3 p-3 bg-secondary/40 rounded-lg space-y-2">
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-subhead">Redaksjonelle felter</p>
+                    <p className="text-[0.625rem] uppercase tracking-wide text-muted-foreground font-subhead">Redaksjonelle felter</p>
                     <div className="grid grid-cols-2 gap-2">
                       <input defaultValue={item.person_name || ""} onBlur={(e) => handleFieldEdit(item.id, "person_name", e.target.value)} placeholder="Navn" className="px-2 py-1.5 bg-background border border-border rounded text-xs font-body" />
                       <select defaultValue={item.change_type} onBlur={(e) => handleFieldEdit(item.id, "change_type", e.target.value)} className="px-2 py-1.5 bg-background border border-border rounded text-xs font-body">

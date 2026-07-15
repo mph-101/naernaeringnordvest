@@ -256,7 +256,7 @@ const Arrangementer = () => {
                 >
                   <Plus className="w-4 h-4" /> {t.submit}
                 </button>
-                <span className="text-[11px] text-muted-foreground">{t.freeToCreate}</span>
+                <span className="text-[0.6875rem] text-muted-foreground">{t.freeToCreate}</span>
               </div>
             ) : !isAuthenticated ? (
               <button onClick={() => navigate("/login")} className="text-sm text-muted-foreground hover:text-foreground underline">
@@ -376,7 +376,7 @@ const Arrangementer = () => {
                       <div className="p-5 flex-1 flex flex-col">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           {e.is_featured && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full inline-flex items-center gap-1 bg-primary text-primary-foreground uppercase tracking-wide font-bold">
+                            <span className="text-[0.625rem] px-2 py-0.5 rounded-full inline-flex items-center gap-1 bg-primary text-primary-foreground uppercase tracking-wide font-bold">
                               <Sparkles className="w-3 h-3" /> {t.featured}
                             </span>
                           )}

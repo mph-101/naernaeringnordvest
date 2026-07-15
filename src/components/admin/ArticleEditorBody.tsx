@@ -383,9 +383,9 @@ export const ArticleEditorBody = ({
                     <>
                       <span className="font-medium">{proofSuggestions.length}</span>{" "}
                       forslag vises inline i brødteksten — klikk{" "}
-                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold align-middle">✓</span>{" "}
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[0.625rem] font-bold align-middle">✓</span>{" "}
                       for å godta eller{" "}
-                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold align-middle">✕</span>{" "}
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive/15 text-destructive text-[0.625rem] font-bold align-middle">✕</span>{" "}
                       for å avvise
                     </>
                   ) : (
@@ -423,7 +423,7 @@ export const ArticleEditorBody = ({
                       {entries.map(([cat, count]) => (
                         <span
                           key={cat}
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-medium ${styles[cat] || styles.stil}`}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[0.6875rem] font-medium ${styles[cat] || styles.stil}`}
                           title={`${count} ${labels[cat] || cat}`}
                         >
                           <span className="font-bold tabular-nums">{count}</span>

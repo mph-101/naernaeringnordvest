@@ -377,8 +377,9 @@ export const NewsFeed = () => {
   if (loading) {
     return (
       <section className="py-[44px]">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+        <div role="status" className="max-w-5xl mx-auto px-6 text-center">
+          <div aria-hidden="true" className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+          <span className="sr-only">{language === "no" ? "Laster artikler" : "Loading articles"}</span>
         </div>
       </section>
     );
@@ -449,6 +450,7 @@ export const NewsFeed = () => {
             >
               <button
                 onClick={() => setSelectedCategories([])}
+                aria-pressed={selectedCategories.length === 0}
                 className={`px-4 min-h-10 inline-flex items-center rounded-full text-sm font-subhead whitespace-nowrap shrink-0 transition-all duration-200 ${
                   selectedCategories.length === 0
                     ? "bg-accent text-accent-foreground shadow-soft"
@@ -507,7 +509,7 @@ export const NewsFeed = () => {
         {featuredItem && (
           <Link
             to={`/article/${featuredItem.id}`}
-            className="group block w-full text-left mb-10 bg-card rounded-2xl shadow-soft hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden border border-border hover:border-accent/30"
+            className="group block w-full text-left mb-10 bg-card rounded-2xl card-interactive transition-all duration-300 animate-fade-up overflow-hidden border border-border hover:border-accent/30"
           >
             <div className="md:flex">
               <div className="aspect-[16/10] md:aspect-auto md:self-stretch md:w-2/5 flex-shrink-0 flex items-center justify-center relative overflow-hidden">
@@ -575,7 +577,7 @@ export const NewsFeed = () => {
             <Link
               key={item.id}
               to={`/article/${item.id}`}
-              className="group block w-full text-left bg-card rounded-2xl border border-border hover:border-accent/30 hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden"
+              className="group block w-full text-left bg-card rounded-2xl border border-border hover:border-accent/30 card-interactive transition-all duration-300 animate-fade-up overflow-hidden"
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="aspect-[16/9] w-full flex items-center justify-center relative overflow-hidden">
@@ -718,10 +720,10 @@ const NativeAdCard = ({ ad, index, language }: NativeAdCardProps) => {
   return (
     <Wrapper
       {...wrapperProps}
-      className="group block w-full text-left bg-card rounded-2xl border-2 border-sponsored/60 hover:shadow-elevated transition-all duration-300 animate-fade-up overflow-hidden relative"
+      className="group block w-full text-left bg-card rounded-2xl border-2 border-sponsored/60 card-interactive transition-all duration-300 animate-fade-up overflow-hidden relative"
       style={{ animationDelay: `${index * 50}ms` }}
     >
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sponsored text-sponsored-foreground text-[10px] font-subhead font-bold uppercase tracking-wide shadow-sm">
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sponsored text-sponsored-foreground text-[0.625rem] font-subhead font-bold uppercase tracking-wide shadow-sm">
         <Megaphone className="w-3 h-3" />
         {labelText}
       </div>

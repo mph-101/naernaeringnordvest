@@ -112,7 +112,7 @@ function NotificationLine({ n, isNo, onClick }: { n: NotificationRow; isNo: bool
         <div className="flex-1 min-w-0">
           <p className="font-subhead text-sm font-semibold text-headline truncate">{title}</p>
           {body && <p className="text-xs text-muted-foreground font-body line-clamp-2 mt-0.5">{body}</p>}
-          <p className="text-[10px] text-muted-foreground font-body mt-1">{relativeTime(n.created_at, isNo)}</p>
+          <p className="text-[0.625rem] text-muted-foreground font-body mt-1">{relativeTime(n.created_at, isNo)}</p>
         </div>
         {!n.read_at && <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0 mt-1.5" />}
       </div>
@@ -255,7 +255,7 @@ export function NotificationBell() {
       >
         <Bell className="w-4 h-4 text-foreground/70" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground text-[10px] font-semibold rounded-full flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground text-[0.625rem] font-semibold rounded-full flex items-center justify-center">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}

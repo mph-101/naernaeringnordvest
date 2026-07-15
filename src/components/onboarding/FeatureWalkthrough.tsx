@@ -200,7 +200,7 @@ export function FeatureWalkthrough() {
           >
             {t.skip}
           </button>
-          <span className="text-[11px] font-subhead text-muted-foreground tabular-nums">
+          <span className="text-[0.6875rem] font-subhead text-muted-foreground tabular-nums">
             {safeIdx + 1} / {cards.length}
           </span>
           <div className="flex items-center gap-2">

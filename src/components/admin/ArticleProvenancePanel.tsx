@@ -171,7 +171,7 @@ export function ArticleProvenancePanel({
                 rows={2}
                 onChange={(e) => setResponses(update(responses, i, { note: e.target.value }))}
               />
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[0.6875rem] text-muted-foreground">
                 🔒 Intern — vises aldri offentlig.
               </p>
             </div>

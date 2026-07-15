@@ -204,12 +204,12 @@ export function SporAIChat() {
                           li: ({ children }) => <li className="leading-[1.6] text-sm">{children}</li>,
                           table: ({ children }) => (
                             <div className="overflow-x-auto my-3 -mx-1 rounded-lg border border-border bg-card">
-                              <table className="w-full text-[11px] border-collapse min-w-[400px]">{children}</table>
+                              <table className="w-full text-[0.6875rem] border-collapse min-w-[400px]">{children}</table>
                             </div>
                           ),
                           thead: ({ children }) => <thead className="bg-muted/60">{children}</thead>,
-                          th: ({ children }) => <th className="text-left py-2 px-2.5 font-subhead font-semibold text-headline border-b border-border text-[11px] whitespace-nowrap">{children}</th>,
-                          td: ({ children }) => <td className="py-1.5 px-2.5 border-b border-border/40 text-[11px] whitespace-nowrap">{children}</td>,
+                          th: ({ children }) => <th className="text-left py-2 px-2.5 font-subhead font-semibold text-headline border-b border-border text-[0.6875rem] whitespace-nowrap">{children}</th>,
+                          td: ({ children }) => <td className="py-1.5 px-2.5 border-b border-border/40 text-[0.6875rem] whitespace-nowrap">{children}</td>,
                           tr: ({ children }) => <tr className="hover:bg-muted/30 transition-colors">{children}</tr>,
                           strong: ({ children }) => <strong className="font-semibold text-headline">{children}</strong>,
                           h3: ({ children }) => <h3 className="font-semibold text-sm mt-4 mb-2 text-headline">{children}</h3>,
@@ -224,12 +224,12 @@ export function SporAIChat() {
                 {msg.role === "assistant" && ((msg.sources && msg.sources.length > 0) || (msg.trustedSources && msg.trustedSources.length > 0)) && (
                   <div className="basis-full pl-9">
                     <div className="mt-2 p-2.5 rounded-xl bg-muted/50 border border-border/50">
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
+                      <p className="text-[0.625rem] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
                         <FileText className="w-3 h-3" /> Kilder
                       </p>
                       <ol className="space-y-1">
                         {(msg.sources ?? []).map((s) => (
-                          <li key={s.id} className="text-[11px] leading-snug">
+                          <li key={s.id} className="text-[0.6875rem] leading-snug">
                             <span className="text-muted-foreground font-mono mr-1">[{s.n}]</span>
                             <Link
                               to={`/article/${s.id}`}
@@ -248,7 +248,7 @@ export function SporAIChat() {
                             : Globe;
                           const label = t.title || t.source_name;
                           return (
-                            <li key={`t-${t.n}`} className="text-[11px] leading-snug flex items-baseline gap-1">
+                            <li key={`t-${t.n}`} className="text-[0.6875rem] leading-snug flex items-baseline gap-1">
                               <span className="text-muted-foreground font-mono">[{t.n}]</span>
                               <TypeIcon className="w-2.5 h-2.5 text-muted-foreground translate-y-0.5 shrink-0" />
                               {t.source_url ? (
@@ -281,9 +281,9 @@ export function SporAIChat() {
                   <Bot className="w-3.5 h-3.5 text-foreground/70" />
                 </div>
                 <div className="bg-secondary rounded-2xl rounded-tl-sm px-3.5 py-2.5 flex gap-1.5 items-center">
-                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" />
-                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" />
+                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: "300ms" }} />
                 </div>
               </div>
             )}

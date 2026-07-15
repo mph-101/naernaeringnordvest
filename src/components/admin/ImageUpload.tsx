@@ -320,7 +320,7 @@ export const ImageUpload = ({
                       <><Sparkles className="w-3.5 h-3.5 mr-2" />Foreslå med AI</>
                     )}
                   </Button>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[0.6875rem] text-muted-foreground">
                     AI fyller inn alt-tekst og bildetekst basert på bildet. Du kan redigere før lagring.
                   </p>
                 </div>
@@ -422,7 +422,7 @@ export const ImageUpload = ({
                   />
                   <div className="p-2">
                     <p className="text-xs line-clamp-2">{a.caption}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">Foto: {a.photographer}</p>
+                    <p className="text-[0.625rem] text-muted-foreground mt-1">Foto: {a.photographer}</p>
                   </div>
                 </button>
               ))}

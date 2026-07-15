@@ -122,7 +122,7 @@ export function ArticleRevisionLog({
         <ol className="mt-4 pt-4 border-t border-border/60 space-y-3">
           {items.map((r) => (
             <li key={r.id} className="flex gap-3 text-sm font-body">
-              <span className="mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full bg-accent/10 text-accent text-[11px] font-subhead font-bold tabular-nums shrink-0">
+              <span className="mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full bg-accent/10 text-accent text-[0.6875rem] font-subhead font-bold tabular-nums shrink-0">
                 v{r.revision_number}
               </span>
               <div className="flex-1 min-w-0">
@@ -148,7 +148,7 @@ export function ArticleRevisionLog({
           ))}
           {firstPublishedDate && (
             <li className="flex gap-3 text-sm font-body opacity-80">
-              <span className="mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground text-[11px] font-subhead font-bold tabular-nums shrink-0">
+              <span className="mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground text-[0.6875rem] font-subhead font-bold tabular-nums shrink-0">
                 v0
               </span>
               <div className="flex-1 min-w-0">

@@ -127,7 +127,7 @@ const HjernevelvWriterPage = () => {
               {articles.map((a) => (
                 <li key={a.id}>
                   <Link to={`/hjernevelvet/essay/${a.id}`} className="block bg-card border border-border rounded-xl p-4 hover:border-accent/40 transition">
-                    {a.topic && <span className="text-[10px] uppercase tracking-wider text-accent font-subhead">{a.topic}</span>}
+                    {a.topic && <span className="text-[0.625rem] uppercase tracking-wider text-accent font-subhead">{a.topic}</span>}
                     <h3 className="font-headline text-lg font-semibold text-headline mt-1 mb-1">{a.title}</h3>
                     <p className="text-sm text-muted-foreground font-body line-clamp-2">{a.excerpt}</p>
                   </Link>

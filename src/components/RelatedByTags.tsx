@@ -174,7 +174,7 @@ export const RelatedByTags = ({ articleId, className = "" }: RelatedByTagsProps)
                   {a.shared_tags.slice(0, 2).map((t) => (
                     <span
                       key={t}
-                      className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-subhead"
+                      className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[0.6875rem] font-subhead"
                     >
                       {t}
                     </span>

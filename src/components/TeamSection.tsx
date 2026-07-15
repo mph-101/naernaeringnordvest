@@ -46,7 +46,7 @@ export const TeamSection = () => {
             {journalists.map((person, index) => (
               <div
                 key={person.id}
-                className="bg-card rounded-xl p-6 shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 text-center flex flex-col"
+                className="bg-card rounded-xl p-6 card-interactive transition-all duration-300 text-center flex flex-col"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {person.avatar ? (

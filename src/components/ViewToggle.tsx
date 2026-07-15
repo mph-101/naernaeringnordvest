@@ -54,7 +54,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
 
   return (
     <div className="flex items-center justify-center py-4 sm:py-6 px-3">
-      <div className="inline-flex items-center bg-secondary rounded-full p-1 sm:p-1.5 max-w-full">
+      <div className="inline-flex items-center bg-secondary rounded-full p-1 sm:p-1.5 max-w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = isActive(tab.id);
@@ -63,7 +63,9 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
               ? "bg-card text-foreground shadow-soft"
               : "text-muted-foreground hover:text-foreground"
           }`;
-          const labelClass = active ? "" : "hidden sm:inline";
+          // Etiketter er alltid synlige — ikon-only faner med title-tooltip
+          // var ubrukelige på touch (re-audit responsive P1).
+          const labelClass = "";
 
           if (tab.to) {
             return (
@@ -98,7 +100,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="ml-0.5 sm:ml-1 p-1.5 sm:p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-card/50 transition-all duration-200 shrink-0"
+              className="ml-0.5 sm:ml-1 min-w-10 min-h-10 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-card/50 transition-all duration-200 shrink-0"
               title={language === "no" ? "Velg startside" : "Choose landing page"}
               aria-label={language === "no" ? "Velg startside" : "Choose landing page"}
             >

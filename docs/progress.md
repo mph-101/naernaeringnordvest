@@ -1,5 +1,16 @@
 # Progress
 
+## Re-audit a11y-bunken: region-bytte overalt, ekte dialog, 40px-gulv (2026-07-11)
+
+- **A11y-PR fra re-auditen (punkt 1–4 + tre P2-mikrofunn)** — 2026-07-11, branch `a11y/targets-dialog-region` (stablet på #157)
+  - **[P0] Region-bytte:** Headerens håndrullede dropdown (blur-timeout som lukket før tastaturet nådde listen, falsk `aria-haspopup`) erstattet med shadcn/Radix `DropdownMenu` — roving fokus, Escape og menu-roller gratis; og region-seksjon lagt i mobilmenyen (7 knapper ≥40px) — mobilbrukere var låst til sist valgte region.
+  - **[P1] Paywall-modal:** RelatedArticles' håndrullede overlay → Radix `Dialog` (dialog-rolle, aria-modal, fokusfelle, Escape, navngitt lukkeknapp; `DialogTitle`/`DialogDescription` koblet).
+  - **[P1] Opacity-på-tekst forbudt i praksis:** ticker-kildelenker `/70` → full `muted-foreground`; headerens region-/språketiketter `/70` → `/80`; Trending-ranktallene `text-accent/30` (1,26:1) → `text-accent-ink`.
+  - **[P1] 40px-gulvet:** `min-w-10 min-h-10` på samtlige ikon-kontroller (header-knapper/-lenker, hamburger, søk, banner-lukk, kalender-eksport, feed-chevroner, stjerne); interaktive piller (kategori, range, hero-chips, Tilpass) → `min-h-10`; ViewToggle-etiketter alltid synlige (ikon-only + title-tooltip var ubrukelig på touch). Range-piller fikk `aria-pressed` i samme slengen.
+  - **Mikrofunn:** marquee-klonene `aria-hidden` + `tabIndex=-1` (lenker dobles ikke lenger i tab-rekkefølgen) + `group-focus-within`-pause; synlig fokusring (`ring-accent-ink`) på begge søkefelt; FirstVisitBanner stables på mobil (320px-funnet).
+  - Verifisert: eslint 0 errors, vitest 127/127, live i preview (Radix-attributter på trigger, 12 kloner skjult, 0 mål under 40px blant synlige kontroller, region-seksjon i mobilmeny, faneetiketter synlige).
+
+
 ## Design-audit optimize A+B: Trending-RPC + React Query i forside-widgetene (2026-07-10)
 
 - **Data-lags-PR fra re-auditen (optimize del A+B; del C blokkert på free plan → magnus-todo)** — 2026-07-10, branch `perf/data-layer-rpc-react-query`

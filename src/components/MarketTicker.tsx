@@ -180,10 +180,13 @@ export const MarketTicker = () => {
       <div className="relative flex items-center">
         <div className={`flex-1 whitespace-nowrap ${reducedMotion ? "overflow-x-auto" : "overflow-hidden"}`}>
           <div
-            className={`flex gap-8 py-2 px-6 ${reducedMotion ? "" : "animate-marquee group-hover:[animation-play-state:paused]"}`}
+            className={`flex gap-8 py-2 px-6 ${reducedMotion ? "" : "animate-marquee group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused]"}`}
             style={!reducedMotion && paused ? { animationPlayState: "paused" } : undefined}
           >
           {loop.map((item, i) => {
+            // Andre halvdel av loopen er en visuell klon for sømløs rulling —
+            // skjules for AT og tas ut av tab-rekkefølgen så lenker ikke dobles.
+            const isClone = !reducedMotion && i >= items.length;
             const Icon = item.icon;
             const ChangeIcon =
               item.change == null
@@ -205,6 +208,7 @@ export const MarketTicker = () => {
               <div
                 key={`${item.label}-${i}`}
                 className="flex items-center gap-2 text-xs font-body"
+                aria-hidden={isClone || undefined}
               >
                 <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                 <span className="text-muted-foreground">{item.label}</span>
@@ -219,9 +223,9 @@ export const MarketTicker = () => {
                   href={item.sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-0.5 text-[10px] text-muted-foreground/70 hover:text-foreground transition-colors border-l border-border/60 pl-2 ml-1"
+                  tabIndex={isClone ? -1 : undefined}
+                  className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors border-l border-border/60 pl-2 ml-1"
                   title={isNo ? `Kilde: ${item.sourceLabel}` : `Source: ${item.sourceLabel}`}
-                  onClick={(e) => e.stopPropagation()}
                 >
                   <span>{isNo ? "Kilde:" : "Source:"} {item.sourceLabel}</span>
                   <ExternalLink className="w-2.5 h-2.5" />

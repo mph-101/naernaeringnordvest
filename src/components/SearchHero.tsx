@@ -46,7 +46,7 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
       {/* Search */}
       <form onSubmit={handleSubmit} className="w-full max-w-xl mb-10 animate-fade-up" style={{ animationDelay: '500ms', animationFillMode: 'both' }}>
         <div className="relative group">
-          <div className="relative bg-card border-2 border-border rounded-2xl shadow-elevated group-focus-within:border-accent group-focus-within:shadow-elevated transition-all duration-300">
+          <div className="relative bg-card border-2 border-border rounded-2xl shadow-elevated group-focus-within:border-accent group-focus-within:ring-2 group-focus-within:ring-accent-ink transition-all duration-300">
             <div className="flex items-center px-5 py-4">
               <Search className="w-5 h-5 text-muted-foreground mr-4 flex-shrink-0" />
               <input
@@ -80,7 +80,7 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
             <button
               key={index}
               onClick={() => handlePromptClick(prompt)}
-              className="px-4 py-2 bg-card hover:bg-secondary border border-border rounded-full text-sm font-body text-foreground/80 hover:text-foreground transition-all duration-200 hover:shadow-soft hover:border-accent/30"
+              className="px-4 min-h-10 inline-flex items-center bg-card hover:bg-secondary border border-border rounded-full text-sm font-body text-foreground/80 hover:text-foreground transition-all duration-200 hover:shadow-soft hover:border-accent/30"
             >
               {prompt}
             </button>

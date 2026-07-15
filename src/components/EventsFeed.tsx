@@ -162,7 +162,8 @@ export const EventsFeed = () => {
           <button
             key={opt.id}
             onClick={() => setRange(opt.id)}
-            className={`px-3 py-1 rounded-full text-xs font-subhead font-medium transition-colors ${
+            aria-pressed={range === opt.id}
+            className={`px-3.5 min-h-10 inline-flex items-center rounded-full text-xs font-subhead font-medium transition-colors ${
               range === opt.id
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-foreground hover:bg-secondary/80"
@@ -306,7 +307,7 @@ export const EventsFeed = () => {
                   onClick={() => downloadIcs(item)}
                   title={isNo ? "Legg til i kalender" : "Add to calendar"}
                   aria-label={isNo ? "Legg til i kalender" : "Add to calendar"}
-                  className="relative z-10 self-center p-2 rounded-md text-muted-foreground hover:text-primary-ink hover:bg-primary/10 transition-colors flex-shrink-0"
+                  className="relative z-10 self-center min-w-10 min-h-10 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-primary-ink hover:bg-primary/10 transition-colors flex-shrink-0"
                 >
                   <CalendarPlus className="w-4 h-4" />
                 </button>

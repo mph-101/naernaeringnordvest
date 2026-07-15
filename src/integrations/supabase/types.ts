@@ -3665,6 +3665,13 @@ export type Database = {
           key_prefix: string
         }[]
       }
+      get_trending_articles: {
+        Args: { days?: number; max_rows?: number }
+        Returns: {
+          article_id: string
+          views: number
+        }[]
+      }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_barometer_access: {
         Args: { _region_slug: string; _user_id: string }

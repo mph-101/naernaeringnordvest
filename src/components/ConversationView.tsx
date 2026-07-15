@@ -601,7 +601,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                       <p className="font-subhead font-semibold text-sm text-headline truncate">
                                         {c.navn}
                                         {c.konkurs && (
-                                          <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-destructive/15 text-destructive-ink text-[10px] font-semibold align-middle">
+                                          <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-negative/15 text-negative text-[10px] font-semibold align-middle">
                                             {language === "no" ? "Konkurs" : "Bankrupt"}
                                           </span>
                                         )}
@@ -635,7 +635,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                             )}
                                             {c.regnskap.aarsresultat != null && (
                                               <> · {language === "no" ? "resultat" : "result"}{" "}
-                                                <span className={`font-semibold ${c.regnskap.aarsresultat < 0 ? "text-destructive-ink" : "text-foreground"}`}>
+                                                <span className={`font-semibold ${c.regnskap.aarsresultat < 0 ? "text-negative" : "text-foreground"}`}>
                                                   {Math.round(c.regnskap.aarsresultat).toLocaleString(locale)} {unit}
                                                 </span>
                                               </>
@@ -911,7 +911,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   <p className="font-subhead font-semibold text-sm text-headline truncate">
                                     {c.navn}
                                     {c.konkurs && (
-                                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-destructive/15 text-destructive-ink text-[10px] font-semibold align-middle">
+                                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-negative/15 text-negative text-[10px] font-semibold align-middle">
                                         {language === "no" ? "Konkurs" : "Bankrupt"}
                                       </span>
                                     )}
@@ -971,7 +971,8 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                     index === messages.length - 1 &&
                     message.sources && message.sources.length > 0 && (
                       <div className="mt-5">
-                        <p className="font-subhead text-[11px] text-muted-foreground mb-2 uppercase tracking-widest">
+                        {/* Rolig etikett — uppercase-eyebrow er et anti-mønster (DESIGN.md) */}
+                        <p className="font-subhead text-sm font-medium text-muted-foreground mb-2">
                           {language === "no" ? "Foreslåtte oppfølginger" : "Suggested follow-ups"}
                         </p>
                         <div className="flex flex-wrap gap-2">
@@ -1001,9 +1002,9 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
             <div className="flex gap-4 animate-fade-in">
               <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center"><Bot className="w-5 h-5 text-accent-ink" /></div>
               <div className="flex gap-1.5 pt-4">
-                <span className="w-2 h-2 bg-accent/50 rounded-full animate-bounce" />
-                <span className="w-2 h-2 bg-accent/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-2 h-2 bg-accent/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                <span className="w-2 h-2 bg-accent/50 rounded-full animate-pulse" />
+                <span className="w-2 h-2 bg-accent/50 rounded-full animate-pulse" style={{ animationDelay: "150ms" }} />
+                <span className="w-2 h-2 bg-accent/50 rounded-full animate-pulse" style={{ animationDelay: "300ms" }} />
               </div>
             </div>
           )}

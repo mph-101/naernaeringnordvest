@@ -281,9 +281,9 @@ export function SporAIChat() {
                   <Bot className="w-3.5 h-3.5 text-foreground/70" />
                 </div>
                 <div className="bg-secondary rounded-2xl rounded-tl-sm px-3.5 py-2.5 flex gap-1.5 items-center">
-                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" />
-                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" />
+                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: "300ms" }} />
                 </div>
               </div>
             )}

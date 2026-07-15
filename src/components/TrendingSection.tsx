@@ -9,9 +9,9 @@ import { PUBLISHED_ARTICLE_LIST_SELECT, toUiArticle } from "@/lib/article-data";
 async function fetchTrendingArticles(): Promise<any[]> {
   // Aggregeringen skjer server-side (get_trending_articles-RPC) — klienten
   // mottar maks 12 (id, views)-rader i stedet for rå article_views-dumpen.
-  const { data: top, error } = await (supabase.rpc as any)("get_trending_articles");
+  const { data: top, error } = await supabase.rpc("get_trending_articles");
   if (error) throw error;
-  const topIds: string[] = ((top ?? []) as any[]).map((r) => r.article_id);
+  const topIds: string[] = (top ?? []).map((r) => r.article_id);
 
   let articles: any[] = [];
   if (topIds.length > 0) {

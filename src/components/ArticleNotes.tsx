@@ -449,7 +449,7 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
               </pre>
               {pendingShare?.kind === "group" && (
                 <div className="space-y-2">
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-subhead">
+                  <p className="text-[0.6875rem] uppercase tracking-wider text-muted-foreground font-subhead">
                     {t.visibility}
                   </p>
                   <div className="grid gap-2">
@@ -486,7 +486,7 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
                 </div>
               )}
               <div>
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-subhead mb-1">
+                <p className="text-[0.6875rem] uppercase tracking-wider text-muted-foreground font-subhead mb-1">
                   {t.linkLabel}
                 </p>
                 <a

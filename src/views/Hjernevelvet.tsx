@@ -276,7 +276,7 @@ const Hjernevelvet = () => {
                       {w.expertise.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {w.expertise.slice(0, 3).map((e) => (
-                            <span key={e} className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-subhead">
+                            <span key={e} className="text-[0.625rem] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-subhead">
                               {e}
                             </span>
                           ))}
@@ -313,7 +313,7 @@ const Hjernevelvet = () => {
                         )}
                         <div className="p-5">
                           {a.topic && (
-                            <span className="inline-block text-[10px] uppercase tracking-wider text-accent font-subhead mb-2">
+                            <span className="inline-block text-[0.625rem] uppercase tracking-wider text-accent font-subhead mb-2">
                               {a.topic}
                             </span>
                           )}

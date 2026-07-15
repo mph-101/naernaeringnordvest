@@ -119,11 +119,11 @@ export function CompanyArticles({ orgnr }: { orgnr: string }) {
                 {a.excerpt}
               </p>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                <Badge variant="outline" className="text-[0.625rem] px-1.5 py-0">
                   {a.category}
                 </Badge>
                 {a.date && (
-                  <span className="text-[10px] text-muted-foreground">{a.date}</span>
+                  <span className="text-[0.625rem] text-muted-foreground">{a.date}</span>
                 )}
               </div>
             </div>

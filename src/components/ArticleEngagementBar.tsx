@@ -51,7 +51,7 @@ export function ArticleEngagementBar({ articleId, articleTitle, authorName, jour
     <section data-tour="article-engagement" className="mb-12">
       <div className="flex items-end justify-between mb-5">
         <div>
-          <p className="text-[11px] font-subhead font-semibold text-accent uppercase tracking-[0.15em]">{t.heading}</p>
+          <p className="text-[0.6875rem] font-subhead font-semibold text-accent uppercase tracking-[0.15em]">{t.heading}</p>
           <h2 className="font-headline text-xl font-bold text-headline mt-1">{t.lead}</h2>
         </div>
         <a

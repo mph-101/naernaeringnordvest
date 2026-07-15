@@ -91,7 +91,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
               <span className="font-headline text-base sm:text-lg font-bold text-headline leading-none truncate">
                 {t.brandName}
               </span>
-              <span className="font-subhead text-[10px] sm:text-xs text-accent-ink tracking-wide truncate">
+              <span className="font-subhead text-[0.625rem] sm:text-xs text-accent-ink tracking-wide truncate">
                 {currentRegion && currentRegion.slug !== "nasjonal" ? currentRegion.name : t.brandSub}
               </span>
             </div>

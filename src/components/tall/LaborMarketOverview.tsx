@@ -203,7 +203,7 @@ export function LaborMarketOverview() {
                 </div>
                 <div className="min-w-0">
                   <p className="font-subhead text-sm text-headline">{m.label}</p>
-                  <p className="text-[11px] text-muted-foreground font-body truncate">{m.help}</p>
+                  <p className="text-[0.6875rem] text-muted-foreground font-body truncate">{m.help}</p>
                 </div>
               </div>
               <div className="flex items-baseline justify-between gap-2">
@@ -214,7 +214,7 @@ export function LaborMarketOverview() {
                     <span className="font-headline text-2xl font-bold text-headline">
                       {m.format(m.point.value)}
                     </span>
-                    <span className="text-[11px] text-muted-foreground font-body">{m.point.period}</span>
+                    <span className="text-[0.6875rem] text-muted-foreground font-body">{m.point.period}</span>
                   </>
                 ) : (
                   <span className="text-xs text-muted-foreground font-body">{isNo ? "Ikke tilgjengelig" : "Not available"}</span>
@@ -224,7 +224,7 @@ export function LaborMarketOverview() {
                 href={src.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors mt-auto pt-2 border-t border-border/60"
+                className="flex items-center gap-1 text-[0.6875rem] text-muted-foreground hover:text-foreground transition-colors mt-auto pt-2 border-t border-border/60"
               >
                 <span>{isNo ? "Kilde:" : "Source:"} {src.label}</span>
                 <ExternalLink className="w-3 h-3" />
@@ -286,7 +286,7 @@ export function LaborMarketOverview() {
                     </p>
                   </div>
                   {j.is_premium && (
-                    <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-accent font-subhead font-semibold whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1 text-[0.625rem] uppercase tracking-wider text-accent font-subhead font-semibold whitespace-nowrap">
                       <Sparkles className="w-3 h-3" /> Premium
                     </span>
                   )}
@@ -323,7 +323,7 @@ export function LaborMarketOverview() {
               >
                 <p className="font-subhead font-medium text-sm text-headline line-clamp-2">{a.title}</p>
                 <p className="text-xs text-muted-foreground font-body mt-1 line-clamp-2">{a.excerpt}</p>
-                <p className="text-[11px] text-muted-foreground font-body mt-2">
+                <p className="text-[0.6875rem] text-muted-foreground font-body mt-2">
                   {a.category}
                   {a.published_at && ` · ${new Date(a.published_at).toLocaleDateString(isNo ? "nb-NO" : "en-US", { day: "numeric", month: "short" })}`}
                 </p>

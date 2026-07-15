@@ -214,7 +214,7 @@ const CitationBadge = ({ cites }: { cites: number }) => {
   if (cites > 0) {
     return (
       <span
-        className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-subhead font-medium bg-accent/10 text-accent"
+        className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[0.625rem] font-subhead font-medium bg-accent/10 text-accent"
         title={`Sitert ${cites} ${cites === 1 ? "gang" : "ganger"} i svaret`}
       >
         <Quote className="w-2.5 h-2.5" />
@@ -224,7 +224,7 @@ const CitationBadge = ({ cites }: { cites: number }) => {
   }
   return (
     <span
-      className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-subhead font-medium bg-muted text-muted-foreground"
+      className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[0.625rem] font-subhead font-medium bg-muted text-muted-foreground"
       title="Hentet som kontekst, men ikke sitert eksplisitt i svaret"
     >
       <CircleDashed className="w-2.5 h-2.5" />

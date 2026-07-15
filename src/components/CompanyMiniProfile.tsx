@@ -99,7 +99,7 @@ export function CompanyMiniProfile({ orgnr, companyName }: { orgnr: string; comp
           </div>
           <div className="min-w-0">
             <h4 className="font-headline text-sm font-semibold text-headline truncate">{name}</h4>
-            <span className="text-[11px] text-muted-foreground font-body">Org.nr {orgnr}</span>
+            <span className="text-[0.6875rem] text-muted-foreground font-body">Org.nr {orgnr}</span>
           </div>
         </div>
         <Link
@@ -119,7 +119,7 @@ export function CompanyMiniProfile({ orgnr, companyName }: { orgnr: string; comp
       {/* CEO */}
       {ceo && (
         <div className="flex items-center gap-1.5 text-xs text-foreground font-body mb-3">
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
+          <Badge variant="outline" className="text-[0.625rem] px-1.5 py-0 font-normal">
             {isNo ? "Daglig leder" : "CEO"}
           </Badge>
           <span className="font-medium">{ceo}</span>
@@ -168,7 +168,7 @@ function KeyFigure({
     <div className="bg-muted/50 rounded-lg p-2.5 text-center">
       <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
         {icon}
-        <span className="text-[10px] font-subhead uppercase tracking-wide">{label}</span>
+        <span className="text-[0.625rem] font-subhead uppercase tracking-wide">{label}</span>
       </div>
       <p className={`text-sm font-semibold font-headline ${negative ? "text-destructive" : "text-foreground"}`}>
         {value}

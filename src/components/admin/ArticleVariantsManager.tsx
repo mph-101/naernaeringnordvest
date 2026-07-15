@@ -215,7 +215,7 @@ export const ArticleVariantsManager = ({ articleId, baselineTitle, baselineImage
                     >
                       <div className="font-semibold mb-1 flex items-center gap-2">
                         Variant {key}
-                        {winner === key && <span className="text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400">vinner</span>}
+                        {winner === key && <span className="text-[0.625rem] uppercase tracking-wide text-emerald-700 dark:text-emerald-400">vinner</span>}
                       </div>
                       <dl className="space-y-1 text-xs text-muted-foreground">
                         <div className="flex justify-between"><dt>Visninger</dt><dd className="font-medium text-foreground">{stat?.impressions ?? 0}</dd></div>

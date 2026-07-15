@@ -377,8 +377,9 @@ export const NewsFeed = () => {
   if (loading) {
     return (
       <section className="py-[44px]">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+        <div role="status" className="max-w-5xl mx-auto px-6 text-center">
+          <div aria-hidden="true" className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+          <span className="sr-only">{language === "no" ? "Laster artikler" : "Loading articles"}</span>
         </div>
       </section>
     );
@@ -449,6 +450,7 @@ export const NewsFeed = () => {
             >
               <button
                 onClick={() => setSelectedCategories([])}
+                aria-pressed={selectedCategories.length === 0}
                 className={`px-4 min-h-10 inline-flex items-center rounded-full text-sm font-subhead whitespace-nowrap shrink-0 transition-all duration-200 ${
                   selectedCategories.length === 0
                     ? "bg-accent text-accent-foreground shadow-soft"

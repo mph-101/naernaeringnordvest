@@ -177,6 +177,8 @@ export const JobChangeFeed = () => {
         </h2>
         <button
           onClick={() => setShowForm(!showForm)}
+          aria-expanded={showForm}
+          aria-controls="jobchange-form"
           className="text-sm text-primary-ink font-subhead font-medium hover:underline"
         >
           {isNo ? "Meld inn" : "Report"}
@@ -184,7 +186,7 @@ export const JobChangeFeed = () => {
       </div>
 
       {showForm && (
-        <div className="mb-5">
+        <div id="jobchange-form" className="mb-5">
           <Suspense fallback={null}>
             <LazyJobChangeForm onSubmitted={() => setShowForm(false)} />
           </Suspense>

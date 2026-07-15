@@ -89,7 +89,7 @@ export function RegionPicker(props: Props) {
           >
             {isSelected ? <Check className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
             {r.name}
-            {isDisabled && <span className="text-[10px] opacity-70">(egen)</span>}
+            {isDisabled && <span className="text-[0.625rem] opacity-70">(egen)</span>}
           </button>
         );
       })}

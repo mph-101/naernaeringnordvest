@@ -445,7 +445,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   href={href}
                                   onClick={(e) => handleCitationClick(e, href)}
                                   title={label}
-                                  className={`inline-flex items-center gap-0.5 align-super mx-0.5 px-1.5 py-px rounded-full text-[10px] font-subhead font-semibold no-underline transition-colors ${
+                                  className={`inline-flex items-center gap-0.5 align-super mx-0.5 px-1.5 py-px rounded-full text-[0.625rem] font-subhead font-semibold no-underline transition-colors ${
                                     isTallRef
                                       ? "bg-primary/10 text-primary-ink hover:bg-primary/20"
                                       : "bg-accent/10 text-accent-ink hover:bg-accent/20"
@@ -575,7 +575,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                         <span className="font-subhead font-semibold text-sm text-headline">
                           {language === "no" ? "Brønnøysundregistrene" : "Brønnøysund Register"}
                         </span>
-                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-subhead ml-auto">
+                        <span className="text-[0.625rem] uppercase tracking-widest text-muted-foreground font-subhead ml-auto">
                           {language === "no" ? "Sanntidsdata" : "Live data"}
                         </span>
                       </div>
@@ -601,7 +601,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                       <p className="font-subhead font-semibold text-sm text-headline truncate">
                                         {c.navn}
                                         {c.konkurs && (
-                                          <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-destructive/15 text-destructive-ink text-[10px] font-semibold align-middle">
+                                          <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-negative/15 text-negative text-[0.625rem] font-semibold align-middle">
                                             {language === "no" ? "Konkurs" : "Bankrupt"}
                                           </span>
                                         )}
@@ -609,7 +609,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                       <p className="text-xs text-muted-foreground font-body mt-0.5 truncate">
                                         {[c.kommune, c.bransje].filter(Boolean).join(" · ")}
                                       </p>
-                                      <p className="text-[11px] text-muted-foreground/80 font-body mt-1">
+                                      <p className="text-[0.6875rem] text-muted-foreground/80 font-body mt-1">
                                         <a
                                           href={`https://virksomhet.brreg.no/nb/oppslag/enheter/${c.orgnr}`}
                                           target="_blank"
@@ -624,7 +624,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                         const locale = language === "no" ? "nb-NO" : "en-US";
                                         const unit = c.regnskap.valuta === "NOK" ? "kr" : c.regnskap.valuta;
                                         return (
-                                          <p className="text-[11px] text-muted-foreground/90 font-body mt-1">
+                                          <p className="text-[0.6875rem] text-muted-foreground/90 font-body mt-1">
                                             {language === "no" ? "Regnskap" : "Accounts"} {c.regnskap.aar}
                                             {c.regnskap.driftsinntekter != null && (
                                               <> · {language === "no" ? "omsetning" : "revenue"}{" "}
@@ -635,7 +635,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                             )}
                                             {c.regnskap.aarsresultat != null && (
                                               <> · {language === "no" ? "resultat" : "result"}{" "}
-                                                <span className={`font-semibold ${c.regnskap.aarsresultat < 0 ? "text-destructive-ink" : "text-foreground"}`}>
+                                                <span className={`font-semibold ${c.regnskap.aarsresultat < 0 ? "text-negative" : "text-foreground"}`}>
                                                   {Math.round(c.regnskap.aarsresultat).toLocaleString(locale)} {unit}
                                                 </span>
                                               </>
@@ -649,7 +649,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                         <UsersIcon className="w-3.5 h-3.5 opacity-60" />
                                         {c.ansatte.toLocaleString(language === "no" ? "nb-NO" : "en-US")}
                                       </div>
-                                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-subhead mt-1">
+                                      <span className="text-[0.625rem] uppercase tracking-wider text-muted-foreground font-subhead mt-1">
                                         {language === "no" ? "ansatte" : "employees"}
                                       </span>
                                     </div>
@@ -660,7 +660,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                           </div>
                         ))}
                       </div>
-                      <div className="px-4 py-2 text-[11px] text-muted-foreground font-body bg-muted/30 border-t border-border">
+                      <div className="px-4 py-2 text-[0.6875rem] text-muted-foreground font-body bg-muted/30 border-t border-border">
                         {message.brregResults!.some((r) => r.companies.some((c) => c.regnskap))
                           ? (language === "no"
                               ? "Kilde: data.brreg.no — Brønnøysundregistrene (enhets- og regnskapsregisteret)"
@@ -685,10 +685,10 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                           <span className="font-subhead font-semibold text-sm text-headline">
                             {language === "no" ? "Tall-databasen" : "Tall database"}
                           </span>
-                          <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-subhead ml-auto group-open:hidden">
+                          <span className="text-[0.625rem] uppercase tracking-widest text-muted-foreground font-subhead ml-auto group-open:hidden">
                             {language === "no" ? "Vis tall" : "Show data"}
                           </span>
-                          <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-subhead ml-auto hidden group-open:inline">
+                          <span className="text-[0.625rem] uppercase tracking-widest text-muted-foreground font-subhead ml-auto hidden group-open:inline">
                             {language === "no" ? "Skjul" : "Hide"}
                           </span>
                         </summary>
@@ -813,9 +813,9 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   const v = typeof p.value === "number" ? p.value.toLocaleString(language === "no" ? "nb-NO" : "en-US") : p.value;
                                   return (
                                     <div key={k} className="p-2 rounded-lg bg-muted/40">
-                                      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{lbl}</dt>
+                                      <dt className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">{lbl}</dt>
                                       <dd className="font-subhead font-semibold text-headline mt-0.5">{v}{suffix}</dd>
-                                      <dd className="text-[10px] text-muted-foreground">{p.period}</dd>
+                                      <dd className="text-[0.625rem] text-muted-foreground">{p.period}</dd>
                                     </div>
                                   );
                                 })}
@@ -858,9 +858,9 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   const v = typeof p.value === "number" ? p.value.toLocaleString(language === "no" ? "nb-NO" : "en-US") : p.value;
                                   return (
                                     <div key={k} className="p-2 rounded-lg bg-muted/40">
-                                      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{lbl}</dt>
+                                      <dt className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">{lbl}</dt>
                                       <dd className="font-subhead font-semibold text-headline mt-0.5">{v}{suffix}</dd>
-                                      <dd className="text-[10px] text-muted-foreground">{p.period}</dd>
+                                      <dd className="text-[0.625rem] text-muted-foreground">{p.period}</dd>
                                     </div>
                                   );
                                 })}
@@ -868,7 +868,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                             </div>
                           ) : null}
                         </div>
-                        <div className="px-4 py-2 text-[11px] text-muted-foreground font-body bg-muted/30 border-t border-border">
+                        <div className="px-4 py-2 text-[0.6875rem] text-muted-foreground font-body bg-muted/30 border-t border-border">
                           {language === "no"
                             ? "Kilder: data.brreg.no og data.ssb.no"
                             : "Sources: data.brreg.no and data.ssb.no"}
@@ -911,7 +911,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   <p className="font-subhead font-semibold text-sm text-headline truncate">
                                     {c.navn}
                                     {c.konkurs && (
-                                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-destructive/15 text-destructive-ink text-[10px] font-semibold align-middle">
+                                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-negative/15 text-negative text-[0.625rem] font-semibold align-middle">
                                         {language === "no" ? "Konkurs" : "Bankrupt"}
                                       </span>
                                     )}
@@ -919,7 +919,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   <p className="text-xs text-muted-foreground font-body mt-0.5 truncate">
                                     {[c.kommune, c.bransje].filter(Boolean).join(" · ")}
                                   </p>
-                                  <p className="text-[11px] text-muted-foreground/80 font-body mt-1">
+                                  <p className="text-[0.6875rem] text-muted-foreground/80 font-body mt-1">
                                     org.nr {c.orgnr}
                                     {c.stiftet && <> · {language === "no" ? "stiftet" : "founded"} {c.stiftet.slice(0, 4)}</>}
                                   </p>
@@ -929,7 +929,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                     <UsersIcon className="w-3.5 h-3.5 opacity-60" />
                                     {c.ansatte.toLocaleString(language === "no" ? "nb-NO" : "en-US")}
                                   </div>
-                                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-subhead mt-1">
+                                  <span className="text-[0.625rem] uppercase tracking-wider text-muted-foreground font-subhead mt-1">
                                     {language === "no" ? "ansatte" : "employees"}
                                   </span>
                                 </div>
@@ -939,7 +939,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                         })}
                       </ul>
                       {message.disambiguation.total > message.disambiguation.candidates.length && (
-                        <div className="px-4 py-2 text-[11px] text-muted-foreground font-body bg-muted/30 border-t border-primary/15">
+                        <div className="px-4 py-2 text-[0.6875rem] text-muted-foreground font-body bg-muted/30 border-t border-primary/15">
                           {language === "no"
                             ? `Viser ${message.disambiguation.candidates.length} av ${message.disambiguation.total} treff. Skriv organisasjonsnummer for å velge et annet selskap.`
                             : `Showing ${message.disambiguation.candidates.length} of ${message.disambiguation.total} hits. Type an org. number to pick a different company.`}
@@ -971,7 +971,8 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                     index === messages.length - 1 &&
                     message.sources && message.sources.length > 0 && (
                       <div className="mt-5">
-                        <p className="font-subhead text-[11px] text-muted-foreground mb-2 uppercase tracking-widest">
+                        {/* Rolig etikett — uppercase-eyebrow er et anti-mønster (DESIGN.md) */}
+                        <p className="font-subhead text-sm font-medium text-muted-foreground mb-2">
                           {language === "no" ? "Foreslåtte oppfølginger" : "Suggested follow-ups"}
                         </p>
                         <div className="flex flex-wrap gap-2">
@@ -1001,9 +1002,9 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
             <div className="flex gap-4 animate-fade-in">
               <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center"><Bot className="w-5 h-5 text-accent-ink" /></div>
               <div className="flex gap-1.5 pt-4">
-                <span className="w-2 h-2 bg-accent/50 rounded-full animate-bounce" />
-                <span className="w-2 h-2 bg-accent/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-2 h-2 bg-accent/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                <span className="w-2 h-2 bg-accent/50 rounded-full animate-pulse" />
+                <span className="w-2 h-2 bg-accent/50 rounded-full animate-pulse" style={{ animationDelay: "150ms" }} />
+                <span className="w-2 h-2 bg-accent/50 rounded-full animate-pulse" style={{ animationDelay: "300ms" }} />
               </div>
             </div>
           )}
@@ -1055,7 +1056,7 @@ const TabButton = ({
     <span>{label}</span>
     {typeof badge === "number" && badge > 0 && (
       <span
-        className={`tabular-nums px-1.5 rounded-full text-[10px] ${
+        className={`tabular-nums px-1.5 rounded-full text-[0.625rem] ${
           active ? "bg-accent/20" : "bg-muted"
         }`}
       >
@@ -1087,30 +1088,30 @@ const TallParamRow = ({
   const isNo = language === "no";
   return (
     <div className="mb-3 rounded-lg border border-border/60 bg-background/60 p-2.5">
-      <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] font-body text-muted-foreground">
+      <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[0.6875rem] font-body text-muted-foreground">
         {period && (
           <span className="inline-flex items-center gap-1">
             <CalendarRange className="w-3 h-3 opacity-70" />
-            <span className="text-[10px] uppercase tracking-wider">{isNo ? "Periode" : "Period"}:</span>
+            <span className="text-[0.625rem] uppercase tracking-wider">{isNo ? "Periode" : "Period"}:</span>
             <span className="text-foreground font-medium">{period}</span>
           </span>
         )}
         {area && (
           <span className="inline-flex items-center gap-1">
             <MapPin className="w-3 h-3 opacity-70" />
-            <span className="text-[10px] uppercase tracking-wider">{isNo ? "Område" : "Area"}:</span>
+            <span className="text-[0.625rem] uppercase tracking-wider">{isNo ? "Område" : "Area"}:</span>
             <span className="text-foreground font-medium">{area}</span>
           </span>
         )}
         {indicator && (
           <span className="inline-flex items-center gap-1">
             <Activity className="w-3 h-3 opacity-70" />
-            <span className="text-[10px] uppercase tracking-wider">{isNo ? "Indikator" : "Indicator"}:</span>
+            <span className="text-[0.625rem] uppercase tracking-wider">{isNo ? "Indikator" : "Indicator"}:</span>
             <span className="text-foreground font-medium">{indicator}</span>
           </span>
         )}
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-body">
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.6875rem] font-body">
         <a
           href={sourceUrl}
           target="_blank"

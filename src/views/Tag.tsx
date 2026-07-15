@@ -146,7 +146,7 @@ const Tag = () => {
               <Link
                 key={a.id}
                 to={`/article/${a.id}`}
-                className="block group bg-card rounded-xl p-5 border border-border hover:shadow-elevated transition-all"
+                className="block group bg-card rounded-xl p-5 border border-border card-interactive transition-all"
               >
                 <div className="flex items-center gap-2 text-xs text-muted-foreground font-body mb-2">
                   <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent font-subhead font-medium">

@@ -78,7 +78,7 @@ export function TrendingSection() {
             <Link
               key={item.id}
               to={`/article/${item.id}`}
-              className="group flex-shrink-0 w-[260px] md:w-auto text-left bg-card rounded-2xl border border-border hover:border-accent/30 hover:shadow-elevated transition-all duration-300 overflow-hidden animate-fade-up"
+              className="group flex-shrink-0 w-[260px] md:w-auto text-left bg-card rounded-2xl border border-border hover:border-accent/30 card-interactive transition-all duration-300 overflow-hidden animate-fade-up"
               style={{ animationDelay: `${index * 75}ms`, animationFillMode: 'both' }}
             >
               <div className="p-5">

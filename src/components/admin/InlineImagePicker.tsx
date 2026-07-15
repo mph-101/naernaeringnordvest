@@ -257,7 +257,7 @@ export const InlineImagePicker = ({ open, onOpenChange, onSelect }: InlineImageP
                     <img src={a.public_url} alt={a.alt_text} className="w-full aspect-video object-cover" loading="lazy" />
                     <div className="p-2">
                       <p className="text-xs line-clamp-2">{a.caption}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">Foto: {a.photographer}</p>
+                      <p className="text-[0.625rem] text-muted-foreground mt-1">Foto: {a.photographer}</p>
                     </div>
                   </button>
                 ))}

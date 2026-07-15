@@ -120,6 +120,9 @@ export function FrontpagePoll({ variant = "page" }: FrontpagePollProps = {}) {
           <p className="text-sm text-muted-foreground font-body mb-5">{poll.description}</p>
         )}
 
+        {/* aria-live på et vedvarende element: når resultatlisten erstatter
+            knappene etter avgitt stemme, annonseres den for skjermlesere. */}
+        <div aria-live="polite">
         {!myChoice ? (
           <div className="grid gap-2.5 mt-4">
             {poll.options.map((opt) => (
@@ -166,6 +169,7 @@ export function FrontpagePoll({ variant = "page" }: FrontpagePollProps = {}) {
             </p>
           </div>
         )}
+        </div>
       </div>
     </section>
   );

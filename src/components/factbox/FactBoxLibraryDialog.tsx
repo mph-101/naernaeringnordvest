@@ -280,14 +280,14 @@ export const FactBoxLibraryDialog = ({
                     <div key={box.id} className="rounded-lg border border-border p-3 bg-card flex flex-col">
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <h4 className="font-headline text-sm font-semibold leading-tight">{box.title}</h4>
-                        <Badge variant="outline" className="text-[10px] shrink-0 capitalize">
+                        <Badge variant="outline" className="text-[0.625rem] shrink-0 capitalize">
                           {box.variant === "keyvalue" ? "key/value" : box.variant}
                         </Badge>
                       </div>
                       {(box.tags || []).length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
                           {box.tags.map((t) => (
-                            <span key={t} className="text-[10px] text-muted-foreground">#{t}</span>
+                            <span key={t} className="text-[0.625rem] text-muted-foreground">#{t}</span>
                           ))}
                         </div>
                       )}

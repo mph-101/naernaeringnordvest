@@ -330,7 +330,7 @@ const SparkBars = ({
       <div className="flex items-end gap-1 h-40">
         {series.map((s, i) => (
           <div key={i} className="flex-1 flex flex-col items-center gap-1 group min-w-0">
-            <div className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="text-[0.625rem] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
               {s.value}
             </div>
             <div
@@ -341,7 +341,7 @@ const SparkBars = ({
           </div>
         ))}
       </div>
-      <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
+      <div className="flex justify-between mt-2 text-[0.625rem] text-muted-foreground">
         <span>{series[0]?.label}</span>
         <span>{series[series.length - 1]?.label}</span>
       </div>

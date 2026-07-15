@@ -207,7 +207,7 @@ const Hjernevelvet = () => {
                     <Link
                       key={p.id}
                       to={`/hjernevelvet/panel/${p.id}`}
-                      className="group block bg-card border border-border rounded-2xl p-6 hover:border-accent/40 hover:shadow-elevated transition"
+                      className="group block bg-card border border-border rounded-2xl p-6 hover:border-accent/40 card-interactive transition"
                     >
                       <div className="flex items-center gap-2 text-xs font-subhead text-accent mb-2">
                         <span className="px-2 py-0.5 rounded-full bg-accent/10">
@@ -276,7 +276,7 @@ const Hjernevelvet = () => {
                       {w.expertise.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {w.expertise.slice(0, 3).map((e) => (
-                            <span key={e} className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-subhead">
+                            <span key={e} className="text-[0.625rem] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-subhead">
                               {e}
                             </span>
                           ))}
@@ -304,7 +304,7 @@ const Hjernevelvet = () => {
                       <Link
                         key={a.id}
                         to={`/hjernevelvet/essay/${a.id}`}
-                        className="group block bg-card border border-border rounded-2xl overflow-hidden hover:border-accent/40 hover:shadow-elevated transition"
+                        className="group block bg-card border border-border rounded-2xl overflow-hidden hover:border-accent/40 card-interactive transition"
                       >
                         {a.image_url && (
                           <div className="h-40 w-full overflow-hidden">
@@ -313,7 +313,7 @@ const Hjernevelvet = () => {
                         )}
                         <div className="p-5">
                           {a.topic && (
-                            <span className="inline-block text-[10px] uppercase tracking-wider text-accent font-subhead mb-2">
+                            <span className="inline-block text-[0.625rem] uppercase tracking-wider text-accent font-subhead mb-2">
                               {a.topic}
                             </span>
                           )}

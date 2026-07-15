@@ -93,7 +93,7 @@ export const JobChangeFeed = () => {
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline flex-wrap gap-x-2">
               <span className="font-subhead font-semibold text-sm text-headline">{name}</span>
-              <span className={`px-1.5 py-0.5 text-[10px] font-subhead font-medium rounded ${typeBg(item.change_type)}`}>
+              <span className={`px-1.5 py-0.5 text-[0.625rem] font-subhead font-medium rounded ${typeBg(item.change_type)}`}>
                 {typeLabel(item.change_type)}
               </span>
             </div>
@@ -140,7 +140,7 @@ export const JobChangeFeed = () => {
               <div className="relative rounded-lg overflow-hidden">
                 <img src={item.image_url} alt={name} className="w-full max-h-64 object-cover" />
                 {item.photo_credit && (
-                  <span className="absolute bottom-1.5 right-1.5 bg-background/80 backdrop-blur-sm text-[10px] text-muted-foreground font-body px-1.5 py-0.5 rounded">
+                  <span className="absolute bottom-1.5 right-1.5 bg-background/80 backdrop-blur-sm text-[0.625rem] text-muted-foreground font-body px-1.5 py-0.5 rounded">
                     {item.photo_credit}
                   </span>
                 )}
@@ -177,6 +177,8 @@ export const JobChangeFeed = () => {
         </h2>
         <button
           onClick={() => setShowForm(!showForm)}
+          aria-expanded={showForm}
+          aria-controls="jobchange-form"
           className="text-sm text-primary-ink font-subhead font-medium hover:underline"
         >
           {isNo ? "Meld inn" : "Report"}
@@ -184,7 +186,7 @@ export const JobChangeFeed = () => {
       </div>
 
       {showForm && (
-        <div className="mb-5">
+        <div id="jobchange-form" className="mb-5">
           <Suspense fallback={null}>
             <LazyJobChangeForm onSubmitted={() => setShowForm(false)} />
           </Suspense>

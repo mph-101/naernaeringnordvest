@@ -222,8 +222,15 @@
     box-shadow: var(--shadow-elevated);
   }
 
-  .border-accent-left {
-    border-left: 4px solid hsl(var(--accent));
+  /* Delt kortoppskrift (DESIGN.md §5 Cards): interaktive kort har Myk skygge
+     i ro og Hevet ved hover — tilstandsskift via skygge og kant, aldri løft
+     eller skala. Selve overgangen håndteres av kortets transition-utility. */
+  .card-interactive {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .card-interactive:hover {
+    box-shadow: var(--shadow-elevated);
   }
 
   .animate-fade-up {

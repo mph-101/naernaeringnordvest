@@ -40,7 +40,7 @@ type ChartMetric = "omsetning" | "driftsresultat" | "arsresultat" | "egenkapital
 
 function SourceLink({ href, label }: { href: string; label: string }) {
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary font-body transition-colors">
+    <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[0.6875rem] text-muted-foreground hover:text-primary font-body transition-colors">
       <ExternalLink className="w-3 h-3" /> {label}
     </a>
   );
@@ -174,7 +174,7 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
               const heightPct = (Math.abs(val) / maxVal) * 100;
               return (
                 <div key={f.year} className="flex-1 flex flex-col items-center justify-end gap-0.5 group relative min-w-0">
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground border border-border rounded px-2 py-1 text-[10px] font-subhead whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-md">
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground border border-border rounded px-2 py-1 text-[0.625rem] font-subhead whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-md">
                     {f.year}: {formatNOK(val)}
                   </div>
                   <div
@@ -252,7 +252,7 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
                         <td className="py-2.5 text-right font-subhead">
                           <div>{formatNOK(f.omsetning)}</div>
                           {revChange !== null && (
-                            <div className={`text-[10px] ${revChange >= 0 ? "text-accent" : "text-destructive"}`}>
+                            <div className={`text-[0.625rem] ${revChange >= 0 ? "text-accent" : "text-destructive"}`}>
                               {revChange >= 0 ? "+" : ""}{revChange.toFixed(1)}%
                             </div>
                           )}
@@ -350,7 +350,7 @@ export function CompanyDetail({ orgnr, companyName: initialName, session }: { or
 
       {/* Data source footer */}
       <div className="text-center py-2">
-        <p className="text-[11px] text-muted-foreground font-body">
+        <p className="text-[0.6875rem] text-muted-foreground font-body">
           {isNo ? "Data hentet fra" : "Data sourced from"}{" "}
           <a href="https://data.brreg.no" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
             Brønnøysundregistrene (data.brreg.no)

@@ -93,7 +93,7 @@ export default function Onboarding() {
                 <button
                   key={r.id}
                   onClick={() => handleRegionSelect(r.id)}
-                  className="group flex items-center gap-3 p-5 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-elevated transition-all duration-300"
+                  className="group flex items-center gap-3 p-5 rounded-2xl border border-border bg-card hover:border-primary/40 card-interactive transition-all duration-300"
                 >
                   <MapPin className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
                   <span className="font-subhead font-medium text-foreground">
@@ -119,7 +119,7 @@ export default function Onboarding() {
                   <button
                     key={v.id}
                     onClick={() => handleViewSelect(v)}
-                    className="group relative flex flex-col items-center gap-4 p-8 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-elevated transition-all duration-300"
+                    className="group relative flex flex-col items-center gap-4 p-8 rounded-2xl border border-border bg-card hover:border-primary/40 card-interactive transition-all duration-300"
                   >
                     <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/15 transition-colors duration-300">
                       <Icon className="w-7 h-7 text-muted-foreground group-hover:text-primary transition-colors duration-300" />

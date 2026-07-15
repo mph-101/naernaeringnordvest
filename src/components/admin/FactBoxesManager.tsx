@@ -292,14 +292,14 @@ export const FactBoxesManager = () => {
             <div key={box.id} className="rounded-lg border border-border p-4 bg-card flex flex-col">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <h4 className="font-headline text-sm font-semibold leading-tight">{box.title}</h4>
-                <Badge variant="outline" className="text-[10px] shrink-0 capitalize">
+                <Badge variant="outline" className="text-[0.625rem] shrink-0 capitalize">
                   {variantLabel(box.variant)}
                 </Badge>
               </div>
               {(box.tags || []).length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-2">
                   {box.tags.map((t) => (
-                    <span key={t} className="text-[10px] text-muted-foreground">
+                    <span key={t} className="text-[0.625rem] text-muted-foreground">
                       #{t}
                     </span>
                   ))}
@@ -310,7 +310,7 @@ export const FactBoxesManager = () => {
                   ? (box.items || []).map((i) => `${i.label}: ${i.value}`).join(" • ")
                   : (box.body || "").replace(/<[^>]*>/g, " ").trim() || "—"}
               </p>
-              <div className="text-[10px] text-muted-foreground mb-2">
+              <div className="text-[0.625rem] text-muted-foreground mb-2">
                 Oppdatert {new Date(box.updated_at).toLocaleDateString("nb-NO")}
               </div>
               <div className="flex gap-1.5">

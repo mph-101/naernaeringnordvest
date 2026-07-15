@@ -287,7 +287,7 @@ const RankedSourceRow = ({ rank, row, maxCites }: RankedSourceRowProps) => {
           </div>
         </div>
         <span
-          className={`shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-subhead font-medium tabular-nums ${
+          className={`shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full text-[0.6875rem] font-subhead font-medium tabular-nums ${
             row.totalCites > 0
               ? "bg-accent/10 text-accent"
               : "bg-muted text-muted-foreground"

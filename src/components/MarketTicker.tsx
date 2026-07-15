@@ -224,7 +224,7 @@ export const MarketTicker = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   tabIndex={isClone ? -1 : undefined}
-                  className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors border-l border-border/60 pl-2 ml-1"
+                  className="flex items-center gap-0.5 text-[0.625rem] text-muted-foreground hover:text-foreground transition-colors border-l border-border/60 pl-2 ml-1"
                   title={isNo ? `Kilde: ${item.sourceLabel}` : `Source: ${item.sourceLabel}`}
                 >
                   <span>{isNo ? "Kilde:" : "Source:"} {item.sourceLabel}</span>

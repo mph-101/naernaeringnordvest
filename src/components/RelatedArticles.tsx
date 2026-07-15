@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Clock, ArrowUpRight, Lock, FileText } from "lucide-react";
+import { Clock, ArrowUpRight, Lock } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
@@ -78,16 +78,12 @@ export function RelatedArticles({ sources }: RelatedArticlesProps = {}) {
       <section className="border-t border-border py-10">
         <div className="max-w-4xl mx-auto px-6">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
-                <FileText className="w-5 h-5 text-accent-ink" />
-              </div>
-              <h2 className="font-headline text-lg font-bold text-headline">
-                {usingLiveSources
-                  ? language === "no" ? "Artikler brukt i svaret" : "Articles used in the answer"
-                  : t.relatedCoverage}
-              </h2>
-            </div>
+            {/* Lora-tittelen bærer seksjonen alene — ikonflisen var SaaS-støy */}
+            <h2 className="font-headline text-lg font-bold text-headline">
+              {usingLiveSources
+                ? language === "no" ? "Artikler brukt i svaret" : "Articles used in the answer"
+                : t.relatedCoverage}
+            </h2>
             <Link
               to="/?view=feed"
               className="font-subhead text-sm text-accent-ink hover:text-link-hover transition-colors flex items-center gap-1 group"
@@ -134,7 +130,7 @@ export function RelatedArticles({ sources }: RelatedArticlesProps = {}) {
                 </div>
                 </>
               );
-              const cls = "group block w-full text-left p-5 bg-card hover:bg-secondary/50 rounded-xl border border-border hover:border-accent/30 transition-all duration-300 hover:shadow-soft animate-fade-up";
+              const cls = "group block w-full text-left p-5 bg-card hover:bg-secondary/50 rounded-xl border border-border hover:border-accent/30 transition-all duration-300 card-interactive animate-fade-up";
               const style = { animationDelay: `${index * 100}ms` } as const;
               return usingLiveSources ? (
                 <Link key={article.id} to={`/article/${article.id}`} className={cls} style={style}>

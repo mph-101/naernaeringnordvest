@@ -89,9 +89,9 @@ export function PollsManager() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     {active ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-subhead font-semibold px-2 py-0.5 bg-accent/15 text-accent rounded-full"><Check className="w-3 h-3" /> Aktiv</span>
+                      <span className="inline-flex items-center gap-1 text-[0.625rem] uppercase tracking-wider font-subhead font-semibold px-2 py-0.5 bg-accent/15 text-accent rounded-full"><Check className="w-3 h-3" /> Aktiv</span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-subhead font-semibold px-2 py-0.5 bg-muted text-muted-foreground rounded-full">Inaktiv</span>
+                      <span className="inline-flex items-center gap-1 text-[0.625rem] uppercase tracking-wider font-subhead font-semibold px-2 py-0.5 bg-muted text-muted-foreground rounded-full">Inaktiv</span>
                     )}
                     <span className="text-xs text-muted-foreground font-body">
                       {new Date(r.starts_at).toLocaleDateString("nb-NO")}

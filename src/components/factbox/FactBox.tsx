@@ -57,7 +57,7 @@ export const FactBox = ({ data, className = "" }: FactBoxProps) => {
 
       <div className="p-4 sm:p-5">
         <header className="mb-3 flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] uppercase tracking-wider font-headline font-semibold text-primary">
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[0.625rem] uppercase tracking-wider font-headline font-semibold text-primary">
             Faktaboks
           </span>
         </header>

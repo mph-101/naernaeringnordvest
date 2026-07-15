@@ -257,7 +257,7 @@ export const AuthorsManager = () => {
                       {a.name}
                     </h3>
                     {!a.active && (
-                      <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                      <span className="text-[0.625rem] uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                         inaktiv
                       </span>
                     )}

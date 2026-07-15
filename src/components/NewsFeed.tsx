@@ -723,7 +723,7 @@ const NativeAdCard = ({ ad, index, language }: NativeAdCardProps) => {
       className="group block w-full text-left bg-card rounded-2xl border-2 border-sponsored/60 card-interactive transition-all duration-300 animate-fade-up overflow-hidden relative"
       style={{ animationDelay: `${index * 50}ms` }}
     >
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sponsored text-sponsored-foreground text-[10px] font-subhead font-bold uppercase tracking-wide shadow-sm">
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sponsored text-sponsored-foreground text-[0.625rem] font-subhead font-bold uppercase tracking-wide shadow-sm">
         <Megaphone className="w-3 h-3" />
         {labelText}
       </div>

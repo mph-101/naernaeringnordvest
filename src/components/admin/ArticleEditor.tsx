@@ -1080,7 +1080,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <div className="text-[11px] text-muted-foreground mb-1">Hero (16:9)</div>
+                  <div className="text-[0.6875rem] text-muted-foreground mb-1">Hero (16:9)</div>
                   <div
                     className="relative w-full rounded-md overflow-hidden border border-border bg-muted"
                     style={(() => { const bg = cropToBackgroundStyle(form.image_crop, form.image_focal); return { aspectRatio: "16 / 9", backgroundImage: `url(${form.image_url})`, backgroundRepeat: "no-repeat", backgroundSize: bg.size, backgroundPosition: bg.position }; })()}
@@ -1088,7 +1088,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
                   />
                 </div>
                 <div>
-                  <div className="text-[11px] text-muted-foreground mb-1">Kort (4:3)</div>
+                  <div className="text-[0.6875rem] text-muted-foreground mb-1">Kort (4:3)</div>
                   <div
                     className="relative w-full rounded-md overflow-hidden border border-border bg-muted"
                     style={(() => { const bg = cropToBackgroundStyle(form.image_crop, form.image_focal); return { aspectRatio: "4 / 3", backgroundImage: `url(${form.image_url})`, backgroundRepeat: "no-repeat", backgroundSize: bg.size, backgroundPosition: bg.position }; })()}
@@ -1490,7 +1490,7 @@ export const ArticleEditor = ({ articleId, onBack }: ArticleEditorProps) => {
               {companyTags.map((tag) => (
                 <Badge key={tag.orgnr} variant="secondary" className="flex items-center gap-1.5 py-1 px-3">
                   <span className="font-subhead text-xs">{tag.company_name || tag.orgnr}</span>
-                  <span className="text-[10px] text-muted-foreground">({tag.orgnr})</span>
+                  <span className="text-[0.625rem] text-muted-foreground">({tag.orgnr})</span>
                   <button type="button" onClick={() => setCompanyTags(companyTags.filter((t) => t.orgnr !== tag.orgnr))} className="ml-1 hover:text-destructive">
                     <X className="w-3 h-3" />
                   </button>

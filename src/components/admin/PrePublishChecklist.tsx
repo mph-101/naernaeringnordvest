@@ -95,7 +95,7 @@ export const PrePublishChecklist = ({ items, variant = "card" }: PrePublishCheck
               >
                 {item.label}
                 {item.advisory && !item.done && (
-                  <span className="ml-2 text-[10px] uppercase tracking-wide text-sky-600 dark:text-sky-400">
+                  <span className="ml-2 text-[0.625rem] uppercase tracking-wide text-sky-600 dark:text-sky-400">
                     Anbefalt
                   </span>
                 )}

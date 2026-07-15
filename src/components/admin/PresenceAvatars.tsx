@@ -75,7 +75,7 @@ export function PresenceAvatars({
           <div
             key={u.clientId}
             title={u.name}
-            className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-background text-[11px] font-semibold text-white shadow-sm"
+            className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-background text-[0.6875rem] font-semibold text-white shadow-sm"
             style={{ backgroundColor: u.color }}
           >
             {initials(u.name)}

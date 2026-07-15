@@ -94,7 +94,7 @@ export function JobListingsReview() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-headline font-semibold text-headline">{r.title}</h3>
                   {r.is_premium && (
-                    <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-primary font-body font-semibold">
+                    <span className="inline-flex items-center gap-1 text-[0.6875rem] uppercase tracking-wider text-primary font-body font-semibold">
                       <Sparkles className="w-3 h-3" /> Premium ({r.premium_payment_method ?? "?"})
                     </span>
                   )}

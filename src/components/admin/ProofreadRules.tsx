@@ -246,7 +246,7 @@ export const ProofreadRules = ({ onRulesChange }: Props) => {
               <div key={r.id} className="flex items-start gap-3 p-3 border border-border rounded-lg">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="outline" className="text-[10px] capitalize">{r.category}</Badge>
+                    <Badge variant="outline" className="text-[0.625rem] capitalize">{r.category}</Badge>
                     {r.reason && <span className="text-xs text-muted-foreground truncate">{r.reason}</span>}
                   </div>
                   <div className="text-sm">

@@ -63,7 +63,7 @@ export const AuthorVoiceSection = ({ authorId, authorName, currentVoiceId, clone
         <Mic className="w-4 h-4 text-accent" />
         <h4 className="text-sm font-subhead font-semibold text-foreground">Stemmeprofil (AI)</h4>
         {currentVoiceId && (
-          <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-accent/15 text-accent">
+          <span className="text-[0.625rem] uppercase tracking-wider px-1.5 py-0.5 rounded bg-accent/15 text-accent">
             <Check className="w-2.5 h-2.5 inline mr-0.5" />klonet
           </span>
         )}
@@ -101,7 +101,7 @@ export const AuthorVoiceSection = ({ authorId, authorName, currentVoiceId, clone
         />
       </div>
       {!currentVoiceId && (
-        <p className="text-[11px] text-muted-foreground mt-2 flex items-start gap-1">
+        <p className="text-[0.6875rem] text-muted-foreground mt-2 flex items-start gap-1">
           <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
           Krever at ELEVENLABS_API_KEY er konfigurert i Lovable Cloud.
         </p>

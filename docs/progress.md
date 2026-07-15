@@ -1,5 +1,15 @@
 # Progress
 
+## P2/P3-bunken fra re-auditen: PR-stabel #158→#160→#161→#162 + typer (2026-07-15)
+
+- **PR #158 opprettet** for a11y-branchen fra 2026-07-11 (PR-opprettelsen falt ut i forrige økt); rebast mot main etter at #157 (trending-RPC + React Query) ble merget 2026-07-10. CI grønn.
+- **PR #159 `chore/regen-supabase-types`** (mot main, uavhengig): typer regenerert via MCP — eneste diff er `get_trending_articles`-signaturen; `(supabase.rpc as any)`-casten i TrendingSection fjernet. Build (tsc) bekrefter. CI grønn.
+- **PR #160 `aria/state-consistency`** (stablet på #158): «Alle»-pillen `aria-pressed`, «Meld inn» `aria-expanded`+`aria-controls`, NewsFeed-spinner `role=status`+sr-only, poll-resultater i vedvarende `aria-live=polite`-region. Preview-verifisert i DOM (poll unntatt — ingen aktiv avstemning i basen). CI grønn.
+- **PR #161 `design/card-and-token-cleanup`** (stablet på #160): ny delt `.card-interactive`-utility koder DESIGN.md §5 én gang (Myk i ro, Hevet ved hover) og erstatter fire ad-hoc hover-skygge-oppskrifter på 11 leserflate-kort; `hover:-translate-y-1` fjernet (TeamSection); Konkurs-badge + negative årsresultat → `--negative`-token; RelatedArticles-ikonflisen fjernet; bounce→pulse-dots (ConversationView, SporAIChat); «Foreslåtte oppfølginger»-eyebrow → rolig etikett; `.border-accent-left` slettet (verifisert ubrukt). Admin-kort bevisst ikke rørt (CMS-territorium). CI grønn.
+- **PR #162 `type/px-to-rem-microtypography`** (stablet på #161): mekanisk sveip `text-[10px]`→`text-[0.625rem]`, `text-[11px]`→`text-[0.6875rem]` — 120 forekomster i 52 filer; identisk rendering, men skalerer nå med leserens skriftinnstillinger.
+- Alle: eslint 0 errors, vitest 127/127, preview-verifisert. **Merge-rekkefølge: #158 → #160 → #161 → #162, slett branch på hvert steg** (stabel-lærdommen fra #150–#155). #159 kan merges uavhengig.
+- Gjenstår fra backloggen: `/impeccable polish` + ny re-audit — venter til stabelen er merget (måler main, ikke stabelen).
+
 ## Re-audit a11y-bunken: region-bytte overalt, ekte dialog, 40px-gulv (2026-07-11)
 
 - **A11y-PR fra re-auditen (punkt 1–4 + tre P2-mikrofunn)** — 2026-07-11, branch `a11y/targets-dialog-region` (stablet på #157)

@@ -147,7 +147,7 @@ export default function Subscribe() {
                 <p className="text-xs text-muted-foreground font-body mb-5">{p.monthly}</p>
                 {p.tiers && (
                   <div className="mb-5 bg-surface-subtle border border-border rounded-xl p-3">
-                    <p className="text-[10px] font-subhead font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    <p className="text-[0.625rem] font-subhead font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                       Pris per sete
                     </p>
                     <ul className="space-y-1">
@@ -236,7 +236,7 @@ export default function Subscribe() {
                     const perSeat = seatCount >= 30 ? 490 : seatCount >= 10 ? 590 : 690;
                     const total = perSeat * seatCount;
                     return (
-                      <p className="text-[11px] text-muted-foreground mt-1">
+                      <p className="text-[0.6875rem] text-muted-foreground mt-1">
                         {perSeat} kr × {seatCount} {seatCount === 1 ? "sete" : "seter"} ={" "}
                         <span className="font-subhead font-semibold text-foreground">
                           {total.toLocaleString("nb-NO")} kr / år
@@ -254,7 +254,7 @@ export default function Subscribe() {
                     onChange={(e) => setEmailDomain(e.target.value.trim().toLowerCase())}
                     placeholder="firma.no"
                   />
-                  <p className="text-[11px] text-muted-foreground mt-1">
+                  <p className="text-[0.6875rem] text-muted-foreground mt-1">
                     Verifiser senere via TXT-record for automatisk tilgang for alle ansatte.
                   </p>
                 </div>

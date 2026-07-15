@@ -62,7 +62,7 @@ export function SubscriptionTrialBanner() {
   let ctaLabel = "";
 
   if (kind === "trial") {
-    bgClass = "bg-accent/10 text-accent border-accent/20";
+    bgClass = "bg-accent/10 text-accent-ink border-accent/20";
     Icon = Sparkles;
     const days = daysUntil(sub.trialEndsAt);
     if (days !== null) {
@@ -74,14 +74,16 @@ export function SubscriptionTrialBanner() {
     }
     ctaLabel = isNo ? "Oppgrader" : "Upgrade";
   } else if (kind === "canceled") {
-    bgClass = "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20";
+    // Nøytral flate: avslutning er brukerens eget valg, ikke en feil —
+    // rå amber er utenfor Kystlys-paletten; ikonet bærer oppmerksomheten.
+    bgClass = "bg-secondary text-foreground border-border";
     Icon = AlertCircle;
     message = isNo
       ? `Abonnementet avsluttes ${formatDate(sub.currentPeriodEnd)}. Du har fortsatt full tilgang frem til da.`
       : `Your subscription ends on ${formatDate(sub.currentPeriodEnd)}. You retain full access until then.`;
     ctaLabel = isNo ? "Gjenoppta" : "Resume";
   } else if (kind === "past_due") {
-    bgClass = "bg-destructive/10 text-destructive border-destructive/20";
+    bgClass = "bg-destructive/10 text-destructive-ink border-destructive/20";
     Icon = AlertCircle;
     message = isNo
       ? "Siste betaling mislyktes. Oppdater betalingsinformasjon for å unngå avbrudd."
@@ -101,14 +103,13 @@ export function SubscriptionTrialBanner() {
         <p className="flex-1 text-sm font-body min-w-0">{message}</p>
         <button
           onClick={() => navigate("/profil")}
-          className="px-3 py-1 rounded-full text-xs font-subhead font-semibold bg-current/10 hover:bg-current/20 transition-colors flex-shrink-0"
-          style={{ backgroundColor: "rgba(0,0,0,0.06)" }}
+          className="px-3 py-1 min-h-10 rounded-full text-xs font-subhead font-semibold bg-foreground/5 hover:bg-foreground/10 transition-colors flex-shrink-0"
         >
           {ctaLabel}
         </button>
         <button
           onClick={handleDismiss}
-          className="p-1 rounded-full hover:bg-current/10 transition-colors flex-shrink-0 opacity-70 hover:opacity-100"
+          className="p-1 min-w-10 min-h-10 inline-flex items-center justify-center rounded-full hover:bg-foreground/10 transition-colors flex-shrink-0 opacity-70 hover:opacity-100"
           title={isNo ? "Lukk" : "Dismiss"}
           aria-label={isNo ? "Lukk" : "Dismiss"}
         >

@@ -4,6 +4,18 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Re-audit 2026-07-15 — tre ting kun du kan avgjøre
+1. **MBL / Norsk Redaktørforening / PFU:** SiteFooter påstår «Medlem av MBL og
+   Norsk Redaktørforening. Tilsluttet PFU.» på hver side. Verifiser at
+   medlemskapene faktisk er tegnet før lansering — hvis ikke, si fra, så
+   omskriver jeg til «Vi arbeider etter Vær Varsom-plakaten og Redaktørplakaten».
+2. **Signal-nummer til tipskanalen:** TipForm viser fortsatt plassholderen
+   «[Signal-nummer kommer]». Skaff nummeret, eller godkjenn at setningen fjernes
+   inntil videre (klarhet-P2, se docs/design-audit-2026-07-15.md).
+3. **Juridiske plassholdere:** personvern («Sist oppdatert: [DATO]»), kontakt
+   («[TELEFON]», «[ORG.NR.]») og eierskap («[NAVN], [PROSENT] %») i
+   footer-pages.ts trenger reelle verdier fra deg.
+
 ### Supabase Pro-oppgradering før lansering (2026-07-10)
 - Prosjektet kjører på **free plan** (bekreftet 2026-07-10). Pro-oppgraderingen
   løser to pre-launch-krav i én beslutning:

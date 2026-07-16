@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, ArrowLeft, Building2, User, X } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useTheme } from "@/hooks/useTheme";
 
 type Plan = "quarterly" | "yearly" | "business_seat";
 
@@ -23,64 +24,144 @@ type PlanDef = {
   tiers?: { range: string; price: string }[];
 };
 
-const SHARED_PERSONAL_BULLETS = [
-  "Alle saker, analyser og dypdykk",
-  "Spør-AI og selskapsdatabasen Tall",
-  "Personlige varsler ved nye saker du følger",
-  "Diskuter saker i åpne og lukkede grupper",
-  "Si opp når som helst",
-];
-
-const PLANS: PlanDef[] = [
-  {
-    id: "quarterly",
-    name: "Kvartal",
-    price: "249 kr",
-    period: "/ 3 måneder",
-    monthly: "≈ 83 kr/mnd",
-    bullets: SHARED_PERSONAL_BULLETS,
-    icon: User,
-  },
-  {
-    id: "yearly",
-    name: "År",
-    price: "890 kr",
-    period: "/ år",
-    monthly: "≈ 74 kr/mnd · Spar 106 kr/år vs kvartal",
-    bullets: SHARED_PERSONAL_BULLETS,
-    highlight: true,
-    icon: User,
-  },
-  {
-    id: "business_seat",
-    name: "Bedrift",
-    price: "fra 490 kr",
-    period: "/ sete / år",
-    monthly: "Volumrabatt fra 10 og 30 seter · Faktureres årlig",
-    tiers: [
-      { range: "1–9 seter", price: "690 kr/sete/år" },
-      { range: "10–29 seter", price: "590 kr/sete/år" },
-      { range: "30+ seter", price: "490 kr/sete/år" },
-    ],
-    bullets: [
-      "Alle ansatte får full tilgang",
-      "Automatisk innlogging via verifisert e-postdomene",
-      "Sentral fakturering — én faktura per år",
-      "Lukkede grupper for hele bedriften",
-    ],
-    icon: Building2,
-  },
-];
-
 export default function Subscribe() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { isActive } = useSubscription();
+  const { language } = useTheme();
+  const isNo = language === "no";
   const [activePlan, setActivePlan] = useState<Plan | null>(null);
   const [seatCount, setSeatCount] = useState(5);
   const [companyName, setCompanyName] = useState("");
   const [orgnr, setOrgnr] = useState("");
   const [emailDomain, setEmailDomain] = useState("");
+
+  // Kjøpsflyten fulgte ikke språkvalget (re-audit klarhet P2) — samme
+  // labels-objekt-mønster som Login/TipForm.
+  const t = isNo
+    ? {
+        back: "Tilbake",
+        title: "Bli abonnent",
+        subtitle: "Alle saker, Spør-AI og selskapsdatabasen — i én tilgang.",
+        alreadyActive: "Du har allerede et aktivt abonnement.",
+        seeProfile: "Se profil",
+        mostPopular: "Mest populær",
+        perSeat: "Pris per sete",
+        subscribeCta: "Bli abonnent",
+        finePrint:
+          "MVA (25 %) kommer i tillegg og beregnes ved utsjekk. Bedrifter faktureres årlig forskuddsvis. Du kan si opp når som helst fra profilen din.",
+        completeTitle: "Fullfør abonnement",
+        close: "Lukk",
+        companyLabel: "Bedriftsnavn",
+        orgnrLabel: "Org.nr (valgfritt)",
+        seatsLabel: "Antall seter",
+        seatSingular: "sete",
+        seatPlural: "seter",
+        exVat: "(ekskl. MVA)",
+        perYear: "kr / år",
+        domainLabel: "Firmadomene (valgfritt)",
+        domainHint:
+          "Domenet bekreftes senere sammen med IT-ansvarlig — da får alle med e-postadresse på domenet automatisk tilgang.",
+      }
+    : {
+        back: "Back",
+        title: "Subscribe",
+        subtitle: "Every story, the Ask AI and the company database — in one subscription.",
+        alreadyActive: "You already have an active subscription.",
+        seeProfile: "View profile",
+        mostPopular: "Most popular",
+        perSeat: "Price per seat",
+        subscribeCta: "Subscribe",
+        finePrint:
+          "VAT (25%) is added at checkout. Businesses are invoiced annually in advance. You can cancel anytime from your profile.",
+        completeTitle: "Complete subscription",
+        close: "Close",
+        companyLabel: "Company name",
+        orgnrLabel: "Org. no. (optional)",
+        seatsLabel: "Number of seats",
+        seatSingular: "seat",
+        seatPlural: "seats",
+        exVat: "(ex. VAT)",
+        perYear: "NOK / year",
+        domainLabel: "Company domain (optional)",
+        domainHint:
+          "The domain is verified later together with your IT contact — then everyone with an email on the domain gets access automatically.",
+      };
+
+  const plans: PlanDef[] = useMemo(() => {
+    const personalBullets = isNo
+      ? [
+          "Alle saker, analyser og dypdykk",
+          "Spør-AI og selskapsdatabasen Tall",
+          "Personlige varsler ved nye saker du følger",
+          "Diskuter saker i åpne og lukkede grupper",
+          "Si opp når som helst",
+        ]
+      : [
+          "Every story, analysis and deep dive",
+          "The Ask AI and the Tall company database",
+          "Personal alerts for stories you follow",
+          "Discuss stories in open and private groups",
+          "Cancel anytime",
+        ];
+    return [
+      {
+        id: "quarterly" as const,
+        name: isNo ? "Kvartal" : "Quarterly",
+        price: isNo ? "249 kr" : "NOK 249",
+        period: isNo ? "/ 3 måneder" : "/ 3 months",
+        monthly: isNo ? "≈ 83 kr/mnd" : "≈ NOK 83/month",
+        bullets: personalBullets,
+        icon: User,
+      },
+      {
+        id: "yearly" as const,
+        name: isNo ? "År" : "Yearly",
+        price: isNo ? "890 kr" : "NOK 890",
+        period: isNo ? "/ år" : "/ year",
+        monthly: isNo
+          ? "≈ 74 kr/mnd · Spar 106 kr/år vs kvartal"
+          : "≈ NOK 74/month · Save NOK 106/year vs quarterly",
+        bullets: personalBullets,
+        highlight: true,
+        icon: User,
+      },
+      {
+        id: "business_seat" as const,
+        name: isNo ? "Bedrift" : "Business",
+        price: isNo ? "fra 490 kr" : "from NOK 490",
+        period: isNo ? "/ sete / år" : "/ seat / year",
+        monthly: isNo
+          ? "Volumrabatt fra 10 og 30 seter · Faktureres årlig"
+          : "Volume discount from 10 and 30 seats · Invoiced annually",
+        tiers: isNo
+          ? [
+              { range: "1–9 seter", price: "690 kr/sete/år" },
+              { range: "10–29 seter", price: "590 kr/sete/år" },
+              { range: "30+ seter", price: "490 kr/sete/år" },
+            ]
+          : [
+              { range: "1–9 seats", price: "NOK 690/seat/yr" },
+              { range: "10–29 seats", price: "NOK 590/seat/yr" },
+              { range: "30+ seats", price: "NOK 490/seat/yr" },
+            ],
+        bullets: isNo
+          ? [
+              "Alle ansatte får full tilgang",
+              "Automatisk innlogging via verifisert e-postdomene",
+              "Sentral fakturering — én faktura per år",
+              "Lukkede grupper for hele bedriften",
+            ]
+          : [
+              "Full access for every employee",
+              "Automatic sign-in via verified email domain",
+              "Central invoicing — one invoice per year",
+              "Private groups for the whole company",
+            ],
+        icon: Building2,
+      },
+    ];
+  }, [isNo]);
 
   const handleStart = (plan: Plan) => {
     if (!isAuthenticated) {
@@ -98,31 +179,29 @@ export default function Subscribe() {
       <div className="max-w-5xl mx-auto px-6 py-12">
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8 font-body text-sm"
+          className="inline-flex items-center gap-2 min-h-10 px-2 -mx-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors mb-8 font-body text-sm"
         >
-          <ArrowLeft className="w-4 h-4" /> Tilbake
+          <ArrowLeft className="w-4 h-4" /> {t.back}
         </button>
 
         <div className="text-center mb-12">
           <h1 className="font-headline text-3xl md:text-4xl font-bold text-headline mb-3">
-            Bli abonnent
+            {t.title}
           </h1>
-          <p className="text-muted-foreground font-body max-w-xl mx-auto">
-            Alle saker, Spør-AI og selskapsdatabasen — i én tilgang.
-          </p>
+          <p className="text-muted-foreground font-body max-w-xl mx-auto">{t.subtitle}</p>
         </div>
 
         {isActive && (
           <div className="mb-8 p-4 bg-accent/10 border border-accent/20 rounded-xl text-center font-body text-sm">
-            Du har allerede et aktivt abonnement.{" "}
+            {t.alreadyActive}{" "}
             <button onClick={() => navigate("/profil")} className="underline font-medium">
-              Se profil
+              {t.seeProfile}
             </button>
           </div>
         )}
 
         <div className="grid md:grid-cols-3 gap-6">
-          {PLANS.map((p) => {
+          {plans.map((p) => {
             const Icon = p.icon;
             return (
               <div
@@ -133,11 +212,11 @@ export default function Subscribe() {
               >
                 {p.highlight && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-accent text-accent-foreground text-xs font-subhead font-semibold rounded-full">
-                    Mest populær
+                    {t.mostPopular}
                   </span>
                 )}
                 <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center mb-4">
-                  <Icon className="w-5 h-5 text-accent" />
+                  <Icon className="w-5 h-5 text-accent-ink" />
                 </div>
                 <h2 className="font-headline text-xl font-bold text-headline mb-1">{p.name}</h2>
                 <div className="flex items-baseline gap-1 mb-1">
@@ -148,7 +227,7 @@ export default function Subscribe() {
                 {p.tiers && (
                   <div className="mb-5 bg-surface-subtle border border-border rounded-xl p-3">
                     <p className="text-xs font-subhead font-medium text-muted-foreground mb-2">
-                      Pris per sete
+                      {t.perSeat}
                     </p>
                     <ul className="space-y-1">
                       {p.tiers.map((tier) => (
@@ -163,7 +242,7 @@ export default function Subscribe() {
                 <ul className="space-y-2.5 mb-6 flex-1">
                   {p.bullets.map((b) => (
                     <li key={b} className="flex items-start gap-2 text-sm font-body text-foreground">
-                      <Check className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
+                      <Check className="w-4 h-4 text-accent-ink flex-shrink-0 mt-0.5" />
                       <span>{b}</span>
                     </li>
                   ))}
@@ -176,7 +255,7 @@ export default function Subscribe() {
                       : "bg-card border border-border text-foreground hover:bg-secondary"
                   }`}
                 >
-                  Bli abonnent
+                  {t.subscribeCta}
                 </button>
               </div>
             );
@@ -184,8 +263,7 @@ export default function Subscribe() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground font-body mt-8 max-w-2xl mx-auto">
-          MVA (25 %) kommer i tillegg og beregnes ved utsjekk. Bedrifter faktureres årlig
-          forskuddsvis. Du kan kansellere når som helst fra profilen din.
+          {t.finePrint}
         </p>
       </div>
 
@@ -194,13 +272,12 @@ export default function Subscribe() {
           <div className="bg-card rounded-2xl border border-border shadow-elevated w-full max-w-2xl my-12 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-headline text-xl font-bold text-headline">
-                Fullfør abonnement —{" "}
-                {PLANS.find((p) => p.id === activePlan)?.name}
+                {t.completeTitle} — {plans.find((p) => p.id === activePlan)?.name}
               </h2>
               <button
                 onClick={() => setActivePlan(null)}
-                className="w-8 h-8 rounded-full hover:bg-secondary flex items-center justify-center"
-                aria-label="Lukk"
+                className="min-w-10 min-h-10 rounded-full hover:bg-secondary inline-flex items-center justify-center"
+                aria-label={t.close}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -209,7 +286,7 @@ export default function Subscribe() {
             {activePlan === "business_seat" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                  <Label htmlFor="company">Bedriftsnavn</Label>
+                  <Label htmlFor="company">{t.companyLabel}</Label>
                   <Input
                     id="company"
                     value={companyName}
@@ -218,11 +295,11 @@ export default function Subscribe() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="orgnr">Org.nr (valgfritt)</Label>
+                  <Label htmlFor="orgnr">{t.orgnrLabel}</Label>
                   <Input id="orgnr" value={orgnr} onChange={(e) => setOrgnr(e.target.value)} placeholder="999999999" />
                 </div>
                 <div>
-                  <Label htmlFor="seats">Antall seter</Label>
+                  <Label htmlFor="seats">{t.seatsLabel}</Label>
                   <Input
                     id="seats"
                     type="number"
@@ -237,25 +314,26 @@ export default function Subscribe() {
                     const total = perSeat * seatCount;
                     return (
                       <p className="text-[0.6875rem] text-muted-foreground mt-1">
-                        {perSeat} kr × {seatCount} {seatCount === 1 ? "sete" : "seter"} ={" "}
+                        {perSeat} kr × {seatCount} {seatCount === 1 ? t.seatSingular : t.seatPlural} ={" "}
                         <span className="font-subhead font-semibold text-foreground">
-                          {total.toLocaleString("nb-NO")} kr / år
+                          {total.toLocaleString(isNo ? "nb-NO" : "en-US")} {t.perYear}
                         </span>
-                        {" "}(ekskl. MVA)
+                        {" "}{t.exVat}
                       </p>
                     );
                   })()}
                 </div>
                 <div>
-                  <Label htmlFor="domain">Firmadomene (valgfritt)</Label>
+                  <Label htmlFor="domain">{t.domainLabel}</Label>
                   <Input
                     id="domain"
                     value={emailDomain}
                     onChange={(e) => setEmailDomain(e.target.value.trim().toLowerCase())}
                     placeholder="firma.no"
                   />
+                  {/* Klarspråk i stedet for TXT-record-sjargong (klarhet P3) */}
                   <p className="text-[0.6875rem] text-muted-foreground mt-1">
-                    Verifiser senere via TXT-record for automatisk tilgang for alle ansatte.
+                    {t.domainHint}
                   </p>
                 </div>
               </div>

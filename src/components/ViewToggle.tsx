@@ -58,7 +58,8 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = isActive(tab.id);
-          const className = `relative flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-5 py-2 sm:py-2.5 rounded-full font-body text-xs sm:text-sm font-medium transition-all duration-200 ${
+          // min-h-10: 40px-gulvet gjelder også hovednavigasjonen på mobil.
+          const className = `relative flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-5 py-2 sm:py-2.5 min-h-10 rounded-full font-body text-xs sm:text-sm font-medium transition-all duration-200 ${
             active
               ? "bg-card text-foreground shadow-soft"
               : "text-muted-foreground hover:text-foreground"
@@ -70,7 +71,9 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
           if (tab.to) {
             return (
               <a key={tab.id} href={tab.to} className={className} title={tab.label} aria-label={tab.label} aria-current={active ? "page" : undefined}>
-                <Icon className="w-4 h-4 shrink-0" />
+                {/* Ikon skjules på xs så alle fire faner får plass uten klippet
+                    overflow (re-audit P2) — teksten bærer fanen. */}
+                <Icon className="hidden sm:block w-4 h-4 shrink-0" />
                 <span className={labelClass}>{tab.label}</span>
                 {defaultView === tab.id && (
                   <Star className="w-3 h-3 fill-primary-ink text-primary-ink shrink-0" />
@@ -88,7 +91,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
               aria-label={tab.label}
               aria-pressed={active}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon className="hidden sm:block w-4 h-4 shrink-0" />
               <span className={labelClass}>{tab.label}</span>
               {defaultView === tab.id && (
                 <Star className="w-3 h-3 fill-primary-ink text-primary-ink shrink-0" />

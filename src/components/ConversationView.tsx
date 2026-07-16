@@ -1023,6 +1023,16 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
               </button>
             </div>
           </div>
+          {/* AI-merking — /innholdsmerking lover at AI-bruk leseren bør kjenne
+              til merkes tydelig; svarene her er AI-genererte. */}
+          <p className="mt-2 text-xs text-muted-foreground font-body text-center">
+            {language === "no"
+              ? "Svarene lages med AI fra artikkelarkivet og kan inneholde feil — sjekk kildene."
+              : "Answers are AI-generated from the article archive and may contain errors — check the sources."}{" "}
+            <Link to="/innholdsmerking" className="underline hover:text-foreground transition-colors">
+              {language === "no" ? "Slik merker vi AI-innhold" : "How we label AI content"}
+            </Link>
+          </p>
         </form>
       </div>
     </div>

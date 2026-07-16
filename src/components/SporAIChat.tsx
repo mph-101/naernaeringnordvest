@@ -309,6 +309,13 @@ export function SporAIChat() {
                 {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
               </button>
             </div>
+            {/* AI-merking, jf. /innholdsmerking (komponenten er norsk-only i dag) */}
+            <p className="mt-1.5 text-[0.6875rem] text-muted-foreground font-body text-center">
+              Svarene lages med AI og kan inneholde feil —{" "}
+              <a href="/innholdsmerking" className="underline hover:text-foreground transition-colors">
+                slik merker vi AI-innhold
+              </a>
+            </p>
           </div>
         </div>
       )}

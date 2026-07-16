@@ -12,7 +12,8 @@ export function MiniPlayer() {
   if (!player.current || location.pathname === "/lytt") return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur border-t border-border shadow-lg">
+    // pb-safe: kontrollene skal ikke kollidere med hjemindikator-gesten på iPhone
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur border-t border-border shadow-lg pb-[env(safe-area-inset-bottom)]">
       <div className="h-1 bg-muted">
         <div
           className="h-full bg-accent transition-all duration-300"

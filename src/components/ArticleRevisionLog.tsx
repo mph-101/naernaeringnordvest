@@ -66,7 +66,7 @@ export function ArticleRevisionLog({
       <button
         type="button"
         onClick={() => hasRevisions && setOpen((o) => !o)}
-        className="w-full flex items-center justify-between text-left"
+        className="w-full flex items-center justify-between text-left min-h-10 -my-2 py-2"
         aria-expanded={open}
         disabled={!hasRevisions}
       >

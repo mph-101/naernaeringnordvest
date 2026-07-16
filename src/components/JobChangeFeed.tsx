@@ -113,7 +113,7 @@ export const JobChangeFeed = () => {
                   href={item.source_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="relative z-10 text-xs text-primary-ink hover:underline flex items-center gap-1"
+                  className="relative z-10 text-xs text-primary-ink hover:underline flex items-center gap-1 min-h-10 -my-2"
                 >
                   <ExternalLink className="w-3 h-3" /> {isNo ? "Kilde" : "Source"}
                 </a>
@@ -180,7 +180,7 @@ export const JobChangeFeed = () => {
           onClick={() => setShowForm(!showForm)}
           aria-expanded={showForm}
           aria-controls="jobchange-form"
-          className="text-sm text-primary-ink font-subhead font-medium hover:underline"
+          className="text-sm text-primary-ink font-subhead font-medium hover:underline inline-flex items-center min-h-10 px-2 -mx-2"
         >
           {isNo ? "Meld inn" : "Report"}
         </button>

@@ -215,7 +215,7 @@ const Article = () => {
   const heroSource = (article as any).image_source || heroAssetMeta?.source || null;
 
   const BackButton = () => (
-    <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-10 font-body text-sm group">
+    <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 min-h-10 -my-2 px-2 -mx-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors mb-10 font-body text-sm group">
       <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
       {language === "no" ? "Tilbake" : "Back"}
     </button>
@@ -316,7 +316,7 @@ const Article = () => {
             (() => {
               const dropClass = dropcapClassName(pickDropcapVariant(article.category, body));
               return body.split('\n\n').map((paragraph, index) => (
-                <p key={index} className={`text-foreground font-body leading-[1.6] mb-[7em] ${index === 0 ? `text-lg md:text-xl font-medium text-headline ${dropClass}` : "text-base md:text-lg"}`}>
+                <p key={index} className={`text-foreground font-body leading-[1.6] mb-7 ${index === 0 ? `text-lg md:text-xl font-medium text-headline ${dropClass}` : "text-base md:text-lg"}`}>
                   {paragraph}
                 </p>
               ));

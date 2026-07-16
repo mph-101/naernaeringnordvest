@@ -246,7 +246,9 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border animate-fade-in">
+          /* max-h + scroll: i telefon-landskap er menyen høyere enn viewporten,
+             og sticky-headeren gjorde nederste halvdel unåelig (re-audit P1) */
+          <div className="md:hidden py-4 border-t border-border animate-fade-in max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain">
             <nav className="flex flex-col gap-1">
               {/* Navigation links */}
               <Link to="/stillinger" onClick={() => setIsMobileMenuOpen(false)} className="w-full px-4 py-3 text-left rounded-xl hover:bg-secondary transition-colors flex items-center gap-3 font-subhead text-sm">

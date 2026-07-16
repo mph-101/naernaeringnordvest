@@ -148,7 +148,7 @@ export const EventsFeed = () => {
         </h2>
         <Link
           to="/arrangementer"
-          className="text-sm text-primary-ink font-subhead font-medium hover:underline inline-flex items-center gap-1"
+          className="text-sm text-primary-ink font-subhead font-medium hover:underline inline-flex items-center gap-1 min-h-10 px-2 -mx-2"
         >
           {isNo ? "Se alle" : "See all"} <ArrowRight className="w-3.5 h-3.5" />
         </Link>
@@ -201,7 +201,7 @@ export const EventsFeed = () => {
             {range === "30d" ? (
               <button
                 onClick={() => setRange("all")}
-                className="px-3 py-1.5 rounded-full text-xs font-subhead font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity inline-flex items-center gap-1.5"
+                className="px-3 min-h-10 rounded-full text-xs font-subhead font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity inline-flex items-center gap-1.5"
               >
                 {isNo ? "Vis alle kommende" : "Show all upcoming"}
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -209,14 +209,14 @@ export const EventsFeed = () => {
             ) : (
               <Link
                 to="/kontakt"
-                className="px-3 py-1.5 rounded-full text-xs font-subhead font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                className="px-3 min-h-10 rounded-full text-xs font-subhead font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity inline-flex items-center"
               >
                 {isNo ? "Tips redaksjonen" : "Tip the editors"}
               </Link>
             )}
             <Link
               to="/arrangementer"
-              className="px-3 py-1.5 rounded-full text-xs font-subhead font-medium text-foreground hover:bg-secondary transition-colors inline-flex items-center gap-1"
+              className="px-3 min-h-10 rounded-full text-xs font-subhead font-medium text-foreground hover:bg-secondary transition-colors inline-flex items-center gap-1"
             >
               {isNo ? "Se alle" : "See all"}
               <ArrowRight className="w-3.5 h-3.5" />

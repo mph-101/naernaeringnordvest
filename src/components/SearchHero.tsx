@@ -60,7 +60,7 @@ export function SearchHero({ onSearch }: SearchHeroProps) {
               <button
                 type="submit"
                 disabled={!query.trim()}
-                className="ml-3 px-5 py-2.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 font-subhead text-sm font-semibold flex items-center gap-2 shadow-soft"
+                className="ml-3 px-5 min-h-10 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 font-subhead text-sm font-semibold flex items-center gap-2 shadow-soft"
               >
                 <span className="hidden sm:inline">{t.askButton}</span>
                 <ArrowRight className="w-4 h-4" />

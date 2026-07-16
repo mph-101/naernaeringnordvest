@@ -29,8 +29,9 @@ function getStackContainer(): HTMLElement | null {
     // flex-col-reverse: lower `order` sits at the bottom (anchored corner),
     // higher `order` stacks upward. pointer-events-none on the column so the
     // gaps between buttons don't swallow clicks; each slot re-enables them.
+    // mb-safe løfter stabelen over hjemindikator-gesten på iPhone (viewport-fit=cover)
     el.className =
-      "fixed bottom-5 right-5 z-50 flex flex-col-reverse items-end gap-3 pointer-events-none";
+      "fixed bottom-5 right-5 z-50 flex flex-col-reverse items-end gap-3 pointer-events-none mb-[env(safe-area-inset-bottom)]";
     document.body.appendChild(el);
   }
   return el;

@@ -73,7 +73,9 @@ export function TrendingSection() {
         </div>
 
         {/* Horizontal scroll on mobile, grid on desktop */}
-        <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 md:mx-0 md:px-0 md:grid md:grid-cols-4 md:overflow-visible">
+        {/* md:2 kolonner før lg:4 — rett til 4 på 768px ga 164px-kort med
+            klemte titler (re-audit responsiv P3) */}
+        <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible">
           {trending.map((item, index) => (
             <Link
               key={item.id}

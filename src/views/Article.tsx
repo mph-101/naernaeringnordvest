@@ -294,13 +294,14 @@ const Article = () => {
 
         {keyPoints.length > 0 && (
           <div className="bg-card rounded-2xl p-7 mb-12 border border-border shadow-soft animate-fade-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
-            <h2 className="font-subhead text-xs font-semibold text-accent uppercase tracking-[0.15em] mb-5">
-              {language === "no" ? "Nøkkelpunkter" : "Key Points"}
+            {/* Lora-først: seksjonstittel i serif/blekkbrun, ikke farge+versaler */}
+            <h2 className="font-headline text-lg font-bold text-headline mb-5">
+              {language === "no" ? "Nøkkelpunkter" : "Key points"}
             </h2>
             <ul className="space-y-4">
               {keyPoints.map((point: string, index: number) => (
                 <li key={index} className="flex items-start gap-4">
-                  <span className="w-7 h-7 bg-accent/10 text-accent rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 font-subhead text-sm font-bold">{index + 1}</span>
+                  <span className="w-7 h-7 bg-accent/10 text-accent-ink rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 font-subhead text-sm font-bold">{index + 1}</span>
                   <span className="text-foreground font-body leading-relaxed text-[0.95rem]">{point}</span>
                 </li>
               ))}

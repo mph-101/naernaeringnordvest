@@ -64,7 +64,7 @@ const Lytt = () => {
         <div className="bg-card border border-border rounded-2xl p-6 shadow-soft">
           <div className="flex items-center gap-2 mb-2">
             <Headphones className="w-4 h-4 text-accent" />
-            <span className="text-xs uppercase tracking-wider text-accent font-medium">
+            <span className="text-xs text-accent font-medium">
               {isNo ? "Dagens utgave" : "Today's edition"} · {player.currentIndex + 1}/{player.queue.length}
             </span>
           </div>

@@ -256,7 +256,7 @@ export function NoteShareButton({ articleId, articleTitle, content, variant = "c
 
               {pending.kind === "group" && (
                 <div className="space-y-2">
-                  <p className="text-[0.6875rem] uppercase tracking-wider text-muted-foreground font-subhead">{t.visibility}</p>
+                  <p className="text-[0.6875rem] text-muted-foreground font-subhead">{t.visibility}</p>
                   <div className="grid gap-2">
                     {([
                       { key: "members" as GroupVisibility, icon: Users, label: t.visMembers, desc: t.visMembersDesc },
@@ -290,7 +290,7 @@ export function NoteShareButton({ articleId, articleTitle, content, variant = "c
               )}
 
               <div>
-                <p className="text-[0.6875rem] uppercase tracking-wider text-muted-foreground font-subhead mb-1">{t.linkLabel}</p>
+                <p className="text-[0.6875rem] text-muted-foreground font-subhead mb-1">{t.linkLabel}</p>
                 <a href={articleUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-body text-accent hover:underline break-all inline-flex items-center gap-1">
                   <LinkIcon className="w-3.5 h-3.5 flex-shrink-0" />
                   {articleUrl}

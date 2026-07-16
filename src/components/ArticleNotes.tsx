@@ -278,7 +278,7 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
         <button
           data-tour="article-notes"
           onClick={() => setIsOpen(true)}
-          className="w-14 h-14 bg-accent text-accent-foreground rounded-full shadow-elevated flex items-center justify-center hover:scale-105 transition-transform"
+          className="w-14 h-14 bg-accent text-accent-foreground rounded-full shadow-elevated flex items-center justify-center hover:bg-accent/90 transition-colors"
           aria-label={t.notes}
         >
           <StickyNote className="w-6 h-6" />
@@ -449,7 +449,7 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
               </pre>
               {pendingShare?.kind === "group" && (
                 <div className="space-y-2">
-                  <p className="text-[0.6875rem] uppercase tracking-wider text-muted-foreground font-subhead">
+                  <p className="text-[0.6875rem] text-muted-foreground font-subhead">
                     {t.visibility}
                   </p>
                   <div className="grid gap-2">
@@ -486,7 +486,7 @@ export function ArticleNotes({ articleId, articleTitle }: ArticleNotesProps) {
                 </div>
               )}
               <div>
-                <p className="text-[0.6875rem] uppercase tracking-wider text-muted-foreground font-subhead mb-1">
+                <p className="text-[0.6875rem] text-muted-foreground font-subhead mb-1">
                   {t.linkLabel}
                 </p>
                 <a

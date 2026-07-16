@@ -380,7 +380,7 @@ export default function JournalistProfile({ username }: Props) {
                   className="block bg-card border border-border rounded-xl p-5 hover:border-accent/30 transition-colors"
                 >
                   {a.category && (
-                    <span className="inline-block text-[0.625rem] text-accent font-subhead uppercase tracking-wider mb-1">
+                    <span className="inline-block text-xs text-accent-ink font-subhead font-medium mb-1">
                       {a.category}
                     </span>
                   )}

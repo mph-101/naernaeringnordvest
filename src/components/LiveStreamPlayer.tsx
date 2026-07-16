@@ -91,7 +91,8 @@ export function LiveStreamPlayer({ playbackId, title }: Props) {
         </div>
       )}
       {/* Live badge overlay */}
-      <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-1 bg-destructive text-destructive-foreground rounded-full text-xs font-subhead font-bold uppercase tracking-wider">
+      {/* Rustrose er reservert feil — direktesending er ikke en alarm */}
+      <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary text-primary-foreground rounded-full text-xs font-subhead font-bold">
         <Radio className="w-3 h-3" />
         <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
         LIVE

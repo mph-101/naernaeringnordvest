@@ -233,7 +233,7 @@ export const ApiKeysSection = ({ isNo }: Props) => {
 
       {/* List */}
       <div>
-        <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-subhead mb-2">
+        <h4 className="text-xs text-muted-foreground font-subhead mb-2">
           {t.keys}
         </h4>
         {loading ? (

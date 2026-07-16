@@ -161,7 +161,7 @@ interface SourceGroupProps {
 
 const SourceGroup = ({ icon, label, count, children }: SourceGroupProps) => (
   <div>
-    <div className="flex items-center gap-1.5 mb-2 text-xs font-subhead font-medium text-muted-foreground uppercase tracking-wide">
+    <div className="flex items-center gap-1.5 mb-2 text-xs font-subhead font-medium text-muted-foreground">
       <span className="text-muted-foreground/80">{icon}</span>
       <span>{label}</span>
       <span className="text-muted-foreground/60">({count})</span>

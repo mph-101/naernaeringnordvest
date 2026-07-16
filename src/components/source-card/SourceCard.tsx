@@ -48,14 +48,15 @@ export const SourceCard = ({ data, className = "" }: SourceCardProps) => {
             {name}
           </p>
           {role && (
-            <p className="font-body font-medium text-[0.78125rem] sm:text-[0.875rem] uppercase tracking-[0.06em] text-accent leading-[1.2] m-0">
+            <p className="font-body font-medium text-[0.78125rem] sm:text-[0.875rem] text-accent-ink leading-[1.2] m-0">
               {role}
             </p>
           )}
         </div>
       </div>
+      {/* 1px nøytral kant på sitatet — fargede side-striper >1px er bannlyst (DESIGN.md) */}
       {quote && (
-        <blockquote className="px-3 sm:px-4 pb-3 sm:pb-4 -mt-1 font-body text-sm text-foreground/80 italic border-l-2 border-accent/40 ml-3 sm:ml-4 pl-3">
+        <blockquote className="px-3 sm:px-4 pb-3 sm:pb-4 -mt-1 font-body text-sm text-foreground/80 italic border-l border-border ml-3 sm:ml-4 pl-3">
           «{quote}»
         </blockquote>
       )}

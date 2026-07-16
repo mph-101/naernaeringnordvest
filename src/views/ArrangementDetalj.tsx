@@ -160,7 +160,7 @@ const ArrangementDetalj = () => {
         )}
 
         {event.category && (
-          <span className="inline-block text-xs text-primary font-medium uppercase tracking-wide mb-2">{event.category}</span>
+          <span className="inline-block text-xs text-primary font-medium mb-2">{event.category}</span>
         )}
         <h1 className="font-headline text-3xl sm:text-4xl text-headline leading-tight">{event.title}</h1>
 
@@ -239,7 +239,7 @@ const ArrangementDetalj = () => {
 
 const InfoRow = ({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) => (
   <div className="bg-card border border-border rounded-xl p-4">
-    <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase tracking-wide mb-1">
+    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
       {icon} {label}
     </div>
     <div className="text-sm">{children}</div>

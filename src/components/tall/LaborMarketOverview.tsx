@@ -286,7 +286,7 @@ export function LaborMarketOverview() {
                     </p>
                   </div>
                   {j.is_premium && (
-                    <span className="inline-flex items-center gap-1 text-[0.625rem] uppercase tracking-wider text-accent font-subhead font-semibold whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1 text-[0.625rem] text-accent-ink font-subhead font-semibold whitespace-nowrap">
                       <Sparkles className="w-3 h-3" /> Premium
                     </span>
                   )}

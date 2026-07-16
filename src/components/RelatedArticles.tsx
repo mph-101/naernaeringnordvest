@@ -1,12 +1,13 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Clock, ArrowUpRight, Lock } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
+import { supabase } from "@/integrations/supabase/client";
+import { PUBLISHED_ARTICLE_LIST_SELECT, toUiArticle } from "@/lib/article-data";
 import type { ArticleSource } from "@/lib/articles-chat";
 
-interface Article {
+interface Card {
   id: string;
   title: string;
   excerpt: string;
@@ -21,20 +22,36 @@ interface RelatedArticlesProps {
   /**
    * When provided, the strip mirrors the actual articles the conversation
    * answer is grounded in (the same `[n]` citations rendered above). When
-   * empty/undefined we fall back to the curated mock list so the section
-   * still has content on the static landing.
+   * empty/undefined we fall back to the latest published articles — real
+   * stories only; the old curated mock list put fictional articles behind
+   * a paywall, which is misleading for a publication built on accuracy.
    */
   sources?: ArticleSource[];
 }
 
 export function RelatedArticles({ sources }: RelatedArticlesProps = {}) {
-  const [showPaywall, setShowPaywall] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const { language } = useTheme();
   const t = translations[language];
 
   const usingLiveSources = Array.isArray(sources) && sources.length > 0;
-  const liveArticles: Article[] = usingLiveSources
+
+  const { data: latestRows = [] } = useQuery({
+    queryKey: ["related-articles-fallback"],
+    enabled: !usingLiveSources,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("articles")
+        .select(PUBLISHED_ARTICLE_LIST_SELECT)
+        .eq("published", true)
+        .order("published_at", { ascending: false })
+        .limit(4);
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
+  const cards: Card[] = usingLiveSources
     ? sources!.slice(0, 6).map((s) => ({
         id: s.id,
         title: s.title,
@@ -45,24 +62,21 @@ export function RelatedArticles({ sources }: RelatedArticlesProps = {}) {
         type: "article" as const,
         premium: false,
       }))
-    : [];
-  const mockArticles: Article[] = usingLiveSources
-    ? liveArticles
-    : t.relatedArticles.map((item, index) => ({
-        ...item,
-        type: index === 1 ? "podcast" : "article",
-        premium: true,
-      }));
+    : latestRows.map((row) => {
+        const a = toUiArticle(row, language);
+        return {
+          id: a.id,
+          title: a.title,
+          excerpt: a.excerpt,
+          category: a.category,
+          readTime: a.readTime,
+          author: a.author,
+          type: a.type,
+          premium: a.premium,
+        };
+      });
 
-  const handleArticleClick = (article: Article) => {
-    if (usingLiveSources) return; // handled by <Link> wrapper
-    if (article.premium) {
-      setSelectedArticle(article);
-      setShowPaywall(true);
-    }
-  };
-
-  const getTypeLabel = (type: Article["type"]) => {
+  const getTypeLabel = (type: Card["type"]) => {
     switch (type) {
       case "video":
         return t.video;
@@ -73,143 +87,70 @@ export function RelatedArticles({ sources }: RelatedArticlesProps = {}) {
     }
   };
 
+  if (cards.length === 0) return null;
+
   return (
-    <>
-      <section className="border-t border-border py-10">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="flex items-center justify-between mb-6">
-            {/* Lora-tittelen bærer seksjonen alene — ikonflisen var SaaS-støy */}
-            <h2 className="font-headline text-lg font-bold text-headline">
-              {usingLiveSources
-                ? language === "no" ? "Artikler brukt i svaret" : "Articles used in the answer"
-                : t.relatedCoverage}
-            </h2>
-            <Link
-              to="/?view=feed"
-              className="font-subhead text-sm text-accent-ink hover:text-link-hover transition-colors flex items-center gap-1 group"
-            >
-              {t.viewAll}
-              <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </Link>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {mockArticles.map((article, index) => {
-              const inner = (
-                <>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="font-subhead text-sm text-accent-ink font-medium">
-                    {article.category}
-                  </span>
-                  {!usingLiveSources && (
-                    <>
-                      <span className="text-muted-foreground text-xs">·</span>
-                      <span className="text-sm text-muted-foreground font-body">
-                        {getTypeLabel(article.type)}
-                      </span>
-                    </>
-                  )}
-                  {article.premium && (
-                    <Lock className="w-3 h-3 text-muted-foreground ml-auto" />
-                  )}
-                </div>
-
-                <h3 className="font-headline text-base font-bold text-headline group-hover:text-accent-ink transition-colors mb-2 leading-snug line-clamp-2">
-                  {article.title}
-                </h3>
-
-                {article.excerpt && (
-                  <p className="text-sm text-muted-foreground font-body leading-relaxed mb-4 line-clamp-2">
-                    {article.excerpt}
-                  </p>
-                )}
-
-                <div className="flex items-center text-xs text-muted-foreground font-body">
-                  <Clock className="w-3.5 h-3.5 mr-1.5" />
-                  {article.readTime || (language === "no" ? "Les artikkel" : "Read article")}
-                </div>
-                </>
-              );
-              const cls = "group block w-full text-left p-5 bg-card hover:bg-secondary/50 rounded-xl border border-border hover:border-accent/30 transition-all duration-300 card-interactive animate-fade-up";
-              const style = { animationDelay: `${index * 100}ms` } as const;
-              return usingLiveSources ? (
-                <Link key={article.id} to={`/article/${article.id}`} className={cls} style={style}>
-                  {inner}
-                </Link>
-              ) : (
-                <button
-                  key={article.id}
-                  onClick={() => handleArticleClick(article)}
-                  className={cls}
-                  style={style}
-                >
-                  {inner}
-                </button>
-              );
-            })}
-          </div>
+    <section className="border-t border-border py-10">
+      <div className="max-w-4xl mx-auto px-6">
+        <div className="flex items-center justify-between mb-6">
+          {/* Lora-tittelen bærer seksjonen alene — ikonflisen var SaaS-støy */}
+          <h2 className="font-headline text-lg font-bold text-headline">
+            {usingLiveSources
+              ? language === "no" ? "Artikler brukt i svaret" : "Articles used in the answer"
+              : language === "no" ? "Siste saker" : "Latest stories"}
+          </h2>
+          <Link
+            to="/?view=feed"
+            className="font-subhead text-sm text-accent-ink hover:text-link-hover transition-colors flex items-center gap-1 group"
+          >
+            {t.viewAll}
+            <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </Link>
         </div>
-      </section>
 
-      {/* Paywall-modal — Radix Dialog gir dialog-rolle, aria-modal, fokusfelle,
-          Escape og navngitt lukkeknapp; den håndrullede varianten manglet alt. */}
-      <Dialog open={showPaywall && !!selectedArticle} onOpenChange={(open) => { if (!open) setShowPaywall(false); }}>
-        <DialogContent className="max-w-lg p-0 gap-0 max-h-[90vh] overflow-y-auto">
-          {selectedArticle && (
-            <>
-              <div className="p-6 border-b border-border">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="font-subhead text-sm text-accent-ink font-medium">
-                    {selectedArticle.category}
-                  </span>
-                </div>
-                <DialogTitle className="font-headline text-lg font-bold text-headline leading-snug mb-2">
-                  {selectedArticle.title}
-                </DialogTitle>
-                <DialogDescription className="text-sm text-muted-foreground font-body">
-                  {language === "no" ? "Av" : "By"} {selectedArticle.author} · {selectedArticle.readTime}
-                </DialogDescription>
+        <div className="grid gap-4 md:grid-cols-2">
+          {cards.map((article, index) => (
+            <Link
+              key={article.id}
+              to={`/article/${article.id}`}
+              className="group block w-full text-left p-5 bg-card hover:bg-secondary/50 rounded-xl border border-border hover:border-accent/30 transition-all duration-300 card-interactive animate-fade-up"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="font-subhead text-sm text-accent-ink font-medium">
+                  {article.category}
+                </span>
+                {!usingLiveSources && (
+                  <>
+                    <span className="text-muted-foreground text-xs">·</span>
+                    <span className="text-sm text-muted-foreground font-body">
+                      {getTypeLabel(article.type)}
+                    </span>
+                  </>
+                )}
+                {article.premium && (
+                  <Lock className="w-3 h-3 text-muted-foreground ml-auto" />
+                )}
               </div>
 
-              <div className="p-6">
-                <p className="text-muted-foreground font-body leading-relaxed mb-6">
-                  {selectedArticle.excerpt}
+              <h3 className="font-headline text-base font-bold text-headline group-hover:text-accent-ink transition-colors mb-2 leading-snug line-clamp-2">
+                {article.title}
+              </h3>
+
+              {article.excerpt && (
+                <p className="text-sm text-muted-foreground font-body leading-relaxed mb-4 line-clamp-2">
+                  {article.excerpt}
                 </p>
+              )}
 
-                <div className="relative">
-                  <p className="text-foreground font-body leading-relaxed line-clamp-4">
-                    {selectedArticle.excerpt}
-                  </p>
-                  <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-card to-transparent" />
-                </div>
+              <div className="flex items-center text-xs text-muted-foreground font-body">
+                <Clock className="w-3.5 h-3.5 mr-1.5" />
+                {article.readTime || (language === "no" ? "Les artikkel" : "Read article")}
               </div>
-
-              <div className="p-6 bg-surface-subtle rounded-b-2xl border-t border-border">
-                <div className="text-center mb-6">
-                  <div className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Lock className="w-6 h-6 text-accent-ink" />
-                  </div>
-                  <h4 className="font-headline text-lg font-bold text-headline mb-2">
-                    {t.subscribeTitle}
-                  </h4>
-                  <p className="text-sm text-muted-foreground font-body">
-                    {t.subscribeDesc}
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <button className="w-full py-3 bg-accent text-accent-foreground rounded-full font-subhead text-sm font-semibold hover:bg-accent/90 transition-colors shadow-soft">
-                    {t.subscribeButton}
-                  </button>
-                  <button className="w-full py-3 bg-card border border-border text-foreground rounded-full font-subhead text-sm font-semibold hover:bg-secondary transition-colors">
-                    {t.signIn}
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

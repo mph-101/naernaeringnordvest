@@ -153,7 +153,7 @@ function JobCard({ job, featured, isNo }: { job: JobListing; featured?: boolean;
         )}
         <div className="flex-1 min-w-0">
           {featured && (
-            <span className="inline-flex items-center gap-1 text-[0.6875rem] uppercase tracking-wider text-primary font-body font-semibold mb-1">
+            <span className="inline-flex items-center gap-1 text-[0.6875rem] text-primary-ink font-subhead font-semibold mb-1">
               <Sparkles className="w-3 h-3" /> {isNo ? "Premium" : "Featured"}
             </span>
           )}

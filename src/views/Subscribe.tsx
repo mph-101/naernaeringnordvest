@@ -147,7 +147,7 @@ export default function Subscribe() {
                 <p className="text-xs text-muted-foreground font-body mb-5">{p.monthly}</p>
                 {p.tiers && (
                   <div className="mb-5 bg-surface-subtle border border-border rounded-xl p-3">
-                    <p className="text-[0.625rem] font-subhead font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    <p className="text-xs font-subhead font-medium text-muted-foreground mb-2">
                       Pris per sete
                     </p>
                     <ul className="space-y-1">

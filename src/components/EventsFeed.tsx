@@ -247,13 +247,13 @@ export const EventsFeed = () => {
                       }`}
                       aria-hidden
                     >
-                      <span className="text-[0.625rem] uppercase tracking-wider font-subhead font-semibold opacity-80">
+                      <span className="text-[0.625rem] font-subhead font-semibold opacity-80">
                         {fmtWeekday(item.start_at)}
                       </span>
                       <span className="font-headline text-xl font-bold tabular-nums">
                         {fmtDay(item.start_at)}
                       </span>
-                      <span className="text-[0.625rem] uppercase tracking-wider font-subhead font-semibold opacity-80">
+                      <span className="text-[0.625rem] font-subhead font-semibold opacity-80">
                         {fmtMonth(item.start_at)}
                       </span>
                     </div>
@@ -262,7 +262,7 @@ export const EventsFeed = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     {item.is_featured && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-subhead font-bold uppercase tracking-wider bg-primary text-primary-foreground">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6875rem] font-subhead font-semibold bg-primary text-primary-foreground">
                         <Sparkles className="w-3 h-3" /> {isNo ? "Fremhevet" : "Featured"}
                       </span>
                     )}
@@ -270,7 +270,7 @@ export const EventsFeed = () => {
                       const s = statusStyles[getStatus(item.start_at)];
                       return (
                         <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-subhead font-bold uppercase tracking-wider ${s.cls}`}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6875rem] font-subhead font-semibold ${s.cls}`}
                         >
                           <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
                           {s.label}

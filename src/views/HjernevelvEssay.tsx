@@ -87,7 +87,7 @@ const HjernevelvEssay = () => {
         </button>
 
         {article.topic && (
-          <span className="inline-block text-xs uppercase tracking-wider text-accent font-subhead mb-2">
+          <span className="inline-block text-xs text-accent font-subhead mb-2">
             {article.topic}
           </span>
         )}

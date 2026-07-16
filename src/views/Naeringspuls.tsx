@@ -175,9 +175,10 @@ export default function Naeringspuls() {
                     <div key={key} className="bg-card border border-border rounded-xl p-5">
                       <div className="flex items-center gap-2 mb-3 text-muted-foreground">
                         <Icon className="w-4 h-4" />
-                        <span className="font-subhead text-xs uppercase tracking-wide">{title}</span>
+                        <span className="font-subhead text-xs font-medium">{title}</span>
                       </div>
-                      <div className={`font-headline text-3xl font-bold ${down ? "text-destructive" : "text-headline"}`}>
+                      {/* Markedsretning bruker positive/negative-tokens — rustrose er reservert feil */}
+                      <div className={`font-headline text-3xl font-bold ${down ? "text-negative" : "text-headline"}`}>
                         {v != null ? fmt(v) : "—"}
                       </div>
                       {row?.period && (
@@ -270,7 +271,7 @@ export default function Naeringspuls() {
                     </div>
                     <div className="w-24 shrink-0 text-right font-body text-sm text-foreground tabular-nums">{fmtOms(b.value)}</div>
                     <div className={`w-16 shrink-0 text-right font-body text-xs tabular-nums flex items-center justify-end gap-0.5 ${
-                      b.yoy == null ? "text-muted-foreground" : b.yoy >= 0 ? "text-accent" : "text-destructive"}`}>
+                      b.yoy == null ? "text-muted-foreground" : b.yoy >= 0 ? "text-positive" : "text-negative"}`}>
                       {b.yoy != null && (b.yoy >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />)}
                       {b.yoy != null ? fmtPct(b.yoy) : "—"}
                     </div>
@@ -298,7 +299,7 @@ export default function Naeringspuls() {
                             {avvik.map((a) => (
                               <div key={a.label} className="flex items-baseline justify-between gap-2">
                                 <dt className="text-muted-foreground">{a.label}</dt>
-                                <dd className={`font-semibold tabular-nums ${a.value >= 0 ? "text-accent" : "text-destructive"}`}>{fmtPct(a.value)}</dd>
+                                <dd className={`font-semibold tabular-nums ${a.value >= 0 ? "text-positive" : "text-negative"}`}>{fmtPct(a.value)}</dd>
                               </div>
                             ))}
                           </dl>

@@ -242,7 +242,7 @@ const GroupDetail = () => {
                 </div>
                 <p className="text-foreground font-body leading-relaxed">{msg.content}</p>
                 {msg.visibility && msg.visibility !== "members" && (
-                  <span className="inline-flex items-center gap-1 mt-2 mr-2 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[0.625rem] font-subhead font-semibold uppercase tracking-wider">
+                  <span className="inline-flex items-center gap-1 mt-2 mr-2 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[0.625rem] font-subhead font-semibold">
                     {msg.visibility === "admins" ? <Shield className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                     {msg.visibility === "admins" ? t.visAdmins : t.visAuthor}
                   </span>

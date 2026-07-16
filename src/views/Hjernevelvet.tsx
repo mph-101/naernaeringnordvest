@@ -148,10 +148,7 @@ const Hjernevelvet = () => {
       <main className="max-w-5xl mx-auto px-6 py-12">
         {/* Hero */}
         <header className="mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-subhead uppercase tracking-wider mb-3">
-            <Brain className="w-3.5 h-3.5" />
-            {t.title}
-          </div>
+          {/* Eyebrow-pillen gjentok bare tittelen under — Lora-h1 bærer alene */}
           <h1 className="font-headline text-4xl md:text-5xl font-bold text-headline mb-3 leading-tight">
             {t.title}
           </h1>
@@ -161,7 +158,7 @@ const Hjernevelvet = () => {
         {/* Region tabs */}
         <div className="flex items-center gap-2 mb-10 overflow-x-auto pb-2 -mx-6 px-6">
           <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-          <span className="text-xs font-subhead uppercase tracking-wider text-muted-foreground shrink-0 mr-1">
+          <span className="text-xs font-subhead font-medium text-muted-foreground shrink-0 mr-1">
             {t.regions}:
           </span>
           <button
@@ -313,7 +310,7 @@ const Hjernevelvet = () => {
                         )}
                         <div className="p-5">
                           {a.topic && (
-                            <span className="inline-block text-[0.625rem] uppercase tracking-wider text-accent font-subhead mb-2">
+                            <span className="inline-block text-[0.625rem] text-accent font-subhead mb-2">
                               {a.topic}
                             </span>
                           )}

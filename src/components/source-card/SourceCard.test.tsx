@@ -8,7 +8,7 @@ import { SourceCard } from "./SourceCard";
  *  - undersized portrait
  *  - missing or clipped role/title
  *  - broken vertical alignment between portrait and text block
- *  - lost hierarchy between name (headline) and role (uppercase accent)
+ *  - lost hierarchy between name (headline) and role (accent-ink label)
  *
  * We assert against class names and inline styles because jsdom does not
  * compute layout. The `data-nn-source-card` root and the structural classes
@@ -62,7 +62,7 @@ describe("SourceCard typography regression", () => {
     });
   });
 
-  it("keeps clear hierarchy: serif headline name, uppercase accent role", () => {
+  it("keeps clear hierarchy: serif headline name, calm accent-ink role", () => {
     const { getByText } = render(<SourceCard data={data} />);
     const name = getByText(data.name);
     const role = getByText(data.role);
@@ -71,8 +71,10 @@ describe("SourceCard typography regression", () => {
     expect(name.className).toMatch(/font-bold/);
     expect(name.className).toMatch(/text-headline/);
 
-    expect(role.className).toMatch(/uppercase/);
-    expect(role.className).toMatch(/text-accent/);
+    // Rolig etikett: normal case, tekst-trygg accent-ink — uppercase-eyebrows
+    // er et anti-mønster (DESIGN.md), hierarkiet bæres av serif-kontrasten.
+    expect(role.className).not.toMatch(/uppercase/);
+    expect(role.className).toMatch(/text-accent-ink/);
     // Role should not visually outweigh the name.
     expect(role.className).not.toMatch(/font-bold/);
   });
@@ -89,13 +91,15 @@ describe("SourceCard typography regression", () => {
     });
   });
 
-  it("renders the optional quote with the editorial accent border", () => {
+  it("renders the optional quote with a 1px neutral border (no accent stripe)", () => {
     const { container } = render(<SourceCard data={data} />);
     const quote = container.querySelector("blockquote");
     expect(quote).not.toBeNull();
     expect(quote!.textContent).toContain(data.quote);
-    expect(quote!.className).toMatch(/border-l-2/);
-    expect(quote!.className).toMatch(/border-accent/);
+    // Fargede side-striper >1px er bannlyst (DESIGN.md) — 1px nøytral kant.
+    expect(quote!.className).toMatch(/border-l(?!-)/);
+    expect(quote!.className).not.toMatch(/border-l-2/);
+    expect(quote!.className).toMatch(/border-border/);
   });
 
   it("omits the role paragraph entirely when role is missing (no empty gap)", () => {

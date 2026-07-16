@@ -104,7 +104,7 @@ export default function StillingDetail() {
         </button>
 
         {job.is_premium && (
-          <div className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-primary font-body font-semibold mb-3">
+          <div className="inline-flex items-center gap-1.5 text-xs text-primary-ink font-subhead font-semibold mb-3">
             <Sparkles className="w-3.5 h-3.5" /> {isNo ? "Premium-annonse" : "Featured posting"}
           </div>
         )}

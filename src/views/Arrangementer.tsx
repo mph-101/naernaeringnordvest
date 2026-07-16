@@ -376,11 +376,11 @@ const Arrangementer = () => {
                       <div className="p-5 flex-1 flex flex-col">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           {e.is_featured && (
-                            <span className="text-[0.625rem] px-2 py-0.5 rounded-full inline-flex items-center gap-1 bg-primary text-primary-foreground uppercase tracking-wide font-bold">
+                            <span className="text-[0.625rem] px-2 py-0.5 rounded-full inline-flex items-center gap-1 bg-primary text-primary-foreground font-bold">
                               <Sparkles className="w-3 h-3" /> {t.featured}
                             </span>
                           )}
-                          {e.category && <span className="text-xs text-primary font-medium uppercase tracking-wide">{e.category}</span>}
+                          {e.category && <span className="text-xs text-primary font-medium">{e.category}</span>}
                         </div>
                         <h3 className="font-headline text-lg text-headline leading-snug">{e.title}</h3>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">

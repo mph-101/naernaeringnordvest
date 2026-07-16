@@ -170,7 +170,7 @@ function KeyFigure({
     <div className="bg-muted/50 rounded-lg p-2.5 text-center">
       <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
         {icon}
-        <span className="text-[0.625rem] font-subhead uppercase tracking-wide">{label}</span>
+        <span className="text-[0.625rem] font-subhead">{label}</span>
       </div>
       <p className={`text-sm font-semibold font-headline ${negative ? "text-destructive" : "text-foreground"}`}>
         {value}

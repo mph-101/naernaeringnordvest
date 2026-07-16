@@ -382,7 +382,7 @@ export default function BusinessPanel() {
         {/* Plan summary */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           <div className="bg-card border border-border rounded-2xl p-5">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground font-subhead mb-2">Seter</div>
+            <div className="text-xs text-muted-foreground font-subhead mb-2">Seter</div>
             <div className="font-headline text-2xl font-bold text-headline">
               {usedSeats} <span className="text-base text-muted-foreground font-body">/ {account.seat_count}</span>
             </div>
@@ -391,11 +391,11 @@ export default function BusinessPanel() {
             </div>
           </div>
           <div className="bg-card border border-border rounded-2xl p-5">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground font-subhead mb-2">Prøveperiode</div>
+            <div className="text-xs text-muted-foreground font-subhead mb-2">Prøveperiode</div>
             <div className="font-headline text-lg font-semibold text-headline">{formatDate(account.trial_ends_at)}</div>
           </div>
           <div className="bg-card border border-border rounded-2xl p-5">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground font-subhead mb-2">Neste fornyelse</div>
+            <div className="text-xs text-muted-foreground font-subhead mb-2">Neste fornyelse</div>
             <div className="font-headline text-lg font-semibold text-headline">{formatDate(account.current_period_end)}</div>
           </div>
         </section>

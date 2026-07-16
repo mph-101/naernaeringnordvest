@@ -184,7 +184,7 @@ export const ConversationSourceTimeline = ({ turns }: ConversationSourceTimeline
 
       {/* Ranked sources */}
       <div>
-        <div className="flex items-center gap-1.5 mb-3 text-xs font-subhead font-medium text-muted-foreground uppercase tracking-wide">
+        <div className="flex items-center gap-1.5 mb-3 text-xs font-subhead font-medium text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />
           <span>Mest brukte kilder</span>
         </div>

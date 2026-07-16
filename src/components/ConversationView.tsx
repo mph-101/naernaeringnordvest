@@ -575,7 +575,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                         <span className="font-subhead font-semibold text-sm text-headline">
                           {language === "no" ? "Brønnøysundregistrene" : "Brønnøysund Register"}
                         </span>
-                        <span className="text-[0.625rem] uppercase tracking-widest text-muted-foreground font-subhead ml-auto">
+                        <span className="text-xs text-muted-foreground font-subhead ml-auto">
                           {language === "no" ? "Sanntidsdata" : "Live data"}
                         </span>
                       </div>
@@ -649,7 +649,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                         <UsersIcon className="w-3.5 h-3.5 opacity-60" />
                                         {c.ansatte.toLocaleString(language === "no" ? "nb-NO" : "en-US")}
                                       </div>
-                                      <span className="text-[0.625rem] uppercase tracking-wider text-muted-foreground font-subhead mt-1">
+                                      <span className="text-[0.625rem] text-muted-foreground font-subhead mt-1">
                                         {language === "no" ? "ansatte" : "employees"}
                                       </span>
                                     </div>
@@ -685,10 +685,10 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                           <span className="font-subhead font-semibold text-sm text-headline">
                             {language === "no" ? "Tall-databasen" : "Tall database"}
                           </span>
-                          <span className="text-[0.625rem] uppercase tracking-widest text-muted-foreground font-subhead ml-auto group-open:hidden">
+                          <span className="text-xs text-muted-foreground font-subhead ml-auto group-open:hidden">
                             {language === "no" ? "Vis tall" : "Show data"}
                           </span>
-                          <span className="text-[0.625rem] uppercase tracking-widest text-muted-foreground font-subhead ml-auto hidden group-open:inline">
+                          <span className="text-xs text-muted-foreground font-subhead ml-auto hidden group-open:inline">
                             {language === "no" ? "Skjul" : "Hide"}
                           </span>
                         </summary>
@@ -813,7 +813,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   const v = typeof p.value === "number" ? p.value.toLocaleString(language === "no" ? "nb-NO" : "en-US") : p.value;
                                   return (
                                     <div key={k} className="p-2 rounded-lg bg-muted/40">
-                                      <dt className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">{lbl}</dt>
+                                      <dt className="text-[0.625rem] text-muted-foreground">{lbl}</dt>
                                       <dd className="font-subhead font-semibold text-headline mt-0.5">{v}{suffix}</dd>
                                       <dd className="text-[0.625rem] text-muted-foreground">{p.period}</dd>
                                     </div>
@@ -858,7 +858,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                   const v = typeof p.value === "number" ? p.value.toLocaleString(language === "no" ? "nb-NO" : "en-US") : p.value;
                                   return (
                                     <div key={k} className="p-2 rounded-lg bg-muted/40">
-                                      <dt className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">{lbl}</dt>
+                                      <dt className="text-[0.625rem] text-muted-foreground">{lbl}</dt>
                                       <dd className="font-subhead font-semibold text-headline mt-0.5">{v}{suffix}</dd>
                                       <dd className="text-[0.625rem] text-muted-foreground">{p.period}</dd>
                                     </div>
@@ -929,7 +929,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
                                     <UsersIcon className="w-3.5 h-3.5 opacity-60" />
                                     {c.ansatte.toLocaleString(language === "no" ? "nb-NO" : "en-US")}
                                   </div>
-                                  <span className="text-[0.625rem] uppercase tracking-wider text-muted-foreground font-subhead mt-1">
+                                  <span className="text-[0.625rem] text-muted-foreground font-subhead mt-1">
                                     {language === "no" ? "ansatte" : "employees"}
                                   </span>
                                 </div>
@@ -1092,21 +1092,21 @@ const TallParamRow = ({
         {period && (
           <span className="inline-flex items-center gap-1">
             <CalendarRange className="w-3 h-3 opacity-70" />
-            <span className="text-[0.625rem] uppercase tracking-wider">{isNo ? "Periode" : "Period"}:</span>
+            <span className="text-[0.625rem]">{isNo ? "Periode" : "Period"}:</span>
             <span className="text-foreground font-medium">{period}</span>
           </span>
         )}
         {area && (
           <span className="inline-flex items-center gap-1">
             <MapPin className="w-3 h-3 opacity-70" />
-            <span className="text-[0.625rem] uppercase tracking-wider">{isNo ? "Område" : "Area"}:</span>
+            <span className="text-[0.625rem]">{isNo ? "Område" : "Area"}:</span>
             <span className="text-foreground font-medium">{area}</span>
           </span>
         )}
         {indicator && (
           <span className="inline-flex items-center gap-1">
             <Activity className="w-3 h-3 opacity-70" />
-            <span className="text-[0.625rem] uppercase tracking-wider">{isNo ? "Indikator" : "Indicator"}:</span>
+            <span className="text-[0.625rem]">{isNo ? "Indikator" : "Indicator"}:</span>
             <span className="text-foreground font-medium">{indicator}</span>
           </span>
         )}

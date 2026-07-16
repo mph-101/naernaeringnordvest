@@ -51,7 +51,8 @@ export function ArticleEngagementBar({ articleId, articleTitle, authorName, jour
     <section data-tour="article-engagement" className="mb-12">
       <div className="flex items-end justify-between mb-5">
         <div>
-          <p className="text-[0.6875rem] font-subhead font-semibold text-accent uppercase tracking-[0.15em]">{t.heading}</p>
+          {/* Rolig etikett — uppercase-eyebrow er et anti-mønster (DESIGN.md) */}
+          <p className="text-sm font-subhead font-medium text-accent-ink">{t.heading}</p>
           <h2 className="font-headline text-xl font-bold text-headline mt-1">{t.lead}</h2>
         </div>
         <a
@@ -104,9 +105,9 @@ function ActionCard({ icon: Icon, title, desc, onClick, accent }: ActionCardProp
   return (
     <button
       onClick={onClick}
-      className={`group text-left p-5 rounded-2xl border bg-card hover:shadow-soft hover:-translate-y-0.5 transition-all ${accent ? "border-accent" : "border-border hover:border-accent/40"}`}
+      className={`group text-left p-5 rounded-2xl border bg-card card-interactive transition-all ${accent ? "border-accent" : "border-border hover:border-accent/40"}`}
     >
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors ${accent ? "bg-accent text-accent-foreground" : "bg-accent/10 text-accent group-hover:bg-accent group-hover:text-accent-foreground"}`}>
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors ${accent ? "bg-accent text-accent-foreground" : "bg-accent/10 text-accent-ink group-hover:bg-accent group-hover:text-accent-foreground"}`}>
         <Icon className="w-5 h-5" />
       </div>
       <h3 className="font-subhead text-base font-semibold text-headline mb-1">{title}</h3>

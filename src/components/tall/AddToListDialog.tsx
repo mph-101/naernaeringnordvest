@@ -72,7 +72,7 @@ export function AddToListDialog({ orgnr, companyName, session, onClose }: Props)
 
         {lists.length > 0 && (
           <div className="space-y-2 mb-4">
-            <p className="text-xs text-muted-foreground font-subhead uppercase tracking-wider">{isNo ? "Eksisterende lister" : "Existing lists"}</p>
+            <p className="text-xs text-muted-foreground font-subhead">{isNo ? "Eksisterende lister" : "Existing lists"}</p>
             {lists.map((l) => (
               <button
                 key={l.id}
@@ -86,7 +86,7 @@ export function AddToListDialog({ orgnr, companyName, session, onClose }: Props)
         )}
 
         <div className="border-t border-border pt-4">
-          <p className="text-xs text-muted-foreground font-subhead uppercase tracking-wider mb-2">{isNo ? "Opprett ny liste" : "Create new list"}</p>
+          <p className="text-xs text-muted-foreground font-subhead mb-2">{isNo ? "Opprett ny liste" : "Create new list"}</p>
           <div className="flex gap-2">
             <input
               value={newListName}

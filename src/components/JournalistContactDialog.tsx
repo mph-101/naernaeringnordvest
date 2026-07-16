@@ -60,7 +60,7 @@ export function JournalistContactDialog({ open, onClose, articleId, articleTitle
           <div>
             <div className="flex items-center gap-2 text-accent">
               <Mail className="w-4 h-4" />
-              <span className="text-xs font-subhead font-semibold uppercase tracking-wider">{t.title}</span>
+              <span className="text-xs font-subhead font-semibold">{t.title}</span>
             </div>
             <h3 className="font-headline text-xl font-bold text-headline mt-1">{t.subtitle(authorName)}</h3>
             <p className="text-xs text-muted-foreground font-body mt-1 truncate">{t.reArticle} {articleTitle}</p>

@@ -7,6 +7,40 @@ import { Mail, Lock, ArrowLeft, User, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
 
+// Kjente Supabase-feilkoder → lokalisert melding med gjenopprettingsvei.
+// Rå API-tekst («Invalid login credentials») hjalp ingen — publikummet
+// inkluderer eldre norske lesere (re-audit klarhet P2).
+const authErrorMessage = (raw: string | undefined, isNo: boolean): string => {
+  const msg = (raw || "").toLowerCase();
+  if (msg.includes("invalid login credentials"))
+    return isNo
+      ? "Feil e-post eller passord. Prøv igjen, eller bruk «Glemt passord?»."
+      : "Wrong email or password. Try again, or use “Forgot password?”.";
+  if (msg.includes("email not confirmed"))
+    return isNo
+      ? "E-posten er ikke bekreftet ennå — sjekk innboksen for bekreftelseslenken."
+      : "Your email isn't confirmed yet — check your inbox for the confirmation link.";
+  if (msg.includes("already registered"))
+    return isNo
+      ? "Det finnes allerede en konto med denne e-posten. Logg inn i stedet."
+      : "An account with this email already exists. Log in instead.";
+  if (msg.includes("password should be at least"))
+    return isNo
+      ? "Passordet må ha minst 6 tegn."
+      : "The password must be at least 6 characters.";
+  if (msg.includes("rate limit") || msg.includes("too many"))
+    return isNo
+      ? "For mange forsøk. Vent et øyeblikk og prøv igjen."
+      : "Too many attempts. Wait a moment and try again.";
+  if (msg.includes("invalid") && msg.includes("email"))
+    return isNo
+      ? "E-postadressen ser ikke gyldig ut. Sjekk skrivemåten."
+      : "That email address doesn't look valid. Check the spelling.";
+  return isNo
+    ? "Noe gikk galt. Prøv igjen om litt."
+    : "Something went wrong. Try again shortly.";
+};
+
 const Login = () => {
   const navigate = useNavigate();
   const { language } = useTheme();
@@ -90,12 +124,12 @@ const Login = () => {
         },
       });
       if (error) {
-        toast.error(error.message || "Google login failed");
+        toast.error(language === "no" ? "Google-innloggingen feilet. Prøv igjen om litt." : "Google login failed. Try again shortly.");
         setGoogleLoading(false);
       }
       // Supabase redirects to Google — page unloads from here
-    } catch (e: any) {
-      toast.error(e.message || "Google login failed");
+    } catch {
+      toast.error(language === "no" ? "Google-innloggingen feilet. Prøv igjen om litt." : "Google login failed. Try again shortly.");
       setGoogleLoading(false);
     }
   };
@@ -110,7 +144,7 @@ const Login = () => {
       if (error) throw error;
       setResetSent(true);
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(authErrorMessage(error?.message, language === "no"));
     } finally {
       setLoading(false);
     }
@@ -139,7 +173,7 @@ const Login = () => {
         navigate(-1);
       }
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(authErrorMessage(error?.message, language === "no"));
     } finally {
       setLoading(false);
     }

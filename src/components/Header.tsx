@@ -232,7 +232,11 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden min-w-10 min-h-10 inline-flex items-center justify-center hover:bg-secondary rounded-full transition-colors"
-              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-label={
+                language === "no"
+                  ? (isMobileMenuOpen ? "Lukk meny" : "Åpne meny")
+                  : (isMobileMenuOpen ? "Close menu" : "Open menu")
+              }
               aria-expanded={isMobileMenuOpen}
             >
               {isMobileMenuOpen ? (

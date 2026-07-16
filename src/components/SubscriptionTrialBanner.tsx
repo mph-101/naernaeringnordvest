@@ -88,7 +88,8 @@ export function SubscriptionTrialBanner() {
     message = isNo
       ? "Siste betaling mislyktes. Oppdater betalingsinformasjon for å unngå avbrudd."
       : "Your last payment failed. Update your payment method to avoid interruption.";
-    ctaLabel = isNo ? "Administrer" : "Manage";
+    // CTA-teksten skal beskrive handlingen meldingen ber om (klarhet P3)
+    ctaLabel = isNo ? "Oppdater betaling" : "Update payment";
   }
 
   const handleDismiss = () => {

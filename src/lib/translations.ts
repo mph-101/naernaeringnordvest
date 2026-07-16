@@ -45,7 +45,7 @@ export const translations = {
     subscribeTitle: "Abonner for å lese videre",
     subscribeDesc: "Få ubegrenset tilgang til alle analyser, data og innsikt om lokalt næringsliv.",
     subscribeButton: "Bli abonnent — fra 249 kr/kvartal",
-    signIn: "Allerede medlem? Logg inn",
+    signIn: "Har du abonnement? Logg inn",
 
     // Conversation
     you: "Deg",
@@ -141,17 +141,17 @@ export const translations = {
     navTransactions: "Transactions",
     navLeagues: "Industries",
     navMediaRights: "Media",
-    navValuations: "Key Figures",
+    navValuations: "Key figures",
     subscribe: "Subscribe",
 
     // Search Hero
-    badge: "Local Business",
+    badge: "Local business",
     heroTitle1: "The business landscape",
     heroTitle2: "in your region",
     heroSubtitle: "Ask questions about companies, ownership, investments and market trends in your area. Answers cite their sources straight from the article archive.",
     searchPlaceholder: "Ask a question...",
     askButton: "Ask",
-    popularQuestions: "Popular Questions",
+    popularQuestions: "Popular questions",
     examplePrompts: [
       "Which companies have the highest revenue in the region?",
       "Who are the largest local employers?",
@@ -164,22 +164,22 @@ export const translations = {
     browse: "Browse",
 
     // News Feed
-    latestAnalysis: "Latest News",
+    latestAnalysis: "Latest news",
     topics: ["All", "Real Estate", "Retail", "Industry", "Technology", "Finance", "Tourism"],
     sports: ["All regions", "Northwestern Norway", "Western Norway", "Northern Norway", "Central Norway", "Eastern Norway", "Southern Norway"],
     sportFilterLabel: "Region",
     premium: "Premium",
-    loadMore: "Load More Stories",
+    loadMore: "Load more stories",
     minRead: "min read",
     minWatch: "min watch",
     minListen: "min listen",
     hoursAgo: "hours ago",
 
     // Paywall
-    subscribeTitle: "Subscribe to Continue Reading",
+    subscribeTitle: "Subscribe to continue reading",
     subscribeDesc: "Get unlimited access to all analysis, data, and insights about local business.",
     subscribeButton: "Subscribe — from 249 NOK / quarter",
-    signIn: "Already a member? Sign in",
+    signIn: "Already subscribed? Log in",
 
     // Conversation
     you: "You",
@@ -191,8 +191,8 @@ export const translations = {
     shareLinkCopied: "Link copied",
 
     // Related Articles
-    relatedCoverage: "Related Coverage",
-    viewAll: "View All",
+    relatedCoverage: "Related coverage",
+    viewAll: "View all",
     article: "Article",
     video: "Video",
     podcast: "Podcast",

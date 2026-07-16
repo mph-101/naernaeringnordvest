@@ -294,8 +294,15 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
           );
         },
       });
-    } catch (error) {
-      upsertAssistant(error instanceof Error ? error.message : "Noe gikk galt, prøv igjen.");
+    } catch {
+      // Aldri rå error.message i svarboblen: den er ofte engelsk/teknisk og
+      // umulig å skille fra et AI-svar. Lokalisert, ærlig systemmelding i
+      // stedet (re-audit klarhet P2).
+      upsertAssistant(
+        language === "no"
+          ? "Vi fikk ikke hentet svar akkurat nå. Prøv igjen om litt."
+          : "We couldn't fetch an answer right now. Please try again shortly.",
+      );
     } finally {
       setIsLoading(false);
     }

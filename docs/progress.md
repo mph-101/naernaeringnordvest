@@ -1,5 +1,18 @@
 # Progress
 
+## Audit-backloggen lukket: alle 6 bunker levert (2026-07-16)
+
+Backloggen fra [design-audit 2026-07-15](design-audit-2026-07-15.md) er ferdig — én fokusert PR per bunke, alle merget fortløpende av Magnus:
+
+- **Bunke 1 — etterrettelighet** (#166, #167): RelatedArticles-fallback viser ekte saker (mock+paywall-dialog fjernet); kontaktsidens kildevern-løfte nedjustert til fase 1.1-nivået; Article-footerens døde lenker → SiteFooter; AI-merking med /innholdsmerking-lenke i begge Spør-flater.
+- **Bunke 2 — anti-mønstre** (#168): uppercase-eyebrow-sveip over hele leserflaten (~35 steder, unntak: språkkoder + annonse-badge); Næringspuls → positive/negative-tokens; LIVE-badge ut av rustrose; scale/løft-hover fjernet; SourceCard-testene oppdatert til ny kontrakt.
+- **Bunke 3 — Spør-popover a11y** (#169): labels + 40px på send/lukk, role=log/aria-live, landskaps-klemme på panelet; delt `src/lib/motion.ts` (scrollBehavior) gir reduced-motion på all JS-scrolling; EventsFeed sr-only-dato; JobChangeFeed aria-controls.
+- **Bunke 4 — responsiv** (#170): mobilmeny scrollbar i landskap (P1); ViewToggle 40px + ikoner skjult på xs (P1); 40px-treffflate på ni tekstlenker; TrendingSection md:2/lg:4; `mb-[7em]`-skrivefeilen; safe-area (viewport-fit=cover + env-inset på MiniPlayer/FAB).
+- **Bunke 5 — ytelse** (#171): død article-tags-query fjernet (nettverks-verifisert); NewsFeed-avledningskjeden + MarketTicker-items i useMemo; poll-bar scaleX; JobChangeFeed-img lazy+aspect. Bevisst utsatt med begrunnelse: generated_notice-overfetch (krever has_notice-skjemaendring — anbefaling: ikke verdt det ved 10 rader) og limit(40) (bevisst avveining).
+- **Bunke 6 — klarhet** (#172): lokaliserte Login-feilmeldinger med gjenopprettingsvei; error.message aldri i Spør-svarboblen; medlem→abonnent-terminologi; Subscribe/SubscribeReturn EN-paritet + «si opp» + klarspråk for domenebekreftelse; Stripe-ID og auto-redirect fjernet fra kvittering; EN sentence case; mobilmeny-aria lokalisert.
+
+Gjenstår utenfor kode (magnus-todo): MBL/NR/PFU-verifisering, Signal-nummer, juridiske plassholdere. Naturlig neste målepunkt: ny re-audit mot 11/20 når magnus-todo-punktene er avklart, eller Næringspuls KPI-redesign (egen designoppgave).
+
 ## Re-audit hele leserflaten: 11/20 med bredere scope (2026-07-15)
 
 - 5-dimensjons re-audit kjørt mot main+polish — **scope utvidet fra forsiden til hele leserflaten** (Article, Stillinger, Naeringspuls, Subscribe, footer-sider). Score: a11y 3, ytelse 3, anti-mønstre 1, responsiv 2, klarhet 2 = **11/20**. Ikke direkte sammenlignbar med 13/20 (forside-scope); forside-funnene fra 07-10 er i hovedsak lukket (bekreftet som styrker av skannerne).

@@ -4,6 +4,7 @@ import { MessageCircle, X, Send, Bot, User, Loader2, FileText, ExternalLink, Rss
 import ReactMarkdown from "react-markdown";
 import { streamArticlesChat, type ArticleSource, type TrustedSource } from "@/lib/articles-chat";
 import { FabSlot } from "@/components/FabSlot";
+import { scrollBehavior } from "@/lib/motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -84,7 +85,7 @@ export function SporAIChat() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: scrollBehavior() });
   }, [messages, isLoading]);
 
   const send = async () => {
@@ -162,9 +163,10 @@ export function SporAIChat() {
         </FabSlot>
       )}
 
-      {/* Chat-vindu */}
+      {/* Chat-vindu — h begrenses av viewport så header/lukkeknapp aldri
+          havner utenfor skjermen i telefon-landskap (re-audit responsiv P2) */}
       {open && (
-        <div className="fixed bottom-6 right-6 z-50 w-[340px] sm:w-[380px] h-[520px] flex flex-col bg-card border border-border rounded-3xl shadow-elevated animate-scale-in overflow-hidden">
+        <div className="fixed bottom-6 right-6 z-50 w-[340px] sm:w-[380px] h-[min(520px,calc(100dvh-6rem))] flex flex-col bg-card border border-border rounded-3xl shadow-elevated animate-scale-in overflow-hidden">
           {/* Header */}
           <div className="flex items-center gap-3 px-5 py-4 bg-gradient-warm flex-shrink-0">
             <div className="w-8 h-8 rounded-full bg-accent-foreground/20 flex items-center justify-center">
@@ -174,13 +176,18 @@ export function SporAIChat() {
               <p className="font-subhead font-semibold text-accent-foreground text-sm">Spør Nær Næring</p>
               <p className="font-body text-xs text-accent-foreground/70">Svar fra artikkelarkivet</p>
             </div>
-            <button onClick={() => setOpen(false)} className="p-1.5 rounded-full hover:bg-accent-foreground/20 transition-colors">
+            <button
+              onClick={() => setOpen(false)}
+              aria-label="Lukk"
+              className="min-w-10 min-h-10 inline-flex items-center justify-center rounded-full hover:bg-accent-foreground/20 transition-colors"
+            >
               <X className="w-4 h-4 text-accent-foreground" />
             </button>
           </div>
 
-          {/* Meldinger */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          {/* Meldinger — role=log gjør at strømmede svar annonseres for
+              skjermlesere (ConversationView har samme mønster) */}
+          <div role="log" aria-live="polite" className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
             {messages.map((msg, i) => (
               <div key={i} className={`flex flex-wrap gap-2 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === "user" ? "bg-accent" : "bg-secondary"}`}>
@@ -298,13 +305,15 @@ export function SporAIChat() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), send())}
                 placeholder="Still et spørsmål..."
+                aria-label="Still et spørsmål"
                 className="flex-1 bg-transparent outline-none font-body text-sm text-foreground placeholder:text-muted-foreground"
                 disabled={isLoading}
               />
               <button
                 onClick={send}
                 disabled={!input.trim() || isLoading}
-                className="w-8 h-8 rounded-xl bg-accent text-accent-foreground flex items-center justify-center hover:bg-accent/90 disabled:opacity-40 transition-all flex-shrink-0"
+                aria-label="Send spørsmål"
+                className="w-10 h-10 rounded-xl bg-accent text-accent-foreground flex items-center justify-center hover:bg-accent/90 disabled:opacity-40 transition-all flex-shrink-0"
               >
                 {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
               </button>

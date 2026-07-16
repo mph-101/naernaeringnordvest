@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { Pencil, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { ArticleChart, type ChartData } from "./ArticleChart";
+import { scrollBehavior } from "@/lib/motion";
 
 const decodeChart = (encoded: string): ChartData | null => {
   try {
@@ -38,7 +39,7 @@ export const ChartFigureView = ({ node, getPos, editor, deleteNode }: NodeViewPr
       sessionStorage.removeItem(key);
       setAnimating(true);
       requestAnimationFrame(() => {
-        wrapperRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        wrapperRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
       });
       const t = window.setTimeout(() => setAnimating(false), 550);
       return () => window.clearTimeout(t);

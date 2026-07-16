@@ -287,6 +287,12 @@ export const EventsFeed = () => {
                       to={`/arrangementer/${item.id}`}
                       className="after:absolute after:inset-0 after:content-['']"
                     >
+                      {/* Dato-flisen er aria-hidden (dekorativ) — datoen må
+                          derfor finnes som tekst for skjermlesere. */}
+                      <span className="sr-only">
+                        {new Date(item.start_at).toLocaleDateString(isNo ? "nb-NO" : "en-US", { weekday: "long", day: "numeric", month: "long" })}
+                        {" — "}
+                      </span>
                       {item.title}
                     </Link>
                   </p>

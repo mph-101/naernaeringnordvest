@@ -125,6 +125,7 @@ export const JobChangeFeed = () => {
               type="button"
               onClick={() => setExpandedId(isExpanded ? null : item.id)}
               aria-expanded={isExpanded}
+              aria-controls={`jobchange-details-${item.id}`}
               aria-label={isNo ? `Vis detaljer for ${name}` : `Show details for ${name}`}
               className="flex-shrink-0 p-2 -m-1 mt-0 rounded-md text-muted-foreground after:absolute after:inset-0 after:content-[''] after:cursor-pointer"
             >
@@ -135,7 +136,7 @@ export const JobChangeFeed = () => {
           )}
         </div>
         {isExpanded && canExpand && (
-          <div className="pl-10 pr-2 pb-4 -mt-1 space-y-3 animate-fade-up">
+          <div id={`jobchange-details-${item.id}`} className="pl-10 pr-2 pb-4 -mt-1 space-y-3 animate-fade-up">
             {item.image_url && (
               <div className="relative rounded-lg overflow-hidden">
                 <img src={item.image_url} alt={name} className="w-full max-h-64 object-cover" />

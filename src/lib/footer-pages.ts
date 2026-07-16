@@ -56,9 +56,9 @@ const kontakt = `Vi vil gjerne høre fra deg — enten du har et tips, et spørs
 Tips, innspill og spørsmål til redaksjonelt innhold:
 [redaksjon@naernaering.no](mailto:redaksjon@naernaering.no)
 
-### Tips oss anonymt
+### Tips oss
 
-Har du sensitive opplysninger? Vi tar imot tips fortrolig og beskytter kildene våre etter pressens kildevernregler. Bruk vår [tipskanal](/) eller kontakt en av journalistene våre direkte.
+Har du et tips? Bruk [tipsskjemaet](/team) eller kontakt en av journalistene våre direkte. Tipset sendes over en sikker forbindelse, og du velger selv om du vil oppgi kontaktinformasjon. For sensitive saker hvor full kildebeskyttelse er kritisk, avtal et fysisk møte med en journalist — skriv til [redaksjon@naernaering.no](mailto:redaksjon@naernaering.no) uten å utdype innholdet.
 
 ### Rettelser og klager
 

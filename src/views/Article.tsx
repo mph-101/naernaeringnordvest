@@ -12,6 +12,7 @@ import { ArticleEngagementBar } from "@/components/ArticleEngagementBar";
 import { ArticleRevisionLog } from "@/components/ArticleRevisionLog";
 import { FrontpagePoll } from "@/components/FrontpagePoll";
 import { RelatedByTags } from "@/components/RelatedByTags";
+import { SiteFooter } from "@/components/SiteFooter";
 import { CompanyMiniProfile } from "@/components/CompanyMiniProfile";
 import { ArticleGallery } from "@/components/ArticleGallery";
 import { ArticleBody } from "@/components/charts/ArticleBody";
@@ -400,22 +401,7 @@ const Article = () => {
 
       <ArticleNotes articleId={id!} articleTitle={title} />
 
-      <footer className="border-t border-border bg-card/50">
-        <div className="max-w-5xl mx-auto px-6 py-14">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="text-center md:text-left">
-              <h2 className="font-headline text-xl font-bold text-headline mb-1.5">{t.brandName}</h2>
-              <p className="text-sm text-muted-foreground font-body">{t.footerTagline}</p>
-            </div>
-            <nav className="flex items-center gap-8 text-sm font-body text-muted-foreground">
-              <a href="/team" className="hover:text-foreground transition-colors">{t.footerAbout}</a>
-              <a href="#" className="hover:text-foreground transition-colors">{t.footerContact}</a>
-              <a href="#" className="hover:text-foreground transition-colors">{t.footerPrivacy}</a>
-              <a href="#" className="hover:text-foreground transition-colors">{t.footerTerms}</a>
-            </nav>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 };

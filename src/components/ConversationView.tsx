@@ -8,6 +8,7 @@ import { streamArticlesChat, type ArticleSource, type TrustedSource, type BrregR
 import { toast } from "@/hooks/use-toast";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { SourceVerificationLog } from "@/components/SourceVerificationLog";
+import { scrollBehavior } from "@/lib/motion";
 import { ConversationSourceTimeline } from "@/components/ConversationSourceTimeline";
 
 interface Message {
@@ -143,7 +144,7 @@ export function ConversationView({ initialQuery, onBack, onSourcesChange }: Conv
 
     // Slight delay so the just-opened panel has measured layout before scroll.
     window.requestAnimationFrame(() => {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
     });
 
     // Pulse highlight — stronger for the dedicated data panels so the user

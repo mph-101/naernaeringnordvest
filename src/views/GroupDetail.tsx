@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
+import { scrollBehavior } from "@/lib/motion";
 
 interface Message {
   id: string;
@@ -99,7 +100,7 @@ const GroupDetail = () => {
   }, [id, userId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: scrollBehavior() });
   }, [messages]);
 
   const fetchGroup = async () => {

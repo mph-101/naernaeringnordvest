@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tag } from "@/lib/tag-utils";
 import { useRegion } from "@/hooks/useRegion";
 import { cropToBackgroundStyle, parseCrop, parseFocal } from "@/lib/image-crop";
+import { scrollBehavior } from "@/lib/motion";
 
 interface TagWithCount extends Tag {
   count: number;
@@ -265,7 +266,7 @@ export const NewsFeed = () => {
   const scrollSections = (dir: -1 | 1) => {
     const el = sectionScrollRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir * Math.max(160, el.clientWidth * 0.6), behavior: "smooth" });
+    el.scrollBy({ left: dir * Math.max(160, el.clientWidth * 0.6), behavior: scrollBehavior() });
   };
 
   // Reorder so that pinned articles land at their requested 1-based slot in

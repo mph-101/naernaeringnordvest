@@ -138,8 +138,10 @@ export const JobChangeFeed = () => {
         {isExpanded && canExpand && (
           <div id={`jobchange-details-${item.id}`} className="pl-10 pr-2 pb-4 -mt-1 space-y-3 animate-fade-up">
             {item.image_url && (
-              <div className="relative rounded-lg overflow-hidden">
-                <img src={item.image_url} alt={name} className="w-full max-h-64 object-cover" />
+              /* Fast aspekt + lazy: bildet reserverer plass før det laster
+                 (ingen CLS ved ekspandering) og hentes først ved behov */
+              <div className="relative rounded-lg overflow-hidden aspect-[16/9] max-h-64">
+                <img src={item.image_url} alt={name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
                 {item.photo_credit && (
                   <span className="absolute bottom-1.5 right-1.5 bg-background/80 backdrop-blur-sm text-[0.625rem] text-muted-foreground font-body px-1.5 py-0.5 rounded">
                     {item.photo_credit}

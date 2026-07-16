@@ -154,10 +154,12 @@ export function FrontpagePoll({ variant = "page" }: FrontpagePollProps = {}) {
                     </span>
                     <span className="tabular-nums text-muted-foreground">{pct}%</span>
                   </div>
+                  {/* scaleX i stedet for width: transform animeres på
+                      compositor-tråden uten reflow (re-audit ytelse P3) */}
                   <div className="h-2.5 rounded-full bg-secondary overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all duration-700 ${isMine ? "bg-accent" : "bg-muted-foreground/40"}`}
-                      style={{ width: `${pct}%` }}
+                      className={`h-full w-full rounded-full origin-left transition-transform duration-700 ${isMine ? "bg-accent" : "bg-muted-foreground/40"}`}
+                      style={{ transform: `scaleX(${pct / 100})` }}
                     />
                   </div>
                 </div>

@@ -1,19 +1,14 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, Play, Headphones, FileText, Lock, Tag as TagIcon, X, MapPin, Megaphone, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, Play, Headphones, FileText, Lock, Megaphone, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
 import { getArticleImage } from "@/lib/article-image";
 import { supabase } from "@/integrations/supabase/client";
-import type { Tag } from "@/lib/tag-utils";
 import { useRegion } from "@/hooks/useRegion";
 import { cropToBackgroundStyle, parseCrop, parseFocal } from "@/lib/image-crop";
 import { scrollBehavior } from "@/lib/motion";
-
-interface TagWithCount extends Tag {
-  count: number;
-}
 
 interface DbArticle {
   id: string;
@@ -49,6 +44,27 @@ interface NativeAd {
   cta_url: string | null;
   pinned_position: number;
 }
+
+interface FeedItem {
+  id: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  readTime: string;
+  publishedAt: string;
+  author: string;
+  type: "article" | "video" | "podcast";
+  premium: boolean;
+  image_url: string | null;
+  image_crop: ReturnType<typeof parseCrop>;
+  image_focal: ReturnType<typeof parseFocal>;
+  region_slug: string | null;
+  featured: boolean;
+}
+
+type FeedEntry =
+  | { kind: "article"; item: FeedItem }
+  | { kind: "ad"; ad: NativeAd };
 
 const regionToSportLabel: Record<string, { no: string; en: string }> = {
   "nordvestlandet": { no: "Nordvestlandet", en: "Northwestern Norway" },
@@ -89,7 +105,6 @@ export const NewsFeed = () => {
   // category names (the Norwegian `categories.name`), so filtering is correct
   // regardless of the display language.
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const INITIAL_COUNT = 10;
   const PAGE_SIZE = 9;
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
@@ -99,7 +114,7 @@ export const NewsFeed = () => {
   useEffect(() => {
     setVisibleCount(INITIAL_COUNT);
     setLoadingMore(false);
-  }, [selectedCategories, selectedTagId, selectedRegionSlug]);
+  }, [selectedCategories, selectedRegionSlug]);
 
   const handleLoadMore = () => {
     if (loadingMore) return;
@@ -174,40 +189,9 @@ export const NewsFeed = () => {
     return map;
   }, [sharedRegionRows]);
 
-  // Tag links for the loaded articles + derived top tags
-  const { data: tagRows = [] } = useQuery({
-    queryKey: ["article-tags", articleIds],
-    enabled: articleIds.length > 0,
-    staleTime: 60_000,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("article_tags")
-        .select("article_id, tags(id, name, slug, description)")
-        .in("article_id", articleIds);
-      if (error) throw error;
-      return (data || []) as any[];
-    },
-  });
-
-  const { articleTagMap, topTags } = useMemo(() => {
-    const map = new Map<string, string[]>();
-    const counts = new Map<string, { tag: Tag; count: number }>();
-    tagRows.forEach((row: any) => {
-      if (!row.tags) return;
-      const tag = row.tags as Tag;
-      const list = map.get(row.article_id) || [];
-      list.push(tag.id);
-      map.set(row.article_id, list);
-      const cur = counts.get(tag.id);
-      if (cur) cur.count += 1;
-      else counts.set(tag.id, { tag, count: 1 });
-    });
-    const sorted: TagWithCount[] = Array.from(counts.values())
-      .sort((a, b) => b.count - a.count || a.tag.name.localeCompare(b.tag.name, "nb"))
-      .slice(0, 12)
-      .map((c) => ({ ...c.tag, count: c.count }));
-    return { articleTagMap: map, topTags: sorted };
-  }, [tagRows]);
+  // Tag-queryen som lå her er fjernet: den hentet tags for opptil 40 artikler
+  // ved hver forsidelast, men tag-filter-UI-et ble fjernet i en tidligere
+  // runde og resultatet ble aldri rendret (re-audit ytelse P2).
 
   // Categories for topic filtering (changes rarely)
   const { data: categories = [] } = useQuery({
@@ -269,61 +253,86 @@ export const NewsFeed = () => {
     el.scrollBy({ left: dir * Math.max(160, el.clientWidth * 0.6), behavior: scrollBehavior() });
   };
 
-  // Reorder so that pinned articles land at their requested 1-based slot in
-  // the feed. Position 1 effectively becomes the featured article.
-  const orderedDbArticles = (() => {
+  // Hele avledningskjeden (pinned-omorganisering → lokalisering med
+  // parseCrop/parseFocal på 40 rader → filtrering → annonse-injisering →
+  // synlighetskutt) memoiseres: den rekjørte ved hver render, inkludert
+  // scroll-chevron-state (re-audit ytelse P2).
+  const { featuredItem, visibleEntries, hasMore } = useMemo(() => {
+    // Reorder so that pinned articles land at their requested 1-based slot in
+    // the feed. Position 1 effectively becomes the featured article.
     const unpinned = dbArticles.filter((a) => a.pinned_position == null);
     const pinned = dbArticles
       .filter((a) => typeof a.pinned_position === "number" && a.pinned_position! > 0)
       .sort((a, b) => (a.pinned_position! - b.pinned_position!));
-    const result = [...unpinned];
+    const ordered = [...unpinned];
     pinned.forEach((a) => {
-      const target = Math.min(Math.max(0, a.pinned_position! - 1), result.length);
-      result.splice(target, 0, a);
+      const target = Math.min(Math.max(0, a.pinned_position! - 1), ordered.length);
+      ordered.splice(target, 0, a);
     });
-    return result;
-  })();
 
-  const articles = orderedDbArticles.map((a, index) => ({
-    id: a.id,
-    title: language === "en" && a.title_en ? a.title_en : a.title,
-    excerpt: language === "en" && a.excerpt_en ? a.excerpt_en : a.excerpt,
-    category: a.category,
-    readTime: a.read_time || estimateReadTime(a.body ?? a.excerpt ?? "", a.type, language),
-    publishedAt: a.published_at ? timeAgo(a.published_at, language) : "",
-    author: a.author,
-    type: a.type as "article" | "video" | "podcast",
-    premium: a.premium,
-    image_url: a.image_url,
-    image_crop: parseCrop(a.image_crop),
-    image_focal: parseFocal(a.image_focal),
-    region_slug: a.region_slug,
-    featured: index === 0,
-  }));
+    const articles = ordered.map((a, index) => ({
+      id: a.id,
+      title: language === "en" && a.title_en ? a.title_en : a.title,
+      excerpt: language === "en" && a.excerpt_en ? a.excerpt_en : a.excerpt,
+      category: a.category,
+      readTime: a.read_time || estimateReadTime(a.body ?? a.excerpt ?? "", a.type, language),
+      publishedAt: a.published_at ? timeAgo(a.published_at, language) : "",
+      author: a.author,
+      type: a.type as "article" | "video" | "podcast",
+      premium: a.premium,
+      image_url: a.image_url,
+      image_crop: parseCrop(a.image_crop),
+      image_focal: parseFocal(a.image_focal),
+      region_slug: a.region_slug,
+      featured: index === 0,
+    }));
 
-  let filteredNews = selectedCategories.length === 0
-    ? articles
-    : articles.filter((item) => selectedCategories.includes(item.category));
+    let filteredNews = selectedCategories.length === 0
+      ? articles
+      : articles.filter((item) => selectedCategories.includes(item.category));
 
-  if (selectedTagId) {
-    filteredNews = filteredNews.filter((item) => articleTagMap.get(item.id)?.includes(selectedTagId));
-  }
+    if (selectedRegionSlug !== "all") {
+      filteredNews = filteredNews.filter((item) => {
+        if (item.region_slug === selectedRegionSlug) return true;
+        const shared = articleSharedRegions.get(item.id) || [];
+        return shared.includes(selectedRegionSlug);
+      });
+    }
 
-  if (selectedRegionSlug !== "all") {
-    filteredNews = filteredNews.filter((item) => {
-      if (item.region_slug === selectedRegionSlug) return true;
-      const shared = articleSharedRegions.get(item.id) || [];
-      return shared.includes(selectedRegionSlug);
+    // Featured flag is index-based on the original list — recompute after filter
+    filteredNews = filteredNews.map((item, idx) => ({ ...item, featured: idx === 0 }));
+
+    const featuredItem = filteredNews.find((item) => item.featured);
+    const regularItems = filteredNews.filter((item) => !item.featured);
+
+    // Inject native ads at their pinned position into the regular grid (positions 2,3,4…)
+    // Position 1 is reserved for the featured article — ads pinned to 1 are bumped to 2.
+    const gridEntries: FeedEntry[] = regularItems.map((item) => ({ kind: "article" as const, item }));
+    // Sort ads by position ascending and insert. Position N means index (N-2) in the grid (after featured).
+    const sortedAds = [...nativeAds].sort((a, b) => a.pinned_position - b.pinned_position);
+    sortedAds.forEach((ad) => {
+      const targetIndex = Math.max(0, ad.pinned_position - 2);
+      const insertAt = Math.min(targetIndex, gridEntries.length);
+      gridEntries.splice(insertAt, 0, { kind: "ad" as const, ad });
     });
-  }
 
-  // Featured flag is index-based on the original list — recompute after filter
-  filteredNews = filteredNews.map((item, idx) => ({ ...item, featured: idx === 0 }));
+    // Cap visible articles to visibleCount (featured counts as 1).
+    // Ads do not count toward the article cap but should not appear past the last visible article.
+    const visibleArticleLimit = Math.max(0, visibleCount - (featuredItem ? 1 : 0));
+    let articleSeen = 0;
+    const visibleEntries: FeedEntry[] = [];
+    for (const entry of gridEntries) {
+      if (entry.kind === "article") {
+        if (articleSeen >= visibleArticleLimit) break;
+        articleSeen += 1;
+      }
+      visibleEntries.push(entry);
+    }
+    const totalArticles = (featuredItem ? 1 : 0) + regularItems.length;
+    const hasMore = visibleCount < totalArticles;
 
-  const selectedTagName = useMemo(
-    () => topTags.find((t) => t.id === selectedTagId)?.name || null,
-    [topTags, selectedTagId],
-  );
+    return { featuredItem, visibleEntries, hasMore };
+  }, [dbArticles, nativeAds, language, selectedCategories, selectedRegionSlug, articleSharedRegions, visibleCount]);
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -333,47 +342,15 @@ export const NewsFeed = () => {
     }
   };
 
-  const getBackground = (item: typeof articles[0]) => {
+  const getBackground = (item: FeedItem) => {
     if (item.image_url) return `url(${item.image_url})`;
     return getArticleImage(item.id, item.category);
   };
 
-  const getBackgroundStyle = (item: typeof articles[0]) =>
+  const getBackgroundStyle = (item: FeedItem) =>
     item.image_url
       ? cropToBackgroundStyle(item.image_crop, item.image_focal, { precise: true })
       : { size: "cover", position: "center" };
-
-  const featuredItem = filteredNews.find((item) => item.featured);
-  const regularItems = filteredNews.filter((item) => !item.featured);
-
-  // Inject native ads at their pinned position into the regular grid (positions 2,3,4…)
-  // Position 1 is reserved for the featured article — ads pinned to 1 are bumped to 2.
-  type FeedEntry =
-    | { kind: "article"; item: typeof regularItems[0] }
-    | { kind: "ad"; ad: NativeAd };
-  const gridEntries: FeedEntry[] = regularItems.map((item) => ({ kind: "article" as const, item }));
-  // Sort ads by position ascending and insert. Position N means index (N-2) in the grid (after featured).
-  const sortedAds = [...nativeAds].sort((a, b) => a.pinned_position - b.pinned_position);
-  sortedAds.forEach((ad) => {
-    const targetIndex = Math.max(0, ad.pinned_position - 2);
-    const insertAt = Math.min(targetIndex, gridEntries.length);
-    gridEntries.splice(insertAt, 0, { kind: "ad" as const, ad });
-  });
-
-  // Cap visible articles to visibleCount (featured counts as 1).
-  // Ads do not count toward the article cap but should not appear past the last visible article.
-  const visibleArticleLimit = Math.max(0, visibleCount - (featuredItem ? 1 : 0));
-  let articleSeen = 0;
-  const visibleEntries: FeedEntry[] = [];
-  for (const entry of gridEntries) {
-    if (entry.kind === "article") {
-      if (articleSeen >= visibleArticleLimit) break;
-      articleSeen += 1;
-    }
-    visibleEntries.push(entry);
-  }
-  const totalArticles = (featuredItem ? 1 : 0) + regularItems.length;
-  const hasMore = visibleCount < totalArticles;
 
   if (loading) {
     return (
@@ -406,7 +383,7 @@ export const NewsFeed = () => {
     );
   }
 
-  if (articles.length === 0) {
+  if (dbArticles.length === 0) {
     return (
       <section className="py-[44px]">
         <div className="max-w-5xl mx-auto px-6 text-center text-muted-foreground">
@@ -493,16 +470,6 @@ export const NewsFeed = () => {
                 </button>
               </>
             )}
-          </div>
-        )}
-
-        {/* Tag filter removed */}
-
-        {selectedTagName && filteredNews.length === 0 && (
-          <div className="mb-10 p-6 rounded-2xl border border-border bg-card text-center text-sm text-muted-foreground font-body">
-            {language === "no"
-              ? `Ingen artikler matcher emnet «${selectedTagName}» med valgt kategori.`
-              : `No articles match the topic "${selectedTagName}" with the selected category.`}
           </div>
         )}
 

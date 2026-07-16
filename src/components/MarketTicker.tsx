@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, Minus, Zap, Droplets, Banknote, Percent, Bitcoin, ExternalLink, LineChart, Pause, Play } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,6 +70,100 @@ export const MarketTicker = () => {
     },
   });
 
+  // items/loop bygges kun når data eller språk endres — de ble rebygget ved
+  // hver render, inkl. pause-toggle (re-audit ytelse P3). Ligger før de
+  // tidlige returene av hensyn til hook-reglene.
+  const items: TickerItem[] = useMemo(() => {
+    if (!data) return [];
+    const out: TickerItem[] = [];
+
+    // Power: average of available zones + show NO1/NO2/NO5 separately
+    if (data.power && data.power.length > 0) {
+      const avg =
+        data.power.reduce((sum, p) => sum + p.ore_per_kwh, 0) / data.power.length;
+      out.push({
+        icon: Zap,
+        label: isNo ? "Strøm (snitt)" : "Power (avg)",
+        value: `${fmtDec(avg, 1)} øre/kWh`,
+        sourceLabel: SOURCES.power.label,
+        sourceUrl: SOURCES.power.url,
+      });
+      data.power.forEach((p) => {
+        out.push({
+          icon: Zap,
+          label: p.zone,
+          value: `${fmtDec(p.ore_per_kwh, 1)} øre`,
+          sourceLabel: SOURCES.power.label,
+          sourceUrl: SOURCES.power.url,
+        });
+      });
+    }
+
+    if (data.brent) {
+      out.push({
+        icon: Droplets,
+        label: "Brent",
+        value: `$${fmtDec(data.brent.usd, 2)}`,
+        sourceLabel: SOURCES.brent.label,
+        sourceUrl: SOURCES.brent.url,
+      });
+    }
+
+    if (data.fx) {
+      data.fx.forEach((f) => {
+        out.push({
+          icon: Banknote,
+          label: `${f.code}/NOK`,
+          value: fmtDec(f.nok, 4),
+          sourceLabel: SOURCES.fx.label,
+          sourceUrl: SOURCES.fx.url,
+        });
+      });
+    }
+
+    if (data.policy_rate) {
+      out.push({
+        icon: Percent,
+        label: isNo ? "Styringsrente" : "Policy rate",
+        value: `${fmtDec(data.policy_rate.rate, 2)} %`,
+        sourceLabel: SOURCES.rate.label,
+        sourceUrl: SOURCES.rate.url,
+      });
+    }
+
+    if (data.cpi) {
+      out.push({
+        icon: LineChart,
+        label: isNo
+          ? `KPI ${data.cpi.period}`
+          : `CPI ${data.cpi.period}`,
+        value: `${fmtDec(data.cpi.pct, 1)} %`,
+        sourceLabel: SOURCES.cpi.label,
+        sourceUrl: SOURCES.cpi.url,
+      });
+    }
+
+    if (data.btc) {
+      out.push({
+        icon: Bitcoin,
+        label: "BTC",
+        value: `${fmtNok(data.btc.nok)} kr`,
+        change: data.btc.change_24h,
+        sourceLabel: SOURCES.btc.label,
+        sourceUrl: SOURCES.btc.url,
+      });
+    }
+
+    return out;
+  }, [data, isNo]);
+
+  // Duplicate for seamless marquee scroll; static (scrollable) single list
+  // when the reader prefers reduced motion.
+  const loop = useMemo(
+    () => (reducedMotion ? items : [...items, ...items]),
+    [items, reducedMotion],
+  );
+
   if (loading) {
     return (
       <div className="border-b border-border bg-card/40 overflow-hidden">
@@ -84,92 +178,7 @@ export const MarketTicker = () => {
 
   // Fetch failed or returned nothing: hide the strip instead of showing a
   // loading message that never resolves. The interval retries in the background.
-  if (!data) return null;
-
-  const items: TickerItem[] = [];
-
-  // Power: average of available zones + show NO1/NO2/NO5 separately
-  if (data.power && data.power.length > 0) {
-    const avg =
-      data.power.reduce((sum, p) => sum + p.ore_per_kwh, 0) / data.power.length;
-    items.push({
-      icon: Zap,
-      label: isNo ? "Strøm (snitt)" : "Power (avg)",
-      value: `${fmtDec(avg, 1)} øre/kWh`,
-      sourceLabel: SOURCES.power.label,
-      sourceUrl: SOURCES.power.url,
-    });
-    data.power.forEach((p) => {
-      items.push({
-        icon: Zap,
-        label: p.zone,
-        value: `${fmtDec(p.ore_per_kwh, 1)} øre`,
-        sourceLabel: SOURCES.power.label,
-        sourceUrl: SOURCES.power.url,
-      });
-    });
-  }
-
-  if (data.brent) {
-    items.push({
-      icon: Droplets,
-      label: "Brent",
-      value: `$${fmtDec(data.brent.usd, 2)}`,
-      sourceLabel: SOURCES.brent.label,
-      sourceUrl: SOURCES.brent.url,
-    });
-  }
-
-  if (data.fx) {
-    data.fx.forEach((f) => {
-      items.push({
-        icon: Banknote,
-        label: `${f.code}/NOK`,
-        value: fmtDec(f.nok, 4),
-        sourceLabel: SOURCES.fx.label,
-        sourceUrl: SOURCES.fx.url,
-      });
-    });
-  }
-
-  if (data.policy_rate) {
-    items.push({
-      icon: Percent,
-      label: isNo ? "Styringsrente" : "Policy rate",
-      value: `${fmtDec(data.policy_rate.rate, 2)} %`,
-      sourceLabel: SOURCES.rate.label,
-      sourceUrl: SOURCES.rate.url,
-    });
-  }
-
-  if (data.cpi) {
-    items.push({
-      icon: LineChart,
-      label: isNo
-        ? `KPI ${data.cpi.period}`
-        : `CPI ${data.cpi.period}`,
-      value: `${fmtDec(data.cpi.pct, 1)} %`,
-      sourceLabel: SOURCES.cpi.label,
-      sourceUrl: SOURCES.cpi.url,
-    });
-  }
-
-  if (data.btc) {
-    items.push({
-      icon: Bitcoin,
-      label: "BTC",
-      value: `${fmtNok(data.btc.nok)} kr`,
-      change: data.btc.change_24h,
-      sourceLabel: SOURCES.btc.label,
-      sourceUrl: SOURCES.btc.url,
-    });
-  }
-
-  if (items.length === 0) return null;
-
-  // Duplicate for seamless marquee scroll; static (scrollable) single list
-  // when the reader prefers reduced motion.
-  const loop = reducedMotion ? items : [...items, ...items];
+  if (!data || items.length === 0) return null;
 
   return (
     <div

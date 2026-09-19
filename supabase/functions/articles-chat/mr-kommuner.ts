@@ -75,7 +75,7 @@ export function resolveMrKommuneFromText(text: string): MrKommune | null {
   return null;
 }
 
-// Relative geo terms that, for a Nær Næring reader, mean "the region" =
+// Relative geo terms that, for a Nær reader, mean "the region" =
 // Møre og Romsdal / Nordvestlandet. Used to scope lookups region-wide when the
 // user says "lokale/regionale/her i regionen" without naming a kommune.
 const REGION_WORDS = new Set([

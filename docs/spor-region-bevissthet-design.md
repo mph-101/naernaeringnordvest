@@ -9,7 +9,7 @@ Del A (implementert, egen PR) gjør at relative stedsord — «lokale», «regio
 i Spørs planner og svar. Det er **hardkodet Nordvest**.
 
 Del B er plumbingen som gjør Spør *region-drevet*: at funksjonen tar inn den
-**brukervalgte** regionen og scoper geo + svar til den — slik at Nær Næring Nord/
+**brukervalgte** regionen og scoper geo + svar til den — slik at Nær Nord/
 Midt/Øst får samme oppførsel uten ny kode per region.
 
 ## Funn som styrer designet

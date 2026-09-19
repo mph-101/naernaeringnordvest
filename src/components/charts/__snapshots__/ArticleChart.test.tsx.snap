@@ -29,7 +29,7 @@ exports[`ArticleChart snapshots > matches snapshot for area 1`] = `
       class="flex items-center gap-2"
     >
       <img
-        alt="Nær Næring"
+        alt="Nær"
         class="w-5 h-5 object-contain dark:bg-white dark:rounded-full dark:p-0.5"
         height="20"
         src="logo.png"
@@ -38,7 +38,7 @@ exports[`ArticleChart snapshots > matches snapshot for area 1`] = `
       <span
         class="font-headline text-xs font-semibold text-foreground/80"
       >
-        Nær Næring
+        Nær
       </span>
     </div>
     <span
@@ -84,7 +84,7 @@ exports[`ArticleChart snapshots > matches snapshot for bar 1`] = `
       class="flex items-center gap-2"
     >
       <img
-        alt="Nær Næring"
+        alt="Nær"
         class="w-5 h-5 object-contain dark:bg-white dark:rounded-full dark:p-0.5"
         height="20"
         src="logo.png"
@@ -93,7 +93,7 @@ exports[`ArticleChart snapshots > matches snapshot for bar 1`] = `
       <span
         class="font-headline text-xs font-semibold text-foreground/80"
       >
-        Nær Næring
+        Nær
       </span>
     </div>
     <span
@@ -134,7 +134,7 @@ exports[`ArticleChart snapshots > matches snapshot for horizontalBar 1`] = `
       class="flex items-center gap-2"
     >
       <img
-        alt="Nær Næring"
+        alt="Nær"
         class="w-5 h-5 object-contain dark:bg-white dark:rounded-full dark:p-0.5"
         height="20"
         src="logo.png"
@@ -143,7 +143,7 @@ exports[`ArticleChart snapshots > matches snapshot for horizontalBar 1`] = `
       <span
         class="font-headline text-xs font-semibold text-foreground/80"
       >
-        Nær Næring
+        Nær
       </span>
     </div>
     <span
@@ -184,7 +184,7 @@ exports[`ArticleChart snapshots > matches snapshot for line 1`] = `
       class="flex items-center gap-2"
     >
       <img
-        alt="Nær Næring"
+        alt="Nær"
         class="w-5 h-5 object-contain dark:bg-white dark:rounded-full dark:p-0.5"
         height="20"
         src="logo.png"
@@ -193,7 +193,7 @@ exports[`ArticleChart snapshots > matches snapshot for line 1`] = `
       <span
         class="font-headline text-xs font-semibold text-foreground/80"
       >
-        Nær Næring
+        Nær
       </span>
     </div>
     <span
@@ -234,7 +234,7 @@ exports[`ArticleChart snapshots > matches snapshot for pie 1`] = `
       class="flex items-center gap-2"
     >
       <img
-        alt="Nær Næring"
+        alt="Nær"
         class="w-5 h-5 object-contain dark:bg-white dark:rounded-full dark:p-0.5"
         height="20"
         src="logo.png"
@@ -243,7 +243,7 @@ exports[`ArticleChart snapshots > matches snapshot for pie 1`] = `
       <span
         class="font-headline text-xs font-semibold text-foreground/80"
       >
-        Nær Næring
+        Nær
       </span>
     </div>
     <span
@@ -284,7 +284,7 @@ exports[`ArticleChart snapshots > matches snapshot for scatter 1`] = `
       class="flex items-center gap-2"
     >
       <img
-        alt="Nær Næring"
+        alt="Nær"
         class="w-5 h-5 object-contain dark:bg-white dark:rounded-full dark:p-0.5"
         height="20"
         src="logo.png"
@@ -293,7 +293,7 @@ exports[`ArticleChart snapshots > matches snapshot for scatter 1`] = `
       <span
         class="font-headline text-xs font-semibold text-foreground/80"
       >
-        Nær Næring
+        Nær
       </span>
     </div>
     <span
@@ -334,7 +334,7 @@ exports[`ArticleChart snapshots > matches snapshot for stackedBar 1`] = `
       class="flex items-center gap-2"
     >
       <img
-        alt="Nær Næring"
+        alt="Nær"
         class="w-5 h-5 object-contain dark:bg-white dark:rounded-full dark:p-0.5"
         height="20"
         src="logo.png"
@@ -343,7 +343,7 @@ exports[`ArticleChart snapshots > matches snapshot for stackedBar 1`] = `
       <span
         class="font-headline text-xs font-semibold text-foreground/80"
       >
-        Nær Næring
+        Nær
       </span>
     </div>
     <span

@@ -12,7 +12,7 @@ const Info = () => {
 
   useEffect(() => {
     if (!page) return;
-    const fullTitle = `${page.title} – Nær Næring`;
+    const fullTitle = `${page.title} – Nær`;
     const url = `${window.location.origin}/${page.slug}`;
 
     document.title = fullTitle;

@@ -1,4 +1,4 @@
-# Paywall — Nær Næring
+# Paywall — Nær
 
 Hvordan abonnement, premium-artikler og betaling er bygd i prosjektet. Sist oppdatert: 2026-05-23.
 

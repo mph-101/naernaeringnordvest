@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Logg inn",
-  description: "Logg inn eller opprett konto hos Nær Næring",
+  description: "Logg inn eller opprett konto hos Nær",
 };
 
 export default function LoginPage() {

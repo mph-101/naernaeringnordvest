@@ -24,7 +24,7 @@ import type {
 // than Tailwind's generic `prose` class.
 export const ARTICLE_BODY_SELECTOR = ".article-body";
 
-export const PUBLISHER_NAME = "Nær Næring Nordvest";
+export const PUBLISHER_NAME = "Nær Nordvest";
 
 export function buildPublisher(siteUrl: string): Record<string, unknown> {
   return {

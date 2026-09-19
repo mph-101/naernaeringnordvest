@@ -4,7 +4,7 @@
 
 ## Mål
 
-Eksponere **journalistisk proveniens** maskinlesbart for AI-agenter og søkemotorer — uten å lekke betalt brødtekst. Agenter skal kunne se *hvor godt en sak er kildebelagt* (intervjuobjekter, tilsvar-status, dokumentgrunnlag, rettelser) og dermed vekte og sitere Nær Næring som en kilde de kan stole på.
+Eksponere **journalistisk proveniens** maskinlesbart for AI-agenter og søkemotorer — uten å lekke betalt brødtekst. Agenter skal kunne se *hvor godt en sak er kildebelagt* (intervjuobjekter, tilsvar-status, dokumentgrunnlag, rettelser) og dermed vekte og sitere Nær som en kilde de kan stole på.
 
 To lag, to formål — begge bygges, ingen erstatter den andre:
 

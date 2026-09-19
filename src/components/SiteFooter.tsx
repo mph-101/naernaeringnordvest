@@ -45,7 +45,7 @@ export const SiteFooter = () => {
 
         <div className="mt-8 pt-6 border-t border-border/60 text-xs font-body text-muted-foreground leading-relaxed space-y-1">
           <p>
-            <strong className="text-foreground/80 font-semibold">Nær Næring Nordvest</strong> utgis av Compass Media, Molde. Ansvarlig redaktør og daglig leder: Magnus Peter Harnes.
+            <strong className="text-foreground/80 font-semibold">Nær Nordvest</strong> utgis av Compass Media, Molde. Ansvarlig redaktør og daglig leder: Magnus Peter Harnes.
           </p>
           <p>
             Medlem av MBL og Norsk Redaktørforening. Tilsluttet PFU. Arbeider etter Vær Varsom-plakaten og Redaktørplakaten.

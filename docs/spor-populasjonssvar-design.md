@@ -63,7 +63,7 @@ hvilke … i regionen/bransjen»). `null` = vanlig (navngitt selskap, generelt) 
 ### 3. Svar-ramme (prompt)
 Når `ranking != null`, injiseres en kontekst-blokk som instruerer modellen til å:
 - lede med grunnlaget («Etter antall ansatte i Brønnøysund …» eller «Blant
-  selskapene Nær Næring har omtalt …»),
+  selskapene Nær har omtalt …»),
 - aldri antyde fullstendighet for arkiv-baserte rangeringer,
 - tilby den besvarbare varianten når den primære ikke er oppnåelig.
 Hedginga trigger **kun** når `ranking != null` — vanlige svar forblir konsise.

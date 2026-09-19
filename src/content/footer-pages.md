@@ -1,4 +1,4 @@
-# Nær Næring — Footer-innhold
+# Nær — Footer-innhold
 
 Standardpakke: Om oss, Kontakt, Redaksjonelle prinsipper, Personvern, Vilkår.
 
@@ -10,7 +10,7 @@ Plassholdere markert med `[KLAMMER]` må fylles inn før publisering.
 
 **Næringslivet i regionen — slik det faktisk er.**
 
-Nær Næring Nordvest er den første næringslivsavisen i Compass Medias regionale satsing. Flere aviser følger — Nær Næring Nord og Nær Næring Midt er under planlegging. Ambisjonen er å bygge ut dekningen region for region, med selvstendige redaksjoner som kjenner sitt eget næringsliv fra innsiden.
+Nær Nordvest er den første næringslivsavisen i Compass Medias regionale satsing. Flere aviser følger — Nær Nord og Nær Midt er under planlegging. Ambisjonen er å bygge ut dekningen region for region, med selvstendige redaksjoner som kjenner sitt eget næringsliv fra innsiden.
 
 Vi dekker bedriftene, gründerne og beslutningstakerne i regionen vår med samme grundighet som de største riksmediene, men med en kunnskap om lokale forhold du ikke finner andre steder.
 
@@ -23,7 +23,7 @@ Vi er bygget for hvordan folk faktisk leser nyheter i dag: digitalt, mobilt og n
 - At teknologi skal frigjøre journalister til å gjøre mer journalistikk — ikke erstatte dem
 - At leserne våre er kloke folk som vil ha fakta, kontekst og analyse — ikke clickbait
 
-Nær Næring Nordvest utgis av **Compass Media**, et uavhengig mediehus med hovedkontor i Molde. Compass Media står bak Nær Næring-avisene, og er medlem av Mediebedriftenes Landsforening (MBL) og Norsk Redaktørforening, og tilsluttet Pressens Faglige Utvalg (PFU). Vi arbeider etter Vær Varsom-plakaten og Redaktørplakaten.
+Nær Nordvest utgis av **Compass Media**, et uavhengig mediehus med hovedkontor i Molde. Compass Media står bak Nær-avisene, og er medlem av Mediebedriftenes Landsforening (MBL) og Norsk Redaktørforening, og tilsluttet Pressens Faglige Utvalg (PFU). Vi arbeider etter Vær Varsom-plakaten og Redaktørplakaten.
 
 **Ansvarlig redaktør og daglig leder:** Magnus Peter Harnes
 **Organisasjonsnummer:** [ORG.NR.]
@@ -65,7 +65,7 @@ Compass Media
 
 ## Redaksjonelle prinsipper
 
-Nær Næring er et redaktørstyrt journalistisk medium som arbeider etter de etiske normene som er nedfelt i **Vær Varsom-plakaten** og **Redaktørplakaten**. Vi er tilsluttet Pressens Faglige Utvalg (PFU).
+Nær er et redaktørstyrt journalistisk medium som arbeider etter de etiske normene som er nedfelt i **Vær Varsom-plakaten** og **Redaktørplakaten**. Vi er tilsluttet Pressens Faglige Utvalg (PFU).
 
 ### Redaksjonell uavhengighet
 
@@ -81,7 +81,7 @@ Alt kommersielt innhold — annonser, sponset innhold, native advertising — sk
 
 ### Bruk av kunstig intelligens
 
-Nær Næring bruker AI-verktøy som en del av den redaksjonelle arbeidsflyten — til research, analyse, transkribering og andre oppgaver der teknologien styrker journalistikken. Alt redaksjonelt innhold som publiseres er kvalitetssikret av en menneskelig journalist og redaktør. Vi publiserer ikke artikler som er generert av AI uten redaksjonell behandling, og vi merker tydelig hvis AI er brukt på måter leseren bør være kjent med (for eksempel automatisert oppsummering eller maskingenererte illustrasjoner).
+Nær bruker AI-verktøy som en del av den redaksjonelle arbeidsflyten — til research, analyse, transkribering og andre oppgaver der teknologien styrker journalistikken. Alt redaksjonelt innhold som publiseres er kvalitetssikret av en menneskelig journalist og redaktør. Vi publiserer ikke artikler som er generert av AI uten redaksjonell behandling, og vi merker tydelig hvis AI er brukt på måter leseren bør være kjent med (for eksempel automatisert oppsummering eller maskingenererte illustrasjoner).
 
 ### Retting av feil
 
@@ -89,11 +89,11 @@ Vi retter feil så snart vi blir oppmerksomme på dem. Vesentlige rettelser merk
 
 ### Klage til PFU
 
-Du kan klage Nær Næring inn for Pressens Faglige Utvalg (PFU). Mer informasjon finner du på [presse.no](https://presse.no).
+Du kan klage Nær inn for Pressens Faglige Utvalg (PFU). Mer informasjon finner du på [presse.no](https://presse.no).
 
 ### Habilitet og bindinger
 
-Journalister og redaktører i Nær Næring opplyser om eierinteresser, verv eller andre bindinger som kan påvirke deres dekning av en sak. Vi dekker ikke saker der vi har personlige eller økonomiske interesser uten at dette opplyses.
+Journalister og redaktører i Nær opplyser om eierinteresser, verv eller andre bindinger som kan påvirke deres dekning av en sak. Vi dekker ikke saker der vi har personlige eller økonomiske interesser uten at dette opplyses.
 
 **Ansvarlig redaktør:** Magnus Peter Harnes, [E-POST]
 
@@ -103,7 +103,7 @@ Journalister og redaktører i Nær Næring opplyser om eierinteresser, verv elle
 
 Sist oppdatert: [DATO]
 
-Compass Media (heretter «vi», «oss» eller «Nær Næring») er behandlingsansvarlig for personopplysninger som behandles i forbindelse med tjenestene våre. Denne personvernerklæringen beskriver hvilke opplysninger vi samler inn, hvordan vi bruker dem, og hvilke rettigheter du har.
+Compass Media (heretter «vi», «oss» eller «Nær») er behandlingsansvarlig for personopplysninger som behandles i forbindelse med tjenestene våre. Denne personvernerklæringen beskriver hvilke opplysninger vi samler inn, hvordan vi bruker dem, og hvilke rettigheter du har.
 
 ### 1. Behandlingsansvarlig
 
@@ -179,7 +179,7 @@ Vi kan oppdatere denne personvernerklæringen ved behov. Vesentlige endringer va
 
 Sist oppdatert: [DATO]
 
-Disse vilkårene regulerer din bruk av tjenestene som tilbys av Compass Media (organisasjonsnummer [ORG.NR.]) gjennom Nær Næring-avisene og tilknyttede plattformer, herunder Nær Næring Nordvest og øvrige regionale titler i porteføljen.
+Disse vilkårene regulerer din bruk av tjenestene som tilbys av Compass Media (organisasjonsnummer [ORG.NR.]) gjennom Nær-avisene og tilknyttede plattformer, herunder Nær Nordvest og øvrige regionale titler i porteføljen.
 
 ### 1. Avtaleinngåelse
 
@@ -187,7 +187,7 @@ Ved å opprette en konto, tegne abonnement eller på annen måte bruke tjenesten
 
 ### 2. Tjenesten
 
-Nær Næring tilbyr digital næringslivsjournalistikk gjennom artikler, nyhetsbrev, podkaster og andre formater. Innholdet er beskyttet etter åndsverkloven og kan ikke kopieres, distribueres eller publiseres uten skriftlig samtykke, utover det som følger av sitatretten.
+Nær tilbyr digital næringslivsjournalistikk gjennom artikler, nyhetsbrev, podkaster og andre formater. Innholdet er beskyttet etter åndsverkloven og kan ikke kopieres, distribueres eller publiseres uten skriftlig samtykke, utover det som følger av sitatretten.
 
 ### 3. Abonnement og betaling
 
@@ -205,7 +205,7 @@ Du forplikter deg til ikke å:
 
 - dele innloggingsopplysninger med andre
 - bruke automatiserte verktøy (scraping, roboter) til å hente innhold uten skriftlig samtykke
-- gjengi eller publisere innhold fra Nær Næring utover sitatretten
+- gjengi eller publisere innhold fra Nær utover sitatretten
 - forsøke å omgå betalingsmurer eller andre tekniske beskyttelsesmekanismer
 - bruke tjenesten i strid med norsk lov
 
@@ -213,17 +213,17 @@ Brudd kan føre til midlertidig eller permanent stenging av kontoen uten refusjo
 
 ### 6. Brukergenerert innhold
 
-Dersom du sender oss tips, kommentarer eller annet materiale, gir du Nær Næring en ikke-eksklusiv, vederlagsfri rett til å bruke materialet redaksjonelt. Du står ansvarlig for at materialet ikke krenker tredjeparts rettigheter.
+Dersom du sender oss tips, kommentarer eller annet materiale, gir du Nær en ikke-eksklusiv, vederlagsfri rett til å bruke materialet redaksjonelt. Du står ansvarlig for at materialet ikke krenker tredjeparts rettigheter.
 
 ### 7. Immaterielle rettigheter
 
-Alt innhold publisert i Nær Næring-avisene — tekst, bilder, video, lyd, design, kildekode — tilhører Compass Media eller våre lisensgivere og er beskyttet etter åndsverkloven og annen relevant lovgivning. Ulovlig kopiering kan medføre erstatningsansvar.
+Alt innhold publisert i Nær-avisene — tekst, bilder, video, lyd, design, kildekode — tilhører Compass Media eller våre lisensgivere og er beskyttet etter åndsverkloven og annen relevant lovgivning. Ulovlig kopiering kan medføre erstatningsansvar.
 
 ### 8. Ansvarsfraskrivelse
 
-Nær Næring etterstreber korrekt og oppdatert informasjon, men gir ingen garantier for at innholdet til enhver tid er feilfritt eller fullstendig. Innholdet utgjør ikke investeringsrådgivning, juridisk rådgivning eller annen profesjonell rådgivning. Beslutninger basert på vårt innhold tas på eget ansvar.
+Nær etterstreber korrekt og oppdatert informasjon, men gir ingen garantier for at innholdet til enhver tid er feilfritt eller fullstendig. Innholdet utgjør ikke investeringsrådgivning, juridisk rådgivning eller annen profesjonell rådgivning. Beslutninger basert på vårt innhold tas på eget ansvar.
 
-Vi tar forbehold om driftsavbrudd og tekniske feil. Nær Næring er ikke ansvarlig for indirekte tap som følge av bruk av eller manglende tilgang til tjenesten, med mindre tapet skyldes grov uaktsomhet eller forsett fra vår side.
+Vi tar forbehold om driftsavbrudd og tekniske feil. Nær er ikke ansvarlig for indirekte tap som følge av bruk av eller manglende tilgang til tjenesten, med mindre tapet skyldes grov uaktsomhet eller forsett fra vår side.
 
 ### 9. Endring av vilkår
 
@@ -248,18 +248,18 @@ Kort tekst til footeren — vis sammen med logo og lenker til de øvrige sidene.
 
 ### Kort versjon (én linje)
 
-> Nær Næring Nordvest utgis av Compass Media, Molde. Ansvarlig redaktør: Magnus Peter Harnes. Org.nr. [ORG.NR.]. Vi arbeider etter Vær Varsom-plakaten og Redaktørplakaten.
+> Nær Nordvest utgis av Compass Media, Molde. Ansvarlig redaktør: Magnus Peter Harnes. Org.nr. [ORG.NR.]. Vi arbeider etter Vær Varsom-plakaten og Redaktørplakaten.
 
 ### Standardversjon (kompakt blokk)
 
-> **Nær Næring Nordvest** er en del av Compass Media.
+> **Nær Nordvest** er en del av Compass Media.
 > Ansvarlig redaktør og daglig leder: Magnus Peter Harnes
 > Compass Media · [ADRESSE], Molde · Org.nr. [ORG.NR.]
 > Medlem av MBL og Norsk Redaktørforening. Tilsluttet PFU. Arbeider etter Vær Varsom-plakaten og Redaktørplakaten.
 
 ### Lang versjon (med opphavsrett-linje)
 
-> **Nær Næring Nordvest** utgis av Compass Media.
+> **Nær Nordvest** utgis av Compass Media.
 > Ansvarlig redaktør og daglig leder: Magnus Peter Harnes
 > Compass Media · [ADRESSE], Molde · Org.nr. [ORG.NR.] · [post@naernaering.no]
 > Medlem av MBL og Norsk Redaktørforening. Tilsluttet PFU. Arbeider etter Vær Varsom-plakaten og Redaktørplakaten.
@@ -271,11 +271,11 @@ Kort tekst til footeren — vis sammen med logo og lenker til de øvrige sidene.
 
 Sist oppdatert: [DATO]
 
-Et tydelig skille mellom journalistikk og kommersielt innhold er en grunnpilar i Nær Nærings redaksjonelle plattform. Denne siden forklarer hvordan vi merker ulike typer innhold, slik at du som leser alltid skal kunne se hvem som står bak det du leser.
+Et tydelig skille mellom journalistikk og kommersielt innhold er en grunnpilar i Nærs redaksjonelle plattform. Denne siden forklarer hvordan vi merker ulike typer innhold, slik at du som leser alltid skal kunne se hvem som står bak det du leser.
 
 ### Redaksjonelt innhold
 
-Alt redaksjonelt innhold er produsert av Nær Nærings journalister og redaktører, og er underlagt ansvarlig redaktør. Dette omfatter nyhetsartikler, reportasjer, intervjuer, analyser, kommentarer og lederartikler. Redaksjonelt innhold er ikke betalt for av kilder, omtalte selskaper eller andre eksterne aktører.
+Alt redaksjonelt innhold er produsert av Nærs journalister og redaktører, og er underlagt ansvarlig redaktør. Dette omfatter nyhetsartikler, reportasjer, intervjuer, analyser, kommentarer og lederartikler. Redaksjonelt innhold er ikke betalt for av kilder, omtalte selskaper eller andre eksterne aktører.
 
 **Sjangermerking innenfor det redaksjonelle:**
 
@@ -295,7 +295,7 @@ Alt kommersielt innhold er tydelig merket og visuelt skilt fra det redaksjonelle
 
 ### Samarbeid og partnerskap
 
-Når Nær Næring inngår redaksjonelle samarbeid med eksterne parter — for eksempel forskningsinstitusjoner, bransjeorganisasjoner eller andre medier — opplyser vi alltid om hvem samarbeidspartneren er og hva samarbeidet innebærer. Redaksjonell kontroll ligger alltid hos ansvarlig redaktør.
+Når Nær inngår redaksjonelle samarbeid med eksterne parter — for eksempel forskningsinstitusjoner, bransjeorganisasjoner eller andre medier — opplyser vi alltid om hvem samarbeidspartneren er og hva samarbeidet innebærer. Redaksjonell kontroll ligger alltid hos ansvarlig redaktør.
 
 ### Bruk av kunstig intelligens
 
@@ -307,11 +307,11 @@ Alle bilder og illustrasjoner er kreditert med fotograf, byrå eller illustratø
 
 ### Lenker
 
-Eksterne lenker i redaksjonelle artikler er valgt av redaksjonen for å gi leseren mer kontekst, og innebærer ikke en anbefaling eller godkjenning av tredjepartens innhold. Affiliate-lenker, der Nær Næring mottar en provisjon dersom leseren foretar et kjøp, brukes ikke i redaksjonelt innhold uten at det er tydelig merket.
+Eksterne lenker i redaksjonelle artikler er valgt av redaksjonen for å gi leseren mer kontekst, og innebærer ikke en anbefaling eller godkjenning av tredjepartens innhold. Affiliate-lenker, der Nær mottar en provisjon dersom leseren foretar et kjøp, brukes ikke i redaksjonelt innhold uten at det er tydelig merket.
 
 ### Klager og rettelser
 
-Mener du noe ikke er merket korrekt — at en artikkel burde vært merket som annonsørinnhold, eller at en kilde er gjengitt på en måte som skjuler interessekonflikter — vil vi vite om det. Skriv til ansvarlig redaktør på [redaktor@naernaering.no]. Du kan også klage Nær Næring inn for Pressens Faglige Utvalg (PFU).
+Mener du noe ikke er merket korrekt — at en artikkel burde vært merket som annonsørinnhold, eller at en kilde er gjengitt på en måte som skjuler interessekonflikter — vil vi vite om det. Skriv til ansvarlig redaktør på [redaktor@naernaering.no]. Du kan også klage Nær inn for Pressens Faglige Utvalg (PFU).
 
 ---
 
@@ -319,17 +319,17 @@ Mener du noe ikke er merket korrekt — at en artikkel burde vært merket som an
 
 Sist oppdatert: [DATO]
 
-Åpenhet om hvem som eier et mediehus er en forutsetning for at lesere skal kunne vurdere journalistikken kritisk. På denne siden får du oversikt over hvem som står bak Nær Næring, hvordan vi er finansiert, og hvilke prinsipper som styrer forholdet mellom eiere og redaksjon.
+Åpenhet om hvem som eier et mediehus er en forutsetning for at lesere skal kunne vurdere journalistikken kritisk. På denne siden får du oversikt over hvem som står bak Nær, hvordan vi er finansiert, og hvilke prinsipper som styrer forholdet mellom eiere og redaksjon.
 
 ### Selskapsstruktur
 
-Nær Næring-avisene utgis av et konsern med følgende oppbygning:
+Nær-avisene utgis av et konsern med følgende oppbygning:
 
 - **Compass Media Holding AS** — øverste eierselskap. Eier aksjene i de operative selskapene, men har ingen egen drift.
 - **Compass Media AS** — operativ konsernmor. Har ansvar for felles funksjoner som økonomi, kommersiell ledelse, sentralredaksjonelle ressurser og administrasjon.
-- **CM CMS AS** — teknologiselskapet. Utvikler og drifter den redaksjonelle plattformen, AI-verktøyene og analyseløsningene som Nær Næring-avisene bruker.
-- **Nær Næring Nordvest AS** — utgiver av Nær Næring Nordvest. Egen redaksjon med ansvarlig redaktør.
-- Tilsvarende egne aksjeselskaper opprettes for hver nye regionavis (Nær Næring Nord, Nær Næring Midt og så videre) ved lansering.
+- **CM CMS AS** — teknologiselskapet. Utvikler og drifter den redaksjonelle plattformen, AI-verktøyene og analyseløsningene som Nær-avisene bruker.
+- **Nær Nordvest AS** — utgiver av Nær Nordvest. Egen redaksjon med ansvarlig redaktør.
+- Tilsvarende egne aksjeselskaper opprettes for hver nye regionavis (Nær Nord, Nær Midt og så videre) ved lansering.
 
 Strukturen er valgt fordi hver avis skal kunne ha lokale eiere uten at risiko eller eierinteresser smitter over på andre aviser, og fordi teknologi- og medievirksomheten har ulike forretningslogikker og bør kunne kapitaliseres separat.
 
@@ -341,7 +341,7 @@ Strukturen er valgt fordi hver avis skal kunne ha lokale eiere uten at risiko el
 - [NAVN], [PROSENT] %
 - [eventuelle øvrige aksjonærer]
 
-**Nær Næring Nordvest AS** eies per [DATO] av:
+**Nær Nordvest AS** eies per [DATO] av:
 
 - Compass Media AS, [PROSENT] %
 - [eventuelle lokale medeiere med over 5 % eierandel]
@@ -355,7 +355,7 @@ Komplette aksjonæroversikter er offentlig tilgjengelige i Brønnøysundregistre
 
 ### Finansiering
 
-Nær Næring finansieres gjennom fire hovedkanaler:
+Nær finansieres gjennom fire hovedkanaler:
 
 - **Abonnementsinntekter** fra privatpersoner og bedrifter.
 - **Annonseinntekter** og kommersielle samarbeid, organisert gjennom en kommersiell avdeling som er strukturelt skilt fra redaksjonen.

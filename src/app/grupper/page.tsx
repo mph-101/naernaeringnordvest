@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Grupper",
-  description: "Dine grupper på Nær Næring",
+  description: "Dine grupper på Nær",
 };
 
 export default function Page() {

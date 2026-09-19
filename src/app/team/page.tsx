@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Redaksjonen",
-  description: "Møt teamet bak Nær Næring Nordvest",
+  description: "Møt teamet bak Nær Nordvest",
 };
 
 export default function TeamPage() {

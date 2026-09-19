@@ -9,7 +9,7 @@ export default function StillingNyTakk() {
   const { language } = useTheme();
   const isNo = language === "no";
   useEffect(() => {
-    document.title = isNo ? "Takk | Nær Næring" : "Thanks | Nær Næring";
+    document.title = isNo ? "Takk | Nær" : "Thanks | Nær";
   }, [isNo]);
   return (
     <div className="min-h-screen bg-background">

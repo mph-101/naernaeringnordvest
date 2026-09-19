@@ -4,6 +4,23 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Rebranding «Nær Nordvest» — region-visningsnavn i databasen (2026-09-19)
+Rebrandingen (avisen «Nær», piloten «Nordvest») er gjort som **ren visningstekst**
+i kode — se progress.md. Etter avklaring med deg gjorde jeg **ikke** noe med
+databasen: `region_slug='nordvestlandet'` står uendret (RLS-policyer, migrasjoner,
+edge functions og eksisterende `subscriptions`/`editorial_regions`-rader i prod
+refererer den — en slug-endring er en egen oppgave med eget designnotat om/når
+det blir aktuelt).
+
+Men **`editorial_regions.name`** (visningsnavnet, ikke slug'en) er trolig fortsatt
+`"Nordvestlandet"` — det er dette Header viser som undertittel under «Nær» når en
+region er valgt (`currentRegion.name`). Hvis du vil at det skal lese «Nordvest» i
+UI-et, må du oppdatere den raden selv (jeg rører ikke prod-data):
+```sql
+UPDATE editorial_regions SET name = 'Nordvest' WHERE slug = 'nordvestlandet';
+```
+Ren tekstendring, ingen slug/FK berørt — trygt å kjøre når som helst.
+
 ### Re-audit 2026-07-15 — tre ting kun du kan avgjøre
 1. **MBL / Norsk Redaktørforening / PFU:** SiteFooter påstår «Medlem av MBL og
    Norsk Redaktørforening. Tilsluttet PFU.» på hver side. Verifiser at

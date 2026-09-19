@@ -26,7 +26,7 @@ export default function Newsletter() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    document.title = isNo ? "Nyhetsbrev — Nær Næring" : "Newsletter — Nær Næring";
+    document.title = isNo ? "Nyhetsbrev — Nær" : "Newsletter — Nær";
   }, [isNo]);
 
   const toggleSector = (id: string) =>

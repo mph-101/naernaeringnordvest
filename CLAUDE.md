@@ -6,7 +6,7 @@
 
 ## Hva dette prosjektet er
 
-**Nær Næring Nordvest** er en regional næringslivsavis for Møre og Romsdal, første utgivelse i en planlagt kjede av regionale aviser (Nær Næring Nord, Midt, Øst, Vest). Bygget av Magnus Peter Harnes (CEO, ansvarlig redaktør) — som også er den primære utvikleren. Dette er ikke et team-prosjekt. Du jobber direkte med Magnus.
+**Nær Nordvest** er en regional næringslivsavis for Møre og Romsdal, første utgivelse i en planlagt kjede av regionale aviser (Nær Nord, Midt, Øst, Vest). Bygget av Magnus Peter Harnes (CEO, ansvarlig redaktør) — som også er den primære utvikleren. Dette er ikke et team-prosjekt. Du jobber direkte med Magnus.
 
 Stack i dag: Vite + React + React Router + Supabase (Postgres + Auth + Storage + Edge Functions) + Stripe via Lovable-gateway + Tailwind + shadcn/ui + tiptap.
 

@@ -31,7 +31,7 @@ export default function StillingDetail() {
         if (j.submitted_by !== userId) {
           supabase.rpc("increment_job_view", { _job_id: j.id }).then(() => {});
         }
-        document.title = `${j.title} – ${j.company_name} | Nær Næring`;
+        document.title = `${j.title} – ${j.company_name} | Nær`;
         const meta =
           document.querySelector('meta[name="description"]') ||
           Object.assign(document.head.appendChild(document.createElement("meta")), { name: "description" });

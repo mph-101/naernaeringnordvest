@@ -66,7 +66,7 @@ const decodeChart = (encoded: string): ChartData | null => {
 };
 
 /**
- * Splits article HTML into segments at every Nær Næring chart figure
+ * Splits article HTML into segments at every Nær chart figure
  * (`<figure data-nn-chart="true" data-chart="<base64>">…</figure>`)
  * and renders the chart blocks as live React components while leaving
  * the surrounding HTML untouched.
@@ -74,7 +74,7 @@ const decodeChart = (encoded: string): ChartData | null => {
 export const ArticleBody = ({ html, className = "", category }: ArticleBodyProps) => {
   const segments = useMemo<Segment[]>(() => {
     if (!html) return [];
-    // Match Nær Næring custom blocks: chart figures, source-card asides, and
+    // Match Nær custom blocks: chart figures, source-card asides, and
     // captioned inline images (figure[data-nn-image]).
     const regex = /<figure\b(?=[^>]*\bdata-nn-chart="true")(?=[^>]*\bdata-chart="([^"]+)")[^>]*>[\s\S]*?<\/figure>|<aside\b(?=[^>]*\bdata-nn-source-card="true")(?=[^>]*\bdata-source-card="([^"]+)")[^>]*>[\s\S]*?<\/aside>|<figure\b(?=[^>]*\bdata-nn-image="true")[^>]*>[\s\S]*?<\/figure>/gi;
     const result: Segment[] = [];

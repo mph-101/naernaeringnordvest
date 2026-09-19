@@ -46,7 +46,7 @@ export default function StillingNy() {
   const [invoice, setInvoice] = useState({ invoice_email: "", invoice_reference: "", notes: "" });
 
   useEffect(() => {
-    document.title = isNo ? "Legg ut stilling | Nær Næring" : "Post a job | Nær Næring";
+    document.title = isNo ? "Legg ut stilling | Nær" : "Post a job | Nær";
     supabase
       .from("editorial_regions")
       .select("slug, name")

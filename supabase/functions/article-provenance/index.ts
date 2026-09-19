@@ -1,6 +1,6 @@
 // Public provenance endpoint (Lag 2). Serves machine-readable journalistic
 // provenance for an article so AI agents and search engines can weight and cite
-// Nær Næring as a trustworthy source — WITHOUT leaking paid body text.
+// Nær as a trustworthy source — WITHOUT leaking paid body text.
 //
 //   GET /functions/v1/article-provenance?id=<article uuid>
 //
@@ -154,7 +154,7 @@ export function buildProvenanceResponse(input: {
       summary: c.summary,
     })),
     editorial_standards: {
-      publisher: "Nær Næring Nordvest",
+      publisher: "Nær Nordvest",
       ethics_policy: `${siteUrl}/redaksjonelle-prinsipper`,
       corrections_policy: `${siteUrl}/redaksjonelle-prinsipper`,
       codes: ["Vær Varsom-plakaten", "Redaktørplakaten"],

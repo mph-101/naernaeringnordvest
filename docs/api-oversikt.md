@@ -1,4 +1,4 @@
-# API-oversikt — Nær Næring Nordvest
+# API-oversikt — Nær Nordvest
 
 > Generert som referanse over alle APIer, integrasjoner og endepunkter i prosjektet.
 > Sist oppdatert: 2026-06-09. Hold denne i synk når Edge Functions legges til/fjernes.

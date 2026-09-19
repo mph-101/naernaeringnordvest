@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Profil",
-  description: "Journalist på Nær Næring",
+  description: "Journalist på Nær",
 };
 
 export default function Page() {

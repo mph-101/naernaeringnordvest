@@ -4,8 +4,8 @@ import "../index.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Nær Næring",
-    template: "%s | Nær Næring",
+    default: "Nær",
+    template: "%s | Nær",
   },
   description: "Regionalt næringsliv, tett på",
 };

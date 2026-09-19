@@ -10,7 +10,7 @@ interface Props {
 /**
  * Living compass mascot. The needle gently breathes and rotates toward
  * an optional target point (the spotlight or the cursor). Built with the
- * Nær Næring peach + dusty-rose palette via semantic tokens.
+ * Nær peach + dusty-rose palette via semantic tokens.
  */
 export function CompassMascot({ size = 96, pointTo = null, className = "", blink = true }: Props) {
   const ref = useRef<HTMLDivElement>(null);

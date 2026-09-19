@@ -238,7 +238,7 @@ export default function BusinessPanel() {
       const bodyLines = [
         `Hei,`,
         ``,
-        `Vi ønsker å utvide bedriftsabonnementet vårt på Nær Næring.`,
+        `Vi ønsker å utvide bedriftsabonnementet vårt på Nær.`,
         ``,
         `Bedrift: ${account.company_name}`,
         account.orgnr ? `Org.nr: ${account.orgnr}` : null,

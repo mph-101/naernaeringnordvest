@@ -18,7 +18,7 @@
 
 const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 const DEFAULT_SITE_URL = "https://naernaeringnordvest.vercel.app";
-const DEFAULT_APP_NAME = "Nær Næring Nordvest";
+const DEFAULT_APP_NAME = "Nær Nordvest";
 
 /**
  * Cost guardrail: cap output tokens on every non-streaming completion so a

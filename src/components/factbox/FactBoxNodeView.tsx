@@ -3,7 +3,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { FactBox, decodeFactBox } from "./FactBox";
 
 /**
- * In-editor view for a Nær Næring fact box. Renders the live preview and
+ * In-editor view for a Nær fact box. Renders the live preview and
  * dispatches a `nn-factbox-edit` DOM event when the user wants to edit it,
  * mirroring the chart-figure pattern.
  */

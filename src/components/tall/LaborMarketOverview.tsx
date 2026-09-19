@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { fetchRegions, regionLabel, EditorialRegion } from "@/lib/regions";
+import { regionDisplayName } from "@/lib/region-display";
 import { UserMinus, Users, TrendingDown, Banknote, HeartPulse, ExternalLink, Newspaper, Loader2, Briefcase, Sparkles, MapPin, Plus } from "lucide-react";
 import { fetchPublishedJobs, jobUrl, type JobListing } from "@/lib/jobs";
 
@@ -184,7 +185,7 @@ export function LaborMarketOverview() {
             className="px-3 py-2 rounded-lg border border-border bg-card text-sm font-body text-foreground focus:outline-none focus:border-accent transition-colors"
           >
             {regions.map((r) => (
-              <option key={r.slug} value={r.slug}>{r.name}</option>
+              <option key={r.slug} value={r.slug}>{regionDisplayName(r)}</option>
             ))}
           </select>
         </div>

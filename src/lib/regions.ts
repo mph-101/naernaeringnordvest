@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { regionDisplayName } from "@/lib/region-display";
 
 export interface EditorialRegion {
   slug: string;
@@ -36,5 +37,5 @@ export function clearRegionCache() {
 export function regionLabel(regions: EditorialRegion[], slug: string | null | undefined): string {
   if (!slug) return "";
   const r = regions.find((x) => x.slug === slug);
-  return r?.name || slug;
+  return r ? regionDisplayName(r) : slug;
 }

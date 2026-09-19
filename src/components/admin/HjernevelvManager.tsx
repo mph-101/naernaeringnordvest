@@ -3,6 +3,7 @@ import { Plus, Loader2, Trash2, Pencil, Save, X, Calendar, Users, MessageSquare,
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { fetchRegions, type EditorialRegion } from "@/lib/regions";
+import { regionDisplayName } from "@/lib/region-display";
 import { toast } from "sonner";
 import {
   type HjernevelvWriter,
@@ -179,7 +180,7 @@ const WriterForm = ({
       <input value={value.avatar_url ?? ""} onChange={(e) => onChange({ ...value, avatar_url: e.target.value })} placeholder="Avatar URL" className="px-3 py-2 rounded-lg bg-background border border-border text-sm" />
       <select value={value.region_slug ?? ""} onChange={(e) => onChange({ ...value, region_slug: e.target.value || null })} className="px-3 py-2 rounded-lg bg-background border border-border text-sm">
         <option value="">{isNo ? "— Region —" : "— Region —"}</option>
-        {regions.map((r) => <option key={r.slug} value={r.slug}>{r.name}</option>)}
+        {regions.map((r) => <option key={r.slug} value={r.slug}>{regionDisplayName(r)}</option>)}
       </select>
     </div>
     <input
@@ -266,7 +267,7 @@ const PanelsTab = ({ regions, isNo }: { regions: EditorialRegion[]; isNo: boolea
             <input value={editing.topic ?? ""} onChange={(e) => setEditing({ ...editing, topic: e.target.value })} placeholder={isNo ? "Tema" : "Topic"} className="px-3 py-2 rounded-lg bg-background border border-border text-sm" />
             <select value={editing.region_slug ?? ""} onChange={(e) => setEditing({ ...editing, region_slug: e.target.value || null })} className="px-3 py-2 rounded-lg bg-background border border-border text-sm">
               <option value="">— Region —</option>
-              {regions.map((r) => <option key={r.slug} value={r.slug}>{r.name}</option>)}
+              {regions.map((r) => <option key={r.slug} value={r.slug}>{regionDisplayName(r)}</option>)}
             </select>
           </div>
           <div className="grid sm:grid-cols-3 gap-3">

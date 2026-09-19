@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "sonner";
 import { fetchRegions, type EditorialRegion } from "@/lib/regions";
+import { regionDisplayName } from "@/lib/region-display";
 import { JournalistFieldsSection } from "./JournalistFieldsSection";
 
 const legacyRegions = [
@@ -215,7 +216,7 @@ export function ProfileEditor({ userId, userEmail, displayName, avatarUrl, userR
           >
             <option value="">{isNo ? "Ingen redaksjon" : "No editorial"}</option>
             {editorialRegions.map(r => (
-              <option key={r.slug} value={r.slug}>{r.name}</option>
+              <option key={r.slug} value={r.slug}>{regionDisplayName(r)}</option>
             ))}
           </select>
         </div>

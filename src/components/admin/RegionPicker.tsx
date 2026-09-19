@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Check, MapPin } from "lucide-react";
 import { fetchRegions, type EditorialRegion } from "@/lib/regions";
+import { regionDisplayName } from "@/lib/region-display";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -54,7 +55,7 @@ export function RegionPicker(props: Props) {
         <SelectContent>
           {regions.map((r) => (
             <SelectItem key={r.slug} value={r.slug} disabled={r.slug === props.disabledSlug}>
-              {r.name}
+              {regionDisplayName(r)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -88,7 +89,7 @@ export function RegionPicker(props: Props) {
             title={isDisabled ? "Forfatterens egen region (alltid mottaker)" : undefined}
           >
             {isSelected ? <Check className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
-            {r.name}
+            {regionDisplayName(r)}
             {isDisabled && <span className="text-[0.625rem] opacity-70">(egen)</span>}
           </button>
         );

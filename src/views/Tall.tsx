@@ -85,8 +85,6 @@ export default function Tall() {
               session={session}
               selectedFylker={selectedFylker}
               selectedKommuner={selectedKommuner}
-              onFylkerChange={setSelectedFylker}
-              onKommunerChange={setSelectedKommuner}
             />
           </div>
         )}

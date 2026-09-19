@@ -2,6 +2,7 @@ import { MessageSquare, Newspaper, BarChart2, Star, Sparkles } from "lucide-reac
 // Using <a> instead of react-router Link for Next.js compatibility
 import { useTheme } from "@/hooks/useTheme";
 import { translations } from "@/lib/translations";
+import { FEATURES } from "@/lib/features";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,7 +31,12 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
     { id: "hjernevelvet", label: "Hjernevelvet", icon: Sparkles, to: "/hjernevelvet" },
   ];
 
-  const tabs = allTabs.filter((tab) => !hiddenElements.includes(tab.id));
+  // Hjernevelvet på hyllen (2026-09-19): flagget overstyrer brukerens egen
+  // Tilpass-innstilling — ingen skal kunne "vise" en fane som ikke finnes.
+  const tabs = allTabs.filter((tab) => {
+    if (tab.id === "hjernevelvet" && !FEATURES.HJERNEVELV) return false;
+    return !hiddenElements.includes(tab.id);
+  });
 
   const handleClick = (tabId: TabId) => {
     if (tabId === "tall" || tabId === "hjernevelvet") {

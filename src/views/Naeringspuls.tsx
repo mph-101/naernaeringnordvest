@@ -121,19 +121,38 @@ export default function Naeringspuls() {
   const maxBransje = bransjer.length ? bransjer[0].value : 1;
   const latestKonkursPeriod = konkursSeries.at(-1)?.period;
 
-  const kpiCards = [
-    { key: "konkurser_12mnd", icon: Building2,
-      fmt: (v: number) => nf(v),
-      title: isNo ? "Konkurser siste 12 md" : "Bankruptcies last 12 mo" },
-    { key: "etableringer", icon: Sprout,
-      fmt: (v: number) => nf(v),
-      title: isNo ? "Nye foretak (siste år)" : "New enterprises (latest year)" },
-    { key: "omsetning_total", icon: Banknote,
-      fmt: (v: number) => fmtOms(v),
-      title: isNo ? "Omsetning, alle næringer" : "Turnover, all industries" },
-    { key: "omsetning_vekst", icon: TrendingUp,
-      fmt: (v: number) => fmtPct(v),
-      title: isNo ? "Omsetningsvekst å/å" : "Turnover growth YoY" },
+  // Tre nøkkeltall, ikke fire — omsetningsvekst er en delta PÅ omsetningen,
+  // ikke en femte likestilt måling (unngår redundans mellom to tiles).
+  const konkurserRow = kpis.get("konkurser_12mnd");
+  const etableringerRow = kpis.get("etableringer");
+  const omsetningRow = kpis.get("omsetning_total");
+  const vekstRow = kpis.get("omsetning_vekst");
+  const vekst = vekstRow?.value != null ? Number(vekstRow.value) : null;
+
+  const nokkeltall = [
+    {
+      key: "konkurser_12mnd", icon: Building2,
+      label: isNo ? "Konkurser siste 12 md" : "Bankruptcies last 12 mo",
+      value: konkurserRow?.value != null ? nf(Number(konkurserRow.value)) : null,
+      period: konkurserRow?.period ? fmtMonth(konkurserRow.period) : null,
+      delta: null as { down: boolean; text: string } | null,
+    },
+    {
+      key: "etableringer", icon: Sprout,
+      label: isNo ? "Nye foretak, siste år" : "New enterprises, latest year",
+      value: etableringerRow?.value != null ? nf(Number(etableringerRow.value)) : null,
+      period: etableringerRow?.period ?? null,
+      delta: null as { down: boolean; text: string } | null,
+    },
+    {
+      key: "omsetning_total", icon: Banknote,
+      label: isNo ? "Omsetning, alle næringer" : "Turnover, all industries",
+      value: omsetningRow?.value != null ? fmtOms(Number(omsetningRow.value)) : null,
+      period: omsetningRow?.period ?? null,
+      delta: vekst != null
+        ? { down: vekst < 0, text: `${fmtPct(vekst)} ${isNo ? "å/å" : "YoY"}` }
+        : null,
+    },
   ];
 
   return (
@@ -164,31 +183,41 @@ export default function Naeringspuls() {
           </p>
         ) : (
           <>
-            {/* KPI-råtall */}
+            {/* Nøkkeltall — én rolig figur-stripe i ett kort, ikke et identisk
+                dashbord-kortgrid (DESIGN.md §6: unngå "identiske kort-grids" /
+                "hero-metric-maler"). Delt av hårfine linjer, ikke fire bokser. */}
             <section>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {kpiCards.map(({ key, icon: Icon, fmt, title }) => {
-                  const row = kpis.get(key);
-                  const v = row?.value != null ? Number(row.value) : null;
-                  const down = key === "omsetning_vekst" && v != null && v < 0;
-                  return (
-                    <div key={key} className="bg-card border border-border rounded-xl p-5">
-                      <div className="flex items-center gap-2 mb-3 text-muted-foreground">
-                        <Icon className="w-4 h-4" />
-                        <span className="font-subhead text-xs font-medium">{title}</span>
+              <h2 className="font-headline text-xl font-semibold text-headline mb-4">
+                {isNo ? "Nøkkeltall" : "Key figures"}
+              </h2>
+              <div className="bg-card border border-border rounded-2xl p-6 md:p-8">
+                <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
+                  {nokkeltall.map(({ key, icon: Icon, label, value, period, delta }) => (
+                    <div key={key} className="py-5 first:pt-0 last:pb-0 sm:py-0 sm:px-6 sm:first:pl-0 sm:last:pr-0">
+                      <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+                        <Icon className="w-4 h-4" aria-hidden="true" />
+                        <span className="font-body text-sm">{label}</span>
                       </div>
-                      {/* Markedsretning bruker positive/negative-tokens — rustrose er reservert feil */}
-                      <div className={`font-headline text-3xl font-bold ${down ? "text-negative" : "text-headline"}`}>
-                        {v != null ? fmt(v) : "—"}
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="font-headline text-3xl md:text-4xl font-semibold text-headline">
+                          {value ?? "—"}
+                        </span>
+                        {/* Markedsretning bruker positive/negative-tokens — rustrose er reservert feil */}
+                        {delta && (
+                          <span className={`inline-flex items-center gap-0.5 font-body text-sm ${delta.down ? "text-negative" : "text-positive"}`}>
+                            {delta.down
+                              ? <TrendingDown className="w-3.5 h-3.5" aria-hidden="true" />
+                              : <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />}
+                            {delta.text}
+                          </span>
+                        )}
                       </div>
-                      {row?.period && (
-                        <div className="font-body text-xs text-muted-foreground mt-1">
-                          {key === "konkurser_12mnd" ? fmtMonth(row.period) : row.period}
-                        </div>
+                      {period && (
+                        <div className="font-body text-xs text-muted-foreground mt-1">{period}</div>
                       )}
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
             </section>
 

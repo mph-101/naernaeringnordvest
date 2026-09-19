@@ -5,6 +5,7 @@ import { Menu, X, Search, Moon, Sun, Globe, Users, LogIn, LogOut, UserCircle, Sh
 import { Link } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { useRegion } from "@/hooks/useRegion";
+import { regionDisplayName } from "@/lib/region-display";
 import { translations } from "@/lib/translations";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -92,7 +93,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
                 {t.brandName}
               </span>
               <span className="font-subhead text-[0.625rem] sm:text-xs text-accent-ink tracking-wide truncate">
-                {currentRegion && currentRegion.slug !== "nasjonal" ? currentRegion.name : t.brandSub}
+                {currentRegion && currentRegion.slug !== "nasjonal" ? regionDisplayName(currentRegion) : t.brandSub}
               </span>
             </div>
           </a>
@@ -111,14 +112,14 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
                     aria-label={language === "no" ? "Bytt region" : "Switch region"}
                   >
                     <MapPin className="w-3.5 h-3.5 text-foreground/70" />
-                    <span className="text-xs font-medium text-foreground/80">{currentRegion?.name}</span>
+                    <span className="text-xs font-medium text-foreground/80">{currentRegion && regionDisplayName(currentRegion)}</span>
                     <ChevronDown className="w-3 h-3 text-foreground/70" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[160px]">
                   {otherRegions.map((r) => (
                     <DropdownMenuItem key={r.slug} onClick={() => switchRegion(r.slug)}>
-                      {r.name}
+                      {regionDisplayName(r)}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -287,7 +288,7 @@ export function Header({ showSearch = true, onSearchClick }: HeaderProps) {
                       className="w-full px-4 py-3 text-left rounded-xl hover:bg-secondary transition-colors flex items-center gap-3 font-subhead text-sm"
                     >
                       <MapPin className="w-4 h-4 text-foreground/70" />
-                      {r.name}
+                      {regionDisplayName(r)}
                     </button>
                   ))}
                 </>

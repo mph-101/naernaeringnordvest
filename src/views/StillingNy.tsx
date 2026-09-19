@@ -8,6 +8,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { EMPLOYMENT_TYPES, PREMIUM_PRICE_NOK } from "@/lib/jobs";
+import { regionDisplayName } from "@/lib/region-display";
 import { toast } from "sonner";
 
 type Region = { slug: string; name: string };
@@ -232,7 +233,7 @@ export default function StillingNy() {
             <Field label={isNo ? "Region" : "Region"}>
               <select className="input" value={form.region_slug} onChange={(e) => setForm({ ...form, region_slug: e.target.value })}>
                 <option value="">{isNo ? "Velg region" : "Select region"}</option>
-                {regions.map((r) => <option key={r.slug} value={r.slug}>{r.name}</option>)}
+                {regions.map((r) => <option key={r.slug} value={r.slug}>{regionDisplayName(r)}</option>)}
               </select>
             </Field>
           </div>
@@ -341,7 +342,7 @@ export default function StillingNy() {
                           checked ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
                         } ${isPrimary ? "opacity-60 cursor-default" : ""}`}
                       >
-                        {r.name} {isPrimary ? `(${isNo ? "primær" : "primary"})` : ""}
+                        {regionDisplayName(r)} {isPrimary ? `(${isNo ? "primær" : "primary"})` : ""}
                       </button>
                     );
                   })}

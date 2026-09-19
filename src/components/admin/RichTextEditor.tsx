@@ -205,7 +205,7 @@ function buildSuggestionChip(h: ProofreadHighlight): HTMLElement {
 }
 
 /**
- * Atom-block node that preserves Nær Næring chart figures verbatim
+ * Atom-block node that preserves Nær chart figures verbatim
  * (`<figure data-nn-chart="true" data-chart="<base64>">`). The editor
  * shows a simple placeholder; the public article view re-renders the
  * real chart component from the encoded JSON.
@@ -259,7 +259,7 @@ const ChartFigureNode = Node.create({
 });
 
 /**
- * Atom-block node that preserves Nær Næring fact boxes verbatim
+ * Atom-block node that preserves Nær fact boxes verbatim
  * (`<aside data-nn-factbox="true" data-factbox="<base64>">`).
  */
 const FactBoxNode = Node.create({
@@ -308,7 +308,7 @@ const FactBoxNode = Node.create({
 });
 
 /**
- * Atom-block node that preserves Nær Næring source-presentation cards
+ * Atom-block node that preserves Nær source-presentation cards
  * (`<aside data-nn-source-card="true" data-source-card="<base64>">`).
  */
 const SourceCardNode = Node.create({

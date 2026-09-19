@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
       return `### Kilde ${i + 1}: ${s.title} (${originLabel})${urlPart}\n${s.content ?? ""}`;
     }).join("\n\n---\n\n");
 
-    const systemPrompt = `Du er en erfaren norsk avisjournalist for Nær Næring, en lokalavis om norsk næringsliv.
+    const systemPrompt = `Du er en erfaren norsk avisjournalist for Nær, en lokalavis om norsk næringsliv.
 Du skriver på norsk bokmål, nøytralt og faktabasert.
 
 ARTIKKELTYPE: ${typeName}

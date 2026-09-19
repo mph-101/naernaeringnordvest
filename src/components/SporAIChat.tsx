@@ -173,7 +173,7 @@ export function SporAIChat() {
               <Bot className="w-4 h-4 text-accent-foreground" />
             </div>
             <div className="flex-1">
-              <p className="font-subhead font-semibold text-accent-foreground text-sm">Spør Nær Næring</p>
+              <p className="font-subhead font-semibold text-accent-foreground text-sm">Spør Nær</p>
               <p className="font-body text-xs text-accent-foreground/70">Svar fra artikkelarkivet</p>
             </div>
             <button

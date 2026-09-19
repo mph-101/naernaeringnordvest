@@ -12,7 +12,7 @@ Sekundære brukere: redaksjonen (admin-CMS, tips-håndtering) og bedriftskunder 
 
 ## Product Purpose
 
-Nær Næring Nordvest er en regional næringslivsavis — første utgivelse i en planlagt kjede (Nær Næring Nord, Midt, Øst, Vest). Den skal fylle rommet mellom kald nasjonal finanspresse og tynn lokalavisdekning: seriøs næringslivsjournalistikk med regional nærhet. Suksess er betalende abonnenter som opplever avisen som *sin* — troverdig nok til å stole på, nær nok til å bry seg om.
+Nær Nordvest er en regional næringslivsavis — første utgivelse i en planlagt kjede (Nær Nord, Midt, Øst, Vest). Den skal fylle rommet mellom kald nasjonal finanspresse og tynn lokalavisdekning: seriøs næringslivsjournalistikk med regional nærhet. Suksess er betalende abonnenter som opplever avisen som *sin* — troverdig nok til å stole på, nær nok til å bry seg om.
 
 ## Brand Personality
 

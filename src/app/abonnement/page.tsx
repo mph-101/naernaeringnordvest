@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Abonnement",
-  description: "Velg abonnement på Nær Næring — tilgang til alt innhold",
+  description: "Velg abonnement på Nær — tilgang til alt innhold",
 };
 
 export default function SubscribePage() {

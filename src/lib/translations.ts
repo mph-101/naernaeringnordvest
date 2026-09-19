@@ -1,7 +1,7 @@
 export const translations = {
   no: {
     // Header
-    brandName: "Nær Næring",
+    brandName: "Nær",
     brandSub: "",
     footerTagline: "Lokalt næringsliv i fokus",
     navTransactions: "Transaksjoner",
@@ -135,7 +135,7 @@ export const translations = {
   },
   en: {
     // Header
-    brandName: "Nær Næring",
+    brandName: "Nær",
     brandSub: "",
     footerTagline: "Local business in focus",
     navTransactions: "Transactions",

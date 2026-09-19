@@ -29,7 +29,7 @@ interface FactBoxProps {
 
 /**
  * Editorial fact box — used both inside the CMS preview and in the published
- * article. Three layout variants share a common Nær Næring-branded chrome.
+ * article. Three layout variants share a common Nær-branded chrome.
  */
 export const FactBox = ({ data, className = "" }: FactBoxProps) => {
   const { variant, title, body, image_url, image_caption, items } = data;
@@ -87,12 +87,12 @@ export const FactBox = ({ data, className = "" }: FactBoxProps) => {
         <div className="mt-4 flex items-center gap-2 pt-3 border-t border-border/60">
           <img
             src={logoImg as unknown as string}
-            alt="Nær Næring"
+            alt="Nær"
             className="w-4 h-4 object-contain dark:bg-white dark:rounded-full dark:p-0.5"
             width={16}
             height={16}
           />
-          <span className="font-headline text-xs font-semibold text-foreground/70">Nær Næring</span>
+          <span className="font-headline text-xs font-semibold text-foreground/70">Nær</span>
         </div>
       </div>
     </aside>

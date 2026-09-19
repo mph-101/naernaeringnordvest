@@ -43,7 +43,7 @@ export interface ChartData {
 }
 
 /**
- * Standardised Nær Næring chart palette — derived from the editorial pastel system
+ * Standardised Nær chart palette — derived from the editorial pastel system
  * but with enough contrast to read as data. Order matters (first series = primary).
  */
 const CHART_COLORS = [
@@ -366,12 +366,12 @@ export const ArticleChart = ({ data, className = "" }: ArticleChartProps) => {
         <div className="flex items-center gap-2">
           <img
             src={logoImg as unknown as string}
-            alt="Nær Næring"
+            alt="Nær"
             className="w-5 h-5 object-contain dark:bg-white dark:rounded-full dark:p-0.5"
             width={20}
             height={20}
           />
-          <span className="font-headline text-xs font-semibold text-foreground/80">Nær Næring</span>
+          <span className="font-headline text-xs font-semibold text-foreground/80">Nær</span>
         </div>
         <span className="text-xs text-muted-foreground font-body italic">{source}</span>
       </div>

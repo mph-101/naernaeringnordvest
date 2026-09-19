@@ -16,7 +16,7 @@ const decodeChart = (encoded: string): ChartData | null => {
 };
 
 /**
- * In-editor view for a Nær Næring chart figure. Renders a live preview of
+ * In-editor view for a Nær chart figure. Renders a live preview of
  * the chart and exposes Edit / Delete / Move affordances. Clicking "Rediger" or
  * the chart itself dispatches a custom DOM event picked up by RichTextEditor.
  *

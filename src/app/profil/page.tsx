@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Min profil",
-  description: "Din profil og innstillinger hos Nær Næring",
+  description: "Din profil og innstillinger hos Nær",
 };
 
 export default function ProfilePage() {

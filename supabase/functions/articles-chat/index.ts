@@ -486,7 +486,7 @@ serve(async (req) => {
           }
         } else if (rankingRoute === "articles") {
           const metricTxt = plan.ranking!.metric === "omsetning" ? "omsetning" : "dette";
-          rankingInstruction = `Dette er et RANGERINGSSPØRSMÅL som IKKE kan rangeres uttømmende fra registrene (en rangering etter ${metricTxt} for hele regionen finnes ikke som ett oppslag). Hvis du rangerer ut fra artiklene, LED svaret med at det kun gjelder selskaper Nær Næring har omtalt — ikke en fullstendig oversikt. Tilby å vise de største etter antall ansatte fra Brønnøysund.`;
+          rankingInstruction = `Dette er et RANGERINGSSPØRSMÅL som IKKE kan rangeres uttømmende fra registrene (en rangering etter ${metricTxt} for hele regionen finnes ikke som ett oppslag). Hvis du rangerer ut fra artiklene, LED svaret med at det kun gjelder selskaper Nær har omtalt — ikke en fullstendig oversikt. Tilby å vise de største etter antall ansatte fra Brønnøysund.`;
         }
 
         sources = (matches || []).map((m: any, i: number) => ({
@@ -616,7 +616,7 @@ serve(async (req) => {
       console.error("financial enrichment failed:", e);
     }
 
-    const systemPrompt = `Du er Spør, en kunnskapsrik redaksjonsassistent for nettavisen Nær Næring. Svar basert på de oppgitte artikkelutdragene og bedriftsdataene under. Hver gang du bruker informasjon fra en artikkel- eller betrodd kilde, siter den inline med [1], [2] osv. Bedriftsdata fra Brønnøysundregistrene siteres inline som [B].
+    const systemPrompt = `Du er Spør, en kunnskapsrik redaksjonsassistent for nettavisen Nær. Svar basert på de oppgitte artikkelutdragene og bedriftsdataene under. Hver gang du bruker informasjon fra en artikkel- eller betrodd kilde, siter den inline med [1], [2] osv. Bedriftsdata fra Brønnøysundregistrene siteres inline som [B].
 
 Regler:
 - Svar alltid på norsk (bokmål eller nynorsk slik kildene er skrevet).
@@ -630,7 +630,7 @@ Regler:
 - Aldri dikt opp tall, navn eller hendelser som ikke står i kildene.
 - Skriv kort: gjerne en oppsummerende setning, deretter kulepunkter eller en kort tabell hvis det passer.
 ${rankingInstruction ? `\nVIKTIG (rangering): ${rankingInstruction}\n` : ""}
-${sources.length > 0 ? `KILDER (publiserte artikler i Nær Næring):\n\n${contextBlock}\n\n` : ""}${trustedSources.length > 0 ? `BETRODDE EKSTERNE KILDER (kuratert av redaksjonen):\n\n${trustedBlock}\n\n` : ""}${rankingBlock ? `RANGERING (Brønnøysund, sortert etter antall ansatte):\n\n${rankingBlock}\n\n` : ""}${brregBlock ? `BEDRIFTSDATA (Brønnøysundregistrene, sanntid):\n\n${brregBlock}\n\n` : ""}${financialsBlock ? `REGNSKAPSTALL (Regnskapsregisteret, siste tilgjengelige årsregnskap):\n\n${financialsBlock}\n\n` : ""}${tallBlock ? `TALL-DATABASEN (etablering, konkurs, arbeidsmarked, boligmarked):\n\n${tallBlock}\n` : ""}${sources.length === 0 && trustedSources.length === 0 && !brregBlock && !financialsBlock && !tallBlock && !rankingBlock ? "Ingen relevante artikler, betrodde kilder, bedriftsdata eller statistikk ble funnet for dette spørsmålet." : ""}`;
+${sources.length > 0 ? `KILDER (publiserte artikler i Nær):\n\n${contextBlock}\n\n` : ""}${trustedSources.length > 0 ? `BETRODDE EKSTERNE KILDER (kuratert av redaksjonen):\n\n${trustedBlock}\n\n` : ""}${rankingBlock ? `RANGERING (Brønnøysund, sortert etter antall ansatte):\n\n${rankingBlock}\n\n` : ""}${brregBlock ? `BEDRIFTSDATA (Brønnøysundregistrene, sanntid):\n\n${brregBlock}\n\n` : ""}${financialsBlock ? `REGNSKAPSTALL (Regnskapsregisteret, siste tilgjengelige årsregnskap):\n\n${financialsBlock}\n\n` : ""}${tallBlock ? `TALL-DATABASEN (etablering, konkurs, arbeidsmarked, boligmarked):\n\n${tallBlock}\n` : ""}${sources.length === 0 && trustedSources.length === 0 && !brregBlock && !financialsBlock && !tallBlock && !rankingBlock ? "Ingen relevante artikler, betrodde kilder, bedriftsdata eller statistikk ble funnet for dette spørsmålet." : ""}`;
 
     const upstream = await aiFetch("/chat/completions", {
       method: "POST",

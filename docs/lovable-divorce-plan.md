@@ -1,4 +1,4 @@
-# Plan: Løsrive Nær Næring Nordvest fra Lovable
+# Plan: Løsrive Nær Nordvest fra Lovable
 
 Status per 2026-05-25.
 
@@ -97,7 +97,7 @@ const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     Authorization: `Bearer ${OPENROUTER_API_KEY}`,
     "Content-Type": "application/json",
     "HTTP-Referer": "https://naernaeringnordvest.vercel.app",
-    "X-Title": "Nær Næring Nordvest",
+    "X-Title": "Nær Nordvest",
   },
   body: JSON.stringify({
     model: "google/gemini-2.5-flash",  // samme modellnavn fungerer
@@ -127,7 +127,7 @@ export async function aiChatCompletion(opts: {
       Authorization: `Bearer ${AI_API_KEY}`,
       "Content-Type": "application/json",
       "HTTP-Referer": "https://naernaeringnordvest.vercel.app",
-      "X-Title": "Nær Næring Nordvest",
+      "X-Title": "Nær Nordvest",
     },
     body: JSON.stringify(opts),
   });
@@ -150,7 +150,7 @@ Da kan hver function importere `aiChatCompletion` og bytte provider sentralt ved
 
 **Estimert tid:** 4-8 timer aktivt arbeid, kan spres over noen dager. Lav risiko fordi du kan rulle tilbake en function av gangen.
 
-**Kostnadsestimat:** Gemini 2.5 Flash via OpenRouter er ~$0.10 per million input tokens / ~$0.40 per million output. For Nær Næring-volumet ditt sannsynligvis $5-20/mnd.
+**Kostnadsestimat:** Gemini 2.5 Flash via OpenRouter er ~$0.10 per million input tokens / ~$0.40 per million output. For Nær-volumet ditt sannsynligvis $5-20/mnd.
 
 ---
 

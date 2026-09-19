@@ -53,7 +53,7 @@ export function decideRankingRoute(ranking: Ranking | null): RankingRoute | null
   return obtainableByEmployees ? "top" : "articles";
 }
 
-export const PLANNER_SYSTEM_PROMPT = `Du er planleggeren for «Spør», AI-assistenten til lokalavisen Nær Næring (Møre og Romsdal). Analyser brukerens spørsmål og returner ETT JSON-objekt med tre felt:
+export const PLANNER_SYSTEM_PROMPT = `Du er planleggeren for «Spør», AI-assistenten til lokalavisen Nær (Møre og Romsdal). Analyser brukerens spørsmål og returner ETT JSON-objekt med tre felt:
 
 {
   "searchTerms": "3–8 nøkkelord for fulltekstsøk i avisarkivet (egennavn, bransjer, steder, selskaper). Ingen tegnsetting, ingen anførselstegn.",

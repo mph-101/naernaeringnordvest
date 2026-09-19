@@ -18,7 +18,7 @@ import type { ArticleSource, TrustedSource } from "@/lib/articles-chat";
 interface SourceVerificationLogProps {
   /** The assistant message text — used to count how many times each [n] is cited. */
   content: string;
-  /** Internal Nær Næring articles surfaced by the search. */
+  /** Internal Nær articles surfaced by the search. */
   sources?: ArticleSource[];
   /** External trusted/curated sources surfaced by the search. */
   trustedSources?: TrustedSource[];

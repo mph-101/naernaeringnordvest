@@ -1,4 +1,4 @@
-# Fargepalett — Nær Næring Nordvest
+# Fargepalett — Nær Nordvest
 
 Den fullstendige palett brukt i prosjektet. HSL-verdiene er kanoniske (de ligger i `src/index.css`). HEX-verdiene er beregnet for bruk i designverktøy (Figma, Pencil, Adobe XD) — runde av med ±1 i siste verdi er normalt.
 

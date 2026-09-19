@@ -14,8 +14,8 @@ export default function Stillinger() {
 
   useEffect(() => {
     document.title = isNo
-      ? "Ledige stillinger i lokalt næringsliv | Nær Næring"
-      : "Local business jobs | Nær Næring";
+      ? "Ledige stillinger i lokalt næringsliv | Nær"
+      : "Local business jobs | Nær";
     const meta =
       document.querySelector('meta[name="description"]') ||
       Object.assign(document.head.appendChild(document.createElement("meta")), { name: "description" });

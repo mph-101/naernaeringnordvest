@@ -1,5 +1,27 @@
 # Progress
 
+## Rebranding: «Nær Næring» → «Nær», piloten «Nordvestlandet» → «Nordvest» (2026-09-19)
+
+- **Tekst-sveip, branch `rebrand/naer-nordvest`** — Magnus: "Vi kjører en liten rebrand, og kaller avisen ganske enkelt 'Nær', med piloten på Nordvestlandet blir 'Nordvest'". Avklart med Magnus først: **kun visningstekst**, ikke `region_slug` i databasen (den treffer RLS/migrasjoner/edge functions/prod-rader — egen oppgave om/når det blir aktuelt, se magnus-todo).
+  - Én mekanisk substitusjon (`Nær Næring` → `Nær`) i 61 filer + regenerert Vitest-snapshot (`ArticleChart.test.tsx.snap`) — dekker alle grammatiske former korrekt fordi «Nær Næring» alltid er prefiks: masthead (`Nær Nordvest`), kjedeplan (`Nær Nord, Midt, Øst, Vest`), genitiv (`Nær Nærings` → `Nærs`), sammensetning (`Nær Næring-avisene` → `Nær-avisene`).
+  - Truffet: Header/SiteFooter/translations.ts (masthead + footer-tagline), `index.html` + `app/layout.tsx` (title/meta/OG/Twitter), `footer-pages.ts`/`footer-pages.md` (redaksjonelle prinsipper, personvern, vilkår, innholdsmerking, eierskap — inkl. **Nær Nordvest AS** som eierselskapsnavn), AI-systemprompter i seks edge functions (`articles-chat`, `generate-article-draft`, `generate-fact-box`, `generate-social-posts`, `clone-author-voice`, `_shared/ai-client.ts` DEFAULT_APP_NAME), `agent-provenance/json-ld.ts` PUBLISHER_NAME, chart/factbox-branding (ArticleChart, FactBox), CLAUDE.md/DESIGN.md/PRODUCT.md/README.md/`.impeccable/design.json`, samtlige docs/*.md-filer med gamle merkevarereferanser.
+  - **Bevisst urørt:** `region_slug='nordvestlandet'` i databasen (RLS/migrasjoner/edge functions) — se magnus-todo. Beskrivende geografi-prosa («næringslivet på Nordvestlandet» i hero-tekster, SSB-kildeangivelser) — det er stedsnavnet, ikke merkevaren, og endres ikke av denne rebrandingen. `naernaering.no`-domene og `redaktor@naernaering.no`-e-post — infrastruktur, ikke visningstekst. «Compass Media» (utgiverselskapet) — uendret, det er ikke avisnavnet.
+  - Verifisert: `tsc --noEmit` rent, eslint 0 errors, vitest 127/127 (snapshot oppdatert), browser-verifisert i preview (forside-header viser «Nær», footer-masthead og juridisk linje viser «Nær Nordvest», om-oss-siden renderer «Nær-avisene» korrekt).
+
+## Design: Tall-siden mistet gradient-hero-banneret (2026-09-19)
+
+- **PR #174, branch `design/tall-header-sober`** — Magnus flagget at Tall-sidens fullbredde `bg-gradient-warm`-bånd brøt med det sobre inntrykket ellers. Tre alternativer forelagt (fjern helt / behold bånd-rytme men flat farge / krymp til innholdsbredde-aksent) — Magnus valgte «fjern helt».
+  - Fjernet gradient-båndet (ordrett DESIGN.md §6-forbudet «ingen gradient-heroer»); H1 + ingress ligger nå direkte i samme `max-w-6xl`-wrapper som fanene, samme struktur som Stillinger.tsx/Arrangementer.tsx.
+  - Verifisert: tsc rent, eslint 0 errors, vitest 127/127, browser-verifisert i preview.
+
+## Design: Næringspuls KPI-redesign — nøkkeltall-stripe (2026-09-19)
+
+- **PR #173, branch `design/naeringspuls-kpi-strip`** — den frittstående designoppgaven nevnt i 2026-07-16-entryen under, valgt av Magnus som neste steg.
+  - De fire KPI-boksene (Konkurser/Etableringer/Omsetning/Omsetningsvekst) var et identisk kort-grid — ordrett DESIGN.md §6-forbudet «identiske kort-grids»/«hero-metric-maler». Erstattet med én redaksjonell nøkkeltall-stripe: tre figurer i ett kort delt av hårfine linjer. Omsetningsvekst er nå en retningsfarget delta på omsetningstallet (positive/negative-tokens) i stedet for en femte likestilt tile.
+  - Lagt til manglende `<h2>`-overskrift på seksjonen og `aria-hidden` på de dekorative ikonene.
+  - Flagget, ikke fikset: `nf`/`fmtOms`/`fmtPct` hardkoder `nb-NO`-locale uavhengig av `language`-innstilling.
+  - Verifisert: tsc rent, eslint 0 errors, vitest 127/127, browser-verifisert i preview (desktop + mobil).
+
 ## Audit-backloggen lukket: alle 6 bunker levert (2026-07-16)
 
 Backloggen fra [design-audit 2026-07-15](design-audit-2026-07-15.md) er ferdig — én fokusert PR per bunke, alle merget fortløpende av Magnus:

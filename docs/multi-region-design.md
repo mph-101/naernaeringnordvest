@@ -5,7 +5,7 @@ Dato: 2026-05-18
 
 ## 1. Overordnet modell
 
-Nær Næring utvides fra én region (Nordvest) til flere regionale utgaver. Hver region er en semi-uavhengig redaksjonell enhet som på sikt kan bli et eget utgiverselskap.
+Nær utvides fra én region (Nordvest) til flere regionale utgaver. Hver region er en semi-uavhengig redaksjonell enhet som på sikt kan bli et eget utgiverselskap.
 
 - **Domene**: Subdomener (`nordvest.naernaering.no`, `ostlandet.naernaering.no`)
 - **Auth**: Felles brukerkontoer, delt cookie på `.naernaering.no`

@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
     }
 
     const lang = language === "en" ? "English" : "Norwegian (bokmål)";
-    const systemPrompt = `You are a social media editor for Nær Næring, a Norwegian local-business news outlet. ` +
+    const systemPrompt = `You are a social media editor for Nær, a Norwegian local-business news outlet. ` +
       `Write platform-tailored posts that drive clicks to the article. Tone: editorial, sober, concrete — never clickbait, never emoji-spam. ` +
       `Output language: ${lang}. Always respond by calling the provided tool.`;
 

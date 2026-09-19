@@ -1,4 +1,4 @@
-# Nær Næring Nordvest
+# Nær Nordvest
 
 Regional næringslivsavis for Nordvestlandet. Første utgivelse i en planlagt kjede av regionale aviser.
 

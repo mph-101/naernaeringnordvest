@@ -96,10 +96,10 @@ const Tag = () => {
       {/* SEO */}
       {tag && (
         <head>
-          <title>{`#${tag.name} – Nær Næring`}</title>
+          <title>{`#${tag.name} – Nær`}</title>
           <meta
             name="description"
-            content={tag.description || `Alle artikler tagget med ${tag.name} på Nær Næring.`}
+            content={tag.description || `Alle artikler tagget med ${tag.name} på Nær.`}
           />
           <link rel="canonical" href={`${window.location.origin}/tag/${tag.slug}`} />
         </head>

@@ -43,7 +43,7 @@ export default function Unsubscribe() {
   const [doneAction, setDoneAction] = useState<null | "updated" | "unsubscribed">(null);
 
   useEffect(() => {
-    document.title = isNo ? "Endre nyhetsbrev — Nær Næring" : "Manage newsletter — Nær Næring";
+    document.title = isNo ? "Endre nyhetsbrev — Nær" : "Manage newsletter — Nær";
   }, [isNo]);
 
   useEffect(() => {

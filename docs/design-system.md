@@ -1,4 +1,4 @@
-# Designsystem — Nær Næring Nordvest
+# Designsystem — Nær Nordvest
 
 Dette dokumentet beskriver designspråket slik det faktisk er implementert i koden per 2026-05-21. Det er en referanse for å holde nye komponenter konsistente med eksisterende — hverken et fasit-katalog eller et statisk styleguide-prosjekt.
 

@@ -1,5 +1,5 @@
 ---
-name: Nær Næring Nordvest
+name: Nær Nordvest
 description: Regional næringslivsavis — varm, nær og etterrettelig
 colors:
   fersken-solnedgang: "#E4AF81"
@@ -69,7 +69,7 @@ components:
     padding: "24px"
 ---
 
-# Design System: Nær Næring Nordvest
+# Design System: Nær Nordvest
 
 ## 1. Overview
 

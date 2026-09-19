@@ -9,8 +9,8 @@ const journalists = [
     name: "Magnus Peter Harnes",
     role: { no: "Ansvarlig redaktør og daglig leder", en: "Editor-in-chief & CEO" },
     bio: {
-      no: "Grunnlegger og redaktør for Nær Næring. Følger lokalt næringsliv på Nordvestlandet med blikk for tall, mennesker og det som er i ferd med å skje.",
-      en: "Founder and editor of Nær Næring. Covers local business on Norway's Northwest coast with an eye for numbers, people, and what's about to happen.",
+      no: "Grunnlegger og redaktør for Nær. Følger lokalt næringsliv på Nordvestlandet med blikk for tall, mennesker og det som er i ferd med å skje.",
+      en: "Founder and editor of Nær. Covers local business on Norway's Northwest coast with an eye for numbers, people, and what's about to happen.",
     },
     avatar: null,
   },
@@ -25,8 +25,8 @@ export const TeamSection = () => {
 
   const title = language === "no" ? "Vårt team" : "Our Team";
   const subtitle = language === "no"
-    ? "Redaksjonen bak Nær Næring Nordvest"
-    : "The team behind Nær Næring Nordvest";
+    ? "Redaksjonen bak Nær Nordvest"
+    : "The team behind Nær Nordvest";
   const tipButtonLabel = language === "no" ? "Send tips" : "Send tip";
 
   return (

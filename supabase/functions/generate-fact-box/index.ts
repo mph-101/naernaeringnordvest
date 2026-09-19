@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
       `### Kilde ${i + 1}: ${s.title}${s.source_url ? `\nURL: ${s.source_url}` : ""}\n${(s.content ?? "").slice(0, 8000)}`
     ).join("\n\n---\n\n");
 
-    const systemPrompt = `Du er en erfaren norsk avisredaktør for Nær Næring som lager kompakte, leservennlige faktabokser.
+    const systemPrompt = `Du er en erfaren norsk avisredaktør for Nær som lager kompakte, leservennlige faktabokser.
 
 Du velger MEST EGNEDE variant basert på kildematerialet:
 - "keyvalue": Når kilden har strukturerte tall, fakta eller nøkkeldata (omsetning, ansatte, stiftet, daglig leder, osv.). 3-8 etikett/verdi-par.

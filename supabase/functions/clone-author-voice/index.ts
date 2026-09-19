@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
 
     const formData = new FormData();
     formData.append("name", `NN — ${author.name}`);
-    formData.append("description", `Klonet stemme for ${author.name} (Nær Næring)`);
+    formData.append("description", `Klonet stemme for ${author.name} (Nær)`);
     formData.append("files", fileBlob, "sample.mp3");
     formData.append("remove_background_noise", "true");
 

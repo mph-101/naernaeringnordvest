@@ -3,7 +3,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/env";
 import { useTheme } from "@/hooks/useTheme";
 import { ArrowUpDown, ArrowUp, ArrowDown, Building2, Users, ChevronRight, TrendingUp, TrendingDown, Loader2 } from "lucide-react";
 import { CompanyDetail } from "./CompanyDetail";
-import { GeoFilter, getKommuneParam } from "./GeoFilter";
+import { getKommuneParam } from "./GeoFilter";
 
 interface TableCompany {
   orgnr: string;
@@ -28,8 +28,6 @@ interface Props {
   session: any;
   selectedFylker: string[];
   selectedKommuner: string[];
-  onFylkerChange: (f: string[]) => void;
-  onKommunerChange: (k: string[]) => void;
 }
 
 function formatNOK(n: number): string {
@@ -38,7 +36,7 @@ function formatNOK(n: number): string {
   return `${n.toLocaleString()}`;
 }
 
-export function CompanyTable({ session, selectedFylker, selectedKommuner, onFylkerChange, onKommunerChange }: Props) {
+export function CompanyTable({ session, selectedFylker, selectedKommuner }: Props) {
   const { language } = useTheme();
   const isNo = language === "no";
   const [companies, setCompanies] = useState<TableCompany[]>([]);
@@ -161,15 +159,9 @@ export function CompanyTable({ session, selectedFylker, selectedKommuner, onFylk
         </p>
       </div>
 
-      <div className="mb-4">
-        <GeoFilter
-          selectedFylker={selectedFylker}
-          selectedKommuner={selectedKommuner}
-          onFylkerChange={onFylkerChange}
-          onKommunerChange={onKommunerChange}
-        />
-      </div>
-
+      {/* Fylkesfilteret vises kun én gang, i CompanySearch over — begge widgetene
+          deler samme selectedFylker/selectedKommuner-state (Tall.tsx), så et eget
+          filter her var et duplikat av samme kontroll, ikke et uavhengig filter. */}
       <div className="bg-card border border-border rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

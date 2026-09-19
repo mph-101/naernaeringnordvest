@@ -111,10 +111,17 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/velkommen" element={<Onboarding />} />
               <Route path="/hjernetrim" element={<Hjernetrim />} />
-              <Route path="/hjernevelvet" element={<Hjernevelvet />} />
-              <Route path="/hjernevelvet/panel/:id" element={<HjernevelvPanel />} />
-              <Route path="/hjernevelvet/skribent/:slug" element={<HjernevelvWriter />} />
-              <Route path="/hjernevelvet/essay/:id" element={<HjernevelvEssay />} />
+              {/* Hjernevelvet på hyllen (2026-09-19, Magnus) — koden og admin-CMS-en
+                  består, men de offentlige rutene skjules til FEATURES.HJERNEVELV
+                  slås på igjen (jf. CLAUDE.md: "Parkeres bak feature flags"). */}
+              {FEATURES.HJERNEVELV && (
+                <>
+                  <Route path="/hjernevelvet" element={<Hjernevelvet />} />
+                  <Route path="/hjernevelvet/panel/:id" element={<HjernevelvPanel />} />
+                  <Route path="/hjernevelvet/skribent/:slug" element={<HjernevelvWriter />} />
+                  <Route path="/hjernevelvet/essay/:id" element={<HjernevelvEssay />} />
+                </>
+              )}
               <Route path="/tag/:slug" element={<Tag />} />
               <Route path="/abonnement" element={<Subscribe />} />
               <Route path="/abonnement/takk" element={<SubscribeReturn />} />

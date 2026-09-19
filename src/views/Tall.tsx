@@ -40,20 +40,18 @@ export default function Tall() {
       <Header showSearch={false} />
       <ViewToggle view="feed" onViewChange={() => {}} />
 
-      <div className="bg-gradient-warm py-10 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="font-headline text-3xl md:text-4xl font-bold text-accent-foreground mb-3">
-            {isNo ? "Bedriftsdatabasen" : "Company Database"}
-          </h1>
-          <p className="font-body text-accent-foreground/80 text-lg max-w-2xl">
-            {isNo
-              ? "Søk blant alle AS og ASA i regionen. Se nøkkeltall, roller og lag egne lister."
-              : "Search all AS and ASA companies in the region. View key figures, roles and create custom lists."}
-          </p>
-        </div>
-      </div>
+      <div className="max-w-6xl mx-auto px-6 py-8 md:py-10">
+        {/* Nøktern header, ikke gradient-bånd — matcher Stillinger/Arrangementer
+            (DESIGN.md §6: "ingen gradient-heroer"; hierarki via Lora, ikke farge). */}
+        <h1 className="font-headline text-3xl md:text-4xl font-bold text-headline mb-3">
+          {isNo ? "Bedriftsdatabasen" : "Company Database"}
+        </h1>
+        <p className="font-body text-muted-foreground text-lg max-w-2xl mb-6">
+          {isNo
+            ? "Søk blant alle AS og ASA i regionen. Se nøkkeltall, roller og lag egne lister."
+            : "Search all AS and ASA companies in the region. View key figures, roles and create custom lists."}
+        </p>
 
-      <div className="max-w-6xl mx-auto px-6 py-6">
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {tabs.map((t) => {
             const Icon = t.icon;

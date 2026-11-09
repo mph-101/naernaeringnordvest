@@ -5,7 +5,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Kommer snart",
-  description: "Vi jobber med noe nytt. Følg med — mer informasjon kommer snart.",
+  description: "Nær Nordvest er en ny næringslivsavis for Møre og Romsdal. Meld deg på for å få beskjed når vi lanserer.",
+  robots: { index: false, follow: false },
 };
 
 export default function ComingSoonPage() {

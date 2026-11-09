@@ -12,6 +12,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { MascotTour } from "@/components/mascot/MascotTour";
 import { FeatureWalkthrough } from "@/components/onboarding/FeatureWalkthrough";
+import { useGlobalChromeHidden } from "@/lib/global-chrome";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,19 @@ function NavigationInterceptor({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Mascot and walkthrough ride along on every route, except pages that opt
+// out (the pre-launch page).
+function GlobalOverlays() {
+  const hidden = useGlobalChromeHidden();
+  if (hidden) return null;
+  return (
+    <>
+      <MascotTour />
+      <FeatureWalkthrough />
+    </>
+  );
+}
+
 export function NextProviders({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -73,8 +87,7 @@ export function NextProviders({ children }: { children: React.ReactNode }) {
                 <AudioPlayerProvider>
                   <TooltipProvider>
                     {children}
-                    <MascotTour />
-                    <FeatureWalkthrough />
+                    <GlobalOverlays />
                     <Toaster />
                     <Sonner />
                   </TooltipProvider>

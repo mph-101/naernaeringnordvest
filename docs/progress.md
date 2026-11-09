@@ -1,5 +1,16 @@
 # Progress
 
+## Førlanseringssperre: «Kommer snart» på alle offentlige ruter (2026-11-09)
+
+- **Branch `feat/prelaunch-gate`** — Magnus: den live siden er en test og skal skjules bak en «kommer snart»-side til lansering.
+  - Ny sperre i middleware styrt av `PRELAUNCH` (Vercel). På: alle offentlige ruter får `/kommer-snart` servert via rewrite (URL-en består), med `X-Robots-Tag: noindex, nofollow`. Av eller usatt: uendret oppførsel. Ingen ruter er lagt til, fjernet eller omdøpt.
+  - Unntak: `/admin`, `/login`, `/nullstill-passord`, `/api`, `/unsubscribe` og statiske filer. Forhåndsvisning: `?forhandsvisning=<PRELAUNCH_PREVIEW_TOKEN>` setter en httpOnly-cookie (30 dager) og fjerner tokenet fra URL-en. Token under 16 tegn regnes som ikke satt.
+  - `/kommer-snart` er skrevet om til en naken førlanseringsside (`PrelaunchPage`): logo, én setning, e-postpåmelding, kontaktadresse. Ingen Header/SiteFooter, og maskot/omvisning skjules via ny `src/lib/global-chrome.ts`.
+  - Påmelding gjenbruker `newsletter_subscriptions` (eksisterende anon INSERT-policy, `topics: ['launch']`). Ingen skjema- eller RLS-endring. Duplikat (23505) vises som vellykket; rå feilmeldinger vises aldri.
+  - **Funn (flagget):** `middleware.ts` lå i repo-roten. Med `src/app` leser Next kun `src/middleware.ts`, så middleware har ikke kjørt i Next-bygget — verken `updateSession` (auth-cookie-fornyelse) eller `/@brukernavn`-rewriten. Filen er flyttet til `src/middleware.ts` fordi sperren krever det; bieffekten er at de to nevnte nå faktisk kjører også når sperren er av. Verifiser innlogging i preview før merge.
+  - Vite-appen (`src/App.tsx`) har ingen sperre — den er ikke i prod. `/kommer-snart` viser samme side der.
+  - Verifisert: vitest 138/138 (11 nye), eslint 0 errors, ingen nye tsc-feil; `next dev` med sperren på og av (rewrite, unntak, forhåndsvisningslenke, feil token, cookie), skjermbilde desktop + mobil uten overlegg.
+
 ## Rebranding: «Nær Næring» → «Nær», piloten «Nordvestlandet» → «Nordvest» (2026-09-19)
 
 - **Tekst-sveip, branch `rebrand/naer-nordvest`** — Magnus: "Vi kjører en liten rebrand, og kaller avisen ganske enkelt 'Nær', med piloten på Nordvestlandet blir 'Nordvest'". Avklart med Magnus først: **kun visningstekst**, ikke `region_slug` i databasen (den treffer RLS/migrasjoner/edge functions/prod-rader — egen oppgave om/når det blir aktuelt, se magnus-todo).

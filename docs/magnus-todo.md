@@ -4,6 +4,20 @@ Ting som krever din handling i dashboards / secrets / DB, utenfor det Claude kan
 
 ## Åpne
 
+### Førlanseringssperre — skru på i Vercel (2026-11-09)
+Koden gjør ingenting før du setter variablene. Etter merge:
+1. **Vercel → Settings → Environment Variables (Production):**
+   - `PRELAUNCH` = `true`
+   - `PRELAUNCH_PREVIEW_TOKEN` = en lang tilfeldig streng (minst 16 tegn, f.eks. `openssl rand -hex 24`). Lagre den i passordmanageren.
+2. **Redeploy** (variablene leses ved deploy).
+3. **Forhåndsvisning** for deg, Per-Ivar og andre: `https://<domene>/?forhandsvisning=<token>`. Gir tilgang i 30 dager på den nettleseren. Bytt token for å trekke tilbake all tilgang.
+4. **Sjekk i preview før merge:** innlogging i `/admin` fungerer. Middleware kjører nå for første gang i Next-bygget (se progress.md), så auth-cookie-fornyelsen er ny i praksis.
+5. **Avklar:** er `redaktor@naernaering.no` en postkasse som leses? Adressen står på førlanseringssiden.
+6. **Lansering:** sett `PRELAUNCH` til `false` (eller slett den) og redeploy.
+
+Sperren dekker ikke: Lovable-siden (`naernaeringnordvest.lovable.app`, må tas ned separat) og Supabase-API-et (testartiklene er fortsatt lesbare med anon-nøkkelen til de avpubliseres).
+
+
 ### Rebranding «Nær Nordvest» — region-visningsnavn i databasen (2026-09-19)
 Rebrandingen (avisen «Nær», piloten «Nordvest») er gjort som **ren visningstekst**
 i kode — se progress.md. Etter avklaring med deg gjorde jeg **ikke** noe med
